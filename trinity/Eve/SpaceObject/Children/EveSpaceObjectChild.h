@@ -302,11 +302,10 @@ public:
 	virtual EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const;
 
 	/**
-	 * @brief Returns damage overlay of the given part, creating it if non-existent.
+	 * @brief Creates damage overlay of the given part.
 	 * @param partTag Part tag identifying the part on this child.
-	 * @return The part's damage overlay.
 	 */
-	virtual EveDamageOverlayPtr EnsurePartDamageOverlay( PartTag partTag );
+	virtual void CreatePartDamageOverlay( PartTag partTag );
 
 	/**
 	 * @brief Returns the armor damage shader effect of the given part's damage overlay.

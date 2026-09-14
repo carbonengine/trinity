@@ -1499,14 +1499,13 @@ EveDamageOverlayPtr EveChildInstancedMeshes::GetPartDamageOverlay( PartTag partT
 	return FindPartDamageOverlay( partTag );
 }
 
-EveDamageOverlayPtr EveChildInstancedMeshes::EnsurePartDamageOverlay( PartTag partTag )
+void EveChildInstancedMeshes::CreatePartDamageOverlay( PartTag partTag )
 {
 	EveDamageOverlayPtr& overlay = m_partDamageOverlays[partTag];
 	if( !overlay )
 	{
 		overlay.CreateInstance();
 	}
-	return overlay;
 }
 
 Tr2Effect* EveChildInstancedMeshes::GetPartArmorDamageShaderEffect( PartTag partTag ) const

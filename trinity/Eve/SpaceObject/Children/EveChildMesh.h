@@ -204,7 +204,7 @@ public:
 	void InvalidateOwnerMergedLocators( LocatorInvalidationReason reason );
 
 	EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const override;
-	EveDamageOverlayPtr EnsurePartDamageOverlay( PartTag partTag ) override;
+	void CreatePartDamageOverlay( PartTag partTag ) override;
 	Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const override;
 	bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const override;
 

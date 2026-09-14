@@ -140,10 +140,8 @@ EveDamageOverlayPtr EveSpaceObjectChild::GetPartDamageOverlay( PartTag ) const
 	return nullptr;
 }
 
-EveDamageOverlayPtr EveSpaceObjectChild::EnsurePartDamageOverlay( PartTag )
+void EveSpaceObjectChild::CreatePartDamageOverlay( PartTag )
 {
-	CCP_ASSERT( false );
-	return nullptr;
 }
 
 Tr2Effect* EveSpaceObjectChild::GetPartArmorDamageShaderEffect( PartTag ) const

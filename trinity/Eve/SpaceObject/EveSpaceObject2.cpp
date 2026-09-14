@@ -3531,7 +3531,10 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 	EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag );
 	if( !overlay )
 	{
-		overlay = const_cast<EveSpaceObjectChild*>( range.owner )->EnsurePartDamageOverlay( range.partTag );
+		EveSpaceObjectChild* child = const_cast<EveSpaceObjectChild*>( range.owner );
+		child->CreatePartDamageOverlay( range.partTag );
+		overlay = child->GetPartDamageOverlay( range.partTag );
+		CCP_ASSERT( overlay );
 		overlay->SetArmorDamageShaderEffect( range.owner->GetPartArmorDamageShaderEffect( range.partTag ) );
 		// each part gets its own flicker curve instance, the async child updates must not share one
 		if( TriPerlinCurve* flickerCurve = m_impactOverlay->GetHullDamageFlickerCurve() )

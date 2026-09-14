@@ -2096,13 +2096,12 @@ EveDamageOverlayPtr EveChildMesh::GetPartDamageOverlay( PartTag ) const
 	return m_damageOverlay;
 }
 
-EveDamageOverlayPtr EveChildMesh::EnsurePartDamageOverlay( PartTag )
+void EveChildMesh::CreatePartDamageOverlay( PartTag )
 {
 	if( !m_damageOverlay )
 	{
 		m_damageOverlay.CreateInstance();
 	}
-	return m_damageOverlay;
 }
 
 void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
