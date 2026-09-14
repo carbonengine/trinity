@@ -937,14 +937,8 @@ void EveInstancedMeshManager::UploadLodData( const MeshKey& mesh, MeshData& mesh
 			const DynamicPerInstanceData* instanceData = reinterpret_cast<const DynamicPerInstanceData*>( instance );
 			DynamicPerInstanceBufferElement* bufferElement = reinterpret_cast<DynamicPerInstanceBufferElement*>( allocation.data );
 
-			for( int i = 0; i < 3; i++ )
-			{
-				bufferElement->worldTransform[i] = instanceData->worldTransform[i];
-			}
-			for( int i = 0; i < 3; i++ )
-			{
-				bufferElement->prevWorldTransform[i] = instanceData->prevWorldTransform[i];
-			}
+			bufferElement->worldTransform = instanceData->worldTransform;
+			bufferElement->prevWorldTransform = instanceData->prevWorldTransform;
 
 			bufferElement->perObjectDataIndex = perObjectDataIndex;
 
@@ -961,10 +955,7 @@ void EveInstancedMeshManager::UploadLodData( const MeshKey& mesh, MeshData& mesh
 			const StaticPerInstanceData* instanceData = reinterpret_cast<const StaticPerInstanceData*>( instance );
 			StaticPerInstanceBufferElement* bufferElement = reinterpret_cast<StaticPerInstanceBufferElement*>( allocation.data );
 
-			for( int i = 0; i < 3; i++ )
-			{
-				bufferElement->worldTransform[i] = instanceData->worldTransform[i];
-			}
+			bufferElement->worldTransform = instanceData->worldTransform;
 
 			bufferElement->perObjectDataIndex = perObjectDataIndex;
 
