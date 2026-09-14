@@ -87,7 +87,7 @@ void TriVariable::UseUav(
 		}
 		else
 		{
-			renderContext.SetUav( stage, registerIndex, Tr2BufferAL() );
+			renderContext.SetUav( stage, registerIndex, Tr2TextureAL() );
 		}
 		return;
 	}

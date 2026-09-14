@@ -872,6 +872,7 @@ ALResult Tr2RenderContextAL::EndScene()
 
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
+	DiscardResourceBindings();
 
 	return S_OK;
 }
@@ -1456,11 +1457,15 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 				case Resource::TEXTURE:
 					if( resource->texture.IsValid() && reg < METAL_UAV_TEXTURE_COUNT )
 					{
-						const NSUInteger texIndex = METAL_UAV_TEXTURE_OFFSET + reg;
-						textures[texIndex] = resource->texture.m_texture->GetUAVMetalTexture( resource->mip );
-						texturesMin = std::min<NSUInteger>( texturesMin, texIndex );
-						texturesMax = std::max<NSUInteger>( texturesMax, texIndex );
-						missingTextureMask &= ~( 1u << texIndex );
+						id<MTLTexture> uavTexture = resource->texture.m_texture->GetUAVMetalTexture( resource->mip );
+						if( uavTexture )
+						{
+							const NSUInteger texIndex = METAL_UAV_TEXTURE_OFFSET + reg;
+							textures[texIndex] = uavTexture;
+							texturesMin = std::min<NSUInteger>( texturesMin, texIndex );
+							texturesMax = std::max<NSUInteger>( texturesMax, texIndex );
+							missingTextureMask &= ~( 1u << texIndex );
+						}
 					}
 					break;
 				case Resource::HEAP_VIEW:

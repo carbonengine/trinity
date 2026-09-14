@@ -1140,37 +1140,23 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 		switch( resource ? resource->type : Resource::NONE )
 		{
 		case Resource::TEXTURE:
-			if( resource->texture.IsValid() )
+			if( resource->texture.IsValid() && reg.registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D && resource->mip < resource->texture.m_texture->m_uav.size() )
 			{
-				if( reg.registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D )
-				{
-					uav = resource->texture.m_texture->m_uav[resource->mip];
-				}
-				if( !uav )
-				{
-					uav = renderContext.GetNullUavDx12( reg.registerType );
-				}
-				else
-				{
-					AddTransition( resource->texture.m_texture->GetResourceDx12(), resource->texture.m_texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-				}
+				uav = resource->texture.m_texture->m_uav[resource->mip];
+			}
+			if( uav )
+			{
+				AddTransition( resource->texture.m_texture->GetResourceDx12(), resource->texture.m_texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
 			}
 			break;
 		case Resource::BUFFER:
-			if( resource->buffer.IsValid() )
+			if( resource->buffer.IsValid() && reg.registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
 			{
-				if( reg.registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
-				{
-					uav = resource->buffer.m_buffer->m_uav;
-				}
-				if( !uav )
-				{
-					uav = renderContext.GetNullUavDx12( reg.registerType );
-				}
-				else
-				{
-					AddTransition( resource->buffer.m_buffer->GetGpuResource(), resource->buffer.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-				}
+				uav = resource->buffer.m_buffer->m_uav;
+			}
+			if( uav )
+			{
+				AddTransition( resource->buffer.m_buffer->GetGpuResource(), resource->buffer.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
 			}
 			break;
 		case Resource::HEAP_VIEW:
@@ -1178,14 +1164,14 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 			break;
 		default:
 			CCP_AL_LOGWARN( "Missing UAV resource binding for register %u, stage %u", reg.index, reg.stage );
-			uav = renderContext.GetNullUavDx12( reg.registerType );
 			break;
 		}
 
-		if( uav )
+		if( !uav )
 		{
-			m_descriptorCache[bufferIndex]->SetUnorderedAccessViews( reg.parameter, 1, &uav );
+			uav = renderContext.GetNullUavDx12( reg.registerType );
 		}
+		m_descriptorCache[bufferIndex]->SetUnorderedAccessViews( reg.parameter, 1, &uav );
 	}
 
 	std::shared_ptr<SamplerStateDx12> samplers[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
@@ -1199,7 +1185,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 		switch( sampler ? sampler->type : Sampler::NONE )
 		{
 		case Sampler::SAMPLER:
-			samplers[reg.parameter] = sampler->sampler.m_sampler->m_samplerState;
+			samplers[reg.parameter] = sampler->sampler.IsValid() ? sampler->sampler.m_sampler->m_samplerState : renderContext.GetNullSamplerDx12();
 			break;
 		case Sampler::HEAP_VIEW:
 			samplers[reg.parameter] = renderContext.GetSamplerHeapView();

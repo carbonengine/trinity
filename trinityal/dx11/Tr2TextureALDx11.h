@@ -16,7 +16,6 @@
 
 
 
-
 namespace TrinityALImpl
 {
 class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>

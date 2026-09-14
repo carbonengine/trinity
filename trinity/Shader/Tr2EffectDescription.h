@@ -7,8 +7,6 @@
 
 #include "../Tr2IndirectDrawBuffer.h"
 
-#include <../trinityal/include/Tr2StaticResourceBindingsAL.h>
-
 extern const BlueSharedString DEFAULT_TECHNIQUE;
 extern const BlueSharedString ANY_TECHNIQUE;
 

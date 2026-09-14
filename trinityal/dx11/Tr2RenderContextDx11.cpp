@@ -89,7 +89,7 @@ struct NullContext : ID3D11DeviceContext
 {
 	virtual HRESULT STDMETHODCALLTYPE QueryInterface(
 		REFIID riid,
-		__RPC__deref_out void __RPC_FAR* __RPC_FAR* ppvObject )
+		__RPC__deref_out void __RPC_FAR * __RPC_FAR * ppvObject )
 	{
 		return E_FAIL;
 	}
@@ -762,8 +762,7 @@ struct NullContext : ID3D11DeviceContext
 #pragma warning( default : 4100 )
 
 Tr2RenderContextAL::Tr2RenderContextAL() throw() :
-	m_topology( TOP_INVALID ), m_lastSetTopology( TOP_INVALID ), m_renderTargetHighWaterMark( 1 ), m_lastSetVertexLayoutVSHash( 0 ), m_stackDS( "Tr2RenderContextAL::m_stackDS" ), m_useReadOnlyDepthView( false ), m_isDepthReadOnly( false ), m_isSrgbRenderTarget( false ), m_previouslyHadHullShader( false ), m_events( nullptr ), m_aftermathContext( nullptr ),
-	m_assignedUavOffset( 0 ), m_assignedUavCount( 0 ), m_assignedPsUavs( false ), m_bindingsCommitted( false ), m_bindingsSealed( false ), m_committedProgram( nullptr )
+	m_topology( TOP_INVALID ), m_lastSetTopology( TOP_INVALID ), m_renderTargetHighWaterMark( 1 ), m_lastSetVertexLayoutVSHash( 0 ), m_stackDS( "Tr2RenderContextAL::m_stackDS" ), m_useReadOnlyDepthView( false ), m_isDepthReadOnly( false ), m_isSrgbRenderTarget( false ), m_previouslyHadHullShader( false ), m_events( nullptr ), m_aftermathContext( nullptr ), m_assignedUavOffset( 0 ), m_assignedUavCount( 0 ), m_assignedPsUavs( false ), m_bindingsCommitted( false ), m_bindingsSealed( false ), m_committedProgram( nullptr )
 {
 	m_dirtyFlag.mask = 0;
 

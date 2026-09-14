@@ -243,6 +243,7 @@ void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex,
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
 
 	renderContext.ResetResourceBindings();
+	pp.m_staticBindings.Apply( renderContext );
 
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
 	{
