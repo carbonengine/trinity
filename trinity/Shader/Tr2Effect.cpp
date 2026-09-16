@@ -1569,7 +1569,7 @@ uint32_t Tr2Effect::GetNonBlendableHashValue() const
 	}
 	for( auto it = m_parameters.begin(); it != m_parameters.end(); ++it )
 	{
-		if ( GetBool( m_shader, ( *it )->GetParameterName(), "IsBlendable", false ) )
+		if( GetBool( m_shader, ( *it )->GetParameterName(), "IsBlendable", false ) )
 		{
 			continue;
 		}

@@ -1720,7 +1720,7 @@ Tr2GpuResourcePool::Texture Tr2PostProcessRenderer::RenderGenericEffects( std::v
 	auto effectSrc = src;
 	for( auto& genericEffect : effects )
 	{
-		if ( genericEffect.effect->m_quality > m_quality )
+		if( genericEffect.effect->m_quality > m_quality )
 		{
 			continue;
 		}

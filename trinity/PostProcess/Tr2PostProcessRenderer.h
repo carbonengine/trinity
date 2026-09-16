@@ -246,7 +246,7 @@ private:
 	Tr2GpuResourcePool::Texture Blur( Tr2GpuResourcePool::Texture src, Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext, const PostProcessBlur::BlurContext& blurContext );
 	Tr2GpuResourcePool::Texture DownSampleDepth( const Tr2TextureAL& depth, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
-	[[nodiscard]] Tr2GpuResourcePool::Texture RenderGenericEffects( std::vector<Tr2AccumulatedGenericEffects::GenericEffectInstance>& effects, const Tr2GpuResourcePool::Texture& src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext ) const;
+	[[nodiscard]] Tr2GpuResourcePool::Texture RenderGenericEffects( std::vector<Tr2AccumulatedGenericEffects::GenericEffectInstance> & effects, const Tr2GpuResourcePool::Texture& src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext ) const;
 
 	Tr2EffectPtr m_downsampleDepthEffect;
 	std::map<uint32_t, std::pair<Tr2EffectPtr, Tr2EffectPtr>> m_blurEffects;
