@@ -149,5 +149,16 @@ using std::max;
 	GPU_REGION_AL( renderContext, label ); \
 	Tr2GpuProfilerZone _profilerZone##__COUNTER__( nullptr, label, renderContext );
 
+#ifdef PYTHON2_SUPPORT
+#define TRINITY_STATS_ZONE( name ) CCP_STATS_ZONE( name )
+#define TRINITY_STATS_SCOPED_TIME( identifier ) CCP_STATS_SCOPED_TIME( identifier )
+#else
 
+const CcpTelemetryCategory& TrinityTelemetryCategory();
+#define TRINITY_STATS_ZONE( name ) TelemetryZone CCP_ANONYMOUS_VARIABLE( trinityZone_ )( TrinityTelemetryCategory(), name, __FILE__, __LINE__ );
+#define TRINITY_STATS_SCOPED_TIME( identifier )  \
+	TelemetryZone CCP_ANONYMOUS_VARIABLE( trinitySopedTime_ )( TrinityTelemetryCategory(), g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ ); \
+	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
+
+#endif
 #endif

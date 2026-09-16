@@ -1737,7 +1737,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	m_morphTargetOffsets.AdvanceFrame();
 	m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-	CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
+	TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 
 	MergeMorphsConstantBuffer* data;

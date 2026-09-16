@@ -433,7 +433,7 @@ bool EveSpaceScene::OnPrepareResources()
 
 void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -484,7 +484,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
-		CCP_STATS_ZONE( "UpdateBackgroundObjects" );
+		TRINITY_STATS_ZONE( "UpdateBackgroundObjects" );
 
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
 		{
@@ -543,7 +543,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "UpdateSyncronous" );
+		TRINITY_STATS_ZONE( "UpdateSyncronous" );
 
 		for( IEveSpaceObject2Vector::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it )
 		{
@@ -556,7 +556,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		}
 	}
 	{
-		CCP_STATS_ZONE( "UpdateAsyncronous" );
+		TRINITY_STATS_ZONE( "UpdateAsyncronous" );
 		ScopedBlockTrap blockTrap;
 
 		Tr2ParallelTaskGroup taskGroup = {};
@@ -604,7 +604,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_componentRegistry )
 	{
@@ -676,7 +676,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 	}
 
 	{
-		CCP_STATS_ZONE( "GetBatches" );
+		TRINITY_STATS_ZONE( "GetBatches" );
 		unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
 		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 		for( auto& vector : shadowCasterInfo )
@@ -685,7 +685,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		}
 
 		{
-			CCP_STATS_ZONE( "Find shadow casters" );
+			TRINITY_STATS_ZONE( "Find shadow casters" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
 				auto cameraFrustum = cameraFrustums[frustumIndex];
 				auto casters = shadowCasterInfo[frustumIndex];
@@ -706,7 +706,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 			} );
 		}
 		{
-			CCP_STATS_ZONE( "Per object data" );
+			TRINITY_STATS_ZONE( "Per object data" );
 
 			// This is not thread safe, hence no threading...
 			for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
@@ -720,7 +720,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		}
 
 		{
-			CCP_STATS_ZONE( "get batches" );
+			TRINITY_STATS_ZONE( "get batches" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
 				for( const auto& info : shadowCasterInfo[frustumIndex] )
 				{
@@ -770,7 +770,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 
 				//***** Do the actual shadow rendering to the atlas (cascaded shadow depth map)
 				{
-					CCP_STATS_ZONE( "ShadowRendering" );
+					TRINITY_STATS_ZONE( "ShadowRendering" );
 
 					renderContext.m_esm.SetInvertedDepthTest( false );
 					ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
@@ -834,7 +834,7 @@ void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Sort objects front to back
 	std::stable_sort( objectsWithTransparencies.begin(), objectsWithTransparencies.end() );
@@ -850,7 +850,7 @@ void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithT
 
 void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const unsigned renderableCount, Tr2RenderableSortList* const objectsWithTransparencies, EveSpaceScene::BatchMap& batches, const TriBatchType* batchTypes, const unsigned batchTypeCount, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( unsigned i = 0; i != renderableCount; ++i )
 	{
@@ -883,13 +883,13 @@ void GetBatchesFromRenderables(
 	const unsigned batchTypeCount,
 	Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Tr2PerObjectData*> perObjectData;
 	perObjectData.reserve( renderableCount );
 
 	{
-		CCP_STATS_ZONE( "PerObjectData" );
+		TRINITY_STATS_ZONE( "PerObjectData" );
 
 		for( unsigned i = 0; i != renderableCount; ++i )
 		{
@@ -899,7 +899,7 @@ void GetBatchesFromRenderables(
 		}
 	}
 	{
-		CCP_STATS_ZONE( "GetBatches" );
+		TRINITY_STATS_ZONE( "GetBatches" );
 
 		Tr2ParallelFor( unsigned( 0 ), renderableCount, [&]( unsigned i ) {
 			ITr2Renderable* r = objectRenderables[i];
@@ -910,7 +910,7 @@ void GetBatchesFromRenderables(
 		} );
 	}
 	{
-		CCP_STATS_ZONE( "Combine" );
+		TRINITY_STATS_ZONE( "Combine" );
 
 		for( unsigned type = 0; type != batchTypeCount; ++type )
 		{
@@ -923,7 +923,7 @@ void GetBatchesFromRenderables(
 	}
 	if( objectsWithTransparencies )
 	{
-		CCP_STATS_ZONE( "Transparencies" );
+		TRINITY_STATS_ZONE( "Transparencies" );
 
 		objectsWithTransparencies->reserve( renderableCount );
 
@@ -983,7 +983,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1007,7 +1007,7 @@ void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1032,7 +1032,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1120,7 +1120,7 @@ void EveSpaceScene::RenderBatch( ITriRenderBatchAccumulator* batch,
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1152,7 +1152,7 @@ void EveSpaceScene::RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& re
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderTransparentBatches( BatchMap& batches, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1176,7 +1176,7 @@ void EveSpaceScene::RenderTransparentBatches( BatchMap& batches, Tr2RenderContex
 }
 void EveSpaceScene::RenderTransparentBatches2( BatchMap& batches, Tr2RenderContext& renderContext, bool pass )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1220,7 +1220,7 @@ void EveSpaceScene::RenderTransparentBatches2( BatchMap& batches, Tr2RenderConte
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !batches[TRIBATCHTYPE_DISTORTION]->GetBatchCount() )
 	{
@@ -1294,7 +1294,7 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -1395,7 +1395,7 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		CCP_STATS_SCOPED_TIME( gatherDynamicLights );
+		TRINITY_STATS_SCOPED_TIME( gatherDynamicLights );
 
 		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
 		lightManager->Clear( renderContext );
@@ -1432,7 +1432,7 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 
 	std::vector<IEveSpaceObject2*> allObjects;
@@ -1441,7 +1441,7 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 	const Matrix& identity = IdentityMatrix();
 
 	{
-		CCP_STATS_ZONE( "UpdateVisibility" );
+		TRINITY_STATS_ZONE( "UpdateVisibility" );
 		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) {
 			obj->UpdateVisibility( m_updateContext, identity );
 		} );
@@ -1536,7 +1536,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
+	TRINITY_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
 
 	ProcessOutdatedRTAnimations( renderContext );
@@ -1573,7 +1573,7 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	GPU_REGION( renderContext, "Impostors Update" );
 
 	CTriViewport fakeViewport;
@@ -1685,7 +1685,7 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 void EveSpaceScene::UpdateShLighting(
 	const std::vector<IEveSpaceObject2*>& allObjects )
 {
-	CCP_STATS_SCOPED_TIME( shLightingUpdateTime );
+	TRINITY_STATS_SCOPED_TIME( shLightingUpdateTime );
 
 	if( m_shLightingManager )
 	{
@@ -1714,7 +1714,7 @@ void EveSpaceScene::UpdateQuadRenderer(
 	const std::vector<IEveSpaceObject2*>& allObjects,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& quadRenderer = *Tr2QuadRenderer::Instance();
 
@@ -1734,7 +1734,7 @@ void EveSpaceScene::UpdateQuadRenderer(
 	PIEveSpaceObject2Vector& objects,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& quadRenderer = *Tr2QuadRenderer::Instance();
 
@@ -1765,7 +1765,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// set the current reflection
 	GPU_REGION( renderContext, "Reflection" );
@@ -2001,7 +2001,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	bool hasBackgroundDistortionBatches = false;
 
@@ -2078,7 +2078,7 @@ bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, Tr2RenderContext& renderContext, BackgroundRenderingReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<ITr2Renderable*> visible;
 	Tr2RenderableSortList transparentObjects;
@@ -2197,7 +2197,7 @@ bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, c
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -2354,7 +2354,7 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 
@@ -2372,7 +2372,7 @@ void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Get distance from camera to zFar
 	auto direction = Tr2Renderer::GetViewPosition() - cloudShadowInformation->aabbMax;
@@ -2386,7 +2386,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	frustum.ExtractFrustum( &viewProj );
 
 	{
-		CCP_STATS_ZONE( "get shadowbatches for volumetrics" );
+		TRINITY_STATS_ZONE( "get shadowbatches for volumetrics" );
 		auto shadowFrustum = TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld );
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
@@ -2475,7 +2475,7 @@ std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScen
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Using depth stencil as shadow map
 	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
@@ -2499,7 +2499,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 	const Matrix& projection,
 	const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	renderContext.m_esm.PushViewport();
 	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap.GetWidth(), shadowMap.GetHeight() );
@@ -2513,7 +2513,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 	TriFrustum shadowFrustum;
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
-		CCP_STATS_ZONE( "get shadowbatches for light" );
+		TRINITY_STATS_ZONE( "get shadowbatches for light" );
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
@@ -2559,7 +2559,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 
 void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( lightData.innerAngle <= 0. )
 	{
@@ -2692,7 +2692,7 @@ bool EveSpaceScene::RenderMainPass(
 	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	bool hasForegroundDistortionBatches = false;
 
@@ -2791,7 +2791,7 @@ void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, 
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -2970,7 +2970,7 @@ void EveSpaceScene::ClearBatches( BatchMap& batches )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::FinalizeBatches( BatchMap& batches )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = batches.begin(); it != batches.end(); ++it )
 	{

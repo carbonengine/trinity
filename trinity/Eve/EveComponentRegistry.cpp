@@ -16,7 +16,7 @@ EveComponentRegistry::~EveComponentRegistry()
 
 void EveComponentRegistry::Clear()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
 
 	for( auto& it : m_componentCollections )
@@ -39,7 +39,7 @@ void EveComponentRegistry::Clear()
 
 void EveComponentRegistry::ReRegister( EveEntity* entity )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	entity->UnRegister( this );
 	entity->Register( this );
@@ -86,7 +86,7 @@ void EveComponentRegistry::UnRegister( EveEntity* entity )
 // UnRegisters all components for a specific entity
 void EveComponentRegistry::UnRegisterAllComponents( EveEntity* entity )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
 
@@ -98,7 +98,7 @@ void EveComponentRegistry::UnRegisterAllComponents( EveEntity* entity )
 
 IEveComponentCollection* EveComponentRegistry::GetComponentCollection( const char* componentName ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto& pair : m_componentCollections )
 	{
@@ -113,7 +113,7 @@ IEveComponentCollection* EveComponentRegistry::GetComponentCollection( const cha
 
 void EveComponentRegistry::AddToCollection( IEveComponentCollection* collection, EveEntity* entity )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	auto collectionBit = collection->GetBit();
 
 	if( !entity->GetComponentIndex( collectionBit ).has_value() )
@@ -128,7 +128,7 @@ void EveComponentRegistry::AddToCollection( IEveComponentCollection* collection,
 
 void EveComponentRegistry::RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	auto collectionBit = collection->GetBit();
 
 	auto entityIndex = entity->GetComponentIndex( collectionBit );

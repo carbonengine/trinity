@@ -52,7 +52,7 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 
 	{
 		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
-		CCP_STATS_SCOPED_TIME( presentTime );
+		TRINITY_STATS_SCOPED_TIME( presentTime );
 		CR_RETURN( renderContext.Present() );
 		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
 	}

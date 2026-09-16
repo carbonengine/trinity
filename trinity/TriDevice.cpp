@@ -696,7 +696,7 @@ static const float ANIMATION_TIME_MAX = 3600.0f; // One hour
 
 void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 {
-	CCP_STATS_SCOPED_TIME( deviceOnTick );
+	TRINITY_STATS_SCOPED_TIME( deviceOnTick );
 
 	// Start with statistics on frame time
 	static BeTimer s_frameTimer;
@@ -1250,7 +1250,7 @@ void TriDevice::Throttle() const
 
 	if( sleepTime > 0 )
 	{
-		CCP_STATS_SCOPED_TIME( throttleTime );
+		TRINITY_STATS_SCOPED_TIME( throttleTime );
 		CcpThreadSleep( sleepTime );
 	}
 
@@ -1353,7 +1353,7 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 
 uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat, bool allowFramegen, Be::Optional<uint32_t> existingContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -1374,7 +1374,7 @@ uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t disp
 
 void TriDevice::DeleteUpscalingContext( uint32_t contextID )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	renderContext.DeleteUpscalingContext( contextID );
 }

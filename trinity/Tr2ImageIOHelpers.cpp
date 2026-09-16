@@ -11,7 +11,7 @@ namespace
 
 bool CreateCubeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !bitmap.IsValid() )
 	{
@@ -47,7 +47,7 @@ bool CreateCubeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t
 
 bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !bitmap.IsValid() )
 	{
@@ -93,7 +93,7 @@ namespace Tr2ImageIOHelpers
 {
 bool Create2DTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& memoryUse, Tr2PrimaryRenderContext& renderContext, Tr2RenderContextEnum::BufferUsage usage )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !bitmap.IsValid() )
 	{
@@ -147,7 +147,7 @@ bool CreateTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& out, uint32_t& me
 
 bool CopyToTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& texture, unsigned int x, unsigned int y, unsigned int margin, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !bitmap.IsValid() )
 	{

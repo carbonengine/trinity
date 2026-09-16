@@ -1588,7 +1588,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 
 void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_isVisible = false;
 	m_isMeshVisible = false;
@@ -1962,7 +1962,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 
 bool EveSpaceObject2::CollectOccluders()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_mesh && m_mesh->GetGeometryResource() )
 	{
@@ -2018,7 +2018,7 @@ bool EveSpaceObject2::CollectOccluders()
 
 bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( size_t i = 0; i < m_damageFilterOccluders.size(); )
 	{
@@ -2045,7 +2045,7 @@ bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 
 void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* damageLocators )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<uint8_t> enabled;
 	enabled.resize( m_damageLocatorEnabled.size() );
@@ -2119,7 +2119,7 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 void EveSpaceObject2::UpdateDamageLocatorFilter()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_damageFilterState == DamageFilterState::Idle )
 	{
@@ -3696,7 +3696,7 @@ Vector3 EveSpaceObject2::GetDamageLocatorDirectionLocal( uint32_t index ) const
 // --------------------------------------------------------------------------------
 Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
 	if( !damageLocators || index >= damageLocators->size() )

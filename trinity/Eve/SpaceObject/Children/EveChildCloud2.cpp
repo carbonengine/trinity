@@ -773,7 +773,7 @@ void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo, Vector3 su
 
 bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_receiveShadows )
 	{
