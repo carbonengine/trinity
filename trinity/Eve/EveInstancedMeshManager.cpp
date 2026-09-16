@@ -850,7 +850,6 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				{
 					continue;
 				}
-				
 				uint32_t stride = uint32_t( mesh.isDynamic ? sizeof( DynamicPerInstanceBufferElement ) : sizeof( StaticPerInstanceBufferElement ) );
 
 				Tr2RenderBatch batch;
