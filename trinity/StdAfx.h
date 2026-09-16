@@ -156,7 +156,7 @@ using std::max;
 
 const CcpTelemetryCategory& TrinityTelemetryCategory();
 #define TRINITY_STATS_ZONE( name ) TelemetryZone CCP_ANONYMOUS_VARIABLE( trinityZone_ )( TrinityTelemetryCategory(), name, __FILE__, __LINE__ );
-#define TRINITY_STATS_SCOPED_TIME( identifier )  \
+#define TRINITY_STATS_SCOPED_TIME( identifier )                                                                                                                  \
 	TelemetryZone CCP_ANONYMOUS_VARIABLE( trinitySopedTime_ )( TrinityTelemetryCategory(), g_ccpStatistics_##identifier.GetName().c_str(), __FILE__, __LINE__ ); \
 	CcpStatisticsStopwatch ccpStatsStopwatch_##identifier( g_ccpStatistics_##identifier )
 
