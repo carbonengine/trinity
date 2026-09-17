@@ -1191,7 +1191,9 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.controllers.clear();
 	for( auto cit = begin( srcData->m_controllers ); cit != end( srcData->m_controllers ); ++cit )
 	{
-		hd.controllers.push_back( { BlueSharedString( ( *cit )->m_path ), ( *cit )->m_buildFilter } );
+		std::string visGroupName( ( *cit )->m_visibilityGroup.c_str() );
+		uint32_t visibilityGroup = CcpHashFNV1( visGroupName.c_str(), visGroupName.size() );
+		hd.controllers.push_back( { BlueSharedString( ( *cit )->m_path ), ( *cit )->m_buildFilter, visibilityGroup } );
 	}
 
 	// model curves
