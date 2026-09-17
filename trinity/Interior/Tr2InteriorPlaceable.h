@@ -74,6 +74,10 @@ public:
 	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2BoundingBox
+	virtual bool GetWorldBoundingObb( Obb& obb ) const;
 	virtual void PrePhysicsUpdate( Be::Time time );
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene );
 
