@@ -26,13 +26,17 @@ const Be::ClassInfo* Tr2PointLight::ExposeToBlue()
 		MAP_ATTRIBUTE( "color", m_lightData.color, "Light color (in linear space)\n:jessica-tuple-type: linearcolor", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "brightness", m_lightData.brightness, "Light brightness (modulates color) for easier animation", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
+		MAP_ATTRIBUTE_WITH_CHOOSER( "falloff", m_lightData.falloff, "Light falloff type", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, LightFalloffTypeChooser )
+
 		MAP_ATTRIBUTE( "noiseAmplitude", m_lightData.noiseAmplitude, "Brightness noise amplitude\n:jessica-group: Noise", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "noiseFrequency", m_lightData.noiseFrequency, "Brightness noise frequency\n:jessica-group: Noise", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "noiseOctaves", m_lightData.noiseOctaves, "Brightness turbulence octaves\n:jessica-group: Noise", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, PerLightShadowSettingChooser );
+		MAP_ATTRIBUTE_WITH_CHOOSER( "lightingQuality", m_lightData.lightingQuality.m_filter, "Filter for lighting quality settings. Controls whether light is active with a certain lighting quality setting.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, LightingQualityFilterChooser );
+		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows.m_filter, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, PerLightShadowSettingChooser );
 		MAP_ATTRIBUTE( "isVolumetric", m_lightData.isVolumetric, "Volumetric lights affect participating media such as fog.", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "scaleBrightness", m_scaleBrightness, "Scale light brightness by its radius", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
 			"lightProfilePath",

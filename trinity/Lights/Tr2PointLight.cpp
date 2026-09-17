@@ -24,6 +24,8 @@ void Tr2PointLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix&
 	}
 	lightMatrix *= worldMatrix;
 
-	renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
-	renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
+	renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Wireframe, Tr2DebugColor( selectedColor, baseColor ) );
+	renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Color( 0, 0, 0, 0 ) );
+	renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Wireframe, Tr2DebugColor( selectedColor, baseColor ) );
+	renderer.DrawText( TRI_DBG_FONT_SMALL, TransformCoord( m_lightData.position, lightMatrix ), baseColor, "%s", m_name.empty() ? "Tr2PointLight" : m_name.c_str() );
 }
