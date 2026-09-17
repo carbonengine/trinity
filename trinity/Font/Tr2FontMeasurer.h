@@ -116,7 +116,7 @@ protected:
 	float CalcAlphaForHorizontal( float x );
 	float CalcAlphaForVertical( float y );
 
-	unsigned short* AdjustIndicesIfNeeded( unsigned int startSprite, unsigned short* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset );
+	unsigned int* AdjustIndicesIfNeeded( unsigned int startSprite, unsigned int* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset );
 
 protected:
 	std::string m_font;
@@ -169,7 +169,7 @@ protected:
 	FTC_ImageTypeRec m_imgTypeFallback;
 
 	struct Tr2Sprite2dD3DVertex* m_vertices;
-	unsigned short* m_indices;
+	unsigned int* m_indices;
 	unsigned int m_vertexCount;
 	unsigned int m_indexCount;
 
