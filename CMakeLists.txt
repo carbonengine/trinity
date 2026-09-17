@@ -126,7 +126,7 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
                 DOXYGEN_SRC_FILES ${TRINITY_DOCS_SOURCE_FILES}
                 SPHINX_TARGET_NAME Sphinx
                 DOXYGEN_TARGET_NAME Doxygen
-                INSTALL_DESTINATION documentation
+                INSTALL_DESTINATION documentation/trinity
         )
     endif()
 endif()
