@@ -159,15 +159,6 @@ BlueStdResult EveModularObjectModifier::Remove( EveSpaceObjectChild::PartTag par
 		++i;
 	}
 
-	for( auto& set : m_object->GetLocatorSets() )
-	{
-		auto& locators = *set->GetLocators();
-		auto removed = std::remove_if( locators.begin(), locators.end(), [partId]( const auto& locator ) {
-			return locator.partTag == partId;
-		} );
-		locators.Resize( std::distance( locators.begin(), removed ) );
-	}
-
 	if( m_instancedMeshes )
 	{
 		m_instancedMeshes->RemoveInstancesByPartTag( partId );
@@ -192,22 +183,6 @@ BlueStdResult EveModularObjectModifier::SetTransform( EveSpaceObjectChild::PartT
 	cmf::Transform oldTransform{ found->position, found->rotation, found->scale };
 	cmf::Transform newTransform{ position, rotation, scale };
 	auto invOldTransform = cmf::Inverse( oldTransform );
-
-	for( auto& set : m_object->GetLocatorSets() )
-	{
-		auto& locators = *set->GetLocators();
-		for( auto& locator : locators )
-		{
-			if( locator.partTag == partId )
-			{
-				locator.scale.x = scale.x / found->scale.x;
-				locator.scale.y = scale.y / found->scale.y;
-				locator.scale.z = scale.z / found->scale.z;
-				locator.direction = invOldTransform.rotation * rotation;
-				locator.position = cmf::TransformPoint( cmf::TransformPoint( locator.position, invOldTransform ), newTransform );
-			}
-		}
-	}
 
 	found->boundingSphere.center = cmf::TransformPoint( cmf::TransformPoint( found->boundingSphere.center, invOldTransform ), newTransform );
 	found->boundingSphere.radius *= std::max( { scale.x, scale.y, scale.z } ) / std::max( { found->scale.x, found->scale.y, found->scale.z } );

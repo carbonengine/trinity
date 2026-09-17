@@ -135,6 +135,25 @@ void EveSpaceObjectChild::CollectOwnedGeometry( TriBatchType type, const Matrix&
 {
 }
 
+EveDamageOverlayPtr EveSpaceObjectChild::GetPartDamageOverlay( PartTag ) const
+{
+	return nullptr;
+}
+
+void EveSpaceObjectChild::CreatePartDamageOverlay( PartTag )
+{
+}
+
+Tr2Effect* EveSpaceObjectChild::GetPartArmorDamageShaderEffect( PartTag ) const
+{
+	return nullptr;
+}
+
+bool EveSpaceObjectChild::GetPartDamageLocatorAnimatedLocal( PartTag, int, Vector3&, Vector3& ) const
+{
+	return false;
+}
+
 void EveCollectAreas( TriBatchType type, Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool )
 {
 	if( !mesh )

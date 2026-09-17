@@ -557,7 +557,7 @@ struct DeclarationMapping
 // --------------------------------------------------------------------------------------
 void Tr2RuntimeInstanceData::Spawn()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_particleSystem && m_particleSystem->IsValid() &&
 		!m_layout.m_items.empty() && m_data )

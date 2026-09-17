@@ -83,7 +83,7 @@ int32_t Tr2RenderTarget::Create(
 	Tr2RenderContextEnum::ExFlag flags,
 	Tr2RenderContextEnum::TextureType type )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( IsAttached() )
 	{
@@ -136,7 +136,7 @@ int32_t Tr2RenderTarget::CreateArray(
 	Tr2RenderContextEnum::ExFlag flags,
 	Tr2RenderContextEnum::TextureType type )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( IsAttached() )
 	{
@@ -197,7 +197,7 @@ int32_t Tr2RenderTarget::CreateManual(
 	Tr2CpuUsage::Type cpuUsage,
 	Tr2GpuUsage::Type gpuUsage )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( IsAttached() )
 	{
@@ -357,16 +357,16 @@ bool Tr2RenderTarget::IsReadable() const
 	return GetRenderTarget().IsValid() && Tr2GpuUsage::HasFlag( GetRenderTarget().GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE );
 }
 
-long Tr2RenderTarget::GenerateMipMaps()
+int32_t Tr2RenderTarget::GenerateMipMaps()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	return GetRenderTarget().GenerateMipMaps( renderContext ).GetResult();
 }
 
-long Tr2RenderTarget::Resolve( Tr2RenderTarget* destination )
+int32_t Tr2RenderTarget::Resolve( Tr2RenderTarget* destination )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( !destination )
 	{

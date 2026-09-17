@@ -52,7 +52,7 @@ bool EveStretch::OnModified( Be::Var* value )
 // start the update mess!
 void EveStretch::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Be::Time time = updateContext.GetTime();
 	if( !m_update )

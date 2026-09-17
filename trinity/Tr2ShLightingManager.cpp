@@ -287,7 +287,7 @@ void Tr2ShLightingManager::UnregisterSecondaryLightSource( const Vector3* positi
 // --------------------------------------------------------------------------------------
 void Tr2ShLightingManager::UpdateWithDirectionalLight( const Vector3& direction, const Vector3& color )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_sunColor = color;
 	m_sunDirection = Normalize( direction );
@@ -393,7 +393,7 @@ inline float MaxVectorComponent( const Vector3& v )
 // --------------------------------------------------------------------------------------
 void Tr2ShLightingManager::UpdateSourceData()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_sourceCount = 0;
 	size_t dataSize = sizeof( SourceData ) * ( ( m_sources.size() + m_lights.size() + 3 ) / 4 ) * 4;

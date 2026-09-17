@@ -196,7 +196,7 @@ void Tr2SkinnedObjectLod::SetLowDetailModel( Tr2SkinnedModel* model )
 
 Tr2SkinnedModel* Tr2SkinnedObjectLod::SetLOD( const TriFrustum* frustum, float estimatedPixelDiameter )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_allowLodSelection )
 	{
