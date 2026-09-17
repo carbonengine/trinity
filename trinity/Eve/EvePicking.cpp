@@ -10,6 +10,7 @@
 EvePendingPickingReadback::EvePendingPickingReadback( uint32_t pickedX, uint32_t pickedY ) :
 	m_pickedX( pickedX ),
 	m_pickedY( pickedY ),
+	m_frameIndex( 0 ),
 	m_debugPickBuffer( NULL, ImageIO::PIXEL_FORMAT_R32G32B32A32_FLOAT ),
 	m_debugPickData( nullptr ),
 	m_mainPickBuffer( NULL, ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM ),
@@ -22,6 +23,7 @@ void EvePendingPickingReadback::ReleaseResources( TriStorage s )
 {
 	m_debugPickData = nullptr;
 	m_mainPickData = nullptr;
+	m_frameIndex = 0;
 }
 
 // ------------------------------------------------------------------------------------------------------
