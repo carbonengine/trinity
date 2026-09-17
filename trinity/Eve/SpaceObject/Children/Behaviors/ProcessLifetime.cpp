@@ -214,7 +214,7 @@ std::vector<Vector3> ProcessLifetime::CalculateBehavior( std::vector<DroneAgent>
 
 float ProcessLifetime::GetRandomOffset( float cylWidth ) const
 {
-	return static_cast<float>( RAND_MAX / ( 2 * ( cylWidth * m_wanderAmount ) ) );
+	return static_cast<float>( float( RAND_MAX ) / ( 2 * ( cylWidth * m_wanderAmount ) ) );
 }
 
 bool ProcessLifetime::ProcessTunnel( DroneAgent& agent, SplineTunnel& tunnel, int& pointID, float boundingSphere )
@@ -402,7 +402,7 @@ void ProcessLifetime::FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* d
 				Vector3 point = ( *tunnel )->splinePoints[0].pos;
 				for( int i = 0; i < 3; i++ )
 				{
-					point[i] += -( *tunnel )->pointOfNoReturnSize + static_cast<float>( rand() ) / ( static_cast<float>( RAND_MAX / ( 2 * ( *tunnel )->pointOfNoReturnSize ) ) );
+					point[i] += -( *tunnel )->pointOfNoReturnSize + static_cast<float>( rand() ) / ( static_cast<float>( float( RAND_MAX ) / ( 2 * ( *tunnel )->pointOfNoReturnSize ) ) );
 				}
 				potentialPoints.push_back( point );
 				potentialRotations.push_back( ( *tunnel )->splinePoints[0].rot );

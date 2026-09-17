@@ -48,7 +48,7 @@ float Random( float a, float b )
 	{
 		return ( ( b - a ) * 0.41f ) + a;
 	}
-	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+	return ( ( b - a ) * ( (float)rand() / float( RAND_MAX ) ) ) + a;
 }
 
 // --------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ Tr2CurveVector3Expression::Tr2CurveVector3Expression( IRoot* lockobj ) :
 	PARENTLOCK( m_inputs ),
 	m_currentValue( 0, 0, 0 ),
 	m_timeScale( 1 ),
-	m_randomConstant( float( rand() ) / RAND_MAX )
+	m_randomConstant( float( rand() ) / float( RAND_MAX ) )
 {
 }
 
@@ -349,7 +349,7 @@ Vector3d* Tr2CurveVector3Expression::InterpolatedPosition( Vector3d* out, Be::Ti
 // --------------------------------------------------------------------------------
 void Tr2CurveVector3Expression::ResetRandomConstant()
 {
-	m_randomConstant = float( rand() ) / RAND_MAX;
+	m_randomConstant = float( rand() ) / float( RAND_MAX );
 }
 
 // --------------------------------------------------------------------------------
