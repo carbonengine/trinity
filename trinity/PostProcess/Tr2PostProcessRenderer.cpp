@@ -817,6 +817,7 @@ void Tr2PostProcessRenderer::Execute(
 			RenderTonemapping( output, postProcess, renderContext );
 		}
 
+		if( postProcess )
 		{
 			auto newOutput = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP], output, gpuResourcePool, renderContext );
 			if( !( newOutput.Get() == output.Get() ) )
@@ -838,6 +839,7 @@ void Tr2PostProcessRenderer::Execute(
 	else
 	{
 		RenderTonemapping( output, postProcess, renderContext );
+		if( postProcess )
 		{
 			auto newOutput = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP], output, gpuResourcePool, renderContext );
 			if( !( newOutput.Get() == output.Get() ) )

@@ -377,6 +377,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			[]( Tr2PostProcessAttributes* a, Tr2PostProcessAttributes* b ) {
 				return a->priority > b->priority;
 			} );
+		m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess ? m_sceneDefaultPostProcess->GetGenericEffectIfAvailable() : nullptr );
 		if( g_enablePostProcessDebugging )
 		{
 			PriorityBlend::AttributesDebugObserver<Tr2PostProcessAttributes> observer;
@@ -395,7 +396,6 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTonemapping( m_sceneDefaultPostProcess->GetTonemappingIfAvailable() );
 			m_combinedPostProcess->SetFog( m_sceneDefaultPostProcess->GetFogIfAvailable() );
 			m_combinedPostProcess->SetGodRays( m_sceneDefaultPostProcess->GetGodRaysIfAvailable() );
-			m_combinedPostProcess->SetGenericEffect( m_sceneDefaultPostProcess->GetGenericEffectIfAvailable() );
 		}
 		else
 		{
@@ -404,7 +404,6 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 			m_combinedPostProcess->SetTonemapping( nullptr );
 			m_combinedPostProcess->SetFog( nullptr );
 			m_combinedPostProcess->SetGodRays( nullptr );
-			m_combinedPostProcess->SetGenericEffect( nullptr );
 		}
 		m_combinedPostProcessAttributes->FromPostProcess( m_combinedPostProcess, PostProcessEnums::MEDIUM_PRIORITY, 1.0f );
 	}

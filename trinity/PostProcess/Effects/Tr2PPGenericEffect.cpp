@@ -234,7 +234,11 @@ void Tr2PPGenericEffect::AddBlendableParameter( const Tr2EffectConstant& constan
 				return;
 			}
 		}
-		blendableParameters.push_back( { param, defaultValue } );
+		auto seen = std::find_if( blendableParameters.begin(), blendableParameters.end(), [&]( const auto& p ) { return p.parameter == param; } );
+		if( seen == blendableParameters.end() )
+		{
+			blendableParameters.push_back( { param, defaultValue } );
+		}
 	};
 
 	switch( constant.dimension )

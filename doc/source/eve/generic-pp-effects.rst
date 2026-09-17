@@ -9,7 +9,7 @@ custom post-processing effects (of type `Tr2PPGenericEffect`). Each of these rep
 
 - `effect`: The shader effect used for this post-processing pass.
 - `quality`: Minimal post-processing quality setting when this effect is visible.
-- `execututionSlot`: Place in the post-processing pipeline where this effect should be executed.
+- `executionSlot`: Place in the post-processing pipeline where this effect should be executed.
 - `order`: The order in which this effect should be applied relative to other effects in the same execution slot.
 
 Effect Files (Shaders)
