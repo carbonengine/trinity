@@ -1163,7 +1163,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSi
 			uav = renderContext.GetUavHeapView();
 			break;
 		default:
-			CCP_AL_LOGWARN( "Missing UAV resource binding for register %u, stage %u", reg.index, reg.stage );
+			CCP_AL_LOGWARN_LIMITED( "Missing UAV resource binding for register %u, stage %u", reg.index, reg.stage );
 			break;
 		}
 

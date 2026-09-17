@@ -2318,7 +2318,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 					}
 					break;
 				default:
-					CCP_AL_LOGWARN( "Missing UAV resource binding for register %u, stage %u", registerIndex, stageIndex );
+					CCP_AL_LOGWARN_LIMITED( "Missing UAV resource binding for register %u, stage %u", registerIndex, stageIndex );
 					break;
 				}
 				uavBegin = std::min( uavBegin, registerIndex );
