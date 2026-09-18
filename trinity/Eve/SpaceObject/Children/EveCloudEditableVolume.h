@@ -155,11 +155,11 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectResourceParameter
-	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+	void UseSRV(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
-		ResourceFlags flags ) const;
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const override;
 	unsigned GetHashValue( unsigned startingHash ) const;
 
 private:

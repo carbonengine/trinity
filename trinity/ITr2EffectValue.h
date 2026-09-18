@@ -33,21 +33,19 @@ BLUE_INTERFACE( ITr2EffectValue ) :
 	{
 	}
 
-	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+	virtual void UseSRV(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
-		ResourceFlags flags ) const
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const
 	{
-		return false;
 	}
 
-	virtual bool ApplyUav(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+	virtual void UseUav(
 		Tr2RenderContextEnum::ShaderType stage,
-		uint32_t registerIndex ) const
+		uint32_t registerIndex,
+		Tr2RenderContext& renderContext ) const
 	{
-		return false;
 	}
 
 	virtual void AddUsedTexture( Tr2BindlessResourcesAL & usedTextures ) const

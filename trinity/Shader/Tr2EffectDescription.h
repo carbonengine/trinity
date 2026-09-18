@@ -205,7 +205,7 @@ struct Tr2Pass
 	unsigned int renderStates;
 	unsigned int shaderTypeMask;
 	unsigned int shaderProgram;
-	Tr2ResourceSetDescriptionAL resourceSetDesc;
+	Tr2StaticResourceBindingsAL staticBindings;
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	Tr2IndirectDrawBufferLayout indirectLayout;
@@ -226,7 +226,7 @@ struct Tr2EffectLibrary
 
 	Tr2EffectStageInput globalInput;
 	Tr2EffectStageInput localInput;
-	Tr2ResourceSetDescriptionAL globalResourceSetDesc;
+	Tr2StaticResourceBindingsAL globalStaticBindings;
 };
 
 

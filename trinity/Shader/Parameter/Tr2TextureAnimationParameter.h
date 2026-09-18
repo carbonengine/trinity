@@ -17,15 +17,15 @@ public:
 
 	bool OnModified( Be::Var * value ) override;
 
-	bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+	void UseSRV(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
-		ResourceFlags flags ) const override;
-	bool ApplyUav(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const override;
+	void UseUav(
 		Tr2RenderContextEnum::ShaderType stage,
-		uint32_t registerIndex ) const override;
+		uint32_t registerIndex,
+		Tr2RenderContext& renderContext ) const override;
 	const char* GetParameterName() const override;
 	void RebuildEffectHandles( Tr2Shader * effectRes ) override;
 	unsigned GetHashValue( unsigned startingHash ) const override;

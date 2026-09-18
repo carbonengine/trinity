@@ -19,36 +19,35 @@ bool Tr2TextureAnimationParameter::OnModified( Be::Var* value )
 	{
 		for( auto it = begin( m_materials ); it != end( m_materials ); ++it )
 		{
-			( *it )->InvalidateResourceSets();
+			( *it )->ResourceChanged();
 		}
 	}
 	return true;
 }
 
-bool Tr2TextureAnimationParameter::CopyToResourceSet(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void Tr2TextureAnimationParameter::UseSRV(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
-	ResourceFlags flags ) const
+	ResourceFlags flags,
+	Tr2RenderContext& renderContext ) const
 {
 	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 	if( m_animation )
 	{
-		return resourceDesc.SetSrv( stage, registerIndex, m_animation->GetTexture( m_channel ), colorSpace );
+		renderContext.SetSrv( stage, registerIndex, m_animation->GetTexture( m_channel ), colorSpace );
 	}
 	else
 	{
-		return resourceDesc.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() ), colorSpace );
+		renderContext.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() ), colorSpace );
 	}
 }
 
-bool Tr2TextureAnimationParameter::ApplyUav(
-	Tr2ResourceSetDescriptionAL& resourceDesc,
+void Tr2TextureAnimationParameter::UseUav(
 	Tr2RenderContextEnum::ShaderType stage,
-	uint32_t registerIndex ) const
+	uint32_t registerIndex,
+	Tr2RenderContext& renderContext ) const
 {
-	return false;
 }
 
 const char* Tr2TextureAnimationParameter::GetParameterName() const

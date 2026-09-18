@@ -31,15 +31,15 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectResourceParameter
-	virtual bool CopyToResourceSet(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+	void UseSRV(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
-		ResourceFlags flags ) const;
-	virtual bool ApplyUav(
-		Tr2ResourceSetDescriptionAL & resourceDesc,
+		ResourceFlags flags,
+		Tr2RenderContext& renderContext ) const override;
+	void UseUav(
 		Tr2RenderContextEnum::ShaderType stage,
-		uint32_t registerIndex ) const;
+		uint32_t registerIndex,
+		Tr2RenderContext& renderContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
