@@ -48,6 +48,8 @@
 #define EVE_SPACEOBJECT_DIRT_LEVEL_DEFAULT ( 0.f )
 #define EVE_SPACEOBJECT_CUSTOWMASK_MAX ( 2 )
 
+extern const BlueSharedString DAMAGE_LOCATOR_SET_NAME;
+
 // forwards
 BLUE_DECLARE_INTERFACE( IEveSpaceObject2 );
 BLUE_DECLARE( EveSpaceObject2 );
@@ -169,6 +171,22 @@ struct EveSpacePerObjectData
 	Vector4 shLighting[7] = {};
 };
 
+struct LocatorSourceRange
+{
+	int32_t start;
+	int32_t count;
+	const class EveSpaceObjectChild* owner;
+	uint32_t partTag;
+	Matrix childToObject = IdentityMatrix();
+};
+
+struct DamageFilterOccluder
+{
+	TriGeometryResPtr geometry;
+	Matrix fromObject;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
+};
 
 // ---------------------------------------------------------------------------------------
 //  Description:
@@ -288,6 +306,12 @@ public:
 	virtual void SetProceduralContainerVariable( const char* name, float value ) override;
 	virtual bool IsPickable() const;
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const;
+	void InvalidateMergedLocators( LocatorInvalidationReason reason ) override;
+
+	void EnsureChildLocatorMerged() const;
+	void UpdateDamageLocatorFilter();
+	EveDamageOverlayPtr EnsureChildDamageOverlay( const LocatorSourceRange& range );
+	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>> & out );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
@@ -332,6 +356,7 @@ public:
 	unsigned int GetDamageLocatorCount() const;
 	int GetClosestDamageLocatorIndex( const Vector3* position );
 	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+	bool GetDamageLocatorBindPosition( int index, Vector3& out ) const;
 	virtual bool GetDamageLocatorDirection( Vector3 * out, int index, bool inWorldSpace );
 	void GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out );
 	int GetGoodDamageLocatorIndex( const Vector3& position );
@@ -388,6 +413,10 @@ public:
 	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
 	void AddToEffectChildrenList( EveSpaceObjectChild * child );
 	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
+	PEveSpaceObjectChildVector& GetEffectChildren()
+	{
+		return m_effectChildren;
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -457,6 +486,12 @@ public:
 	Vector3 GetDamageLocatorDirectionLocal( uint32_t index ) const;
 	const LocatorStructureList* GetLocatorsForSet( const BlueSharedString& setName ) const;
 	void MergeToLocatorSet( const EveLocatorSets& locatorSet );
+	void RunDamageLocatorFilter();
+
+	PEveLocatorSetsVector& GetLocatorSets()
+	{
+		return m_locatorSets;
+	}
 
 	// clear stuff
 	void ClearLocatorSets();
@@ -496,6 +531,7 @@ public:
 
 	// access to impacts
 	void SetImpactOverlay( EveImpactOverlayPtr overlay );
+	EveImpactOverlayPtr GetImpactOverlay() const;
 	void SetImpactDamageState( float shield, float armor, float hull, bool doCreateArmorImpacts );
 	void SetImpactAnimation( const std::string& name, bool enable, float duration );
 	void ClearImpactDamage();
@@ -535,6 +571,9 @@ public:
 	void SetInheritProperties( const Color* colorSet ) override;
 
 	void SetMute( bool isMute );
+
+	float GetBoundingSphereRadius() const;
+	Vector3 GetBoundingSphereCenter() const;
 
 protected:
 	// Activation-Strength
@@ -633,9 +672,6 @@ protected:
 	bool m_allAreasCastShadow;
 	void CacheAllAreasCastShadow();
 
-	float GetBoundingSphereRadius() const;
-	Vector3 GetBoundingSphereCenter() const;
-
 	Vector4 CalculateSkinnedBoundingSphere();
 	std::pair<Vector3, Vector3> CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform );
 
@@ -729,7 +765,9 @@ protected:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
-	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator ) const;
+	// Pass the locator's index in the merged damage locator set as mergedDamageIndex so that
+	// locators owned by a child part get the child's bone pose applied; -1 for other sets.
+	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -760,7 +798,13 @@ protected:
 private:
 #if BLUE_WITH_PYTHON
 	static PyObject* PyTransformLocators( PyObject * self, PyObject * args );
+	static PyObject* PyGetTransformedLocatorsFromSet( PyObject * self, PyObject * args );
 #endif
+
+	void ReleaseDamageFilterSessions();
+	bool CollectOccluders();
+	bool AreOccludersReadyForRaycasts();
+	void RefreshDamageLocatorMask( const LocatorStructureList* damageLocators );
 
 	bool m_dynamicBoundingSphereEnabled;
 
@@ -776,6 +820,21 @@ private:
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
 	Tr2RingBufferOffsets m_boneOffsets;
+
+	mutable std::vector<LocatorSourceRange> m_mergedDamageLocatorSources; // Ranges identifying damage locators owners in m_mergedLocatorSets.
+	mutable std::vector<EveLocatorSetsPtr> m_mergedLocatorSets; // Locator sets of this object and all children.
+	std::vector<bool> m_damageLocatorEnabled; // Mask for damage locators in m_mergedLocatorSets to filter selection.
+	mutable bool m_mergedLocatorSetsDirty; // Does m_mergedLocatorSets need to be rebuilt?
+	bool m_damageLocatorAutoFilterEnabled; // For debugging purposes: Shall we run damage locator filtering whenever parts are moved?
+	bool m_damageLocatorFilterRequested; // Did someone request filtering damage locator?
+	std::vector<DamageFilterOccluder> m_damageFilterOccluders; // Occluders used during damage locator filtering (geometry to raycast against).
+	std::vector<EveChildGeometryArea> m_damageFilterAreas; // Areas referenced by m_damageFilterOccluders.
+	enum class DamageFilterState // State machine for damage locator filtering, since we have to wait on stuff before we can start raycasting.
+	{
+		Idle, // No need to run filtering this frame.
+		Pending, // Filtering has been requested. We need to collect occluders and wait until their geometry IsPrepared.
+		SessionActive // Occluders have been collected. We need to wait until the BVH is ready, and then we can start raycasting.
+	} m_damageFilterState;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObject2 );

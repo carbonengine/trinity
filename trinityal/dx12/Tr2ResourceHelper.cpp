@@ -120,9 +120,14 @@ void Tr2ResourceHelper::Destroy( Tr2PrimaryRenderContextAL& renderContext )
 		RELEASE_LATER( &renderContext, m_gpuResource.resource );
 		m_gpuResource = Resource();
 	}
-	for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
+	if( m_mapped.resource )
 	{
-		RELEASE_LATER( &renderContext, it->resource );
+		RELEASE_LATER( &renderContext, m_mapped.resource );
+		m_mapped = Resource();
+	}
+	for( auto& resource : m_resources )
+	{
+		RELEASE_LATER( &renderContext, resource.resource );
 	}
 	m_resources.clear();
 }
@@ -271,6 +276,7 @@ ALResult Tr2ResourceHelper::UpdateBuffer( Tr2LockType::Type lockType, uint32_t o
 		}
 
 		RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
+		m_mapped = Resource();
 
 		return S_OK;
 	}

@@ -496,7 +496,7 @@ void EveSwarm::UpdateAsyncronous( const EveUpdateContext& context )
 
 void EveSwarm::UpdateSwarm( Be::Time t )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	if( t == m_timeLast )
 	{
 		return;
@@ -1079,9 +1079,9 @@ void EveSwarm::EnableSwarmForceDebug( bool enable )
 }
 
 // --------------------------------------------------------------------------------
-void EveSwarm::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const
+void EveSwarm::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator, int mergedDamageIndex ) const
 {
-	EveShip2::GetLocatorInObjectSpace( position, direction, locator );
+	EveShip2::GetLocatorInObjectSpace( position, direction, locator, mergedDamageIndex );
 	if( m_count )
 	{
 		Matrix localTransform = *m_renderables[m_targetIndex]->GetWorldTransform() * m_invWorldTransform;
@@ -1109,7 +1109,7 @@ bool EveSwarm::GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSp
 			const Locator& damageLocator = ( *damageLocators )[index];
 
 			Vector3 position, direction;
-			GetLocatorInObjectSpace( position, direction, damageLocator );
+			GetLocatorInObjectSpace( position, direction, damageLocator, index );
 
 			if( inWorldSpace )
 			{

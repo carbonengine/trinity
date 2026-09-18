@@ -78,7 +78,7 @@ ALResult Tr2RtTopLevelAccelerationStructureAL::Create( const size_t count, const
 	uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	uavBarrier.UAV.pResource = nullptr;
 	uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	renderContext.m_commandList->ResourceBarrier( 1, &uavBarrier );
+	TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &uavBarrier );
 
 	size_t capacity = Align( count, 128 );
 
@@ -165,7 +165,7 @@ ALResult Tr2RtTopLevelAccelerationStructureAL::Create( const size_t count, const
 	topLevelUavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	topLevelUavBarrier.UAV.pResource = buffer.TrinityALImpl_GetObject()->GetGpuResource();
 	topLevelUavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	renderContext.m_commandList->ResourceBarrier( 1, &topLevelUavBarrier );
+	TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &topLevelUavBarrier );
 
 	return S_OK;
 }
@@ -195,7 +195,7 @@ ALResult Tr2RtTopLevelAccelerationStructureAL::Update( const size_t count, const
 	uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	uavBarrier.UAV.pResource = nullptr;
 	uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	renderContext.m_commandList->ResourceBarrier( 1, &uavBarrier );
+	TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &uavBarrier );
 
 	CComPtr<ID3D12Resource> uploadBuffer;
 	auto completed = m_owner->GetRenderedFrameNumber();
@@ -256,7 +256,7 @@ ALResult Tr2RtTopLevelAccelerationStructureAL::Update( const size_t count, const
 	topLevelUavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
 	topLevelUavBarrier.UAV.pResource = m_buffer.TrinityALImpl_GetObject()->GetGpuResource();
 	topLevelUavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	renderContext.m_commandList->ResourceBarrier( 1, &topLevelUavBarrier );
+	TrinityALImpl::ResourceBarrier( renderContext.m_commandList, 1, &topLevelUavBarrier );
 
 	return S_OK;
 }

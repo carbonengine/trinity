@@ -16,6 +16,15 @@ struct Tr2MorphTargetAnimationData
 	float m_weight;
 };
 
+struct Tr2ChildBoosterInstanceData
+{
+	Float4x3 transform;
+	float intensity;
+	float wavePhase;
+	uint32_t atlasIndex0;
+	uint32_t atlasIndex1;
+};
+
 BLUE_CLASS( Tr2RingBuffer ) :
 	public ITr2GpuBuffer,
 	public Tr2DeviceResource

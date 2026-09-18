@@ -367,6 +367,33 @@ void EmitOverlayBatches(
 	EmitOverlayBatchesImpl( batches, perObjectData, batchType, overlayEffects, areaBlocks, lod );
 }
 
+void EmitDamageOverlayBatches(
+	ITriRenderBatchAccumulator* batches,
+	const Tr2PerObjectData* perObjectData,
+	Tr2Effect* effect,
+	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
+	const TriGeometryResLodData& lod )
+{
+	for( auto& areaBlock : areaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
+	{
+		if( auto primCount = GetPrimitiveCount( lod, areaBlock.m_startIndex, areaBlock.m_count ) )
+		{
+			Tr2RenderBatch batch;
+			batch.SetMaterial( effect );
+			batch.SetPriority( 0xFFFFFFFF );
+			batch.SetGeometry( lod.m_mesh->m_vertexDeclarationHandle, lod.m_vertexAllocation, lod.m_indexAllocation );
+			batch.SetPerObjectData( perObjectData );
+			batch.SetDrawIndexedInstanced(
+				primCount * 3,
+				1,
+				lod.m_indexAllocation.GetStartIndex() + lod.m_areas[areaBlock.m_startIndex].m_firstIndex,
+				lod.m_vertexAllocation.GetOffset() / lod.m_vertexAllocation.GetStride(),
+				0 );
+			batches->Commit( batch );
+		}
+	}
+}
+
 void EmitOverlayBatches(
 	ITriRenderBatchAccumulator* batches,
 	const Tr2PerObjectData* perObjectData,

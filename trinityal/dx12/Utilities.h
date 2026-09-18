@@ -20,6 +20,10 @@ D3D12_RESOURCE_BARRIER AliasBarrier(
 	ID3D12Resource* before,
 	ID3D12Resource* after );
 
+void SetDredMarker( ID3D12GraphicsCommandList* commandList, const char* text );
+
+void ResourceBarrier( ID3D12GraphicsCommandList* commandList, UINT count, const D3D12_RESOURCE_BARRIER* barriers );
+
 D3D12_HEAP_PROPERTIES HeapDesc( D3D12_HEAP_TYPE type );
 
 void MemcpySubresource(

@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "EveSpaceObjectChild.h"
+#include "Tr2MeshBase.h"
 
 
 EveSpaceObjectChild::EveSpaceObjectChild( IRoot* )
@@ -126,6 +127,58 @@ EveSpaceObjectChild* EveSpaceObjectChild::GetParent() const
 	return m_parent;
 }
 
+void EveSpaceObjectChild::CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const
+{
+}
+
+void EveSpaceObjectChild::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
+{
+}
+
+EveDamageOverlayPtr EveSpaceObjectChild::GetPartDamageOverlay( PartTag ) const
+{
+	return nullptr;
+}
+
+void EveSpaceObjectChild::CreatePartDamageOverlay( PartTag )
+{
+}
+
+Tr2Effect* EveSpaceObjectChild::GetPartArmorDamageShaderEffect( PartTag ) const
+{
+	return nullptr;
+}
+
+bool EveSpaceObjectChild::GetPartDamageLocatorAnimatedLocal( PartTag, int, Vector3&, Vector3& ) const
+{
+	return false;
+}
+
+void EveCollectAreas( TriBatchType type, Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool )
+{
+	if( !mesh )
+	{
+		return;
+	}
+
+	Tr2MeshAreaVector* areas = mesh->GetAreas( type );
+
+	if( !areas )
+	{
+		return;
+	}
+
+	for( auto it = begin( *areas ); it != end( *areas ); it++ )
+	{
+		EveChildGeometryArea area;
+		area.index = uint32_t( ( *it )->GetIndex() );
+		area.count = uint32_t( ( *it )->GetCount() );
+		area.alphaCutout = ( *it )->IsAlphaCutout();
+		area.reversed = ( *it )->IsReversed();
+		areaPool.push_back( area );
+	}
+}
+
 void EveSpaceObjectChild::RegisterChild( EveSpaceObjectChild* child )
 {
 	if( child )
@@ -143,7 +196,7 @@ void EveSpaceObjectChild::UnregisterChild( EveSpaceObjectChild* child )
 {
 	if( child )
 	{
-		CCP_ASSERT( child->GetParent() == this );
+		CCP_ASSERT( child->GetParent() == this || child->GetParent() == nullptr );
 		child->SetParent( nullptr );
 		child->SetOwner( nullptr );
 		// No reason to reset the part tag as it is meaningless outside the hierarchy of the parent object

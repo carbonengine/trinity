@@ -7,6 +7,7 @@
 #include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
+#include "Eve/SpaceObject/Attachments/EveDamageOverlay.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Eve/SpaceObject/Attachments/IEveSpaceObjectDecalOwner.h"
 #include "Lights/Tr2Light.h"
@@ -27,6 +28,7 @@ BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE( Tr2GpuBufferWrapper );
+BLUE_DECLARE( Tr2Effect );
 
 extern Tr2SuballocatedBuffer g_bakedMorphTargetBuffer;
 
@@ -82,8 +84,8 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void GetLocalToWorldTransform( Matrix & transform ) const;
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
@@ -93,7 +95,7 @@ public:
 	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
 	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
-
+	void SetOwner( IEveSpaceObject2 * owner ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -160,6 +162,7 @@ public:
 	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	// access
+	Tr2MeshBase* GetMesh() const;
 	void SetMesh( Tr2MeshBase * mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );
@@ -196,11 +199,26 @@ public:
 	bool IsMorphsBaked() const;
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 
+	void CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const override;
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
+	void SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets );
+	void InvalidateOwnerMergedLocators( LocatorInvalidationReason reason );
+
+	EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const override;
+	void CreatePartDamageOverlay( PartTag partTag ) override;
+	Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const override;
+	bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const override;
+
+	void SetArmorDamageShaderEffect( Tr2Effect * effect );
+	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
+
 protected:
+	const LocatorStructureList* GetOwnedDamageLocators() const;
+
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
-	void InitializeAnimation();
+	virtual void InitializeAnimation();
 	bool ShouldReflect() const;
 
 	bool DisplayDecals() const;
@@ -304,6 +322,15 @@ protected:
 		uint32_t m_bakedCount;
 		uint32_t m_allCount;
 	} m_morphAnimationOffsets;
+
+	void ReleaseBvhVisualization();
+	TriGeometryResPtr m_bvhVisualizationGeometry;
+
+	std::vector<EveLocatorSetsPtr> m_ownedLocatorSets;
+
+	// armor/hull damage owned by this part, renders whether or not it is attached to a ship
+	EveDamageOverlayPtr m_damageOverlay;
+	Tr2EffectPtr m_armorDamageShader;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

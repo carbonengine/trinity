@@ -633,7 +633,7 @@ EveSOFDataMgr::HullAreas EveSOFDataMgr::LoadHullAreaData( const EveSOFDataHullAr
 	for( auto paramIt = areaData->m_parameters.begin(); paramIt != areaData->m_parameters.end(); paramIt++ )
 	{
 		EveSOFDataParameter* param = *paramIt;
-		ha.parameters[param->m_name] = param->m_value;
+		ha.parameters[param->m_name] = param->GetValue();
 	}
 	return ha;
 }
@@ -695,6 +695,18 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		HullBoosterData hbd;
 		hbd.alwaysOn = boosterData->m_alwaysOn;
 		hbd.hasTrails = boosterData->m_hasTrails;
+		hbd.driveName = boosterData->m_driveName;
+		hbd.effectPath = boosterData->m_effectPath;
+		for( const auto& parameter : boosterData->m_parameters )
+		{
+			hbd.parameters[parameter->m_name] = parameter->GetValue();
+		}
+		for( const auto& texture : boosterData->m_textures )
+		{
+			TextureData td;
+			td.resFilePath = texture->m_resFilePath;
+			hbd.textures[texture->m_name] = td;
+		}
 
 		// booster items
 		for( auto biit = boosterData->m_items.begin(); biit != boosterData->m_items.end(); ++biit )
@@ -973,7 +985,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			{
 				EveSOFDataParameterPtr parameterData = ( *hdpit );
 
-				itemData.parameters[parameterData->m_name] = parameterData->m_value;
+				itemData.parameters[parameterData->m_name] = parameterData->GetValue();
 			}
 			decalSetData.items.push_back( itemData );
 		}
@@ -1474,7 +1486,7 @@ void EveSOFDataMgr::GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) 
 		{
 			EveSOFDataParameterPtr param = ( *adpit );
 
-			rd.damage.armorDamageParameters[param->m_name] = param->m_value;
+			rd.damage.armorDamageParameters[param->m_name] = param->GetValue();
 		}
 		for( auto adtit = srcData->m_damage->m_armorImpactTextures.begin(); adtit != srcData->m_damage->m_armorImpactTextures.end(); ++adtit )
 		{
@@ -1488,7 +1500,7 @@ void EveSOFDataMgr::GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) 
 		{
 			EveSOFDataParameterPtr param = ( *sdpit );
 
-			rd.damage.shieldDamageParameters[param->m_name] = param->m_value;
+			rd.damage.shieldDamageParameters[param->m_name] = param->GetValue();
 		}
 		for( auto sdtit = srcData->m_damage->m_shieldImpactTextures.begin(); sdtit != srcData->m_damage->m_shieldImpactTextures.end(); ++sdtit )
 		{
@@ -1850,7 +1862,7 @@ void EveSOFDataMgr::GenerateMaterialData( MaterialData& rd, EveSOFDataMaterialPt
 	{
 		EveSOFDataParameterPtr parameterData = ( *mpit );
 
-		rd.parameters[parameterData->m_name] = parameterData->m_value;
+		rd.parameters[parameterData->m_name] = parameterData->GetValue();
 	}
 }
 
@@ -1959,7 +1971,7 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		for( auto pdit = shaderData->m_defaultParameters.begin(); pdit != shaderData->m_defaultParameters.end(); ++pdit )
 		{
 			EveSOFDataParameterPtr paramData = ( *pdit );
-			gsd.defaultParameters[paramData->m_name] = paramData->m_value;
+			gsd.defaultParameters[paramData->m_name] = paramData->GetValue();
 		}
 
 		gsd.shader = shaderData->m_shader.c_str();
@@ -2001,7 +2013,7 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		for( auto pdit = shaderData->m_defaultParameters.begin(); pdit != shaderData->m_defaultParameters.end(); ++pdit )
 		{
 			EveSOFDataParameterPtr paramData = ( *pdit );
-			gsd.defaultParameters[paramData->m_name] = paramData->m_value;
+			gsd.defaultParameters[paramData->m_name] = paramData->GetValue();
 		}
 
 		for( auto spit = shaderData->m_parameters.begin(); spit != shaderData->m_parameters.end(); ++spit )

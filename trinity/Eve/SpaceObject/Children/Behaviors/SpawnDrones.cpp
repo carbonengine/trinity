@@ -25,7 +25,7 @@ SpawnDrones::~SpawnDrones()
 
 void SpawnDrones::UpdateGrid( BehaviorGroup& group )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// for behaviors to work we always have to add one decoy drone, delete that one so he doesn't mess up the cube
 	for( unsigned int i = 0; i < group.GetCount(); i++ )
@@ -86,7 +86,7 @@ void SpawnDrones::UpdateGrid( BehaviorGroup& group )
 
 std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Vector3> noNeedToReturnForces;
 	if( !m_enabled )

@@ -23,13 +23,6 @@ BLUE_CLASS( BehaviorGroupBooster ) :
 	public INotify
 {
 public:
-	// booster vertex data
-	struct BoosterVertex
-	{
-		Vector3 position;
-		Vector2 texCoord;
-	};
-
 	struct Quad
 	{
 		Quad()

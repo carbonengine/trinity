@@ -591,7 +591,7 @@ void EveSpaceObjectDecal::SetBoneIndex( int idx )
 // ------------------------------------------------------------------------------------------------------
 void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache& meshCache )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -826,7 +826,7 @@ void EveSpaceObjectDecal::SetMinScreenSize( float minScreenSize )
 
 void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 

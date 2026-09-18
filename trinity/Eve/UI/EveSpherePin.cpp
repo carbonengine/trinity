@@ -185,7 +185,7 @@ void EveSpherePin::ReleaseCachedData( BlueAsyncRes* p )
 // ------------------------------------------------------------------------------------------------------
 void EveSpherePin::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_tree )
 	{
@@ -414,7 +414,7 @@ void EveSpherePin::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2Pi
 // --------------------------------------------------------------------------------
 void EveSpherePinPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// set to VS
 	int vsConstantCount = 4 + 6;

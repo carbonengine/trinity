@@ -457,6 +457,41 @@ void Tr2GrannyAnimationLayer::ClearMorphTracks( granny_control* control )
 }
 #endif
 
+void Tr2GrannyAnimationLayer::StopAnimations( float delay )
+{
+	m_animationQueue.clear();
+
+	if( m_sequencer )
+	{
+		const float animationTime = GetLayerAnimationTime();
+		m_sequencer->EnumerateAnimations( [&]( const std::shared_ptr<cmf::AnimationPlayer>& player ) {
+			player->SetStopTime( animationTime + delay );
+			if( delay <= 0.f )
+			{
+				ClearMorphTracks( player.get() );
+			}
+		} );
+		m_sequencer->RemoveFinishedAnimations( animationTime );
+	}
+
+#if WITH_GRANNY
+	if( m_modelInstance )
+	{
+		for( granny_model_control_binding* binding = GrannyModelControlsBegin( m_modelInstance ); binding != GrannyModelControlsEnd( m_modelInstance ); )
+		{
+			granny_control* control = GrannyGetControlFromBinding( binding );
+			binding = GrannyModelControlsNext( binding );
+			GrannyCompleteControlAt( control, GetLayerAnimationTime() + delay );
+			if( GrannyFreeControlIfComplete( control ) )
+			{
+				ClearTextTracks( control );
+				ClearMorphTracks( control );
+			}
+		}
+	}
+#endif
+}
+
 void Tr2GrannyAnimationLayer::ClearAnimations()
 {
 	m_animationQueue.clear();

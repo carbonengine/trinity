@@ -192,7 +192,7 @@ Tr2Sprite2dScene::~Tr2Sprite2dScene()
 
 void Tr2Sprite2dScene::Update( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_realTime = realTime;
 	m_simTime = simTime;
@@ -222,7 +222,7 @@ void Tr2Sprite2dScene::Update( Be::Time realTime, Be::Time simTime )
 
 void Tr2Sprite2dScene::Render( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	D3DPERF_EVENT( L"Tr2Sprite2dScene::Render" );
 
 	if( !m_display || !renderContext.IsValid() )
@@ -385,7 +385,7 @@ void Tr2Sprite2dScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 
 void Tr2Sprite2dScene::PushTranslation( const Vector2& t )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	TransformStackEntry entry;
 	entry.isTranslationOnlySet = true;
@@ -419,7 +419,7 @@ void Tr2Sprite2dScene::PushTranslation( const Vector2& t )
 
 void Tr2Sprite2dScene::PopTranslation()
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( !m_transformStack->empty() );
 	CCP_ASSERT( m_transformStack->back().isTranslationOnlySet );
@@ -444,7 +444,7 @@ const Vector2& Tr2Sprite2dScene::GetTranslation() const
 
 void Tr2Sprite2dScene::PushDepthRange( float depthMin, float depthMax )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_is2dRenderContext )
 	{
@@ -471,7 +471,7 @@ void Tr2Sprite2dScene::PushDepthRange( float depthMin, float depthMax )
 
 void Tr2Sprite2dScene::PopDepthRange()
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_is2dRenderContext )
 	{
@@ -484,7 +484,7 @@ void Tr2Sprite2dScene::PopDepthRange()
 
 void Tr2Sprite2dScene::SetDepth( float depth )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_is2dRenderContext )
 	{
@@ -499,7 +499,7 @@ void Tr2Sprite2dScene::SetDepth( float depth )
 
 void Tr2Sprite2dScene::PushTransform( const Matrix& m )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	TransformStackEntry entry;
 	entry.isTranslationOnly = false;
@@ -529,7 +529,7 @@ void Tr2Sprite2dScene::PushTransform( const Matrix& m )
 
 void Tr2Sprite2dScene::PopTransform()
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( !m_transformStack->empty() );
 	CCP_ASSERT( !m_transformStack->back().isTranslationOnly );
@@ -557,7 +557,7 @@ void Tr2Sprite2dScene::PopTransformAbsolute()
 
 void Tr2Sprite2dScene::PushClipRectangle( float x, float y, float width, float height )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( width >= 0.0f );
 	CCP_ASSERT( height >= 0.0f );
@@ -678,7 +678,7 @@ void Tr2Sprite2dScene::PushClipRectangle( float x, float y, float width, float h
 
 void Tr2Sprite2dScene::PopClipRectangle()
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_ignoreClip )
 	{
@@ -705,7 +705,7 @@ const Tr2Sprite2dClipRect& Tr2Sprite2dScene::GetClipRectangle() const
 
 void Tr2Sprite2dScene::SetTexture( unsigned ix, Tr2AtlasTexturePtr tex, Tr2Sprite2dTextureSettings settings )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_STATS_INC( spriteSceneTextureCount );
 
@@ -780,7 +780,7 @@ void Tr2Sprite2dScene::SetTexture( unsigned ix, Tr2AtlasTexturePtr tex, Tr2Sprit
 
 void Tr2Sprite2dScene::SetTextureWindow( unsigned int ix, float x, float y, float width, float height )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( ix < 2 );
 
@@ -793,7 +793,7 @@ void Tr2Sprite2dScene::SetTextureWindow( unsigned int ix, float x, float y, floa
 
 void Tr2Sprite2dScene::SetTextureTransform( unsigned int ix, Matrix* m )
 {
-	//CCP_STATS_ZONE( __FUNCTION__ );
+	//TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( ix < 2 );
 
@@ -832,7 +832,7 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 	float height,
 	Tr2SpriteObjectEffect sfx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !TexturesReady() )
 	{
@@ -889,7 +889,7 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 	}
 
 	{
-		//CCP_STATS_ZONE( __FUNCTION__ " vertices" );
+		//TRINITY_STATS_ZONE( __FUNCTION__ " vertices" );
 		for( int i = 0; i < 4; ++i )
 		{
 			Tr2Sprite2dD3DVertex& vertex = destVerts[i];
@@ -924,7 +924,7 @@ bool Tr2Sprite2dScene::PrepareSpriteVerts(
 
 bool Tr2Sprite2dScene::PrepareTriangleVerts( Tr2Sprite2dD3DVertex* destVerts, Tr2Sprite2dVertexBase* verts, unsigned int stride, unsigned int vertexCount )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !TexturesReady() )
 	{
@@ -1048,7 +1048,7 @@ void Tr2Sprite2dScene::IssueDrawCall()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	CCP_STATS_INC( spriteSceneDrawCallCount );
 
 	if( !m_indexCount )
@@ -1165,7 +1165,7 @@ void Tr2Sprite2dScene::IssueDrawCall()
 
 void Tr2Sprite2dScene::SubmitGeometry( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Error checking is done in IssueDrawCall - we won't get here unless the effect
 	// is valid, as well as the constant table and transforms handle.
@@ -1592,7 +1592,7 @@ bool Tr2Sprite2dScene::IsInsideTriangle( const Vector2& pointIn, const Vector2& 
 
 void Tr2Sprite2dScene::StartLayer( Tr2TextureAL& rt )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	D3DPERF_EVENT( L"Tr2Sprite2dScene::StartLayer" );
@@ -1631,7 +1631,7 @@ void Tr2Sprite2dScene::StartLayer( Tr2TextureAL& rt )
 
 void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height, ITr2Sprite2dTexture* secondaryTexture )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	D3DPERF_EVENT( L"Tr2Sprite2dScene::EndLayer" );
@@ -1754,7 +1754,7 @@ float Tr2Sprite2dScene::GetAccumulatedAlpha() const
 
 void Tr2Sprite2dScene::RunJob( TriRenderJob* job )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( job );
 
@@ -1940,7 +1940,7 @@ void Tr2Sprite2dScene::SetGlowBrightness( float glowBrightness )
 //////////////////////////////////////////////////////////////////////////
 bool Tr2Sprite2dScene::StartCapture( ITr2SpriteObject* owner )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	CCP_STATS_INC( spriteSceneDisplayListsCreated );
 
 	CCP_ASSERT( !m_captureDisplayList );
@@ -1973,7 +1973,7 @@ bool Tr2Sprite2dScene::StartCapture( ITr2SpriteObject* owner )
 
 Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* previousDisplayList )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( m_captureDisplayList );
 	if( !m_captureDisplayList )
@@ -2072,7 +2072,7 @@ Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* pr
 
 void Tr2Sprite2dScene::ReplayCapture( Tr2Sprite2dDisplayList* dl )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -2462,7 +2462,7 @@ void Tr2Sprite2dScene::SetSpriteVerticesUVs( Vector2 uv[2][4], float width, floa
 // vertices that need to be added.
 void Tr2Sprite2dScene::GrowCaptureVertexBuffer( unsigned int vertexCount )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_captureVertexDataCapacity *= 2;
 	if( m_captureVertexDataSize + vertexCount >= m_captureVertexDataCapacity )
@@ -2480,7 +2480,7 @@ void Tr2Sprite2dScene::GrowCaptureVertexBuffer( unsigned int vertexCount )
 // indices that need to be added.
 void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned short indexCount )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_captureIndexDataCapacity *= 2;
 	if( m_captureIndexDataSize + indexCount >= m_captureIndexDataCapacity )
@@ -2512,7 +2512,7 @@ bool Tr2Sprite2dScene::EnsureBufferSpace( unsigned int vertexCount, unsigned sho
 {
 	if( m_captureDisplayList )
 	{
-		CCP_STATS_ZONE( "Tr2Sprite2dScene::EnsureBufferSpace capture" );
+		TRINITY_STATS_ZONE( "Tr2Sprite2dScene::EnsureBufferSpace capture" );
 
 		// Ensure we have enough space for vertices.
 		if( m_captureVertexDataSize + vertexCount >= m_captureVertexDataCapacity )

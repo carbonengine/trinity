@@ -75,6 +75,17 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 }
 #endif
 
+#ifndef PYTHON2_SUPPORT
+
+const CcpTelemetryCategory& TrinityTelemetryCategory()
+{
+	static const CcpTelemetryCategory& category =
+		CcpTelemetryCategoryRegister( "trinity", CcpColor::PowderBlue ).first;
+	return category;
+}
+
+#endif
+
 #if BLUE_WITH_PYTHON
 
 #if PY_MAJOR_VERSION == 2
@@ -173,6 +184,7 @@ PyObject* InitializeForPython()
 
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
+extern bool g_requestDred;
 extern bool g_gpuTimersEnabled;
 bool g_bindlessRenderingEnabled = true;
 TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
@@ -239,6 +251,12 @@ void InitializeTrinity()
 	if( !debugArg.empty() )
 	{
 		g_requestDeviceDebugLayer = debugArg == L"1";
+	}
+
+	auto dredArg = BeOS->GetStartupArgValue( L"dred" );
+	if( !dredArg.empty() )
+	{
+		g_requestDred = dredArg == L"1";
 	}
 
 	auto markersArg = BeOS->GetStartupArgValue( L"gpuMarkers" );

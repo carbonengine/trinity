@@ -10,6 +10,7 @@
 
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2Effect );
+BLUE_DECLARE( EveLocatorSets );
 
 
 BLUE_CLASS( EveChildInstancedMeshes ) :
@@ -76,6 +77,8 @@ public:
 		TriBatchType batchType = TRIBATCHTYPE_OPAQUE;
 		uint32_t areaIndex = 0;
 		uint32_t areaCount = 1;
+		bool alphaCutout = false;
+		bool reversed = false;
 		uint64_t effectHash = 0;
 		EveInstancedMeshManager::MeshGroupHandle meshGroupHandle;
 	};
@@ -90,12 +93,19 @@ public:
 		const Matrix* instanceTransforms,
 		size_t count,
 		const BlueSharedString& sofHullName,
-		const BlueSharedString& sofLocatorSetName );
+		const BlueSharedString& sofLocatorSetName,
+		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG,
+		const std::vector<EveLocatorSetsPtr>& ownedLocatorSets = {},
+		Tr2Effect* armorDamageShader = nullptr );
+
+	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
+	void SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
 
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
 	uint32_t GetMeshCount() const;
 	BluePy GetMeshInfo( uint32_t meshId ) const;
 	BluePy GetAreaInfo( uint32_t meshId, uint32_t areaId ) const;
+	BluePy GetInstancesTransforms( uint32_t meshId ) const;
 	BluePy GetMeshDisplay( uint32_t meshId ) const;
 	BluePy SetMeshDisplay( uint32_t meshId, bool display );
 	BluePy GetMeshInheritOverlayEffects( uint32_t meshId ) const;
@@ -105,6 +115,15 @@ public:
 	BluePy RemoveMeshOverlayEffect( uint32_t meshId, EveMeshOverlayEffect* overlayEffect );
 	BluePy ClearMeshOverlayEffects( uint32_t meshId );
 	BluePy GetMeshOverlayEffectCount( uint32_t meshId ) const;
+
+	void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const override;
+
+	void CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const override;
+
+	EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const override;
+	void CreatePartDamageOverlay( PartTag partTag ) override;
+	Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const override;
+	bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const override;
 
 private:
 	// per-instance constant buffers for overlay draws
@@ -134,11 +153,15 @@ private:
 
 		std::vector<EveInstancedMeshManager::StaticPerInstanceData> instances;
 		std::vector<CcpMath::Sphere> instanceSpheres;
+		std::vector<uint32_t> partTags;
 
 		EveInstancedMeshManager::BoundingSphereHandle sphereHandle;
 
 		BlueSharedString sofHullName;
 		BlueSharedString sofLocatorSetName;
+
+		std::vector<EveLocatorSetsPtr> ownedLocatorSets;
+		Tr2EffectPtr armorDamageShader;
 
 		struct RayTracingArea
 		{
@@ -168,11 +191,15 @@ private:
 	void RebuildCachedData( BlueAsyncRes * p ) override;
 	void UnregisterFromMeshManager();
 
-	void UpdateOverlayInstanceData( const EveSpaceObjectVSData& parentVsData, const EveSpaceObjectPSData& parentPsData );
+	void UpdateOverlayInstanceData( const EveUpdateContext& updateContext, const EveSpaceObjectVSData& parentVsData, const EveSpaceObjectPSData& parentPsData );
 	static void RebuildOverlayAreaBlocks( Mesh & mesh );
 	bool HasAnyOwnOverlayEffects() const;
 	bool AnyMeshInheritsOverlayEffects() const;
 	bool MeshHasActiveOverlayEffects( const Mesh& mesh ) const;
+	const Mesh* FindMeshByPartTag( PartTag partTag, size_t* instanceIndex = nullptr ) const;
+	EveDamageOverlay* FindPartDamageOverlay( PartTag partTag ) const;
+	bool MeshHasDamageOverlays( const Mesh& mesh ) const;
+	bool MeshNeedsOverlayPods( const Mesh& mesh ) const;
 
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;
@@ -185,6 +212,7 @@ private:
 	EveInstancedMeshManager::PerObjectDataHandle m_perObjectDataHandle;
 	EveInstancedMeshManager::PerObjectDataHandle m_perObjectDataNoClipHandle;
 	std::vector<Mesh> m_meshes;
+	std::map<PartTag, EveDamageOverlayPtr> m_partDamageOverlays;
 	TriFrustum m_lastCameraFrustum;
 	float m_lastInvLodFactor = 1.0f;
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;

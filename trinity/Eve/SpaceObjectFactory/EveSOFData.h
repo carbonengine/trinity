@@ -23,12 +23,42 @@ public:
 	{
 	}
 
+	virtual Vector4 GetValue() const
+	{
+		return m_value;
+	}
+
 	// simple shader parameter
 	BlueSharedString m_name;
+
+private:
 	Vector4 m_value;
 };
 TYPEDEF_BLUECLASS( EveSOFDataParameter );
 BLUE_DECLARE_VECTOR( EveSOFDataParameter );
+
+
+#define SOF_PARAM_DECLARE( _className, _valueType ) \
+	BLUE_CLASS( _className ) :                      \
+		public EveSOFDataParameter                  \
+	{                                               \
+	public:                                         \
+		EXPOSE_TO_BLUE();                           \
+		_className( IRoot* lockobj = nullptr );     \
+		Vector4 GetValue() const override;          \
+                                                    \
+	private:                                        \
+		_valueType m_value;                         \
+	};                                              \
+	TYPEDEF_BLUECLASS( _className );
+
+SOF_PARAM_DECLARE( EveSOFDataParameterBool, bool );
+SOF_PARAM_DECLARE( EveSOFDataParameterInt, int32_t );
+SOF_PARAM_DECLARE( EveSOFDataParameterFloat, float );
+SOF_PARAM_DECLARE( EveSOFDataParameterVector2, Vector2 );
+SOF_PARAM_DECLARE( EveSOFDataParameterVector3, Vector3 );
+SOF_PARAM_DECLARE( EveSOFDataParameterColor, Color );
+
 
 BLUE_CLASS( EveSOFDataGenericString ) :
 	public IRoot
@@ -1056,6 +1086,10 @@ public:
 
 	// per-hull data of a booster
 	bool m_alwaysOn, m_hasTrails;
+	BlueSharedString m_driveName;
+	BlueSharedString m_effectPath;
+	PEveSOFDataTextureVector m_textures;
+	PEveSOFDataParameterVector m_parameters;
 	PEveSOFDataHullBoosterItemVector m_items;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullBooster );

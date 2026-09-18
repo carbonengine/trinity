@@ -238,14 +238,9 @@ public:
 
 private:
 	bool OnPrepareResources();
+	struct EveBoosterFlareParams GetFlareParams() const;
 
 public:
-	// vertex data from stream0: booster geometry
-	struct BoosterVertex
-	{
-		Vector3 position;
-		Vector2 texCoord;
-	};
 	// vertex data for stream1: transform and random wave-phase
 	struct InstanceVertex
 	{
@@ -267,11 +262,12 @@ public:
 
 	// The point light contributed by one booster, computed from its EveBoosterItem by Add().
 	// Parallel to m_boosters: same index, same count. Never persisted.
+	// Field names match what the AddBoosterLights template in EveBoosterUtilities.h expects.
 	struct BoosterLight
 	{
-		Vector3 position;
-		float radius;
-		float phase;
+		Vector3 lightPosition;
+		float lightRadius;
+		float lightPhase;
 	};
 
 	void Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail, uint32_t atlasIndex0, uint32_t atlasIndex1, float lightScale = 1 );
@@ -338,9 +334,6 @@ private:
 	void PrepareForRebuild();
 	// rebuild glows after all boosters have been re-added; used internally by RebuildBoosters()
 	void FinalizeRebuild();
-
-	// function to create the flares from boosterdata
-	void CreateFlares( const EveBoosterItem& item );
 
 	// toggle display
 	bool m_display;

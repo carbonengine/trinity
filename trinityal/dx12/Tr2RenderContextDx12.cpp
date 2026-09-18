@@ -17,6 +17,7 @@
 #include "util/AmdExtDevice.h"
 
 extern bool g_requestDebugMarkers;
+extern bool g_dredBreadcrumbsEnabled;
 
 CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
@@ -139,6 +140,7 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 		commandAllocator,
 		nullptr,
 		IID_PPV_ARGS( &m_commandList ) ) );
+	TrinityALImpl::SetDebugName( m_commandList, "Tr2RenderContext CommandList" );
 	CR_RETURN_HR( m_commandList->Close() );
 	m_commandList.QueryInterface( &m_commandList2 );
 
@@ -1576,6 +1578,10 @@ void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 	{
 		crashTracker->PutMarker( m_commandList2, marker );
 	}
+	if( g_dredBreadcrumbsEnabled )
+	{
+		TrinityALImpl::SetDredMarker( m_commandList, marker );
+	}
 }
 
 void Tr2RenderContextAL::PushGpuMarker( const char* marker )
@@ -1724,7 +1730,7 @@ void Tr2RenderContextAL::FlushBarriersDx12()
 {
 	if( !m_barriers.empty() )
 	{
-		m_commandList->ResourceBarrier( UINT( m_barriers.size() ), m_barriers.data() );
+		TrinityALImpl::ResourceBarrier( m_commandList, UINT( m_barriers.size() ), m_barriers.data() );
 		m_barriers.clear();
 	}
 }
@@ -1771,7 +1777,7 @@ void Tr2RenderContextAL::FlushBarriersDx12( size_t count, ID3D12Resource** resou
 		}
 		if( barrierCount )
 		{
-			m_commandList->ResourceBarrier( UINT( barrierCount ), barriers );
+			TrinityALImpl::ResourceBarrier( m_commandList, UINT( barrierCount ), barriers );
 		}
 	}
 	else
@@ -1797,7 +1803,7 @@ void Tr2RenderContextAL::FlushBarriersDx12( size_t count, ID3D12Resource** resou
 		}
 		if( !barriers.empty() )
 		{
-			m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
+			TrinityALImpl::ResourceBarrier( m_commandList, UINT( barriers.size() ), barriers.data() );
 		}
 	}
 }
