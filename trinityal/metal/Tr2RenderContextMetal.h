@@ -158,6 +158,7 @@ public:
 						   uint32_t width,
 						   uint32_t height,
 						   uint32_t depth );
+	ALResult SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader );
 
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 

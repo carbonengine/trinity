@@ -730,6 +730,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
 
 				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+				renderContext.SetRtPipelineState( pipelineState, rayGenName.c_str() );
 				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
 				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 

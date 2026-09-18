@@ -212,7 +212,6 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
 
-	renderContext.ResetResourceBindings();
 	pp.m_staticBindings.Apply( renderContext );
 
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
@@ -242,7 +241,6 @@ void Tr2Material::ApplyMaterialDataForPassWithOverride( uint32_t techniqueIndex,
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
 	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
 
-	renderContext.ResetResourceBindings();
 	pp.m_staticBindings.Apply( renderContext );
 
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
@@ -487,7 +485,6 @@ void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, Tr2Rende
 	}
 	auto& pp = *m_parametersForPasses[techniqueIndex].libraries[0];
 
-	renderContext.ResetResourceBindings();
 	pp.m_globalStaticBindings.Apply( renderContext );
 
 	ApplyConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, !pp.m_reroutedParameters.empty(), renderContext );

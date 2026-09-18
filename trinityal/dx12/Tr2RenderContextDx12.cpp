@@ -332,7 +332,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 	{
 		m_psoDescription.m_shaderProgram = shader;
 		m_dirtyPso = true;
-		m_bindings.Invalidate();
+		m_bindings.SetRootSignature( GetProgramRootSignatureDx12() );
 	}
 	return S_OK;
 }
@@ -741,6 +741,11 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 	auto st = shaderTable.TrinityALImpl_GetObject();
 	auto p = pipeline.TrinityALImpl_GetObject();
 
+	if( m_bindings.GetRootSignature() != &p->GetGlobalRootSignature() )
+	{
+		return E_INVALIDCALL;
+	}
+
 	D3D12_DISPATCH_RAYS_DESC desc = {};
 	desc.RayGenerationShaderRecord.StartAddress = st->GetRayGenShader( rayGenShader );
 	desc.RayGenerationShaderRecord.SizeInBytes = st->GetEntrySize();
@@ -759,7 +764,7 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 
 	m_commandList->SetComputeRootSignature( p->GetGlobalRootSignature().m_rootSignature );
 	uint32_t bufferIndex = m_ownerDevice->GetCurrentBackBufferIndex();
-	UseResourceBindings( p->GetGlobalRootSignature() );
+	m_bindings.Commit( *this );
 	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap(), &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );
 	FlushComputeBarriersDx12();
 
@@ -769,7 +774,18 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 		m_commandList4->DispatchRays( &desc );
 	}
 
+	m_bindings.SetRootSignature( GetProgramRootSignatureDx12() );
 	m_dirtyPso = true;
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* )
+{
+	if( !pipeline.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	m_bindings.SetRootSignature( &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );
 	return S_OK;
 }
 
@@ -820,18 +836,18 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 	return pipelineState;
 }
 
+const TrinityALImpl::Tr2RootSignatureAL* Tr2RenderContextAL::GetProgramRootSignatureDx12() const
+{
+	return m_psoDescription.m_shaderProgram.IsValid() ? &m_psoDescription.m_shaderProgram.m_program->m_rootSignature : nullptr;
+}
+
 ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 {
-	if( !m_psoDescription.m_shaderProgram.IsValid() )
+	if( !m_bindings.GetRootSignature() )
 	{
 		return S_OK;
 	}
-	return UseResourceBindings( m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
-}
-
-ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSignatureAL& rootSignature ) throw()
-{
-	return m_bindings.Commit( *this, rootSignature );
+	return m_bindings.Commit( *this );
 }
 
 ALResult Tr2RenderContextAL::SetAllState()
@@ -1575,6 +1591,7 @@ void Tr2RenderContextAL::ResetDx12()
 	m_dynamicIB = false;
 
 	m_psoDescription = TrinityALImpl::PSODescription();
+	m_bindings.SetRootSignature( nullptr );
 	m_topology = Tr2RenderContextEnum::TOP_INVALID;
 	m_primitiveToVertexCount = std::make_pair( 0, 0 );
 

@@ -154,6 +154,9 @@ public:
 
 	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
 
+	/** Select the raytracing pipeline the following resource bindings are for, as SetShaderProgram does for draws and compute */
+	ALResult SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader );
+
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw();
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw();
 
@@ -247,7 +250,7 @@ public:
 
 protected:
 	ALResult UseResourceBindings() throw();
-	ALResult UseResourceBindings( const TrinityALImpl::Tr2RootSignatureAL& rootSignature ) throw();
+	const TrinityALImpl::Tr2RootSignatureAL* GetProgramRootSignatureDx12() const;
 
 	ID3D12PipelineState* GetPipelineState();
 

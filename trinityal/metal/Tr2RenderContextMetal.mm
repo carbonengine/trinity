@@ -660,6 +660,20 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline,
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader )
+{
+	if( !pipeline.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	auto rayGen = pipeline.TrinityALImpl_GetObject()->GetRayGenIndex( rayGenShader );
+	if( !rayGen )
+	{
+		return E_INVALIDARG;
+	}
+	return SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram( *rayGen ) );
+}
+
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer,
 										   ShaderType shaderType,
 										   uint32_t registerIndex,
@@ -912,7 +926,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderP
 							 shaderProgram.m_program->GetThreadGroupSize(),
 							 shaderProgram.m_program->GetResourceMasks() );
 
-	m_bindings.Invalidate();
+	m_bindings.SetProgram( shaderProgram.IsValid() ? shaderProgram.TrinityALImpl_GetObject() : nullptr );
 
 	return S_OK;
 }
@@ -1187,18 +1201,17 @@ ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType stage,
 
 ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
 {
-	m_bindings.Discard();
-	return S_OK;
+	return m_bindings.Reset();
 }
 
 ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 {
-	if( !m_shaderProgram.IsValid() )
+	if( !m_bindings.GetProgram() )
 	{
 		return S_OK;
 	}
 
-	return m_bindings.Commit( *this, *m_shaderProgram.TrinityALImpl_GetObject() );
+	return m_bindings.Commit( *this );
 }
 
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )

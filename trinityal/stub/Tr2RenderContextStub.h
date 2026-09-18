@@ -190,6 +190,11 @@ public:
 		return E_FAIL;
 	}
 
+	ALResult SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader )
+	{
+		return E_FAIL;
+	}
+
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );

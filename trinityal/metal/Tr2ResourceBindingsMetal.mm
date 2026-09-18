@@ -14,10 +14,33 @@
 #include "Tr2TextureALMetal.h"
 
 Tr2ResourceBindings::Tr2ResourceBindings() :
+	m_program( nullptr ),
 	m_committed( false ),
-	m_sealed( false ),
-	m_committedProgram( nullptr )
+	m_sealed( false )
 {
+}
+
+void Tr2ResourceBindings::Clear() throw()
+{
+	if( !m_program )
+	{
+		return;
+	}
+	const Tr2RegisterMapAL& registerMap = m_program->GetRegisterMap();
+	std::fill( m_srvs, m_srvs + registerMap.srvCount, Resource() );
+	std::fill( m_uavs, m_uavs + registerMap.uavCount, Resource() );
+	std::fill( m_samplers, m_samplers + registerMap.samplerCount, Sampler() );
+}
+
+void Tr2ResourceBindings::SetProgram( const TrinityALImpl::Tr2ShaderProgramAL* program ) throw()
+{
+	if( program == m_program )
+	{
+		return;
+	}
+	Clear();
+	m_program = program;
+	m_committed = false;
 }
 
 void Tr2ResourceBindings::BeginBatch() throw()
@@ -30,29 +53,67 @@ void Tr2ResourceBindings::BeginBatch() throw()
 	m_sealed = false;
 	m_committed = false;
 
-	m_pendingSRVs.clear();
-	m_pendingUAVs.clear();
-	m_pendingSamplers.clear();
+	Clear();
 }
 
 void Tr2ResourceBindings::Discard() throw()
 {
-	m_pendingSRVs.clear();
-	m_pendingUAVs.clear();
-	m_pendingSamplers.clear();
+	Clear();
 
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
+	m_program = nullptr;
+	m_committed = false;
+	m_sealed = false;
+}
+
+ALResult Tr2ResourceBindings::Reset() throw()
+{
+	Clear();
 
 	m_committed = false;
 	m_sealed = false;
-	m_committedProgram = nullptr;
+	return S_OK;
 }
 
-void Tr2ResourceBindings::Invalidate() throw()
+Tr2ResourceBindings::Resource* Tr2ResourceBindings::GetSrvSlot( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
 {
+	if( !m_program )
+	{
+		return nullptr;
+	}
+	BeginBatch();
 	m_committed = false;
+
+	const Tr2RegisterMapAL& registerMap = m_program->GetRegisterMap();
+	uint32_t index = registerMap.srvs[stage][registerIndex];
+	return index < registerMap.srvCount ? &m_srvs[index] : nullptr;
+}
+
+Tr2ResourceBindings::Resource* Tr2ResourceBindings::GetUavSlot( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	if( !m_program )
+	{
+		return nullptr;
+	}
+	BeginBatch();
+	m_committed = false;
+
+	const Tr2RegisterMapAL& registerMap = m_program->GetRegisterMap();
+	uint32_t index = registerMap.uavs[stage][registerIndex];
+	return index < registerMap.uavCount ? &m_uavs[index] : nullptr;
+}
+
+Tr2ResourceBindings::Sampler* Tr2ResourceBindings::GetSamplerSlot( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	if( !m_program )
+	{
+		return nullptr;
+	}
+	BeginBatch();
+	m_committed = false;
+
+	const Tr2RegisterMapAL& registerMap = m_program->GetRegisterMap();
+	uint32_t index = registerMap.samplers[stage][registerIndex];
+	return index < registerMap.samplerCount ? &m_samplers[index] : nullptr;
 }
 
 ALResult Tr2ResourceBindings::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
@@ -61,16 +122,12 @@ ALResult Tr2ResourceBindings::SetSrv( Tr2RenderContextEnum::ShaderType stage, ui
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::BUFFER;
-	resource.buffer = buffer;
-	m_pendingSRVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetSrvSlot( stage, registerIndex ) )
+	{
+		slot->type = Resource::BUFFER;
+		slot->buffer = buffer;
+		slot->texture = Tr2TextureAL();
+	}
 	return S_OK;
 }
 
@@ -80,17 +137,13 @@ ALResult Tr2ResourceBindings::SetSrv( Tr2RenderContextEnum::ShaderType stage, ui
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::TEXTURE;
-	resource.texture = texture;
-	resource.colorSpace = colorSpace;
-	m_pendingSRVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetSrvSlot( stage, registerIndex ) )
+	{
+		slot->type = Resource::TEXTURE;
+		slot->texture = texture;
+		slot->buffer = Tr2BufferAL();
+		slot->colorSpace = colorSpace;
+	}
 	return S_OK;
 }
 
@@ -100,16 +153,12 @@ ALResult Tr2ResourceBindings::SetUav( Tr2RenderContextEnum::ShaderType stage, ui
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::BUFFER;
-	resource.buffer = buffer;
-	m_pendingUAVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetUavSlot( stage, registerIndex ) )
+	{
+		slot->type = Resource::BUFFER;
+		slot->buffer = buffer;
+		slot->texture = Tr2TextureAL();
+	}
 	return S_OK;
 }
 
@@ -119,17 +168,13 @@ ALResult Tr2ResourceBindings::SetUav( Tr2RenderContextEnum::ShaderType stage, ui
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::TEXTURE;
-	resource.texture = texture;
-	resource.mip = mip;
-	m_pendingUAVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetUavSlot( stage, registerIndex ) )
+	{
+		slot->type = Resource::TEXTURE;
+		slot->texture = texture;
+		slot->buffer = Tr2BufferAL();
+		slot->mip = mip;
+	}
 	return S_OK;
 }
 
@@ -139,15 +184,11 @@ ALResult Tr2ResourceBindings::SetSrvHeapView( Tr2RenderContextEnum::ShaderType s
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::HEAP_VIEW;
-	m_pendingSRVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetSrvSlot( stage, registerIndex ) )
+	{
+		*slot = Resource();
+		slot->type = Resource::HEAP_VIEW;
+	}
 	return S_OK;
 }
 
@@ -157,15 +198,11 @@ ALResult Tr2ResourceBindings::SetUavHeapView( Tr2RenderContextEnum::ShaderType s
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::HEAP_VIEW;
-	m_pendingUAVs.push_back( resource );
-
-	m_committed = false;
+	if( auto* slot = GetUavSlot( stage, registerIndex ) )
+	{
+		*slot = Resource();
+		slot->type = Resource::HEAP_VIEW;
+	}
 	return S_OK;
 }
 
@@ -175,16 +212,11 @@ ALResult Tr2ResourceBindings::SetSampler( Tr2RenderContextEnum::ShaderType stage
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Sampler entry;
-	entry.stage = stage;
-	entry.registerIndex = registerIndex;
-	entry.type = Sampler::SAMPLER;
-	entry.sampler = sampler;
-	m_pendingSamplers.push_back( entry );
-
-	m_committed = false;
+	if( auto* slot = GetSamplerSlot( stage, registerIndex ) )
+	{
+		slot->type = Sampler::SAMPLER;
+		slot->sampler = sampler;
+	}
 	return S_OK;
 }
 
@@ -194,56 +226,27 @@ ALResult Tr2ResourceBindings::SetSamplerHeapView( Tr2RenderContextEnum::ShaderTy
 	{
 		return E_INVALIDARG;
 	}
-	BeginBatch();
-
-	Sampler entry;
-	entry.stage = stage;
-	entry.registerIndex = registerIndex;
-	entry.type = Sampler::HEAP_VIEW;
-	m_pendingSamplers.push_back( entry );
-
-	m_committed = false;
+	if( auto* slot = GetSamplerSlot( stage, registerIndex ) )
+	{
+		slot->type = Sampler::HEAP_VIEW;
+		slot->sampler = Tr2SamplerStateAL();
+	}
 	return S_OK;
 }
 
-ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context, const TrinityALImpl::Tr2ShaderProgramAL& program ) throw()
+ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context ) throw()
 {
-	if( m_committed && m_committedProgram == &program )
+	if( !m_program )
+	{
+		return E_INVALIDCALL;
+	}
+	if( m_committed )
 	{
 		return S_OK;
 	}
 
-	const Tr2RegisterMapAL& registerMap = program.GetRegisterMap();
-	const TrinityALImpl::ShaderResourceMask* resourceMasks = program.GetResourceMasks();
-
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
-
-	for( const auto& resource : m_pendingSRVs )
-	{
-		uint32_t index = registerMap.srvs[resource.stage][resource.registerIndex];
-		if( index < registerMap.srvCount )
-		{
-			m_sortedSRVs[index] = &resource;
-		}
-	}
-	for( const auto& resource : m_pendingUAVs )
-	{
-		uint32_t index = registerMap.uavs[resource.stage][resource.registerIndex];
-		if( index < registerMap.uavCount )
-		{
-			m_sortedUAVs[index] = &resource;
-		}
-	}
-	for( const auto& sampler : m_pendingSamplers )
-	{
-		uint32_t index = registerMap.samplers[sampler.stage][sampler.registerIndex];
-		if( index < registerMap.samplerCount )
-		{
-			m_sortedSamplers[index] = &sampler;
-		}
-	}
+	const Tr2RegisterMapAL& registerMap = m_program->GetRegisterMap();
+	const TrinityALImpl::ShaderResourceMask* resourceMasks = m_program->GetResourceMasks();
 
 	TrinityALImpl::MetalContext* metalContext = context.GetMetalContext();
 	TrinityALImpl::MetalWorkQueue* workQueue = context.GetMetalWorkQueue();
@@ -272,24 +275,24 @@ ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context, const Trinity
 			const uint32_t srvIndex = registerMap.srvs[stage][reg];
 			if( srvIndex < registerMap.srvCount )
 			{
-				const Resource* resource = m_sortedSRVs[srvIndex];
-				switch( resource ? resource->type : Resource::NONE )
+				const Resource& resource = m_srvs[srvIndex];
+				switch( resource.type )
 				{
 				case Resource::BUFFER:
-					if( resource->buffer.IsValid() && reg < METAL_SRV_BUFFER_COUNT )
+					if( resource.buffer.IsValid() && reg < METAL_SRV_BUFFER_COUNT )
 					{
 						const NSUInteger bufferIndex = METAL_SRV_BUFFER_OFFSET + reg;
-						buffers[bufferIndex] = resource->buffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+						buffers[bufferIndex] = resource.buffer.TrinityALImpl_GetObject()->GetMetalBuffer();
 						buffersMask |= ( 1u << bufferIndex );
 					}
 					break;
 				case Resource::TEXTURE:
-					if( resource->texture.IsValid() && reg < METAL_SRV_TEXTURE_COUNT )
+					if( resource.texture.IsValid() && reg < METAL_SRV_TEXTURE_COUNT )
 					{
 						const NSUInteger texIndex = METAL_SRV_TEXTURE_OFFSET + reg;
-						textures[texIndex] = ( resource->colorSpace == Tr2RenderContextEnum::COLOR_SPACE_SRGB ) ?
-							resource->texture.TrinityALImpl_GetObject()->GetSRGBViewMetalTexture() :
-							resource->texture.TrinityALImpl_GetObject()->GetMetalTexture();
+						textures[texIndex] = ( resource.colorSpace == Tr2RenderContextEnum::COLOR_SPACE_SRGB ) ?
+							resource.texture.TrinityALImpl_GetObject()->GetSRGBViewMetalTexture() :
+							resource.texture.TrinityALImpl_GetObject()->GetMetalTexture();
 						texturesMin = std::min<NSUInteger>( texturesMin, texIndex );
 						texturesMax = std::max<NSUInteger>( texturesMax, texIndex );
 						missingTextureMask &= ~( 1u << texIndex );
@@ -309,21 +312,21 @@ ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context, const Trinity
 			const uint32_t uavIndex = registerMap.uavs[stage][reg];
 			if( uavIndex < registerMap.uavCount )
 			{
-				const Resource* resource = m_sortedUAVs[uavIndex];
-				switch( resource ? resource->type : Resource::NONE )
+				const Resource& resource = m_uavs[uavIndex];
+				switch( resource.type )
 				{
 				case Resource::BUFFER:
-					if( resource->buffer.IsValid() && reg < METAL_UAV_BUFFER_COUNT )
+					if( resource.buffer.IsValid() && reg < METAL_UAV_BUFFER_COUNT )
 					{
 						const NSUInteger bufferIndex = METAL_UAV_BUFFER_OFFSET + reg;
-						buffers[bufferIndex] = resource->buffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+						buffers[bufferIndex] = resource.buffer.TrinityALImpl_GetObject()->GetMetalBuffer();
 						buffersMask |= ( 1u << bufferIndex );
 					}
 					break;
 				case Resource::TEXTURE:
-					if( resource->texture.IsValid() && reg < METAL_UAV_TEXTURE_COUNT )
+					if( resource.texture.IsValid() && reg < METAL_UAV_TEXTURE_COUNT )
 					{
-						id<MTLTexture> uavTexture = resource->texture.TrinityALImpl_GetObject()->GetUAVMetalTexture( resource->mip );
+						id<MTLTexture> uavTexture = resource.texture.TrinityALImpl_GetObject()->GetUAVMetalTexture( resource.mip );
 						if( uavTexture )
 						{
 							const NSUInteger texIndex = METAL_UAV_TEXTURE_OFFSET + reg;
@@ -348,13 +351,13 @@ ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context, const Trinity
 			const uint32_t samplerIndex = registerMap.samplers[stage][reg];
 			if( samplerIndex < registerMap.samplerCount )
 			{
-				const Sampler* sampler = m_sortedSamplers[samplerIndex];
-				switch( sampler ? sampler->type : Sampler::NONE )
+				const Sampler& sampler = m_samplers[samplerIndex];
+				switch( sampler.type )
 				{
 				case Sampler::SAMPLER:
-					if( sampler->sampler.IsValid() && reg < METAL_MAX_BOUND_SAMPLERS )
+					if( sampler.sampler.IsValid() && reg < METAL_MAX_BOUND_SAMPLERS )
 					{
-						samplers[reg] = sampler->sampler.TrinityALImpl_GetObject()->GetMetalSamplerState();
+						samplers[reg] = sampler.sampler.TrinityALImpl_GetObject()->GetMetalSamplerState();
 						samplersMin = std::min<NSUInteger>( samplersMin, reg );
 						samplersMax = std::max<NSUInteger>( samplersMax, reg );
 						missingSamplerMask &= ~( 1u << reg );
@@ -409,7 +412,6 @@ ALResult Tr2ResourceBindings::Commit( Tr2RenderContextAL& context, const Trinity
 
 	m_committed = true;
 	m_sealed = true;
-	m_committedProgram = &program;
 	return S_OK;
 }
 

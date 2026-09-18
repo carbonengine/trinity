@@ -531,6 +531,7 @@ TEST_F( Raytracing, TraceRays )
 		float clearColor[] = { 0, 0, float( g & 0xff ) / 255.f, 0 };
 		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( resultTex, 0, clearColor ) );
 
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRtPipelineState( state, L"RayGen_12" ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0 ) );
 		// We need to insert a UAV barrier before using the acceleration structures in a raytracing
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() ) ); // accelerationStructure
@@ -665,6 +666,7 @@ TEST_F( Raytracing, CanUpdateBlas )
 		float clearColor[] = { 0, 0, float( g & 0xff ) / 255.f, 0 };
 		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( resultTex, 0, clearColor ) );
 
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRtPipelineState( state, L"RayGen_12" ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0 ) );
 		// We need to insert a UAV barrier before using the acceleration structures in a raytracing
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() ) ); // accelerationStructure
@@ -818,6 +820,7 @@ TEST_F( Raytracing, CanUseLocalConstants )
 		float clearColor[] = { 0, float( g & 0xff ) / 255.f, 0, 0 };
 		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( result, 0, clearColor ) );
 
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRtPipelineState( state, L"RayGen_12" ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, result ) );
@@ -994,6 +997,7 @@ TEST_F( Raytracing, CanUsePerObjectData )
 		float clearColor[] = { 0, float( g & 0xff ) / 255.f, 0, 0 };
 		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( result, 0, clearColor ) );
 
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRtPipelineState( state, L"RayGen_12" ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, result ) );

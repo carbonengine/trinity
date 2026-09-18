@@ -20,11 +20,20 @@ namespace TrinityALImpl
 struct Tr2RootSignatureAL;
 }
 
-/** Pending shader resource, unordered access and sampler bindings for a render context */
+/** Shader resource, unordered access and sampler bindings for a render context, stored in the
+	slots of the root signature that was set before them */
 class ResourceBindings
 {
 public:
 	ResourceBindings();
+
+	/** Select the root signature the following bindings are for; drops everything set for the previous one */
+	void SetRootSignature( const TrinityALImpl::Tr2RootSignatureAL* rootSignature ) throw();
+
+	const TrinityALImpl::Tr2RootSignatureAL* GetRootSignature() const
+	{
+		return m_rootSignature;
+	}
 
 	ALResult SetSrv( Tr2RenderContextAL& context, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
 	ALResult SetSrv( Tr2RenderContextAL& context, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace ) throw();
@@ -38,17 +47,11 @@ public:
 	/** Drop everything that was set, flushing any pending out transitions */
 	ALResult Reset( Tr2RenderContextAL& context ) throw();
 
-	/** Start a new set of bindings once the previous set has been committed */
-	void BeginBatch( Tr2RenderContextAL& context ) throw();
-
-	/** Drop everything that was set without touching the command list */
+	/** Drop everything that was set, without touching the command list */
 	void Discard() throw();
 
-	/** Force the next Commit to rebind, without dropping what was set */
-	void Invalidate() throw();
-
-	/** Bind everything that was set through the root signature of the program about to be used */
-	ALResult Commit( Tr2RenderContextAL& context, const TrinityALImpl::Tr2RootSignatureAL& rootSignature ) throw();
+	/** Bind everything that was set through the current root signature */
+	ALResult Commit( Tr2RenderContextAL& context ) throw();
 
 	const std::vector<ID3D12Resource*>& GetUsedResources() const
 	{
@@ -66,8 +69,6 @@ private:
 			HEAP_VIEW,
 		};
 
-		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
-		uint32_t registerIndex = 0;
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
 		Type type = NONE;
@@ -87,29 +88,28 @@ private:
 			HEAP_VIEW,
 		};
 
-		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
-		uint32_t registerIndex = 0;
 		Tr2SamplerStateAL sampler;
 		Type type = NONE;
 	};
 
-	void ClearSorted() throw();
+	/** Start a new set of bindings once the previous set has been committed */
+	void BeginBatch( Tr2RenderContextAL& context ) throw();
+	void Clear() throw();
 	void FlushOutTransitions( Tr2RenderContextAL& context ) throw();
+	Resource* GetSrvSlot( Tr2RenderContextAL& context, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	Resource* GetUavSlot( Tr2RenderContextAL& context, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	Sampler* GetSamplerSlot( Tr2RenderContextAL& context, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
 
-	std::vector<Resource> m_pendingSRVs;
-	std::vector<Resource> m_pendingUAVs;
-	std::vector<Sampler> m_pendingSamplers;
-
-	const Resource* m_sortedSRVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Resource* m_sortedUAVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Sampler* m_sortedSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_srvs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	Resource m_uavs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	Sampler m_samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 
 	std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;
 	std::vector<ID3D12Resource*> m_usedResources;
 
+	const TrinityALImpl::Tr2RootSignatureAL* m_rootSignature;
 	bool m_committed;
 	bool m_sealed;
-	const TrinityALImpl::Tr2RootSignatureAL* m_committedRootSignature;
 };
 
 #endif

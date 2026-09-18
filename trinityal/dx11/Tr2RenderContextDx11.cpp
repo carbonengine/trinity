@@ -892,6 +892,7 @@ ALResult Tr2RenderContextAL::BeginScene() throw()
 {
 	m_shaderProgram = Tr2ShaderProgramAL();
 
+	m_bindings.SetProgram( nullptr );
 	m_bindings.UnbindShaderResources( m_context, true );
 	m_bindings.ClearBoundSamplers();
 
@@ -1567,7 +1568,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& p ) thr
 	}
 
 	m_shaderProgram = p;
-	m_bindings.Invalidate();
+	m_bindings.SetProgram( p.IsValid() ? p.TrinityALImpl_GetObject() : nullptr );
 
 	return S_OK;
 }
@@ -1998,11 +1999,11 @@ ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
 // --------------------------------------------------------------------------------------
 ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 {
-	if( !m_shaderProgram.IsValid() )
+	if( !m_bindings.GetProgram() )
 	{
 		return S_OK;
 	}
-	return m_bindings.Commit( m_context, *m_shaderProgram.TrinityALImpl_GetObject() );
+	return m_bindings.Commit( m_context );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2306,6 +2307,11 @@ void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name 
 }
 
 ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader )
 {
 	return E_FAIL;
 }
