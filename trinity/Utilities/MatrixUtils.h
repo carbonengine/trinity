@@ -28,4 +28,8 @@ Matrix* TriMatrixCopyFrom3x4( Matrix* out, const granny_matrix_3x4* in );
 // copy a 3x4 matrix into a 4x4 matrix
 Matrix* TriMatrixCopyFrom3x4( Matrix* out, const Float4x3* in );
 
+bool IsMirrored( const Matrix& m );
+
+void DecomposeMirrorAware( Vector3& scale, Quaternion& rotation, Vector3& translation, const Matrix& m, int mirrorAxis = 0 );
+
 #endif
