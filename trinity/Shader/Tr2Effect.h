@@ -116,6 +116,7 @@ public:
 	void Render( IRenderCallback * cb, Tr2RenderContext & renderContext );
 
 	unsigned GetHashValue() const;
+	uint32_t GetNonBlendableHashValue() const;
 
 	const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const;
 	ITriEffectParameter* GetParameterByName( const char* name ) const;

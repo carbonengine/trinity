@@ -87,6 +87,8 @@ public:
 
 	float m_exposureAdjustment = 0;
 
+	Tr2AccumulatedGenericEffects m_genericEffects;
+
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
 	Tr2PPGodRaysEffectPtr m_godRays;
