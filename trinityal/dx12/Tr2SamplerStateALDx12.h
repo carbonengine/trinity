@@ -36,6 +36,7 @@ private:
 	bool m_isValid;
 
 	friend class Tr2RenderContextAL;
+	friend class ResourceBindings;
 	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };
 

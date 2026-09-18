@@ -119,6 +119,7 @@ private:
 	std::unique_ptr<MipMapGenerator> m_mipMapGenerator;
 
 	friend class Tr2RenderContextAL;
+	friend class ResourceBindings;
 	friend class Tr2RtShaderTableAL;
 };
 }

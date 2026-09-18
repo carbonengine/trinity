@@ -91,6 +91,8 @@ set(_SOURCES
     dx11/Tr2RenderContextDx11.h
     dx11/Tr2RenderStateEmulationDx11.cpp
     dx11/Tr2RenderStateEmulationDx11.h
+    dx11/Tr2ResourceBindingsDx11.cpp
+    dx11/Tr2ResourceBindingsDx11.h
     dx11/Tr2SamplerStateALDx11.cpp
     dx11/Tr2SamplerStateALDx11.h
     dx11/Tr2ShaderALDx11.cpp
@@ -178,6 +180,8 @@ set(_SOURCES
     dx12/util/GpuMarkerBuffer.h
     dx12/util/PsoDescription.cpp
     dx12/util/PsoDescription.h
+    dx12/util/ResourceBindingsDx12.cpp
+    dx12/util/ResourceBindingsDx12.h
     include/Tr2BufferAL.h
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
@@ -237,6 +241,8 @@ set(_SOURCES
     metal/Tr2PrimaryRenderContextMetal.mm
     metal/Tr2RenderContextMetal.h
     metal/Tr2RenderContextMetal.mm
+    metal/Tr2ResourceBindingsMetal.h
+    metal/Tr2ResourceBindingsMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.h
     metal/Tr2RtPipelineStateALMetal.mm

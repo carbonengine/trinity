@@ -97,22 +97,9 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw() :
 	m_separateAlphaBlendEnabled( false ),
 	m_srgbWriteEnable( false ),
 	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES ),
-	m_uavBarriersDisabledCounter( 0 ),
-	m_bindingsCommitted( false ),
-	m_bindingsSealed( false ),
-	m_committedRootSignature( nullptr )
+	m_uavBarriersDisabledCounter( 0 )
 {
 	std::fill( std::begin( m_vertexBuffers ), std::end( m_vertexBuffers ), VB() );
-
-	m_pendingSRVs.reserve( Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE );
-	m_pendingUAVs.reserve( Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE );
-	m_pendingSamplers.reserve( Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE );
-	m_outTransitions.reserve( Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE );
-	m_usedResources.reserve( Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE );
-
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL() throw()
@@ -128,7 +115,7 @@ void Tr2RenderContextAL::Destroy() throw()
 		m_ownerDevice->UnRegisterFromCrashTracker( m_commandList2 );
 	}
 
-	DiscardResourceBindings();
+	m_bindings.Discard();
 
 	ResetDx12();
 
@@ -345,7 +332,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 	{
 		m_psoDescription.m_shaderProgram = shader;
 		m_dirtyPso = true;
-		m_bindingsCommitted = false;
+		m_bindings.Invalidate();
 	}
 	return S_OK;
 }
@@ -508,218 +495,49 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-void Tr2RenderContextAL::BeginResourceBindingBatch() throw()
-{
-	if( !m_bindingsSealed )
-	{
-		return;
-	}
-
-	m_bindingsSealed = false;
-	m_bindingsCommitted = false;
-
-	m_pendingSRVs.clear();
-	m_pendingUAVs.clear();
-	m_pendingSamplers.clear();
-
-	if( !m_outTransitions.empty() )
-	{
-		ResourceBarrierDx12( m_outTransitions.size(), m_outTransitions.data() );
-		m_outTransitions.clear();
-	}
-	m_usedResources.clear();
-}
-
-void Tr2RenderContextAL::DiscardResourceBindings() throw()
-{
-	m_pendingSRVs.clear();
-	m_pendingUAVs.clear();
-	m_pendingSamplers.clear();
-
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
-
-	m_outTransitions.clear();
-	m_usedResources.clear();
-
-	m_bindingsCommitted = false;
-	m_bindingsSealed = false;
-	m_committedRootSignature = nullptr;
-}
-
 ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::BUFFER;
-	resource.buffer = buffer;
-	m_pendingSRVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetSrv( *this, stage, registerIndex, buffer );
 }
 
 ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::TEXTURE;
-	resource.texture = texture;
-	resource.colorSpace = colorSpace;
-	m_pendingSRVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetSrv( *this, stage, registerIndex, texture, colorSpace );
 }
 
 ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::BUFFER;
-	resource.buffer = buffer;
-	m_pendingUAVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetUav( *this, stage, registerIndex, buffer );
 }
 
 ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::TEXTURE;
-	resource.texture = texture;
-	resource.mip = mip;
-	m_pendingUAVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetUav( *this, stage, registerIndex, texture, mip );
 }
 
 ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::HEAP_VIEW;
-	m_pendingSRVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetSrvHeapView( *this, stage, registerIndex );
 }
 
 ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Resource resource;
-	resource.stage = stage;
-	resource.registerIndex = registerIndex;
-	resource.type = Resource::HEAP_VIEW;
-	m_pendingUAVs.push_back( resource );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetUavHeapView( *this, stage, registerIndex );
 }
 
 ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Sampler entry;
-	entry.stage = stage;
-	entry.registerIndex = registerIndex;
-	entry.type = Sampler::SAMPLER;
-	entry.sampler = sampler;
-	m_pendingSamplers.push_back( entry );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetSampler( *this, stage, registerIndex, sampler );
 }
 
 ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
 {
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	BeginResourceBindingBatch();
-
-	Sampler entry;
-	entry.stage = stage;
-	entry.registerIndex = registerIndex;
-	entry.type = Sampler::HEAP_VIEW;
-	m_pendingSamplers.push_back( entry );
-
-	m_bindingsCommitted = false;
-	return S_OK;
+	return m_bindings.SetSamplerHeapView( *this, stage, registerIndex );
 }
 
 ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
 {
-	m_pendingSRVs.clear();
-	m_pendingUAVs.clear();
-	m_pendingSamplers.clear();
-
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
-
-	if( !m_outTransitions.empty() )
-	{
-		ResourceBarrierDx12( m_outTransitions.size(), m_outTransitions.data() );
-		m_outTransitions.clear();
-	}
-	m_usedResources.clear();
-
-	m_bindingsCommitted = false;
-	m_bindingsSealed = false;
-	m_committedRootSignature = nullptr;
-	return S_OK;
+	return m_bindings.Reset( *this );
 }
 
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw()
@@ -1013,201 +831,7 @@ ALResult Tr2RenderContextAL::UseResourceBindings() throw()
 
 ALResult Tr2RenderContextAL::UseResourceBindings( const TrinityALImpl::Tr2RootSignatureAL& rootSignature ) throw()
 {
-	if( m_bindingsCommitted && m_committedRootSignature == &rootSignature )
-	{
-		return S_OK;
-	}
-
-	Tr2PrimaryRenderContextAL& renderContext = GetPrimaryRenderContext();
-	auto& registerMap = rootSignature.m_registerMap;
-
-	std::fill( std::begin( m_sortedSRVs ), std::end( m_sortedSRVs ), nullptr );
-	std::fill( std::begin( m_sortedUAVs ), std::end( m_sortedUAVs ), nullptr );
-	std::fill( std::begin( m_sortedSamplers ), std::end( m_sortedSamplers ), nullptr );
-
-	for( const auto& resource : m_pendingSRVs )
-	{
-		uint32_t index = registerMap.srvs[resource.stage][resource.registerIndex];
-		if( index < registerMap.srvCount )
-		{
-			m_sortedSRVs[index] = &resource;
-		}
-	}
-	for( const auto& resource : m_pendingUAVs )
-	{
-		uint32_t index = registerMap.uavs[resource.stage][resource.registerIndex];
-		if( index < registerMap.uavCount )
-		{
-			m_sortedUAVs[index] = &resource;
-		}
-	}
-	for( const auto& sampler : m_pendingSamplers )
-	{
-		uint32_t index = registerMap.samplers[sampler.stage][sampler.registerIndex];
-		if( index < registerMap.samplerCount )
-		{
-			m_sortedSamplers[index] = &sampler;
-		}
-	}
-
-	if( !m_outTransitions.empty() )
-	{
-		ResourceBarrierDx12( m_outTransitions.size(), m_outTransitions.data() );
-		m_outTransitions.clear();
-	}
-	m_usedResources.clear();
-
-	constexpr uint32_t maxTransitions = 2 * Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE;
-	D3D12_RESOURCE_BARRIER inTransitions[maxTransitions];
-	ID3D12Resource* transitioned[maxTransitions];
-	uint32_t inCount = 0;
-	uint32_t transitionedCount = 0;
-
-	auto AddTransition = [&]( ID3D12Resource* res, D3D12_RESOURCE_STATES defaultState, D3D12_RESOURCE_STATES expectedState ) {
-		// TODO: verify state
-		if( ( defaultState & expectedState ) == 0 && defaultState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE )
-		{
-			auto found = std::find( transitioned, transitioned + transitionedCount, res );
-			if( found == transitioned + transitionedCount && transitionedCount < maxTransitions )
-			{
-				inTransitions[inCount++] = TrinityALImpl::Transition( res, defaultState, expectedState );
-				m_outTransitions.push_back( TrinityALImpl::Transition( res, expectedState, defaultState ) );
-				transitioned[transitionedCount++] = res;
-			}
-		}
-		m_usedResources.push_back( res );
-	};
-
-	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-
-	for( const auto& reg : rootSignature.m_srvRegisters )
-	{
-		uint32_t mapIndex = registerMap.srvs[reg.stage][reg.index];
-		const Resource* resource = mapIndex < registerMap.srvCount ? m_sortedSRVs[mapIndex] : nullptr;
-		auto stateFlag = reg.stage == Tr2RenderContextEnum::PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-
-		std::shared_ptr<ShaderResourceViewDx12> srv;
-		switch( resource ? resource->type : Resource::NONE )
-		{
-		case Resource::TEXTURE:
-			if( resource->texture.IsValid() && reg.registerType >= Tr2ShaderRegisterAL::SRV_TEXTURE1D )
-			{
-				srv = resource->texture.m_texture->m_view[resource->colorSpace];
-			}
-			if( !srv )
-			{
-				srv = renderContext.GetNullSrvDx12( reg.registerType );
-			}
-			else
-			{
-				AddTransition( resource->texture.m_texture->GetResourceDx12(), resource->texture.m_texture->m_defaultState, stateFlag );
-			}
-			break;
-		case Resource::BUFFER:
-			if( resource->buffer.IsValid() && reg.registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
-			{
-				srv = resource->buffer.m_buffer->m_srv;
-			}
-			if( !srv )
-			{
-				srv = renderContext.GetNullSrvDx12( reg.registerType );
-			}
-			else
-			{
-				AddTransition( resource->buffer.m_buffer->GetGpuResource(), resource->buffer.m_buffer->m_defaultState, stateFlag );
-			}
-			break;
-		case Resource::HEAP_VIEW:
-			srv = renderContext.GetSrvHeapView();
-			break;
-		default:
-			srv = renderContext.GetNullSrvDx12( reg.registerType );
-			break;
-		}
-
-		if( srv )
-		{
-			m_descriptorCache[bufferIndex]->SetShaderResources( reg.parameter, 1, &srv );
-		}
-	}
-
-	for( const auto& reg : rootSignature.m_uavRegisters )
-	{
-		uint32_t mapIndex = registerMap.uavs[reg.stage][reg.index];
-		const Resource* resource = mapIndex < registerMap.uavCount ? m_sortedUAVs[mapIndex] : nullptr;
-
-		std::shared_ptr<UnorderedAccessViewDx12> uav;
-		switch( resource ? resource->type : Resource::NONE )
-		{
-		case Resource::TEXTURE:
-			if( resource->texture.IsValid() && reg.registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D && resource->mip < resource->texture.m_texture->m_uav.size() )
-			{
-				uav = resource->texture.m_texture->m_uav[resource->mip];
-			}
-			if( uav )
-			{
-				AddTransition( resource->texture.m_texture->GetResourceDx12(), resource->texture.m_texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-			}
-			break;
-		case Resource::BUFFER:
-			if( resource->buffer.IsValid() && reg.registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
-			{
-				uav = resource->buffer.m_buffer->m_uav;
-			}
-			if( uav )
-			{
-				AddTransition( resource->buffer.m_buffer->GetGpuResource(), resource->buffer.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-			}
-			break;
-		case Resource::HEAP_VIEW:
-			uav = renderContext.GetUavHeapView();
-			break;
-		default:
-			CCP_AL_LOGWARN_LIMITED( "Missing UAV resource binding for register %u, stage %u", reg.index, reg.stage );
-			break;
-		}
-
-		if( !uav )
-		{
-			uav = renderContext.GetNullUavDx12( reg.registerType );
-		}
-		m_descriptorCache[bufferIndex]->SetUnorderedAccessViews( reg.parameter, 1, &uav );
-	}
-
-	std::shared_ptr<SamplerStateDx12> samplers[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	uint32_t samplerCount = 0;
-
-	for( const auto& reg : rootSignature.m_samplerRegisters )
-	{
-		uint32_t mapIndex = registerMap.samplers[reg.stage][reg.index];
-		const Sampler* sampler = mapIndex < registerMap.samplerCount ? m_sortedSamplers[mapIndex] : nullptr;
-
-		switch( sampler ? sampler->type : Sampler::NONE )
-		{
-		case Sampler::SAMPLER:
-			samplers[reg.parameter] = sampler->sampler.IsValid() ? sampler->sampler.m_sampler->m_samplerState : renderContext.GetNullSamplerDx12();
-			break;
-		case Sampler::HEAP_VIEW:
-			samplers[reg.parameter] = renderContext.GetSamplerHeapView();
-			break;
-		default:
-			samplers[reg.parameter] = renderContext.GetNullSamplerDx12();
-			break;
-		}
-		samplerCount = std::max( reg.parameter + 1, samplerCount );
-	}
-
-	m_descriptorCache[bufferIndex]->SetSamplers( 0, samplerCount, samplers );
-
-	if( inCount )
-	{
-		ResourceBarrierDx12( inCount, inTransitions );
-	}
-
-	m_bindingsCommitted = true;
-	m_bindingsSealed = true;
-	m_committedRootSignature = &rootSignature;
-	return S_OK;
+	return m_bindings.Commit( *this, rootSignature );
 }
 
 ALResult Tr2RenderContextAL::SetAllState()
@@ -1291,7 +915,7 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 		return;
 	}
 	size_t count = 0;
-	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + m_usedResources
+	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + used resources
 	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + 2 * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 
 	if( resource )
@@ -1321,10 +945,11 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 		resources[count++] = m_indexBuffer.m_buffer->m_buffer.GetResource();
 	}
 
-	if( !m_usedResources.empty() )
+	const auto& usedResources = m_bindings.GetUsedResources();
+	if( !usedResources.empty() )
 	{
-		std::copy( begin( m_usedResources ), end( m_usedResources ), resources + count );
-		count += m_usedResources.size();
+		std::copy( begin( usedResources ), end( usedResources ), resources + count );
+		count += usedResources.size();
 	}
 
 	FlushBarriersDx12( count, resources );
@@ -1344,10 +969,11 @@ void Tr2RenderContextAL::FlushComputeBarriersDx12( ID3D12Resource* resource )
 		resources[count++] = resource;
 	}
 
-	if( !m_usedResources.empty() )
+	const auto& usedResources = m_bindings.GetUsedResources();
+	if( !usedResources.empty() )
 	{
-		std::copy( begin( m_usedResources ), end( m_usedResources ), resources + count );
-		count += m_usedResources.size();
+		std::copy( begin( usedResources ), end( usedResources ), resources + count );
+		count += usedResources.size();
 	}
 
 	if( count )

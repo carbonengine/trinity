@@ -31,6 +31,7 @@ struct Tr2Viewport;
 #if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 
 #include "Tr2RenderStateEmulationDx11.h"
+#include "Tr2ResourceBindingsDx11.h"
 #include "Tr2ShaderProgramALDx11.h"
 
 
@@ -267,65 +268,9 @@ private:
 	// Current shaders
 	Tr2ShaderProgramAL m_shaderProgram;
 
-	struct Resource
-	{
-		enum Type
-		{
-			NONE,
-			BUFFER,
-			TEXTURE,
-			HEAP_VIEW,
-		};
-
-		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
-		uint32_t registerIndex = 0;
-		Tr2TextureAL texture;
-		Tr2BufferAL buffer;
-		Type type = NONE;
-		union
-		{
-			Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-			uint32_t mip;
-		};
-	};
-
-	struct Sampler
-	{
-		enum Type
-		{
-			NONE,
-			SAMPLER,
-			HEAP_VIEW,
-		};
-
-		Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::INVALID_SHADER;
-		uint32_t registerIndex = 0;
-		Tr2SamplerStateAL sampler;
-		Type type = NONE;
-	};
-
-	std::vector<Resource> m_pendingSRVs;
-	std::vector<Resource> m_pendingUAVs;
-	std::vector<Sampler> m_pendingSamplers;
-
-	const Resource* m_sortedSRVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Resource* m_sortedUAVs[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	const Sampler* m_sortedSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-
-	ID3D11ShaderResourceView* m_boundSrvs[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	ID3D11SamplerState* m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
-	uint32_t m_assignedUavOffset;
-	uint32_t m_assignedUavCount;
-	bool m_assignedPsUavs;
-
-	bool m_bindingsCommitted;
-	bool m_bindingsSealed;
-	const TrinityALImpl::Tr2ShaderProgramAL* m_committedProgram;
+	Tr2ResourceBindings m_bindings;
 
 	ALResult UseResourceBindings() throw();
-	void BeginResourceBindingBatch() throw();
-	void DiscardResourceBindings() throw();
-	void UnbindShaderResources( bool unbindUavs ) throw();
 
 	Tr2RenderContextEnum::Topology m_topology;
 	Tr2RenderContextEnum::Topology m_lastSetTopology;
