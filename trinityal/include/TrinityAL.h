@@ -25,7 +25,6 @@
 #include "Tr2GpuTimerAL.h"
 #include "Tr2ShaderProgramAL.h"
 #include "Tr2RegisterMapAL.h"
-#include "Tr2StaticResourceBindingsAL.h"
 #include "Tr2BufferAL.h"
 #include "Tr2PipelineStatsQueryAL.h"
 #include "Tr2RtBottomLevelAccelerationStructureAL.h"

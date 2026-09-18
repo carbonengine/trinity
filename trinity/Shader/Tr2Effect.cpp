@@ -620,7 +620,7 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2StaticResourceBindingsAL& staticBindings ) {
+	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2StaticResourceBindings& staticBindings ) {
 		bool modified = false;
 		for( auto& samplerOverride : m_samplerOverrides )
 		{

@@ -138,7 +138,7 @@ public:
 
 
 	std::vector<ITriReroutable*> m_reroutedParameters;
-	Tr2StaticResourceBindingsAL m_staticBindings;
+	Tr2StaticResourceBindings m_staticBindings;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	Tr2BindlessResourcesAL m_usedTextures;
 	bool m_compatibleWithGdr;
@@ -155,7 +155,7 @@ struct Tr2EffectLibraryParameters : public PassParametersOwner
 	Tr2MaterialStageInput m_localInput;
 
 	Tr2MaterialStageInput m_globalInput;
-	Tr2StaticResourceBindingsAL m_globalStaticBindings;
+	Tr2StaticResourceBindings m_globalStaticBindings;
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	Tr2BindlessResourcesAL m_usedTextures;

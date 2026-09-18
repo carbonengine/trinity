@@ -35,7 +35,6 @@ set(PUBLIC_AL_HEADER_FILES
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
     include/Tr2ShaderProgramAL.h
-    include/Tr2StaticResourceBindingsAL.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2VertexLayoutAL.h
@@ -200,7 +199,6 @@ set(_SOURCES
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
     include/Tr2ShaderProgramAL.h
-    include/Tr2StaticResourceBindingsAL.h
     include/Tr2StreamlineAL.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
@@ -283,7 +281,6 @@ set(_SOURCES
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
     src/Tr2ShaderProgramAL.cpp
-    src/Tr2StaticResourceBindingsAL.cpp
     src/Tr2StreamlineAL.cpp
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp

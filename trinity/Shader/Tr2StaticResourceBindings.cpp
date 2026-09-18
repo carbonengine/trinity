@@ -1,42 +1,39 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#include "../include/Tr2StaticResourceBindingsAL.h"
-#include "../include/Tr2RenderContextAL.h"
-#include "../include/Tr2RegisterMapAL.h"
+#include "Tr2StaticResourceBindings.h"
 
-
-bool Tr2StaticResourceBindingsAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
+bool Tr2StaticResourceBindings::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
 	return Set( KIND_SAMPLER, stage, registerIndex, sampler );
 }
 
-bool Tr2StaticResourceBindingsAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+bool Tr2StaticResourceBindings::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
 {
 	return Set( KIND_SRV_HEAP_VIEW, stage, registerIndex, Tr2SamplerStateAL() );
 }
 
-bool Tr2StaticResourceBindingsAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+bool Tr2StaticResourceBindings::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
 {
 	return Set( KIND_UAV_HEAP_VIEW, stage, registerIndex, Tr2SamplerStateAL() );
 }
 
-bool Tr2StaticResourceBindingsAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+bool Tr2StaticResourceBindings::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
 {
 	return Set( KIND_SAMPLER_HEAP_VIEW, stage, registerIndex, Tr2SamplerStateAL() );
 }
 
-void Tr2StaticResourceBindingsAL::Clear()
+void Tr2StaticResourceBindings::Clear()
 {
 	m_entries.clear();
 }
 
-bool Tr2StaticResourceBindingsAL::IsEmpty() const
+bool Tr2StaticResourceBindings::IsEmpty() const
 {
 	return m_entries.empty();
 }
 
-bool Tr2StaticResourceBindingsAL::operator==( const Tr2StaticResourceBindingsAL& other ) const
+bool Tr2StaticResourceBindings::operator==( const Tr2StaticResourceBindings& other ) const
 {
 	if( m_entries.size() != other.m_entries.size() )
 	{
@@ -58,7 +55,7 @@ bool Tr2StaticResourceBindingsAL::operator==( const Tr2StaticResourceBindingsAL&
 	return true;
 }
 
-ALResult Tr2StaticResourceBindingsAL::Apply( Tr2RenderContextAL& renderContext ) const
+ALResult Tr2StaticResourceBindings::Apply( Tr2RenderContextAL& renderContext ) const
 {
 	for( const auto& entry : m_entries )
 	{
@@ -82,7 +79,7 @@ ALResult Tr2StaticResourceBindingsAL::Apply( Tr2RenderContextAL& renderContext )
 	return S_OK;
 }
 
-bool Tr2StaticResourceBindingsAL::SharesRegisterSpace( Kind a, Kind b )
+bool Tr2StaticResourceBindings::SharesRegisterSpace( Kind a, Kind b )
 {
 	if( a == b )
 	{
@@ -91,7 +88,7 @@ bool Tr2StaticResourceBindingsAL::SharesRegisterSpace( Kind a, Kind b )
 	return ( a == KIND_SAMPLER || a == KIND_SAMPLER_HEAP_VIEW ) && ( b == KIND_SAMPLER || b == KIND_SAMPLER_HEAP_VIEW );
 }
 
-bool Tr2StaticResourceBindingsAL::Set( Kind kind, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
+bool Tr2StaticResourceBindings::Set( Kind kind, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
 	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
 	{

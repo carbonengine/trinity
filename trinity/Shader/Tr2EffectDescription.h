@@ -6,6 +6,7 @@
 #define Tr2EffectDescription_H
 
 #include "../Tr2IndirectDrawBuffer.h"
+#include "Tr2StaticResourceBindings.h"
 
 extern const BlueSharedString DEFAULT_TECHNIQUE;
 extern const BlueSharedString ANY_TECHNIQUE;
@@ -205,7 +206,7 @@ struct Tr2Pass
 	unsigned int renderStates;
 	unsigned int shaderTypeMask;
 	unsigned int shaderProgram;
-	Tr2StaticResourceBindingsAL staticBindings;
+	Tr2StaticResourceBindings staticBindings;
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	Tr2IndirectDrawBufferLayout indirectLayout;
@@ -226,7 +227,7 @@ struct Tr2EffectLibrary
 
 	Tr2EffectStageInput globalInput;
 	Tr2EffectStageInput localInput;
-	Tr2StaticResourceBindingsAL globalStaticBindings;
+	Tr2StaticResourceBindings globalStaticBindings;
 };
 
 

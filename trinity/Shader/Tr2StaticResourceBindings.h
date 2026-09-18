@@ -4,13 +4,7 @@
 
 #include <vector>
 
-#include "../ALResult.h"
-#include "../Tr2RenderContextEnum.h"
-#include "Tr2SamplerStateAL.h"
-
-class Tr2RenderContextAL;
-
-class Tr2StaticResourceBindingsAL
+class Tr2StaticResourceBindings
 {
 public:
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
@@ -20,7 +14,7 @@ public:
 	void Clear();
 	bool IsEmpty() const;
 
-	bool operator==( const Tr2StaticResourceBindingsAL& other ) const;
+	bool operator==( const Tr2StaticResourceBindings& other ) const;
 
 	ALResult Apply( Tr2RenderContextAL& renderContext ) const;
 
