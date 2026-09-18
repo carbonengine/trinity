@@ -313,7 +313,7 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 {
 	std::string s = "BuildChild ";
 	s += std::string( dnaString );
-	CCP_STATS_ZONE( s.c_str() );
+	TRINITY_STATS_ZONE( s.c_str() );
 
 	EveSOFDNAPtr dna = CreateDna( dnaString );
 	if( dna == nullptr )
@@ -3068,7 +3068,7 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 // --------------------------------------------------------------------------------
 void EveSOF::SetupChildBoosters( EveChildContainerPtr child, const EveSOFDNAPtr dna ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// does this hull have boosters at all?
 	if( dna->GetHullBoosterCount() == 0 )

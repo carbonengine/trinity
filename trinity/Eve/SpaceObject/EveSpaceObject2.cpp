@@ -7,7 +7,6 @@
 #include "Utilities/MatrixUtils.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "include/IEveBallpark.h"
 #include "Include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
@@ -40,6 +39,7 @@
 #include "../../Tr2RingBuffer.h"
 
 #include <limits>
+#include <IEveBallpark.h>
 
 
 std::atomic<uint64_t> EveSpaceObject2::s_nextAudioInstanceId{ 1 };
