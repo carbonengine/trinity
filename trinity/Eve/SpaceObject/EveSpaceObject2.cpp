@@ -7,7 +7,6 @@
 #include "Utilities/MatrixUtils.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "include/IEveBallpark.h"
 #include "Include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
@@ -40,6 +39,7 @@
 #include "../../Tr2RingBuffer.h"
 
 #include <limits>
+#include <IEveBallpark.h>
 
 
 std::atomic<uint64_t> EveSpaceObject2::s_nextAudioInstanceId{ 1 };
@@ -55,6 +55,8 @@ float g_secondaryLightingRadiusCutoffFactor = 0.3f;
 TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLightingRadiusCutoffFactor );
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
+
+extern bool g_eveSpaceObjectImpactEffectEnabled;
 
 void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 ITriRenderBatchAccumulator* batches,
@@ -205,7 +207,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_mergedLocatorSetsDirty( true ),
 	m_damageLocatorAutoFilterEnabled( false ),
 	m_damageLocatorFilterRequested( false ),
-	m_damageFilterState( DamageFilterState::Pending )
+	m_damageFilterState( DamageFilterState::Idle )
 {
 	m_positionDelta.CreateInstance();
 
@@ -1015,29 +1017,18 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			for( size_t i = 0; i < locators.size(); ++i )
 			{
 				auto& locator = locators[i];
-				auto position = locator.position;
-				auto rotation = locator.direction;
 
-				size_t boneCount;
-				const Float4x3* bones;
+				Vector3 position;
+				Vector3 direction;
+				GetLocatorInObjectSpace( position, direction, locator, isDamageLocatorSet ? int( i ) : -1 );
 
 				Color locatorColor = c;
 
-				if( locator.boneIndex >= 0 && Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) )
+				size_t boneCount;
+				const Float4x3* bones;
+				if( Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount ) && locator.boneIndex >= int( boneCount ) )
 				{
-					if( locator.boneIndex < int( boneCount ) )
-					{
-						const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-						Matrix boneTF = IdentityMatrix();
-						TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
-						position = XMVector3TransformCoord( position, boneTF );
-
-						rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
-					}
-					else
-					{
-						locatorColor = 0x99ff4444;
-					}
+					locatorColor = 0x99ff4444;
 				}
 
 				if( isDamageLocatorSet && i < m_damageLocatorEnabled.size() && !m_damageLocatorEnabled[i] )
@@ -1049,7 +1040,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 				renderer.DrawSphereArrow(
 					Tr2DebugObjectReference( &locators, uint32_t( i ) ),
 					Vector3( XMVector3TransformCoord( position, m_worldTransform ) ),
-					Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( rotation ) ) * m_worldTransform ) ),
+					Vector3( XMVector3TransformNormal( direction, m_worldTransform ) ),
 					min( m_boundingSphereRadius * m_modelScale / 50.f, 100.0f ),
 					8,
 					Tr2DebugRenderer::Lit,
@@ -1551,6 +1542,10 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 			CCP_STATS_INC( eveLowDetailObjects );
 		}
 	}
+	else if( !m_mesh && m_impactOverlay && m_isMeshVisible )
+	{
+		renderables.push_back( this );
+	}
 
 	PushChildrenAndDecalRenderables( renderables );
 }
@@ -1593,7 +1588,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 
 void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_isVisible = false;
 	m_isMeshVisible = false;
@@ -1943,9 +1938,10 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 		{
 			LocatorSourceRange range;
 			range.owner = childLocatorSet.owner;
-			range.partTag = childLocatorSet.owner->GetPartTag();
+			range.partTag = childLocatorSet.partTag;
 			range.start = int32_t( ( *mergedLocatorSet )->GetLocators()->size() - childLocatorSet.sets->GetLocators()->size() );
 			range.count = int32_t( childLocatorSet.sets->GetLocators()->size() );
+			range.childToObject = childLocatorSet.childToObject;
 			m_mergedDamageLocatorSources.push_back( range );
 		}
 	}
@@ -1969,7 +1965,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 
 bool EveSpaceObject2::CollectOccluders()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_mesh && m_mesh->GetGeometryResource() )
 	{
@@ -2038,7 +2034,7 @@ bool EveSpaceObject2::CollectOccluders()
 
 bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( size_t i = 0; i < m_damageFilterOccluders.size(); )
 	{
@@ -2065,7 +2061,7 @@ bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 
 void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* damageLocators )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<uint8_t> enabled;
 	enabled.resize( m_damageLocatorEnabled.size() );
@@ -2148,7 +2144,7 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 void EveSpaceObject2::UpdateDamageLocatorFilter()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_damageFilterState == DamageFilterState::Idle )
 	{
@@ -2621,7 +2617,7 @@ int EveSpaceObject2::GetClosestLocatorIndex( const Vector3* position, BlueShared
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			auto distanceFromLocator = LengthSq( locatorPosition - posInObjectSpace );
@@ -2664,7 +2660,7 @@ int EveSpaceObject2::GetCloseLocatorIndex( const Vector3& position, BlueSharedSt
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 
 		auto distanceFromLocator = LengthSq( locatorPosition - posInObjectSpace );
 		if( distanceFromLocator < closestLength )
@@ -2734,7 +2730,7 @@ int EveSpaceObject2::GetGoodLocatorIndex( const Vector3& position, BlueSharedStr
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			Vector3 v( XMVectorSubtract( locatorPosition, posInObjectSpace ) );
@@ -2759,7 +2755,7 @@ int EveSpaceObject2::GetGoodLocatorIndex( const Vector3& position, BlueSharedStr
 		}
 
 		auto& locator = ( *locators )[i];
-		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator );
+		GetLocatorInObjectSpace( locatorPosition, locatorDirection, locator, isDamageLocatorSet ? int( i ) : -1 );
 		if( IsLocatorFacingPosition( locatorDirection, posInObjectSpace ) )
 		{
 			Vector3 v( XMVectorSubtract( locatorPosition, posInObjectSpace ) );
@@ -2790,6 +2786,19 @@ float EveSpaceObject2::GetRadius() const
 bool EveSpaceObject2::GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace )
 {
 	return GetLocatorPosition( out, index, inWorldSpace, DAMAGE_LOCATOR_SET_NAME );
+}
+
+bool EveSpaceObject2::GetDamageLocatorBindPosition( int index, Vector3& out ) const
+{
+	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
+	if( !damageLocators || index < 0 || index >= int( damageLocators->size() ) )
+	{
+		out = Vector3( 0.f, 0.f, 0.f );
+		return false;
+	}
+
+	out = ( *damageLocators )[index].position;
+	return true;
 }
 
 Vector3 EveSpaceObject2::GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName )
@@ -2823,7 +2832,7 @@ bool EveSpaceObject2::GetLocatorPosition( Vector3* out, int index, bool inWorldS
 	const Locator& locator = ( *locators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, locator );
+	GetLocatorInObjectSpace( position, direction, locator, locatorSetName == DAMAGE_LOCATOR_SET_NAME ? index : -1 );
 
 	if( inWorldSpace )
 	{
@@ -2966,7 +2975,7 @@ bool EveSpaceObject2::GetLocatorDirection( Vector3* out, int index, bool inWorld
 	const Locator& locator = ( *locators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, locator );
+	GetLocatorInObjectSpace( position, direction, locator, locatorSetName == DAMAGE_LOCATOR_SET_NAME ? index : -1 );
 
 	if( inWorldSpace )
 	{
@@ -3519,11 +3528,14 @@ void EveSpaceObject2::SetImpactDamageState( float shield, float armor, float hul
 // --------------------------------------------------------------------------------
 EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSourceRange& range )
 {
-	EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay();
+	EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag );
 	if( !overlay )
 	{
-		overlay = const_cast<EveChildMesh*>( range.owner )->EnsureDamageOverlay();
-		overlay->SetArmorDamageShaderEffect( m_impactOverlay->GetArmorDamageShaderEffect() );
+		EveSpaceObjectChild* child = const_cast<EveSpaceObjectChild*>( range.owner );
+		child->CreatePartDamageOverlay( range.partTag );
+		overlay = child->GetPartDamageOverlay( range.partTag );
+		CCP_ASSERT( overlay );
+		overlay->SetArmorDamageShaderEffect( range.owner->GetPartArmorDamageShaderEffect( range.partTag ) );
 		// each part gets its own flicker curve instance, the async child updates must not share one
 		if( TriPerlinCurve* flickerCurve = m_impactOverlay->GetHullDamageFlickerCurve() )
 		{
@@ -3531,7 +3543,7 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 			BeClasses->CopyTo( flickerCurve->GetRootObject(), (IRoot**)&flickerCopy );
 			overlay->SetHullDamageFlickerCurve( flickerCopy );
 		}
-		overlay->SetSeed( m_impactOverlay->GetSeed() + range.owner->GetPartTag() );
+		overlay->SetSeed( m_impactOverlay->GetSeed() + range.partTag );
 	}
 	overlay->SetDamageLocatorCount( uint32_t( range.count ) );
 	int rangeStart = min( int32_t( m_damageLocatorEnabled.size() ), range.start );
@@ -3540,6 +3552,25 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 	// ship and parts share one impact index namespace, so UpdateImpact can resolve any index
 	overlay->SetImpactIndexSource( m_impactOverlay->GetDamageOverlay() );
 	return overlay;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Collects the damage overlays of parts, with offsets into the merged damage locator set.
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>>& out )
+{
+	EnsureChildLocatorMerged();
+	for( const auto& range : m_mergedDamageLocatorSources )
+	{
+		if( range.owner )
+		{
+			if( EveDamageOverlay* overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
+			{
+				out.emplace_back( overlay, range.start );
+			}
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -3585,7 +3616,7 @@ void EveSpaceObject2::ClearImpactDamage()
 	{
 		if( range.owner )
 		{
-			if( EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay() )
+			if( EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
 			{
 				overlay->Clear();
 			}
@@ -3610,9 +3641,14 @@ int EveSpaceObject2::CreateImpact( int damageLocatorIndex, const Vector3& direct
 			{
 				if( range.owner && damageLocatorIndex >= range.start && damageLocatorIndex < range.start + range.count )
 				{
+					if( !g_eveSpaceObjectImpactEffectEnabled )
+					{
+						return -1;
+					}
 					if( EveDamageOverlayPtr overlay = EnsureChildDamageOverlay( range ) )
 					{
-						return overlay->CreateImpact( damageLocatorIndex - range.start, size, false );
+						bool spawnEffects = m_lodLevel != TR2_LOD_LOW;
+						return overlay->CreateImpact( damageLocatorIndex - range.start, size, spawnEffects );
 					}
 				}
 			}
@@ -3663,7 +3699,7 @@ bool EveSpaceObject2::UpdateImpact( Vector3& out, const Vector3& direction, int 
 		{
 			if( range.owner )
 			{
-				if( EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay() )
+				if( EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
 				{
 					if( overlay->HasImpact( impactIndex ) )
 					{
@@ -3706,7 +3742,7 @@ Vector3 EveSpaceObject2::GetDamageLocator( uint32_t index ) const
 	const Locator& damageLocator = ( *damageLocators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 
 	return position;
 }
@@ -3720,17 +3756,17 @@ Vector3 EveSpaceObject2::GetDamageLocatorDirectionLocal( uint32_t index ) const
 	}
 	const Locator& damageLocator = ( *damageLocators )[index];
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 	return direction;
 }
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Returns the damage locator positionin worldspace
+//   Returns the damage locator position in worldspace
 // --------------------------------------------------------------------------------
 Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
 	if( !damageLocators || index >= damageLocators->size() )
@@ -3740,35 +3776,32 @@ Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 	const Locator& damageLocator = ( *damageLocators )[index];
 
 	Vector3 position, direction;
-	GetLocatorInObjectSpace( position, direction, damageLocator );
+	GetLocatorInObjectSpace( position, direction, damageLocator, int( index ) );
 
 	return XMVector3TransformCoord( position, m_worldTransform );
 }
 
-void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const
+void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator, int mergedDamageIndex ) const
 {
-	Vector3 damagelocatorDirection = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), locator.direction );
-	// We're assuming for now that the bone 0 isn't animated for performance reasons.
-	if( locator.boneIndex <= 0 )
+	if( mergedDamageIndex >= 0 )
 	{
-		// damage locator is not attached to a bone, return the position
-		position = locator.position;
-		direction = damagelocatorDirection;
-		return;
-	}
-
-	// If the damage locator is animated we extract the bone matrix and apply it to the damage locator position
-	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-	{
-		if( locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
+		EnsureChildLocatorMerged();
+		for( const auto& range : m_mergedDamageLocatorSources )
 		{
-			const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-			Matrix boneTF = IdentityMatrix();
-			TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
-			position = XMVector3TransformCoord( locator.position, boneTF );
-			direction = XMVector3TransformNormal( damagelocatorDirection, boneTF );
+			if( range.owner && mergedDamageIndex >= range.start && mergedDamageIndex < range.start + range.count )
+			{
+				if( range.owner->GetPartDamageLocatorAnimatedLocal( range.partTag, mergedDamageIndex - range.start, position, direction ) )
+				{
+					position = XMVector3TransformCoord( position, range.childToObject );
+					direction = Normalize( (Vector3)XMVector3TransformNormal( direction, range.childToObject ) );
+					return;
+				}
+				break;
+			}
 		}
 	}
+
+	EveGetLocatorPose( m_animationUpdater, locator, position, direction );
 }
 
 Be::Result<std::string> EveSpaceObject2::GetLocalBoundingBoxFromScript( std::pair<Vector3, Vector3>& result )

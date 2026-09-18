@@ -21,6 +21,7 @@ if(BUILD_FOR_PYTHON_2)
     add_library(GPUOpen::VulkanMemoryAllocator ALIAS GPUOpen::VMA)
     find_package(CarbonTrinityAudioAPI REQUIRED)
     add_library(CcpTrinityAudioAPI ALIAS CarbonTrinityAudioAPI)
+    find_package(Destiny)
 else()
     find_package(unofficial-libsquish CONFIG REQUIRED)
     find_package(amd-fidelityfx-cas CONFIG REQUIRED)
@@ -29,11 +30,10 @@ else()
     find_package(VulkanHeaders CONFIG) # Required for VulkanMemoryAllocator
     find_package(VulkanMemoryAllocator CONFIG REQUIRED)
     find_package(carbon-trinityaudioapi CONFIG REQUIRED)
+    find_package(carbon-destiny CONFIG REQUIRED)
 endif()
 
 set(PUBLIC_HEADER_FILES
-    Include/IEveBallpark.h
-    Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
@@ -578,6 +578,9 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildSpherePin_Blue.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
     Eve/SpaceObject/Children/EveChildTransform.cpp
+    Eve/SpaceObject/Children/EveChildTurret.cpp
+    Eve/SpaceObject/Children/EveChildTurret.h
+    Eve/SpaceObject/Children/EveChildTurret_Blue.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.cpp
     Eve/SpaceObject/Children/EveCloudEditableVolume.h
     Eve/SpaceObject/Children/EveCloudEditableVolume_Blue.cpp
@@ -702,6 +705,8 @@ set(_SOURCES
     Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.cpp
     Eve/SpaceObjectFactory/EveSOFUtils.h
+    Eve/Turret/EveTurretAiming.cpp
+    Eve/Turret/EveTurretAiming.h
     Eve/Turret/EveTurretFiringFX.cpp
     Eve/Turret/EveTurretFiringFX.h
     Eve/Turret/EveTurretFiringFX_Blue.cpp
@@ -781,6 +786,9 @@ set(_SOURCES
     Eve/AudioGameObject.cpp
     Eve/AudioGameObject.h
     Eve/AudioGameObject_Blue.cpp
+    Eve/EveTriggerVolume.cpp
+    Eve/EveTriggerVolume.h
+    Eve/EveTriggerVolume_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -847,8 +855,6 @@ set(_SOURCES
     Font/Tr2SBit.cpp
     Font/Tr2SBit.h
     Font/Tr2SBit_Blue.cpp
-    Include/IEveBallpark.h
-    Include/IEveReferencePoint.h
     Include/ITr2AnimationUpdater.h
     Include/ITr2BoundingBox.h
     Include/ITr2DebugRenderer.h
@@ -856,6 +862,7 @@ set(_SOURCES
     Include/ITr2InstanceData.h
     Include/ITr2Interior.h
     Include/ITr2MultiPassScene.h
+    Include/ITr2PoseModifier.h
     Include/ITr2Scene.h
     Include/ITr2Updateable.h
     Include/ITr2ValueBinding.h
@@ -1892,13 +1899,18 @@ function(set_shared_trinity_properties target)
     endif()
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
-
+    set(destiny_target_name destiny)
+    if (BUILD_FOR_PYTHON_2)
+        set(destiny_target_name Destiny)
+    endif ()
+    get_target_property(DESTINY_INCLUDE_DIRS ${destiny_target_name} INTERFACE_INCLUDE_DIRECTORIES)
     target_include_directories(${target}
         PUBLIC
             $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:include>
             $<TARGET_PROPERTY:PNG::PNG,INTERFACE_INCLUDE_DIRECTORIES>
+            $<BUILD_INTERFACE:${DESTINY_INCLUDE_DIRS}>
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/..

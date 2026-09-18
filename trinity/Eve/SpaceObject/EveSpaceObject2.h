@@ -175,8 +175,9 @@ struct LocatorSourceRange
 {
 	int32_t start;
 	int32_t count;
-	const class EveChildMesh* owner;
+	const class EveSpaceObjectChild* owner;
 	uint32_t partTag;
+	Matrix childToObject = IdentityMatrix();
 };
 
 struct DamageFilterOccluder
@@ -310,6 +311,7 @@ public:
 	void EnsureChildLocatorMerged() const;
 	void UpdateDamageLocatorFilter();
 	EveDamageOverlayPtr EnsureChildDamageOverlay( const LocatorSourceRange& range );
+	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>> & out );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
@@ -354,6 +356,7 @@ public:
 	unsigned int GetDamageLocatorCount() const;
 	int GetClosestDamageLocatorIndex( const Vector3* position );
 	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+	bool GetDamageLocatorBindPosition( int index, Vector3& out ) const;
 	virtual bool GetDamageLocatorDirection( Vector3 * out, int index, bool inWorldSpace );
 	void GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out );
 	int GetGoodDamageLocatorIndex( const Vector3& position );
@@ -762,7 +765,9 @@ protected:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
-	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator ) const;
+	// Pass the locator's index in the merged damage locator set as mergedDamageIndex so that
+	// locators owned by a child part get the child's bone pose applied; -1 for other sets.
+	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -793,6 +798,7 @@ protected:
 private:
 #if BLUE_WITH_PYTHON
 	static PyObject* PyTransformLocators( PyObject * self, PyObject * args );
+	static PyObject* PyGetTransformedLocatorsFromSet( PyObject * self, PyObject * args );
 #endif
 
 	void ReleaseDamageFilterSessions();

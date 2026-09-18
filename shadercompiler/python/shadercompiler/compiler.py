@@ -6,6 +6,7 @@ import json
 
 BUILDER_DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def _find_branch_dir(start):
     directory = start
     while True:
@@ -17,16 +18,19 @@ def _find_branch_dir(start):
         directory = parent
     raise RuntimeError('could not locate carbon.json in any parent of %s' % start)
 
+
 BRANCH_DIR = _find_branch_dir(BUILDER_DIR)
 
 carbonjson = json.load(open(os.path.join(BRANCH_DIR, 'carbon.json')))
 
-SHADER_COMPILER_PATH = os.path.join(BRANCH_DIR, "vendor", carbonjson['libraries']['carbon_trinity'], "shadercompiler", "bin")
+SHADER_COMPILER_PATH = os.path.join(BRANCH_DIR, "vendor", carbonjson['libraries']['carbon_trinity'], "shadercompiler",
+                                    "bin")
 
 if sys.platform == 'win32':
     COMPILER_PATH = os.path.abspath(os.path.join(SHADER_COMPILER_PATH, 'Windows', 'x64', 'v141', 'ShaderCompiler.exe'))
 elif sys.platform == 'darwin':
-    COMPILER_PATH = os.path.abspath(os.path.join(SHADER_COMPILER_PATH, 'macOS', 'universal', 'AppleClang', 'ShaderCompiler'))
+    COMPILER_PATH = os.path.abspath(
+        os.path.join(SHADER_COMPILER_PATH, 'macOS', 'universal', 'AppleClang', 'ShaderCompiler'))
 else:
     raise RuntimeError('unsupported platform')
 
@@ -59,7 +63,7 @@ def compile_shader(effect_path, output_path=None, platform=None, shader_model=No
         args.extend(('/define', 'PLATFORM', str(platform)))
     if shader_model is not None:
         args.extend(('/define', 'SHADERMODEL', str(shader_model)))
-    for name, value in (defines or {}).iteritems():
+    for name, value in (defines or {}).items():
         args.extend(('/define', name, str(value)))
     if avoid_flow_control:
         args.append('/Gfa')

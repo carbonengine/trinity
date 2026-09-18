@@ -65,7 +65,7 @@ Tr2SSSSS::Tr2SSSSS( IRoot* lockobj ) :
 
 void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderContext, ITriRenderBatchAccumulator* batches, const Tr2TextureAL& colorMap, const Tr2TextureAL& opaqueColorMap, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_enabled )
 	{
@@ -94,7 +94,7 @@ void Tr2SSSSS::SetupScreenSpaceSubSurfaceScattering( Tr2RenderContext& renderCon
 
 	// JKG need to confirm m_primaryBatches is a safe batch to render from
 	{
-		CCP_STATS_ZONE( "SeprableSpecularRendering" );
+		TRINITY_STATS_ZONE( "SeprableSpecularRendering" );
 
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( batches, SSSSS );
