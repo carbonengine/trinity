@@ -30,6 +30,14 @@ enum class ShadowQuality
 	SHADOW_RAYTRACED
 };
 
+// The base is deliberately set to 32bit because of a bug in MAP_ATTRIBUTE
+enum class LightingQuality : int32_t
+{
+	LOW,
+	MEDIUM,
+	HIGH,
+};
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Manages light sources for tiled/clustered lighting. An object of this class does not
@@ -101,19 +109,28 @@ public:
 	static const uint16_t FLAG_AFFECTS_PARTICLES = 1 << 1;
 	static const uint16_t FLAG_CASTS_SHADOWS = 1 << 2;
 	static const uint16_t FLAG_IS_VOLUMETRIC = 1 << 3;
+	static const uint16_t FLAG_FALLOFF_INV_SQUARE = 1 << 4;
+
+	static const uint16_t FLAG_BITS = 5;
 
 	static const uint16_t FLAG_DEFAULT = FLAG_AFFECTS_SURFACES;
 
+	static uint16_t PackFlags( uint16_t flags, uint16_t profileIndex );
+
 	void Clear( Tr2RenderContext& renderContext );
 	void SetFrustum( const TriFrustum& frustum );
-	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT );
-	void AddLight( PerLightData& data );
+	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
+	void AddLight( PerLightData& data, bool scaleBrightness = true );
 	void ResolveLightData();
 	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void SetVariableStore();
 	void AdjustLightCutoff( float lodFactor );
 
 	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
+	void SetLightingQuality( LightingQuality lightingQuality );
+	LightingQuality GetLightingQuality() const;
+
+	static const uint8_t ANY_LIGHT_QUALITY = 0xff;
 
 	virtual void ReleaseResources( TriStorage s );
 
@@ -195,6 +212,7 @@ private:
 
 	uint32_t nextFrameShadowQuality; // bitmask, collecting ShadowQualities during the current frame
 	ShadowQuality m_currentSpaceSceneShadowQuality;
+	LightingQuality m_lightingQuality = LightingQuality::HIGH;
 	uint64_t m_currentFrameCounter;
 
 	struct

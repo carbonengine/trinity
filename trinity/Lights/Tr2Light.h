@@ -5,6 +5,7 @@
 #include "Tr2LightManager.h"
 #include "Tr2DebugRenderer.h"
 #include "Utilities/MatrixUtils.h"
+#include "../EnumFilter.h"
 
 BLUE_DECLARE( Tr2LightProfileRes );
 
@@ -17,11 +18,10 @@ struct LightFeatures
 	float parentBrightness;
 };
 
-enum class PerLightShadowSetting
+enum class LightFalloffType : uint8_t
 {
-	DISABLED,
-	ENABLED_ONLY_ON_HIGH_QUALITY,
-	ALWAYS_ENABLED
+	INVERSE,
+	INVERSE_SQUARE
 };
 
 struct LightData
@@ -45,16 +45,20 @@ struct LightData
 	float outerAngle;
 	float innerAngle;
 
+	// This should be LightFalloffType, but it can't be used because of a bug in MAP_ATTRIBUTE
+	uint8_t falloff;
+	EnumFilter<LightingQuality> lightingQuality;
+
 	// Textured light specifics
 	std::wstring texturePath;
 	int32_t boneIndex;
 
 	uint16_t flags;
 
-	Be::Time startTime;
-
-	PerLightShadowSetting castsShadows;
+	EnumFilter<ShadowQuality> castsShadows;
 	bool isVolumetric;
+
+	Be::Time startTime;
 };
 
 
@@ -105,6 +109,7 @@ protected:
 	std::string m_name;
 	Be::Time m_startTime;
 	bool m_isDynamic;
+	bool m_scaleBrightness;
 	float m_brightnessMultiplier;
 	Matrix m_boneTransform; // used for lights that have boneIndices
 
@@ -116,3 +121,5 @@ TYPEDEF_BLUECLASS( Tr2Light );
 
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
+extern const Be::VarChooser LightFalloffTypeChooser[];
+extern const Be::VarChooser LightingQualityFilterChooser[];
