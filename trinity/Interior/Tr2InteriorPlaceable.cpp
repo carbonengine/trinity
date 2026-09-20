@@ -8,6 +8,7 @@
 
 // Trinity headers
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/Obb.h"
 #include "Tr2PerObjectData.h"
 #include "Wod/WodPlaceableRes.h"
 #include "Tr2Mesh.h"
@@ -132,6 +133,17 @@ bool Tr2InteriorPlaceable::GetWorldBoundingBox( Vector3& min, Vector3& max ) con
 
 	BoundingBoxTransform( min, max, m_transform );
 
+	return true;
+}
+
+bool Tr2InteriorPlaceable::GetWorldBoundingObb( Obb& obb ) const
+{
+	Vector3 min, max;
+	if( !GetLocalBoundingBox( min, max ) )
+	{
+		return false;
+	}
+	obb.CreateWorldBoundingObb( min, max, m_transform );
 	return true;
 }
 

@@ -106,6 +106,14 @@ const Be::ClassInfo* Tr2ProjectBoundingBoxBracket::ExposeToBlue()
 			Be::READWRITE )
 
 		MAP_ATTRIBUTE(
+			"debugDraw",
+			m_debugDraw,
+			"If set, and a debug renderer is set, draws the bounds the projection\n"
+			"consumed as a world-space wireframe, the published rect, and the\n"
+			"bracket's name and size at its projected position.",
+			Be::READWRITE )
+
+		MAP_ATTRIBUTE(
 			"screenMargin",
 			m_screenMargin,
 			"If greater than zero, the projected rect is clamped inside the viewport"
