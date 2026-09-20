@@ -526,6 +526,7 @@ public:
 	{
 		BlueSharedString path;
 		uint32_t buildFilter;
+		uint32_t visibilityGroup;
 	};
 
 	struct HullData

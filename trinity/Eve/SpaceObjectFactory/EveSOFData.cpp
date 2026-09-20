@@ -297,6 +297,11 @@ EveSOFDataRaceDamage::EveSOFDataRaceDamage( IRoot* lockobj ) :
 {
 }
 
+EveSOFDataHullController::EveSOFDataHullController( IRoot* lockobj ) :
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
+{
+}
+
 
 std::string EveSOFDataHullController::GetName() const
 {
