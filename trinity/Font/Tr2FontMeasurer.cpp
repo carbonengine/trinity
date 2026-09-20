@@ -782,8 +782,8 @@ void Tr2FontMeasurer::PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2&
 	m_vertices = CCP_NEW( "Tr2FontMeasurer/m_vertices" ) Tr2Sprite2dD3DVertex[m_vertexCount];
 
 	m_indexCount = spriteCount * 6;
-	m_indices = CCP_NEW( "Tr2FontMeasurer/m_indices" ) unsigned short[m_indexCount];
-	unsigned short* curIndex = m_indices;
+	m_indices = CCP_NEW( "Tr2FontMeasurer/m_indices" ) unsigned int[m_indexCount];
+	unsigned int* curIndex = m_indices;
 
 	Tr2AtlasTexture* currentTexture = nullptr;
 
@@ -1072,7 +1072,7 @@ void Tr2FontMeasurer::SubmitSprites( Tr2Sprite2dScene* renderer )
 
 	Tr2Sprite2dD3DVertex* vertices;
 	unsigned int vertexCount;
-	unsigned short* indices;
+	unsigned int* indices;
 	unsigned int indexCount;
 	unsigned int vertexOffset = 0;
 
@@ -1083,11 +1083,11 @@ void Tr2FontMeasurer::SubmitSprites( Tr2Sprite2dScene* renderer )
 
 		unsigned int startSprite = entry.startSprite;
 		unsigned int spriteCount = entry.spriteCount;
-		unsigned short* adjustedIndices = nullptr;
+		unsigned int* adjustedIndices = nullptr;
 
 		if( spriteCount > maxSpriteCount )
 		{
-			adjustedIndices = CCP_NEW( "adjustedIndices" ) unsigned short[maxSpriteCount * 6];
+			adjustedIndices = CCP_NEW( "adjustedIndices" ) unsigned int[maxSpriteCount * 6];
 		}
 
 		// Ensure we don't submit too many vertices at once
@@ -1339,9 +1339,9 @@ void Tr2FontMeasurer::SetFadeBottomEnd( float val )
 	NotifyListenersOfChange();
 }
 
-unsigned short* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite, unsigned short* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset )
+unsigned int* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite, unsigned int* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset )
 {
-	unsigned short* indices;
+	unsigned int* indices;
 	if( startSprite > 0 && adjustedIndices )
 	{
 		indices = adjustedIndices;
