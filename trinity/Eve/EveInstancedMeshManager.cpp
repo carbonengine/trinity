@@ -705,38 +705,6 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 	GetPickingBatches( readback, batches );
 }
-/*
-std::pair<IRootPtr, uint32_t> EveInstancedMeshManager::GetPickedObject( uint32_t objectId, uint32_t areaId )
-{
-	for( auto& [mesh, meshInfo] : m_meshInstances )
-	{
-		for( auto& group : meshInfo.meshGroups )
-		{
-			if( group.pickingObjectId == 0xffffffff )
-			{
-				continue;
-			}
-			if( group.pickingObjectId > objectId || group.pickingObjectId + meshInfo.lodIndices.size() <= objectId )
-			{
-				continue;
-			}
-			if( m_sphereGroups[group.sphereGroupIndex].lastTestResult == TriFrustumTestResult::Outside )
-			{
-				continue;
-			}
-			BinVisibleInstances( mesh, meshInfo, group );
-			auto& lod = meshInfo.lodIndices[objectId - group.pickingObjectId];
-			uint32_t instanceId = 0;
-			if( areaId < lod.size() )
-			{
-				instanceId = uint32_t( mesh.isDynamic ? static_cast<const DynamicPerInstanceData*>( lod[areaId].first ) - group.dynamicInstances : static_cast<const StaticPerInstanceData*>( lod[areaId].first ) - group.staticInstances );
-			}
-			return { group.owner, instanceId | ( group.ownerIndex << 16 ) };
-		}
-	}
-	return { nullptr, 0 };
-}
-*/
 
 void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {

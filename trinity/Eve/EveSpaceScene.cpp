@@ -3711,7 +3711,6 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 		const void* pointer;
 		uint32_t pitch;
-		//if( m_pickBuffer.MapForReading( Tr2TextureSubresource( 0 ), pointer, pitch, renderContext ) == S_OK )
 		if( pickingReadback.m_readback.Map(pointer, pitch, renderContext ) == S_OK )
 		{
 
@@ -3738,11 +3737,6 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 					break;
 				}
 			}
-
-			CCP_LOGERR( "READBACK RESULT: %08x, %08x, %08x, %08x", data[0], data[1], data[2], data[3] );
-
-			CCP_LOGERR( "Picking result: pointer: %p (found: %s), extra1: %d, extra2: %d", object, found ? "yes" : "NO!!!", extraData1, extraData2 );
-
 
 			if( !found )
 			{
