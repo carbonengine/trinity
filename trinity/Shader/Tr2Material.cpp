@@ -305,11 +305,11 @@ void Tr2Material::SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2
 {
 	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
 	{
-		it->m_sourceValue->UseSRV( shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ), renderContext );
+		it->m_sourceValue->SetSrv( shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ), renderContext );
 	}
 	for( auto it = input.m_uavs.cbegin(); it != input.m_uavs.cend(); ++it )
 	{
-		it->m_sourceValue->UseUav( shaderType, it->m_registerIndex, renderContext );
+		it->m_sourceValue->SetUav( shaderType, it->m_registerIndex, renderContext );
 	}
 }
 

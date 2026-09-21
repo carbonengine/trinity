@@ -412,7 +412,7 @@ void EveCloudVolumeTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes 
 	m_isUsedByEffect = true;
 }
 
-void EveCloudVolumeTextureParameter::UseSRV(
+void EveCloudVolumeTextureParameter::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,

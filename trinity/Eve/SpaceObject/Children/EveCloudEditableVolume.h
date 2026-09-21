@@ -155,7 +155,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectResourceParameter
-	void UseSRV(
+	void SetSrv(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags,

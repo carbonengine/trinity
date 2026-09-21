@@ -101,7 +101,7 @@ void Tr2GeometryBufferParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2GeometryBufferParameter::UseSRV(
+void Tr2GeometryBufferParameter::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,
@@ -120,7 +120,7 @@ void Tr2GeometryBufferParameter::UseSRV(
 }
 
 // --------------------------------------------------------------------------------------
-void Tr2GeometryBufferParameter::UseUav(
+void Tr2GeometryBufferParameter::SetUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	Tr2RenderContext& renderContext ) const

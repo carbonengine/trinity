@@ -277,7 +277,6 @@ ALResult ResourceBindings::Commit( Tr2RenderContextAL& context ) throw()
 	uint32_t transitionedCount = 0;
 
 	auto AddTransition = [&]( ID3D12Resource* res, D3D12_RESOURCE_STATES defaultState, D3D12_RESOURCE_STATES expectedState ) {
-		// TODO: verify state
 		if( ( defaultState & expectedState ) == 0 && defaultState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE )
 		{
 			auto found = std::find( transitioned, transitioned + transitionedCount, res );
@@ -305,7 +304,7 @@ ALResult ResourceBindings::Commit( Tr2RenderContextAL& context ) throw()
 		{
 		case Resource::TEXTURE: {
 			auto* texture = resource->texture.TrinityALImpl_GetObject();
-			if( resource->texture.IsValid() && reg.registerType >= Tr2ShaderRegisterAL::SRV_TEXTURE1D )
+			if( resource->texture.IsValid() && Tr2ShaderRegisterAL::IsSrvTexture( reg.registerType ) )
 			{
 				srv = texture->m_view[resource->colorSpace];
 			}
@@ -321,7 +320,7 @@ ALResult ResourceBindings::Commit( Tr2RenderContextAL& context ) throw()
 		}
 		case Resource::BUFFER: {
 			auto* buffer = resource->buffer.TrinityALImpl_GetObject();
-			if( resource->buffer.IsValid() && reg.registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
+			if( resource->buffer.IsValid() && Tr2ShaderRegisterAL::IsSrvBuffer( reg.registerType ) )
 			{
 				srv = buffer->m_srv;
 			}

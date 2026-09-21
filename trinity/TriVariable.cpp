@@ -22,7 +22,7 @@ const Be::ClassInfo* TriVariable::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-void TriVariable::UseSRV(
+void TriVariable::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,
@@ -68,7 +68,7 @@ void TriVariable::UseSRV(
 	}
 }
 
-void TriVariable::UseUav(
+void TriVariable::SetUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	Tr2RenderContext& renderContext ) const

@@ -33,7 +33,7 @@ BLUE_INTERFACE( ITr2EffectValue ) :
 	{
 	}
 
-	virtual void UseSRV(
+	virtual void SetSrv(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags,
@@ -41,7 +41,7 @@ BLUE_INTERFACE( ITr2EffectValue ) :
 	{
 	}
 
-	virtual void UseUav(
+	virtual void SetUav(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		Tr2RenderContext& renderContext ) const

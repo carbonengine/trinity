@@ -39,12 +39,12 @@ public:
 		unsigned char* destHandle,
 		size_t size,
 		Tr2RenderContext& renderContext ) const override;
-	void UseSRV(
+	void SetSrv(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags,
 		Tr2RenderContext& renderContext ) const override;
-	void UseUav(
+	void SetUav(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		Tr2RenderContext& renderContext ) const override;

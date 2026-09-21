@@ -36,12 +36,12 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	/////////////////////////////////////////////////////////////////////////////////////
-	void UseSRV(
+	void SetSrv(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		ResourceFlags flags,
 		Tr2RenderContext& renderContext ) const override;
-	void UseUav(
+	void SetUav(
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		Tr2RenderContext& renderContext ) const override;

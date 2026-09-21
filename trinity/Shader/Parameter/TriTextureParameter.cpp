@@ -174,7 +174,7 @@ void TriTextureParameter::AddUsedTexture( Tr2BindlessResourcesAL& usedTextures )
 }
 
 // --------------------------------------------------------------------------------------
-void TriTextureParameter::UseSRV(
+void TriTextureParameter::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,
@@ -186,7 +186,7 @@ void TriTextureParameter::UseSRV(
 }
 
 // --------------------------------------------------------------------------------------
-void TriTextureParameter::UseUav(
+void TriTextureParameter::SetUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	Tr2RenderContext& renderContext ) const

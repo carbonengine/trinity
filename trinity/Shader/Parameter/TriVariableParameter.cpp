@@ -56,7 +56,7 @@ bool TriVariableParameter::Initialize()
 }
 
 // ---------------------------------------------------------------
-void TriVariableParameter::UseSRV(
+void TriVariableParameter::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,
@@ -66,18 +66,18 @@ void TriVariableParameter::UseSRV(
 	{
 		return;
 	}
-	m_variable->UseSRV( stage, registerIndex, flags, renderContext );
+	m_variable->SetSrv( stage, registerIndex, flags, renderContext );
 }
 
 // ---------------------------------------------------------------
-void TriVariableParameter::UseUav(
+void TriVariableParameter::SetUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	Tr2RenderContext& renderContext ) const
 {
 	if( m_variable )
 	{
-		m_variable->UseUav( stage, registerIndex, renderContext );
+		m_variable->SetUav( stage, registerIndex, renderContext );
 		return;
 	}
 	renderContext.SetUav( stage, registerIndex, Tr2TextureAL() );

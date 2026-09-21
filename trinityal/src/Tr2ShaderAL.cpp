@@ -78,6 +78,16 @@ bool Tr2ShaderRegisterAL::IsUav() const
 	return ( registerType & UAV_REGISTER_FLAG ) != 0;
 }
 
+bool Tr2ShaderRegisterAL::IsSrvBuffer( RegisterType registerType )
+{
+	return registerType == SRV_BUFFER || registerType == SRV_STRUCTURED_BUFFER;
+}
+
+bool Tr2ShaderRegisterAL::IsSrvTexture( RegisterType registerType )
+{
+	return ( registerType & SRV_REGISTER_FLAG ) != 0 && !IsSrvBuffer( registerType );
+}
+
 bool Tr2ShaderRegisterAL::operator==( const Tr2ShaderRegisterAL& other ) const
 {
 	return registerType == other.registerType && registerIndex == other.registerIndex;

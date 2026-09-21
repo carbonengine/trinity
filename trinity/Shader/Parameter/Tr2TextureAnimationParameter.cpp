@@ -25,7 +25,7 @@ bool Tr2TextureAnimationParameter::OnModified( Be::Var* value )
 	return true;
 }
 
-void Tr2TextureAnimationParameter::UseSRV(
+void Tr2TextureAnimationParameter::SetSrv(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	ResourceFlags flags,
@@ -43,7 +43,7 @@ void Tr2TextureAnimationParameter::UseSRV(
 	}
 }
 
-void Tr2TextureAnimationParameter::UseUav(
+void Tr2TextureAnimationParameter::SetUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex,
 	Tr2RenderContext& renderContext ) const

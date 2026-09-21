@@ -81,11 +81,9 @@ ALResult Tr2StaticResourceBindings::Apply( Tr2RenderContextAL& renderContext ) c
 
 bool Tr2StaticResourceBindings::SharesRegisterSpace( Kind a, Kind b )
 {
-	if( a == b )
-	{
-		return true;
-	}
-	return ( a == KIND_SAMPLER || a == KIND_SAMPLER_HEAP_VIEW ) && ( b == KIND_SAMPLER || b == KIND_SAMPLER_HEAP_VIEW );
+	bool aIsSampler = a == KIND_SAMPLER || a == KIND_SAMPLER_HEAP_VIEW;
+	bool bIsSampler = b == KIND_SAMPLER || b == KIND_SAMPLER_HEAP_VIEW;
+	return a == b || ( aIsSampler && bIsSampler );
 }
 
 bool Tr2StaticResourceBindings::Set( Kind kind, Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
