@@ -95,7 +95,7 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddHull( const char* hull
 	auto id = AllocatePartId();
 	auto size = m_object->GetEffectChildren().size();
 	auto dna = std::string( hullName ) + ":" + ( factionName[0] ? factionName : m_data->m_faction.c_str() ) + ":" + ( raceName[0] ? raceName : m_data->m_race.c_str() );
-	if( !m_sof->BuildChild( m_object, dna.c_str(), id, TransformationMatrix( scale, rotation, position ) ) )
+	if( !m_sof->BuildChild( m_object, dna.c_str(), id, TransformationMatrix( scale, rotation, position ), m_armorDamageEffectCache ) )
 	{
 		return INVALID_PART_TAG;
 	}
@@ -159,15 +159,6 @@ BlueStdResult EveModularObjectModifier::Remove( EveSpaceObjectChild::PartTag par
 		++i;
 	}
 
-	for( auto& set : m_object->GetLocatorSets() )
-	{
-		auto& locators = *set->GetLocators();
-		auto removed = std::remove_if( locators.begin(), locators.end(), [partId]( const auto& locator ) {
-			return locator.partTag == partId;
-		} );
-		locators.Resize( std::distance( locators.begin(), removed ) );
-	}
-
 	if( m_instancedMeshes )
 	{
 		m_instancedMeshes->RemoveInstancesByPartTag( partId );
@@ -193,22 +184,6 @@ BlueStdResult EveModularObjectModifier::SetTransform( EveSpaceObjectChild::PartT
 	cmf::Transform newTransform{ position, rotation, scale };
 	auto invOldTransform = cmf::Inverse( oldTransform );
 
-	for( auto& set : m_object->GetLocatorSets() )
-	{
-		auto& locators = *set->GetLocators();
-		for( auto& locator : locators )
-		{
-			if( locator.partTag == partId )
-			{
-				locator.scale.x = scale.x / found->scale.x;
-				locator.scale.y = scale.y / found->scale.y;
-				locator.scale.z = scale.z / found->scale.z;
-				locator.direction = invOldTransform.rotation * rotation;
-				locator.position = cmf::TransformPoint( cmf::TransformPoint( locator.position, invOldTransform ), newTransform );
-			}
-		}
-	}
-
 	found->boundingSphere.center = cmf::TransformPoint( cmf::TransformPoint( found->boundingSphere.center, invOldTransform ), newTransform );
 	found->boundingSphere.radius *= std::max( { scale.x, scale.y, scale.z } ) / std::max( { found->scale.x, found->scale.y, found->scale.z } );
 
@@ -221,6 +196,10 @@ BlueStdResult EveModularObjectModifier::SetTransform( EveSpaceObjectChild::PartT
 		if( child->GetPartTag() == partId )
 		{
 			child->Setup( &scale, &rotation, &position, Tr2Lod::TR2_LOD_LOW );
+		}
+		if( EveChildInstancedMeshesPtr instancedMeshes = BlueCastPtr( child ) )
+		{
+			instancedMeshes->SetInstanceTransformByPartTag( partId, position, rotation, scale );
 		}
 	}
 	m_object->InvalidateMergedLocators( LocatorInvalidationReason::PartMoved );

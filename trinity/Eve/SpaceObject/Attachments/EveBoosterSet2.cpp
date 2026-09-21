@@ -11,7 +11,7 @@
 #include "TriSettingsRegistrar.h"
 #include "Include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
-
+#include "Eve/SpaceObject/Utils/EveBoosterUtilities.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "EveTrailsSet.h"
 #include "Tr2LightManager.h"
@@ -40,10 +40,6 @@ float g_eveSpaceObjectTrailsMaxLength = 50000.f;
 TRI_REGISTER_SETTING( "eveSpaceObjectTrailsMaxLength", g_eveSpaceObjectTrailsMaxLength );
 float g_eveSpaceObjectTrailsMaxLengthFade = 20000.f;
 TRI_REGISTER_SETTING( "eveSpaceObjectTrailsMaxLengthFade", g_eveSpaceObjectTrailsMaxLengthFade );
-
-const unsigned g_lightNoiseSize = 128;
-float g_lightNoise[g_lightNoiseSize];
-bool g_lightNoiseInitialized = false;
 
 
 EveBoosterSet2Renderable::EveBoosterSet2Renderable( IRoot* lockobj ) :
@@ -295,12 +291,7 @@ Tr2PerObjectData* EveBoosterSet2Renderable::GetPerObjectData( ITriRenderBatchAcc
 // --------------------------------------------------------------------------------
 void EveBoosterSet2Renderable::GetBoundingSphere( Vector4& boundingSphere ) const
 {
-	// move bounding sphere back to catch all the glowy exhaust
-	boundingSphere = m_boosterSet->m_boosterBoundingSphere + Vector4( 0.f, 0.f, -0.5f * m_boosterSet->m_boosterBoundingSphere.w, 0.f );
-	// transform center into worldspace
-	boundingSphere.GetXYZ() = TransformCoord( boundingSphere.GetXYZ(), m_parentTransform );
-	// blow up radius so we contain all the glowy stuff coming out of a booster
-	boundingSphere.w = 2.f * m_boosterSet->m_boosterBoundingSphere.w;
+	boundingSphere = PadBoosterBoundingSphere( m_boosterSet->m_boosterBoundingSphere, m_parentTransform );
 }
 
 // --------------------------------------------------------------------------------
@@ -584,75 +575,6 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 	}
 }
 
-
-namespace
-{
-ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
-{
-	const uint32_t vertexCount = 4 * 6;
-	EveBoosterSet2::BoosterVertex vertices[vertexCount];
-	auto p = &vertices[0];
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-
-	return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
-}
-
-ALResult GetStarVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
-{
-	const uint32_t vertexCount = 4 * 4;
-	EveBoosterSet2::BoosterVertex vertices[vertexCount];
-	auto p = &vertices[0];
-	for( unsigned int i = 0; i < vertexCount; i += 4 )
-	{
-		float t = (float)i * XM_PI / 4.f / 4.f;
-		float x = cos( t ) * 0.5f;
-		float y = sin( t ) * 0.5f;
-		p->position = Vector3( -x, -y, 0.f );
-		p->texCoord = Vector2( 1.f, 1.f );
-		++p;
-		p->position = Vector3( -x, -y, -1.f );
-		p->texCoord = Vector2( 1.f, 0.f );
-		++p;
-		p->position = Vector3( x, y, -1.f );
-		p->texCoord = Vector2( 0.f, 0.f );
-		++p;
-		p->position = Vector3( x, y, 0.0f );
-		p->texCoord = Vector2( 0.f, 1.f );
-		++p;
-	}
-
-	return g_sharedBuffer.Allocate( sizeof( EveBoosterSet2::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
-}
-}
-
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members, build the tree-shape geometry we will use for
@@ -688,22 +610,13 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 	m_lightFlickerFrequency( 0.f ),
 	m_lightColor( 0.f, 0.f, 0.f, 0.f ),
 	m_lightWarpColor( 0.f, 0.f, 0.f, 0.f ),
-	m_vertexBuffer( BlueSharedString( "BoosterBoxVB" ), GetBoxVB )
+	m_vertexBuffer( MakeBoosterBoxBuffer() )
 {
 	BoundingSphereInitialize( m_boosterBoundingSphere );
 
 	for( unsigned int i = 0; i < EVE_MAX_CONTROL_POINT_COUNT; ++i )
 	{
 		m_trailsStaticOffsets[i] = Vector3( 0.f, 0.f, 0.f );
-	}
-
-	if( !g_lightNoiseInitialized )
-	{
-		g_lightNoiseInitialized = true;
-		for( unsigned i = 0; i < g_lightNoiseSize; ++i )
-		{
-			g_lightNoise[i] = float( rand() ) / float( RAND_MAX );
-		}
 	}
 }
 
@@ -755,7 +668,7 @@ bool EveBoosterSet2::OnModified( Be::Var* value )
 			m_glows->Clear();
 			for( auto it = m_singleBoosters.begin(); it != m_singleBoosters.end(); ++it )
 			{
-				CreateFlares( *it );
+				CreateBoosterFlares( *m_glows, it->transform, GetFlareParams() );
 			}
 			m_glows->Rebuild();
 		}
@@ -823,6 +736,11 @@ void EveBoosterSet2::UpdateTrails( float deltaT, Be::Time t )
 	}
 }
 
+EveBoosterFlareParams EveBoosterSet2::GetFlareParams() const
+{
+	return { m_warpGlowColor, m_glowScale, m_glowColor, m_haloScaleX, m_haloScaleY, m_symHaloScale, m_haloColor, m_warpHaloColor };
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Clear all the individual boosters & trails this set was holding so far.
@@ -858,7 +776,7 @@ void EveBoosterSet2::Add( const Matrix* localMatrix, const Vector4* functionalit
 	Vector3 lightOffset( 0.f, 0.f, -m_lightOffset );
 	sbd.lightPosition = TransformCoord( lightOffset, *localMatrix );
 	sbd.lightRadius = std::max( Length( localMatrix->GetX() ), Length( localMatrix->GetY() ) ) * lightScale;
-	sbd.lightPhase = float( g_lightNoiseSize ) * float( rand() ) / float( RAND_MAX );
+	sbd.lightPhase = GenerateBoosterLightPhase();
 	sbd.atlasIndex0 = atlasIndex0;
 	sbd.atlasIndex1 = atlasIndex1;
 	m_singleBoosters.push_back( sbd );
@@ -868,7 +786,7 @@ void EveBoosterSet2::Add( const Matrix* localMatrix, const Vector4* functionalit
 
 	if( m_glows )
 	{
-		CreateFlares( sbd );
+		CreateBoosterFlares( *m_glows, sbd.transform, GetFlareParams() );
 	}
 
 	// also add it to the trails
@@ -894,32 +812,6 @@ void EveBoosterSet2::Add( const Matrix* localMatrix, const Vector4* functionalit
 	{
 		m_maxSize = scale;
 	}
-}
-
-void EveBoosterSet2::CreateFlares( SingleBoosterData& boosterData )
-{
-	auto localMatrix = boosterData.transform;
-	// grab pos/dir/scale from the local transform matrix
-	Vector3 pos( localMatrix._41, localMatrix._42, localMatrix._43 );
-	Vector3 dir( localMatrix._31, localMatrix._32, localMatrix._33 );
-	float scale = std::max( Length( localMatrix.GetX() ), Length( localMatrix.GetY() ) );
-
-	dir = Normalize( dir );
-	if( scale < 3.f )
-	{
-		dir *= scale / 3.f;
-	}
-
-	float seed = float( rand() ) / float( RAND_MAX ) * 0.7f;
-
-	Vector3 spritePos = pos - 2.5f * dir;
-	m_glows->Add( spritePos, seed, seed, scale * m_glowScale, scale * m_glowScale, 0.0f, m_glowColor, m_warpGlowColor );
-
-	spritePos = pos - 3.0f * dir;
-	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_symHaloScale, scale * m_symHaloScale, 0.0f, m_haloColor, m_warpHaloColor );
-
-	spritePos = pos - 3.01f * dir;
-	m_glows->Add( spritePos, seed, 1.0f + seed, scale * m_haloScaleX, scale * m_haloScaleY, 0.0f, m_haloColor, m_warpHaloColor );
 }
 
 // --------------------------------------------------------------------------------
@@ -1037,11 +929,11 @@ bool EveBoosterSet2::OnPrepareResources()
 	// create star-shape geometry as "indexed" geometry
 	if( Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI )
 	{
-		m_vertexBuffer = Tr2ProceduralBuffer( BlueSharedString( "BoosterBoxVB" ), GetBoxVB );
+		m_vertexBuffer = MakeBoosterBoxBuffer();
 	}
 	else
 	{
-		m_vertexBuffer = Tr2ProceduralBuffer( BlueSharedString( "BoosterStarVB" ), GetStarVB );
+		m_vertexBuffer = MakeBoosterStarBuffer();
 	}
 
 	// now build the "instance" buffer, which depends on the actual number of booster, this set currently holds
@@ -1291,6 +1183,7 @@ void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 		return;
 	}
 
+	EveBoosterLightParams params{ m_lightWarpRadius, m_lightWarpColor, m_lightRadius, m_lightColor, m_lightFlickerAmplitude, m_lightFlickerFrequency };
 	for( auto dit = m_boosterRenderables.begin(); dit != m_boosterRenderables.end(); dit++ )
 	{
 		if( ( *dit )->m_overallIntensity <= 0 )
@@ -1298,23 +1191,7 @@ void EveBoosterSet2::GetLights( Tr2LightManager& lightManager ) const
 			continue;
 		}
 
-		float warpIntensity = std::min( std::max( m_warpIntensity, 0.f ), 1.f );
-		float radiusFactor = m_lightRadius * ( 1.f - warpIntensity ) + m_lightWarpRadius * warpIntensity;
-		radiusFactor *= ( *dit )->m_overallIntensity;
-		Color color = m_lightColor * ( 1.f - warpIntensity ) + m_lightWarpColor * warpIntensity;
-		XMMATRIX transform = ( *dit )->m_parentTransform;
-		for( auto it = std::begin( m_singleBoosters ); it != std::end( m_singleBoosters ); ++it )
-		{
-			float phase = ( it->lightPhase + Tr2Renderer::GetAnimationTime() ) * m_lightFlickerFrequency;
-			float p0 = g_lightNoise[int( phase ) % g_lightNoiseSize];
-			float p1 = g_lightNoise[( int( phase ) + 1 ) % g_lightNoiseSize];
-			float t = phase - std::floor( phase );
-			float flicker = 1 + m_lightFlickerAmplitude * 2.0f * ( p0 * ( 1.0f - t ) + p1 * t ) - m_lightFlickerAmplitude;
-			lightManager.AddPointLight(
-				Vector3( XMVector3TransformCoord( it->lightPosition, transform ) ),
-				it->lightRadius * radiusFactor,
-				color * flicker );
-		}
+		AddBoosterLights( lightManager, m_singleBoosters, ( *dit )->m_parentTransform, ( *dit )->m_overallIntensity, m_warpIntensity, params );
 	}
 }
 

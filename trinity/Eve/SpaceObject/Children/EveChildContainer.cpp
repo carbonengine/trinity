@@ -522,7 +522,7 @@ void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext
 	if( m_isPlacementRoot && updateContext.GetTaskGroup() )
 	{
 		updateContext.GetTaskGroup()->run( [this, &updateContext, params] {
-			CCP_STATS_ZONE( "Placement Child UpdateAsyncronous" );
+			TRINITY_STATS_ZONE( "Placement Child UpdateAsyncronous" );
 			this->DoUpdateAsyncronous( updateContext, params );
 		} );
 	}
@@ -1241,12 +1241,12 @@ void EveChildContainer::CollectOwnedLocatorSets( const Matrix& parentTransform, 
 	}
 }
 
-void EveChildContainer::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildContainer::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	Matrix transform = ComputeLocalTransform();
 	transform = transform * parentTransform;
 	for( const auto& object : m_objects )
 	{
-		object->CollectOwnedGeometry( transform, out );
+		object->CollectOwnedGeometry( type, transform, out, areaPool );
 	}
 }

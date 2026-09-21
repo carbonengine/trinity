@@ -292,7 +292,7 @@ bool Tr2VariableStore::UnregisterLocalVariable( const char* name )
 // -------------------------------------------------------------
 TriVariable* Tr2VariableStore::FindVariable( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	const Tr2VariableStore* store = this;
 	while( store )

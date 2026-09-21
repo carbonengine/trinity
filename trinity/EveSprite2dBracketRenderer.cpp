@@ -19,7 +19,7 @@ unsigned int EveSprite2dBracketRenderer::GetVertexCount()
 
 void EveSprite2dBracketRenderer::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	using namespace Tr2RenderContextEnum;

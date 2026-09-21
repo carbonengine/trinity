@@ -4,6 +4,23 @@
 #include "EveChildInstancedMeshes.h"
 #include "./Tr2RingBuffer.h"
 #include "../EveSpaceObject2.h"
+#include "../Attachments/EveDamageOverlay.h"
+#include "../Utils/EveLocatorSets.h"
+
+namespace
+{
+const LocatorStructureList* FindDamageLocators( const std::vector<EveLocatorSetsPtr>& sets )
+{
+	for( const auto& entry : sets )
+	{
+		if( entry->HasName( DAMAGE_LOCATOR_SET_NAME ) )
+		{
+			return entry->GetLocators();
+		}
+	}
+	return nullptr;
+}
+}
 
 
 EveChildInstancedMeshes::EveChildInstancedMeshes( IRoot* lockobj )
@@ -145,9 +162,8 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 				}
 			}
 
-			XMMATRIX m = *reinterpret_cast<const Matrix*>( instanceTransform.worldTransform );
-			m.r[3] = XMVectorSet( 0, 0, 0, 1 );
-			m = XMMatrixMultiply( XMMatrixTranspose( m ), m_worldTransform );
+			XMMATRIX m = Matrix( instanceTransform.worldTransform );
+			m = XMMatrixMultiply( m, m_worldTransform );
 			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
 		}
 
@@ -184,7 +200,7 @@ void EveChildInstancedMeshes::UpdateVisibility( const EveUpdateContext& updateCo
 void EveChildInstancedMeshes::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	// only overlay draws render here; the base hull goes through EveInstancedMeshManager
-	if( m_hasUpdated && ( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() ) )
+	if( m_hasUpdated && ( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() || !m_partDamageOverlays.empty() ) )
 	{
 		renderables.push_back( this );
 	}
@@ -207,6 +223,11 @@ void EveChildInstancedMeshes::UpdateSyncronous( const EveUpdateContext& updateCo
 		{
 			overlay->Update( time, time );
 		}
+	}
+
+	for( auto& entry : m_partDamageOverlays )
+	{
+		entry.second->UpdateSyncronous( updateContext );
 	}
 }
 
@@ -275,10 +296,11 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		for( const auto& instance : mesh.instances )
 		{
-			Vector3 position = Vector3( instance.worldTransform[0].w, instance.worldTransform[1].w, instance.worldTransform[2].w );
-			float scale = std::sqrtf( std::max( { LengthSq( instance.worldTransform[0].GetXYZ() ),
-												  LengthSq( instance.worldTransform[1].GetXYZ() ),
-												  LengthSq( instance.worldTransform[2].GetXYZ() ) } ) );
+			Matrix m = instance.worldTransform;
+			Vector3 position = m.GetTranslation();
+			float scale = std::sqrtf( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ),
+												  LengthSq( Vector3( m._21, m._22, m._23 ) ),
+												  LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
 			position = TransformCoord( position, m_worldTransform );
 			scale *= worldScale;
 			mesh.instanceSpheres[&instance - mesh.instances.data()] = CcpMath::Sphere( position, radius * scale );
@@ -307,9 +329,38 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 			}
 		}
 	}
-	if( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() )
+
+	for( auto& entry : m_partDamageOverlays )
 	{
-		UpdateOverlayInstanceData( vsData, psData );
+		EveDamageOverlay::OwnerInfo info;
+		size_t instanceIndex = 0;
+		const Mesh* mesh = FindMeshByPartTag( entry.first, &instanceIndex );
+		if( mesh && mesh->geometry && mesh->geometry->IsGood() )
+		{
+			if( auto meshData = mesh->geometry->GetMeshData( mesh->meshIndex ) )
+			{
+				CcpMath::Sphere localSphere( CcpMath::AxisAlignedBox( meshData->m_minBounds, meshData->m_maxBounds ) );
+				info.boundingSphere = Vector4( localSphere.center, localSphere.radius );
+			}
+			const CcpMath::Sphere& worldSphere = mesh->instanceSpheres[instanceIndex];
+			info.estimatedPixelDiameter = std::max( updateContext.GetFrustum().GetPixelSizeAccrossEst( worldSphere.center, worldSphere.radius ) * updateContext.GetInvLodFactor(), 0.f );
+			info.isInFrustum = updateContext.GetFrustum().IsSphereVisible( worldSphere.center, worldSphere.radius );
+			const LocatorStructureList* damageLocators = FindDamageLocators( mesh->ownedLocatorSets );
+			info.getDamageLocatorPositionOS = [damageLocators]( int index, Vector3& out ) {
+				if( !damageLocators || index < 0 || index >= int( damageLocators->size() ) )
+				{
+					return false;
+				}
+				out = ( *damageLocators )[index].position;
+				return true;
+			};
+		}
+		entry.second->UpdateAsyncronous( updateContext, info, 0, false );
+	}
+
+	if( ( m_parentOverlayEffects != nullptr && AnyMeshInheritsOverlayEffects() ) || HasAnyOwnOverlayEffects() || !m_partDamageOverlays.empty() )
+	{
+		UpdateOverlayInstanceData( updateContext, vsData, psData );
 	}
 
 	m_hasUpdated = true;
@@ -400,7 +451,9 @@ void EveChildInstancedMeshes::AddMesh(
 	size_t count,
 	const BlueSharedString& sofHullName,
 	const BlueSharedString& sofLocatorSetName,
-	EveSpaceObjectChild::PartTag partTag )
+	EveSpaceObjectChild::PartTag partTag,
+	const std::vector<EveLocatorSetsPtr>& ownedLocatorSets,
+	Tr2Effect* armorDamageShader )
 {
 	if( areaCount == 0 || count == 0 )
 	{
@@ -443,16 +496,17 @@ void EveChildInstancedMeshes::AddMesh(
 		{
 			continue;
 		}
+		if( mesh.ownedLocatorSets.empty() != ownedLocatorSets.empty() )
+		{
+			continue;
+		}
 		const size_t existingCount = mesh.instances.size();
 		mesh.instances.reserve( existingCount + count );
 		mesh.partTags.reserve( mesh.partTags.size() + count );
 		for( size_t i = 0; i < count; ++i )
 		{
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
-			auto& mat = instanceTransforms[i];
-			instanceData.worldTransform[0] = Vector4( mat._11, mat._21, mat._31, mat._41 );
-			instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
-			instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
+			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
@@ -469,6 +523,10 @@ void EveChildInstancedMeshes::AddMesh(
 				area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
 			}
 		}
+		if( !mesh.ownedLocatorSets.empty() && GetOwner() )
+		{
+			GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
+		}
 		m_allRegistered = false;
 		return;
 	}
@@ -484,6 +542,8 @@ void EveChildInstancedMeshes::AddMesh(
 		a.batchType = areas[i].batchType;
 		a.areaIndex = areas[i].areaIndex;
 		a.areaCount = areas[i].areaCount;
+		a.alphaCutout = areas[i].alphaCutout;
+		a.reversed = areas[i].reversed;
 		a.effectHash = a.effect ? a.effect->GetHashValue() : 0;
 	}
 	mesh.instances.reserve( count );
@@ -491,10 +551,7 @@ void EveChildInstancedMeshes::AddMesh(
 	for( size_t i = 0; i < count; ++i )
 	{
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
-		auto& mat = instanceTransforms[i];
-		instanceData.worldTransform[0] = Vector4( mat._11, mat._21, mat._31, mat._41 );
-		instanceData.worldTransform[1] = Vector4( mat._12, mat._22, mat._32, mat._42 );
-		instanceData.worldTransform[2] = Vector4( mat._13, mat._23, mat._33, mat._43 );
+		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
@@ -524,11 +581,18 @@ void EveChildInstancedMeshes::AddMesh(
 	}
 	mesh.sofHullName = sofHullName;
 	mesh.sofLocatorSetName = sofLocatorSetName;
+	mesh.ownedLocatorSets = ownedLocatorSets;
+	mesh.armorDamageShader = armorDamageShader;
+	if( !mesh.ownedLocatorSets.empty() && GetOwner() )
+	{
+		GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
+	}
 	m_allRegistered = false;
 }
 
 void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag )
 {
+	bool removedOwnedLocators = false;
 	for( size_t i = 0; i < m_meshes.size(); ++i )
 	{
 		auto& mesh = m_meshes[i];
@@ -541,6 +605,7 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 		{
 			continue;
 		}
+		removedOwnedLocators |= !mesh.ownedLocatorSets.empty();
 		if( newEnd == begin( mesh.instances ) )
 		{
 			if( mesh.sphereHandle )
@@ -590,6 +655,32 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 				}
 			}
 		}
+	}
+	m_partDamageOverlays.erase( partTag );
+	if( removedOwnedLocators && GetOwner() )
+	{
+		GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
+	}
+}
+void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale )
+{
+	Matrix m = TransformationMatrix( scale, rotation, translation );
+	const Float4x3 packedTransform( m );
+	bool movedOwnedLocators = false;
+	for( auto& mesh : m_meshes )
+	{
+		for( size_t i = 0; i < mesh.instances.size(); ++i )
+		{
+			if( mesh.partTags[i] == partTag )
+			{
+				mesh.instances[i].worldTransform = packedTransform;
+				movedOwnedLocators |= !mesh.ownedLocatorSets.empty();
+			}
+		}
+	}
+	if( movedOwnedLocators && GetOwner() )
+	{
+		GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::PartMoved );
 	}
 }
 
@@ -766,6 +857,32 @@ BluePy EveChildInstancedMeshes::GetSofSourceLocator( uint32_t areaId ) const
 uint32_t EveChildInstancedMeshes::GetMeshCount() const
 {
 	return static_cast<uint32_t>( m_meshes.size() );
+}
+BluePy EveChildInstancedMeshes::GetInstancesTransforms( uint32_t meshId ) const
+{
+	if( meshId >= m_meshes.size() )
+	{
+		PyErr_SetString( PyExc_IndexError, "Mesh index out of range" );
+		return {};
+	}
+
+	auto& mesh = m_meshes[meshId];
+	BluePy result( PyTuple_New( mesh.instances.size() ) );
+	int i = 0;
+	for( auto& instance : mesh.instances )
+	{
+		Vector3 scale, translation;
+		Quaternion rotation;
+		Decompose( scale, rotation, translation, instance.worldTransform );
+
+		PyObject* transform = PyTuple_New( 3 );
+		PyTuple_SetItem( transform, 0, ToPython( translation ) );
+		PyTuple_SetItem( transform, 1, ToPython( rotation ) );
+		PyTuple_SetItem( transform, 2, ToPython( scale ) );
+		PyTuple_SetItem( result, i++, transform );
+	}
+
+	return result;
 }
 
 BluePy EveChildInstancedMeshes::GetMeshInfo( uint32_t meshId ) const
@@ -995,6 +1112,56 @@ bool EveChildInstancedMeshes::MeshHasActiveOverlayEffects( const Mesh& mesh ) co
 	return !mesh.ownOverlayEffects.empty() || ( m_parentOverlayEffects != nullptr && mesh.inheritOverlayEffects );
 }
 
+const EveChildInstancedMeshes::Mesh* EveChildInstancedMeshes::FindMeshByPartTag( PartTag partTag, size_t* instanceIndex ) const
+{
+	for( const Mesh& mesh : m_meshes )
+	{
+		for( size_t i = 0; i < mesh.partTags.size(); ++i )
+		{
+			if( mesh.partTags[i] == partTag )
+			{
+				if( instanceIndex )
+				{
+					*instanceIndex = i;
+				}
+				return &mesh;
+			}
+		}
+	}
+	return nullptr;
+}
+
+EveDamageOverlay* EveChildInstancedMeshes::FindPartDamageOverlay( PartTag partTag ) const
+{
+	auto it = m_partDamageOverlays.find( partTag );
+	if( it != m_partDamageOverlays.end() )
+	{
+		return it->second;
+	}
+	return nullptr;
+}
+
+bool EveChildInstancedMeshes::MeshHasDamageOverlays( const Mesh& mesh ) const
+{
+	if( m_partDamageOverlays.empty() )
+	{
+		return false;
+	}
+	for( uint32_t tag : mesh.partTags )
+	{
+		if( m_partDamageOverlays.find( tag ) != m_partDamageOverlays.end() )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool EveChildInstancedMeshes::MeshNeedsOverlayPods( const Mesh& mesh ) const
+{
+	return MeshHasActiveOverlayEffects( mesh ) || MeshHasDamageOverlays( mesh );
+}
+
 uint32_t EveChildInstancedMeshes::OverlayInstancePod::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
@@ -1016,20 +1183,20 @@ void EveChildInstancedMeshes::OverlayInstancePod::UpdatePerObjectBuffer( Tr2Rend
 	}
 }
 
-void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSData& parentVsData, const EveSpaceObjectPSData& parentPsData )
+void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveUpdateContext& updateContext, const EveSpaceObjectVSData& parentVsData, const EveSpaceObjectPSData& parentPsData )
 {
 	// worldTransformLast still holds the previous frame's transposed world transform here
 	Matrix prevWorldTransform = Transpose( m_perObjectData.worldTransformLast );
 
 	for( Mesh& mesh : m_meshes )
 	{
-		if( mesh.instances.empty() || !mesh.display || !MeshHasActiveOverlayEffects( mesh ) )
+		if( mesh.instances.empty() || !mesh.display || !MeshNeedsOverlayPods( mesh ) )
 		{
 			continue;
 		}
-		if( !mesh.overlayPods )
+		if( !mesh.overlayPods || mesh.overlayPods->size() != mesh.instances.size() )
 		{
-			// sized once; the pods own device resources so they must stay at stable addresses
+			// the pods own device resources so they must stay at stable addresses
 			mesh.overlayPods = std::make_unique<std::vector<OverlayInstancePod>>( mesh.instances.size() );
 		}
 
@@ -1038,19 +1205,7 @@ void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSD
 			const auto& wt = mesh.instances[i].worldTransform;
 			OverlayInstancePod& pod = ( *mesh.overlayPods )[i];
 
-			Matrix local = IdentityMatrix();
-			local._11 = wt[0].x;
-			local._12 = wt[1].x;
-			local._13 = wt[2].x;
-			local._21 = wt[0].y;
-			local._22 = wt[1].y;
-			local._23 = wt[2].y;
-			local._31 = wt[0].z;
-			local._32 = wt[1].z;
-			local._33 = wt[2].z;
-			local._41 = wt[0].w;
-			local._42 = wt[1].w;
-			local._43 = wt[2].w;
+			Matrix local = mesh.instances[i].worldTransform;
 
 			Matrix worldTransform = Transpose( local * m_worldTransform );
 			Matrix worldTransformLast = Transpose( local * prevWorldTransform );
@@ -1078,6 +1233,12 @@ void EveChildInstancedMeshes::UpdateOverlayInstanceData( const EveSpaceObjectVSD
 				pod.psData.clipRadius2Sq = 0.f;
 				pod.psData.clipSphereFactor = 0.f;
 				pod.psData.clipSphereFactor2 = 0.f;
+			}
+
+			if( EveDamageOverlay* damageOverlay = FindPartDamageOverlay( mesh.partTags[i] ) )
+			{
+				pod.psData.shipData.y *= damageOverlay->GetActivationStrength( updateContext );
+				pod.psData.impactDataOffset = (float)damageOverlay->GetDataTextureOffset();
 			}
 
 			pod.vsBuffer.InvalidateBufferData();
@@ -1145,7 +1306,7 @@ float EveChildInstancedMeshes::GetSortValue()
 
 Tr2PerObjectData* EveChildInstancedMeshes::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( ( m_parentOverlayEffects == nullptr || !AnyMeshInheritsOverlayEffects() ) && !HasAnyOwnOverlayEffects() )
+	if( ( m_parentOverlayEffects == nullptr || !AnyMeshInheritsOverlayEffects() ) && !HasAnyOwnOverlayEffects() && m_partDamageOverlays.empty() )
 	{
 		return nullptr;
 	}
@@ -1157,7 +1318,7 @@ Tr2PerObjectData* EveChildInstancedMeshes::GetPerObjectData( ITriRenderBatchAccu
 		{
 			continue;
 		}
-		if( !mesh.display || !MeshHasActiveOverlayEffects( mesh ) )
+		if( !mesh.display || !MeshNeedsOverlayPods( mesh ) )
 		{
 			for( OverlayInstancePod& pod : *mesh.overlayPods )
 			{
@@ -1195,7 +1356,8 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 	{
 		const bool hasOwnOverlays = !mesh.ownOverlayEffects.empty();
 		const bool hasInheritedOverlays = m_parentOverlayEffects != nullptr && mesh.inheritOverlayEffects;
-		if( !hasInheritedOverlays && !hasOwnOverlays )
+		const bool hasDamageOverlays = MeshHasDamageOverlays( mesh );
+		if( !hasInheritedOverlays && !hasOwnOverlays && !hasDamageOverlays )
 		{
 			continue;
 		}
@@ -1239,6 +1401,16 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 
 			// own effects are emitted before the inherited ones so the parent's overlays
 			// (e.g. cloak) draw on top of this mesh's own overlays
+			if( hasDamageOverlays )
+			{
+				if( EveDamageOverlay* damageOverlay = FindPartDamageOverlay( mesh.partTags[i] ) )
+				{
+					if( Tr2Effect* damageShader = damageOverlay->GetArmorDamageShader( batchType ) )
+					{
+						EmitDamageOverlayBatches( batches, pod.framePod, damageShader, mesh.overlayAreaBlocks, *lod );
+					}
+				}
+			}
 			if( hasOwnOverlays )
 			{
 				EmitOverlayBatches( batches, pod.framePod, batchType, mesh.ownOverlayEffects, mesh.overlayAreaBlocks, *lod );
@@ -1249,4 +1421,114 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 			}
 		}
 	}
+}
+
+void EveChildInstancedMeshes::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
+{
+	static_assert(
+		sizeof( Float4x3 ) == sizeof( EveInstancedMeshManager::StaticPerInstanceData::worldTransform ),
+		"Float4x3 must match StaticPerInstanceData::worldTransform" );
+
+	for( const Mesh& mesh : m_meshes )
+	{
+		if( !mesh.geometry || mesh.instances.empty() )
+		{
+			continue;
+		}
+
+		uint32_t areaStart = uint32_t( areaPool.size() );
+		for( const MeshArea& area : mesh.areas )
+		{
+			if( area.batchType != type )
+			{
+				continue;
+			}
+			EveChildGeometryArea childGeometryArea;
+			childGeometryArea.index = area.areaIndex;
+			childGeometryArea.count = area.areaCount;
+			childGeometryArea.alphaCutout = area.alphaCutout;
+			childGeometryArea.reversed = area.reversed;
+			areaPool.push_back( childGeometryArea );
+		}
+		uint32_t areaCount = uint32_t( areaPool.size() ) - areaStart;
+
+		if( areaCount == 0 )
+		{
+			continue;
+		}
+
+		for( const auto& instance : mesh.instances )
+		{
+			Matrix instanceTransform = instance.worldTransform;
+			EveChildGeometry source;
+			source.childToObject = instanceTransform * parentTransform;
+			source.geometry = mesh.geometry;
+			source.areaStart = areaStart;
+			source.areaCount = areaCount;
+			out.push_back( source );
+		}
+	}
+}
+
+void EveChildInstancedMeshes::CollectOwnedLocatorSets( const Matrix& parentTransform, std::vector<EveChildLocatorSetsSource>& out ) const
+{
+	for( const Mesh& mesh : m_meshes )
+	{
+		for( const auto& sets : mesh.ownedLocatorSets )
+		{
+			if( !sets || sets->GetLocators()->empty() )
+			{
+				continue;
+			}
+			for( size_t i = 0; i < mesh.instances.size(); ++i )
+			{
+				Matrix instanceTransform = mesh.instances[i].worldTransform;
+				EveChildLocatorSetsSource source;
+				source.childToObject = instanceTransform * parentTransform;
+				source.owner = this;
+				source.partTag = mesh.partTags[i];
+				source.sets = sets;
+				out.push_back( source );
+			}
+		}
+	}
+}
+
+EveDamageOverlayPtr EveChildInstancedMeshes::GetPartDamageOverlay( PartTag partTag ) const
+{
+	return FindPartDamageOverlay( partTag );
+}
+
+void EveChildInstancedMeshes::CreatePartDamageOverlay( PartTag partTag )
+{
+	EveDamageOverlayPtr& overlay = m_partDamageOverlays[partTag];
+	if( !overlay )
+	{
+		overlay.CreateInstance();
+	}
+}
+
+Tr2Effect* EveChildInstancedMeshes::GetPartArmorDamageShaderEffect( PartTag partTag ) const
+{
+	if( const Mesh* mesh = FindMeshByPartTag( partTag ) )
+	{
+		return mesh->armorDamageShader;
+	}
+	return nullptr;
+}
+
+bool EveChildInstancedMeshes::GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const
+{
+	const Mesh* mesh = FindMeshByPartTag( partTag );
+	if( !mesh )
+	{
+		return false;
+	}
+	const LocatorStructureList* locators = FindDamageLocators( mesh->ownedLocatorSets );
+	if( !locators || index < 0 || index >= int( locators->size() ) )
+	{
+		return false;
+	}
+	EveGetLocatorPose( nullptr, ( *locators )[index], position, direction );
+	return true;
 }
