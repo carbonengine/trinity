@@ -3711,8 +3711,8 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 		const void* pointer;
 		uint32_t pitch;
-		if( m_pickBuffer.MapForReading( Tr2TextureSubresource( 0 ), pointer, pitch, renderContext ) == S_OK )
-		//if( pickingReadback.m_readback.Map(pointer, pitch, renderContext ) == S_OK ) 
+		//if( m_pickBuffer.MapForReading( Tr2TextureSubresource( 0 ), pointer, pitch, renderContext ) == S_OK )
+		if( pickingReadback.m_readback.Map(pointer, pitch, renderContext ) == S_OK )
 		{
 
 			const uint32_t* data = static_cast<const uint32_t*>( pointer );
