@@ -42,10 +42,7 @@ public:
 	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace ) throw();
 	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
 	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip ) throw();
-	ALResult SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
-	ALResult SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
 	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
-	ALResult SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
 
 	/** Drop everything that was set, without touching the device context */
 	ALResult Reset() throw();
@@ -70,7 +67,6 @@ private:
 			NONE,
 			BUFFER,
 			TEXTURE,
-			HEAP_VIEW,
 		};
 
 		Tr2TextureAL texture;
@@ -89,7 +85,6 @@ private:
 		{
 			NONE,
 			SAMPLER,
-			HEAP_VIEW,
 		};
 
 		Tr2SamplerStateAL sampler;

@@ -279,51 +279,6 @@ ALResult Tr2ResourceBindings::SetUav( Tr2RenderContextEnum::ShaderType stage, ui
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2ResourceBindings::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
-{
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	if( auto* slot = GetSrvSlot( stage, registerIndex ) )
-	{
-		*slot = Resource();
-		slot->type = Resource::HEAP_VIEW;
-	}
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-ALResult Tr2ResourceBindings::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
-{
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	if( auto* slot = GetUavSlot( stage, registerIndex ) )
-	{
-		*slot = Resource();
-		slot->type = Resource::HEAP_VIEW;
-	}
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-ALResult Tr2ResourceBindings::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
-{
-	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )
-	{
-		return E_INVALIDARG;
-	}
-	if( auto* slot = GetSamplerSlot( stage, registerIndex ) )
-	{
-		slot->type = Sampler::HEAP_VIEW;
-		slot->sampler = Tr2SamplerStateAL();
-	}
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
 ALResult Tr2ResourceBindings::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw()
 {
 	if( stage >= Tr2RenderContextEnum::SHADER_TYPE_COUNT || registerIndex >= Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE )

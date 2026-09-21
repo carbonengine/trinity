@@ -1967,21 +1967,21 @@ ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uin
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
 {
-	return m_bindings.SetSrvHeapView( stage, registerIndex );
+	return E_INVALIDCALL;
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
 {
-	return m_bindings.SetUavHeapView( stage, registerIndex );
+	return E_INVALIDCALL;
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
 {
-	return m_bindings.SetSamplerHeapView( stage, registerIndex );
+	return E_INVALIDCALL;
 }
 
 // --------------------------------------------------------------------------------------
