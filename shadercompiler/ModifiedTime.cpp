@@ -119,7 +119,7 @@ void GetSourceHash( const char* sourcePath, const char* parentData, const char* 
 		return;
 	}
 	visited.insert( sourcePath );
-	if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
+	if( auto opened = s_includeHandler.Open( sourcePath, CachingIncludeHandler::IncludeLocal, parentData, rootPath ) )
 	{
 		md5.add( opened->data, opened->size );
 
