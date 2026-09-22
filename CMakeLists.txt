@@ -130,3 +130,5 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
         )
     endif()
 endif()
+
+install(DIRECTORY shaders/ DESTINATION shaders)
