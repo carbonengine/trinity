@@ -357,14 +357,14 @@ bool Tr2RenderTarget::IsReadable() const
 	return GetRenderTarget().IsValid() && Tr2GpuUsage::HasFlag( GetRenderTarget().GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE );
 }
 
-int32_t Tr2RenderTarget::GenerateMipMaps()
+long Tr2RenderTarget::GenerateMipMaps()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	return GetRenderTarget().GenerateMipMaps( renderContext ).GetResult();
 }
 
-int32_t Tr2RenderTarget::Resolve( Tr2RenderTarget* destination )
+long Tr2RenderTarget::Resolve( Tr2RenderTarget* destination )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();

@@ -553,7 +553,7 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 	// override some behaviour for bombs
 	if( m_bombFlightpath )
 	{
-		const float bombTrackBall = pow( 1.f - quickFlight01, 2.f );
+		const float bombTrackBall = pow( 1.f - quickFlight01, 2 );
 		m_currentOffset *= bombTrackBall;
 	}
 
