@@ -516,9 +516,6 @@ bool Tr2EffectDescription::Read( const void* data,
 				Tr2Pass& pass = techniques[technique].passes[passIx];
 				pass.shaderTypeMask = 0;
 
-				std::vector<Tr2RenderContextEnum::ShaderType> shaderTypes;
-				std::vector<Tr2ShaderSignatureAL> signatures;
-
 				for( unsigned stageIx = 0; stageIx != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++stageIx )
 				{
 					pass.stageInputs[stageIx].m_exists = false;
@@ -614,9 +611,6 @@ bool Tr2EffectDescription::Read( const void* data,
 						return false;
 					}
 
-					shaderTypes.push_back( type );
-					signatures.push_back( pass.stageInputs[type].signature );
-
 					for( auto& c : pass.stageInputs[type].constants )
 					{
 						if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
@@ -636,14 +630,13 @@ bool Tr2EffectDescription::Read( const void* data,
 					}
 				}
 
-				pass.resourceSetDesc = Tr2ResourceSetDescriptionAL( Tr2RegisterMapAL( shaderTypes.data(), signatures.data(), signatures.size() ) );
 				for( uint32_t stageIx = 0; stageIx < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++stageIx )
 				{
 					if( pass.stageInputs[stageIx].m_exists )
 					{
 						for( auto sampler = begin( pass.stageInputs[stageIx].samplers ); sampler != end( pass.stageInputs[stageIx].samplers ); ++sampler )
 						{
-							pass.resourceSetDesc.SetSampler( Tr2RenderContextEnum::ShaderType( stageIx ), sampler->first, sampler->second.sampler );
+							pass.staticBindings.SetSampler( Tr2RenderContextEnum::ShaderType( stageIx ), sampler->first, sampler->second.sampler );
 						}
 					}
 				}
@@ -710,10 +703,9 @@ bool Tr2EffectDescription::Read( const void* data,
 					auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
 					ReadRegisters( library.globalInput.signature, stream, version, shaderType );
 					ReadInput( library.globalInput, stream, version, shaderType, renderContext );
-					library.globalResourceSetDesc = Tr2ResourceSetDescriptionAL( Tr2RegisterMapAL( &shaderType, &library.globalInput.signature, 1 ) );
 					for( auto sampler = begin( library.globalInput.samplers ); sampler != end( library.globalInput.samplers ); ++sampler )
 					{
-						library.globalResourceSetDesc.SetSampler( shaderType, sampler->first, sampler->second.sampler );
+						library.globalStaticBindings.SetSampler( shaderType, sampler->first, sampler->second.sampler );
 					}
 
 					ReadRegisters( library.localInput.signature, stream, version, shaderType );
@@ -764,21 +756,21 @@ bool Tr2EffectDescription::Read( const void* data,
 				{
 					if( IsHeapView( res.second.name ) )
 					{
-						library.globalResourceSetDesc.SetSrvHeapView( type, res.first );
+						library.globalStaticBindings.SetSrvHeapView( type, res.first );
 					}
 				}
 				for( auto& res : library.globalInput.uavs )
 				{
 					if( IsHeapView( res.second.name ) )
 					{
-						library.globalResourceSetDesc.SetUavHeapView( type, res.first );
+						library.globalStaticBindings.SetUavHeapView( type, res.first );
 					}
 				}
 				for( auto& res : library.globalInput.samplers )
 				{
 					if( IsHeapView( res.second.name ) )
 					{
-						library.globalResourceSetDesc.SetSamplerHeapView( type, res.first );
+						library.globalStaticBindings.SetSamplerHeapView( type, res.first );
 					}
 				}
 			}
@@ -792,26 +784,23 @@ bool Tr2EffectDescription::Read( const void* data,
 				{
 					for( auto& res : stage.resources )
 					{
-						auto isHeapView = IsHeapView( res.second.name );
 						if( IsHeapView( res.second.name ) )
 						{
-							pass.resourceSetDesc.SetSrvHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
+							pass.staticBindings.SetSrvHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
 						}
 					}
 					for( auto& res : stage.uavs )
 					{
-						auto isHeapView = IsHeapView( res.second.name );
 						if( IsHeapView( res.second.name ) )
 						{
-							pass.resourceSetDesc.SetUavHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
+							pass.staticBindings.SetUavHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
 						}
 					}
 					for( auto& sampler : stage.samplers )
 					{
-						auto isHeapView = IsHeapView( sampler.second.name );
 						if( IsHeapView( sampler.second.name ) )
 						{
-							pass.resourceSetDesc.SetSamplerHeapView( Tr2RenderContextEnum::ShaderType( type ), sampler.first );
+							pass.staticBindings.SetSamplerHeapView( Tr2RenderContextEnum::ShaderType( type ), sampler.first );
 						}
 					}
 				}

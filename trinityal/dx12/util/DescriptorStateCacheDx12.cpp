@@ -41,7 +41,7 @@ DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2Pri
 /** Dirty all states and reset internal allocators */
 void DescriptorStateCache::Reset()
 {
-	for( uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot )
+	for( uint32_t slot = 0; slot < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE; ++slot )
 	{
 		m_srvUav[slot] = m_nullSrv;
 		m_sampler[slot] = m_nullSampler;
@@ -72,7 +72,7 @@ void DescriptorStateCache::Dirty()
 	m_samplerDirty = true;
 
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
-	for( uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot )
+	for( uint32_t slot = 0; slot < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE; ++slot )
 	{
 		m_parameterSlots[slot].SetNone();
 		m_parameterSlots[slot].SetNone();

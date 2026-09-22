@@ -9,7 +9,7 @@
 #include "../Tr2ConstantBufferALDx12.h"
 #include "../Tr2ShaderProgramAlDx12.h"
 #include "../../Tr2RenderContextEnum.h"
-#include "../../include/Tr2ResourceSetAL.h"
+#include "../../include/Tr2RegisterMapAL.h"
 
 #include "DescriptorHeapViewDx12.h"
 #include "FrameLocalDescriptorHeapAllocatorDx12.h"
@@ -129,9 +129,9 @@ private:
 
 	CComPtr<ID3D12RootSignature> m_rootSignature;
 
-	std::shared_ptr<ShaderResourceViewDx12> m_srvUav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	D3D12_GPU_VIRTUAL_ADDRESS m_cbv[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	std::shared_ptr<ShaderResourceViewDx12> m_srvUav[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	std::shared_ptr<SamplerStateDx12> m_sampler[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+	D3D12_GPU_VIRTUAL_ADDRESS m_cbv[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 
 	CComPtr<ID3D12DescriptorHeap> m_globalSrvUavHeap;
 	CComPtr<ID3D12DescriptorHeap> m_globalSamplerHeap;
@@ -139,7 +139,7 @@ private:
 	bool m_srvUavDirty;
 	bool m_samplerDirty;
 
-	RootParameterSlot m_parameterSlots[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	RootParameterSlot m_parameterSlots[Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 };
 
 #endif
