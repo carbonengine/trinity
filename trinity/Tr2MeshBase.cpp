@@ -360,34 +360,23 @@ Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* are
 		return batch;
 	}
 
-	auto& meshArea = lod->m_areas[std::max( 0, area->GetIndex() )];
 	const bool reversed = area->GetReversed() != reverseWinding;
 
-	if( reversed && !lod->m_reversedIndicesValid )
+	auto indexRange = GetAreaIndexRange( *lod, uint32_t( std::max( 0, area->GetIndex() ) ), primCount, reversed );
+	if( !indexRange.valid )
 	{
 		return batch;
 	}
 
 	batch.SetMaterial( shadMat );
-	batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, lod->m_indexAllocation );
+	batch.SetGeometry( lod->m_mesh->m_vertexDeclarationHandle, lod->m_vertexAllocation, *indexRange.indices );
 
 	batch.SetPerObjectData( data );
-
-	auto& indices = reversed ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
-	uint32_t startIndex;
-	if( reversed )
-	{
-		startIndex = indices.GetStartIndex() + lod->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
-	}
-	else
-	{
-		startIndex = indices.GetStartIndex() + meshArea.m_firstIndex;
-	}
 
 	batch.SetDrawIndexedInstanced(
 		primCount * 3,
 		1,
-		startIndex,
+		indexRange.startIndex,
 		lod->m_vertexAllocation.GetOffset() / lod->m_vertexAllocation.GetStride(),
 		0 );
 	return batch;

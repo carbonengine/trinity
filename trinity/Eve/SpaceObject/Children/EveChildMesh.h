@@ -281,6 +281,7 @@ protected:
 	bool m_dirtyRtMesh;
 	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
 	bool m_hasUpdated = false;
+	bool m_reverseWinding = false;
 
 	float m_activationStrength;
 

@@ -7,6 +7,7 @@
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/EveTransform.h"
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/MatrixUtils.h"
 #include "Tr2InstancedMesh.h"
 #include "Tr2GrannyAnimation.h"
 #include "TriFrustumOrtho.h"
@@ -680,8 +681,7 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 	{
 		if( m_mesh )
 		{
-			const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), reverseWinding );
+			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), m_reverseWinding );
 		}
 
 		if( m_activationStrength != 0.0 )
@@ -731,19 +731,19 @@ void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batc
 
 	if( damageShader )
 	{
-		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod );
+		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	// own effects are emitted before the inherited ones so the parent's overlays (e.g. cloak)
 	// draw on top of this child's own overlays (e.g. battle damage)
 	if( !m_overlayEffects.empty() )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	if( hasParentOverlays )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 }
 
@@ -753,8 +753,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	// Fix asap <Logi 27. aug 2015>
 	if( m_display && m_mesh && m_hasUpdated )
 	{
-		const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, reverseWinding );
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, m_reverseWinding );
 	}
 }
 
@@ -998,6 +997,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	{
 		m_worldTransform = ( *it )->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
+	m_reverseWinding = IsMirrored( m_worldTransform );
 
 	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
 

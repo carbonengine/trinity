@@ -508,6 +508,7 @@ void EveChildInstancedMeshes::AddMesh(
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
 			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
+			instanceData.mirrored = IsMirrored( instanceTransforms[i] );
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
 		}
@@ -553,6 +554,7 @@ void EveChildInstancedMeshes::AddMesh(
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
 		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
+		instanceData.mirrored = IsMirrored( instanceTransforms[i] );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
 	}
@@ -666,6 +668,7 @@ void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 {
 	Matrix m = TransformationMatrix( scale, rotation, translation );
 	const Float4x3 packedTransform( m );
+	bool mirrored = IsMirrored( m );
 	bool movedOwnedLocators = false;
 	for( auto& mesh : m_meshes )
 	{
@@ -674,6 +677,7 @@ void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 			if( mesh.partTags[i] == partTag )
 			{
 				mesh.instances[i].worldTransform = packedTransform;
+				mesh.instances[i].mirrored = mirrored;
 				movedOwnedLocators |= !mesh.ownedLocatorSets.empty();
 			}
 		}
@@ -800,6 +804,7 @@ void EveChildInstancedMeshes::AddMeshesToManager( EveInstancedMeshManager& manag
 					mesh.meshIndex,
 					area.areaIndex,
 					area.areaCount,
+					area.reversed,
 					area.effect,
 					area.effectHash,
 					mesh.inheritOverlayEffects ? m_perObjectDataHandle : m_perObjectDataNoClipHandle,
@@ -873,7 +878,7 @@ BluePy EveChildInstancedMeshes::GetInstancesTransforms( uint32_t meshId ) const
 	{
 		Vector3 scale, translation;
 		Quaternion rotation;
-		Decompose( scale, rotation, translation, instance.worldTransform );
+		DecomposeMirrorAware( scale, rotation, translation, instance.worldTransform );
 
 		PyObject* transform = PyTuple_New( 3 );
 		PyTuple_SetItem( transform, 0, ToPython( translation ) );
@@ -1399,6 +1404,8 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 				continue;
 			}
 
+			bool reverseWinding = mesh.instances[i].mirrored;
+
 			// own effects are emitted before the inherited ones so the parent's overlays
 			// (e.g. cloak) draw on top of this mesh's own overlays
 			if( hasDamageOverlays )
@@ -1407,17 +1414,17 @@ void EveChildInstancedMeshes::GetBatches( ITriRenderBatchAccumulator* batches, T
 				{
 					if( Tr2Effect* damageShader = damageOverlay->GetArmorDamageShader( batchType ) )
 					{
-						EmitDamageOverlayBatches( batches, pod.framePod, damageShader, mesh.overlayAreaBlocks, *lod );
+						EmitDamageOverlayBatches( batches, pod.framePod, damageShader, mesh.overlayAreaBlocks, *lod, reverseWinding );
 					}
 				}
 			}
 			if( hasOwnOverlays )
 			{
-				EmitOverlayBatches( batches, pod.framePod, batchType, mesh.ownOverlayEffects, mesh.overlayAreaBlocks, *lod );
+				EmitOverlayBatches( batches, pod.framePod, batchType, mesh.ownOverlayEffects, mesh.overlayAreaBlocks, *lod, reverseWinding );
 			}
 			if( hasInheritedOverlays )
 			{
-				EmitOverlayBatches( batches, pod.framePod, batchType, *m_parentOverlayEffects, mesh.overlayAreaBlocks, *lod );
+				EmitOverlayBatches( batches, pod.framePod, batchType, *m_parentOverlayEffects, mesh.overlayAreaBlocks, *lod, reverseWinding );
 			}
 		}
 	}

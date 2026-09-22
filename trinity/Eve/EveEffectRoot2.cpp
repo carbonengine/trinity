@@ -201,7 +201,7 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	m_localTransform = TransformationMatrix( m_scaling, m_rotation, m_translation );
 	m_lastUpdateMatrix = m_localTransform * m_worldTransform;
-	m_secondaryLightingSphereRadiusWorld = m_secondaryLightingSphereRadiusLocal * ( m_scaling.x + m_scaling.y + m_scaling.z ) / 3.f;
+	m_secondaryLightingSphereRadiusWorld = m_secondaryLightingSphereRadiusLocal * ( std::abs( m_scaling.x ) + std::abs( m_scaling.y ) + std::abs( m_scaling.z ) ) / 3.f;
 
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
@@ -716,7 +716,7 @@ PEveSpaceObjectChildVector& EveEffectRoot2::GetChildren()
 // -----------------------------------------------------------------------------
 void EveEffectRoot2::SetTransform( const Matrix& transform )
 {
-	Decompose( m_scaling, m_rotation, m_translation, transform );
+	DecomposeMirrorAware( m_scaling, m_rotation, m_translation, transform );
 }
 
 // -----------------------------------------------------------------------------
