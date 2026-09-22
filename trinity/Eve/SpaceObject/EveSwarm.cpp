@@ -496,7 +496,7 @@ void EveSwarm::UpdateAsyncronous( const EveUpdateContext& context )
 
 void EveSwarm::UpdateSwarm( Be::Time t )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	if( t == m_timeLast )
 	{
 		return;

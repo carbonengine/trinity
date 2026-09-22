@@ -656,7 +656,7 @@ void Tr2PostProcessRenderer::Execute(
 	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !sourceBuffer.IsValid() )
 	{

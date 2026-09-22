@@ -87,7 +87,7 @@ BVH::BoundingVolumeHierarchy& Tr2RaycastGeometryRes::GetBVH()
 
 BlueAsyncRes::LoadingResult Tr2RaycastGeometryRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_dataStream )
 	{
@@ -539,7 +539,7 @@ void TriGeometryRes::GetDescription( std::string& desc )
 // This gets called on the background loading thread
 BlueAsyncRes::LoadingResult TriGeometryRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_cmfContents )
 	{
@@ -606,7 +606,7 @@ BlueAsyncRes::LoadingResult TriGeometryRes::DoLoad()
 // This gets called on the main thread
 bool TriGeometryRes::DoPrepare()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -675,7 +675,7 @@ bool TriGeometryRes::DoPrepare()
 #if WITH_GRANNY
 void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Determine bounds for area
 	// Assume that position is the first component
@@ -716,7 +716,7 @@ void TriGeometryRes::DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& ar
 #if WITH_GRANNY
 bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	// offset to boneindex
 	int boneIndexOffset = GetVertexComponentOffset( grannyMesh, GrannyVertexBoneIndicesName );
 	// if there are no bone-indices , we are done
@@ -799,7 +799,7 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* g
 
 bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( myMesh->MorphTargetCount == 0 )
 	{
@@ -854,7 +854,7 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 
 bool TriGeometryRes::SetupMeshes( const cmf::Data& cmfData )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	int minimumLOD = gTriDev->GetMinimumModelLOD();
 
@@ -952,7 +952,7 @@ bool TriGeometryRes::SetupMeshes( const cmf::Data& cmfData )
 #if WITH_GRANNY
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupMeshes: intern messed up cmf loading" );
 
@@ -1186,7 +1186,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 void TriGeometryRes::SetupSkeletons( const cmf::Data& cmfData )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_skeletons.resize( cmfData.skeletons.size() );
 	for( int skelIx = 0; skelIx < cmfData.skeletons.size(); ++skelIx )
@@ -1211,7 +1211,7 @@ void TriGeometryRes::SetupSkeletons( const cmf::Data& cmfData )
 #if WITH_GRANNY
 void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupSkeletons: intern messed up cmf loading" );
 
@@ -1243,7 +1243,7 @@ void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
 
 bool TriGeometryRes::ReadCMFFile()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_useCMF = true;
 	m_cmfContents = Tr2CmfContents( *m_dataStream, CW2A( m_path.c_str() ) );
@@ -1264,7 +1264,7 @@ bool TriGeometryRes::ReadCMFFile()
 #if WITH_GRANNY
 bool TriGeometryRes::ReadGrannyFile()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_useCMF = false;
 
@@ -1301,7 +1301,7 @@ bool TriGeometryRes::ReadGrannyFile()
 
 void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	if( g->IsUsingCMF() )
@@ -1346,7 +1346,7 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 //This entire function is sus. We should be able to compute this when we upload the mesh to the GPU, as it can never change unless the vertex data changes.
 void TriGeometryRes::RecalculateBoundingSphere()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	for( auto& mesh : m_meshes )
@@ -1427,7 +1427,7 @@ static void ConvertTriangleData( Tr2VertexDefinition::DataType elementType, unsi
 
 void TriGeometryRes::ProcessMeshTriangles( int meshIx, PerTriangleCallback cb, void* cbContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	int i = meshIx;
@@ -2007,7 +2007,7 @@ TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDef
 #if WITH_GRANNY
 float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, uint8_t* pMorphSrc, Tr2VertexDefinition morphDecl, uint8_t* pVertices, Tr2VertexDefinition decl )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	MorphToBaseData baseData = InitMorphToBaseData( decl );
 	MorphToBaseData morphData = InitMorphToBaseData( morphDecl );
@@ -2025,7 +2025,7 @@ float CalculateMorphDeformationAmount( bool dataIsDeltas, int32_t vertexCount, u
 
 bool TriGeometryRes::CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
@@ -2151,7 +2151,7 @@ bool TriGeometryRes::CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cm
 #if WITH_GRANNY
 bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeometryResLodData* lod, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !Tr2Renderer::IsResourceCreationAllowed() || grannyMesh == NULL )
 	{
@@ -2310,7 +2310,7 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 
 bool TriGeometryRes::CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !cmfContents.GetData() )
 	{
@@ -2363,7 +2363,7 @@ static granny_mesh* FindOcclusionMesh( granny_file_info* gi, const std::string& 
 
 bool TriGeometryRes::CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto& mesh : m_meshes )
 	{
