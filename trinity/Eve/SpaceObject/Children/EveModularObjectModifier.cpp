@@ -7,6 +7,7 @@
 #include "../Attachments/EveImpactOverlay.h"
 #include "EveChildInstancedMeshes.h"
 #include "EveChildContainer.h"
+#include "Tr2QuadRenderer.h"
 #include <cmf/transforms.h>
 
 
@@ -100,6 +101,11 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddHull( const char* hull
 		return INVALID_PART_TAG;
 	}
 
+	for( size_t i = size; i < m_object->GetEffectChildren().size(); ++i )
+	{
+		m_object->GetEffectChildren()[i]->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
+	}
+
 	if( !m_instancedMeshes )
 	{
 		for( size_t i = size; i < m_object->GetEffectChildren().size(); ++i )
@@ -129,6 +135,7 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddChild( const char* res
 	{
 		child->Setup( &scale, &rotation, &position, Tr2Lod::TR2_LOD_LOW );
 		m_object->AddToEffectChildrenList( child );
+		child->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 		auto id = AllocatePartId();
 		child->SetPartTag( id );
 		m_data->m_parts.emplace_back( EveChildPartData::PartData{ id, position, rotation, scale } );
