@@ -26,7 +26,7 @@ namespace TrinityALImpl
 class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
 {
 public:
-	void Initialize( CComPtr<ID3D11Texture2D> stagingTexture, uint64_t frameNumber );
+	Tr2ReadbackAL( CComPtr<ID3D11Texture2D> stagingTexture, uint64_t frameNumber );
 
 	~Tr2ReadbackAL();
 
@@ -43,12 +43,12 @@ public:
 	bool IsValid() const;
 
 private:
-	CComPtr<ID3D11Texture2D> m_stagingTexture;
-	uint64_t m_frameNumber;
+	CComPtr<ID3D11Texture2D> m_stagingTexture = nullptr;
+	uint64_t m_frameNumber = 0;
 
-	CComPtr<ID3D11DeviceContext> m_context;
-	void* m_pointer;
-	uint32_t m_rowPitch;
+	CComPtr<ID3D11DeviceContext> m_context = nullptr;
+	void* m_pointer = nullptr;
+	uint32_t m_rowPitch = 0;
 };
 
 class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>

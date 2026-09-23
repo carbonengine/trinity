@@ -3503,51 +3503,100 @@ void EveSpaceScene::OnListModified(
 }
 
 
+//Blue-exposed Python functions for picking
 
-IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+IRootPtr EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	uint32_t areaID;
-	return PickObjectAndArea( x, y, proj, view, viewport, areaID, pickTypes, renderContext );
-}
 
-IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
-{
 	EvePickingContextPtr listener;
 	listener.CreateInstance();
 
-	PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
 
-	areaID = listener->GetArea();
-	return listener->GetObject();
+	return object;
 }
 
-IRoot* EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+BluePy EveSpaceScene::PickObjectAndAreaID( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	uint32_t areaID;
-	return PickAsyncObjectAndArea( listener, x, y, proj, view, viewport, areaID, pickTypes, renderContext );
+
+	EvePickingContextPtr listener;
+	listener.CreateInstance();
+
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	if( object )
+	{
+		PyObject* tuple = PyTuple_New( 2 );
+		PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+		PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+		return BluePy( tuple, false );
+	}
+
+	return BluePy( Py_None, true );
 }
 
-IRoot* EveSpaceScene::PickAsyncObjectAndArea( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+BluePy EveSpaceScene::PickObjectAndExtraData( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	EvePickingContextPtr listener;
+	listener.CreateInstance();
+
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	if( object )
+	{
+		PyObject* tuple = PyTuple_New( 3 );
+		PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+		PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+		PyTuple_SET_ITEM( tuple, 2, PyLong_FromUnsignedLong( extra2 ) );
+		return BluePy( tuple, false );
+	}
+
+	return BluePy( Py_None, true );
+}
+
+IRootPtr EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	if( !listener )
 	{
-		areaID = 0;
 		return nullptr;
 	}
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
+	auto [object, extra1, extra2] = PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
 
-	areaID = listener->GetArea();
-	return listener->GetObject();
+	return object;
 }
 
-void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+BluePy EveSpaceScene::PickAsyncObjectAndExtraData( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	if( listener )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		auto [object, extra1, extra2] = PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
+
+		if( object )
+		{
+			PyObject* tuple = PyTuple_New( 3 );
+			PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+			PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+			PyTuple_SET_ITEM( tuple, 2, PyLong_FromUnsignedLong( extra2 ) );
+			return BluePy( tuple, false );
+		}
+	}
+
+	return BluePy( Py_None, true );
+}
+
+std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
 	if( !renderContext.IsValid() )
 	{
-		return;
+		return { nullptr, 0, 0 };
 	}
 
 	float fx, fy;
@@ -3615,7 +3664,7 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 			renderContext.m_esm.BeginManagedRendering();
 			ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
 
-			CR_RETURN( Tr2Renderer::BeginRenderContext() );
+			Tr2Renderer::BeginRenderContext();
 			ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
 
 			renderContext.m_esm.PushRenderTarget( m_pickBuffer );
@@ -3706,7 +3755,8 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 		}
 
 		IRoot* object = nullptr;
-		uint32_t area = 0;
+		uint32_t extraData1 = 0;
+		uint32_t extraData2 = 0;
 
 		const void* pointer;
 		uint32_t pitch;
@@ -3717,37 +3767,45 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 			uint64_t pickingObjectLowBits = data[0];
 			uint64_t pickingObjectHighBits = data[1];
-			uint32_t extraData1 = data[2];
-			uint32_t extraData2 = data[3];
+			uint32_t data1 = data[2];
+			uint32_t data2 = data[3];
 
 			object = (IRoot*)( pickingObjectLowBits | ( pickingObjectHighBits << 32 ) );
 
 			bool found = false;
 
-			std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
-
-			for( size_t i = 0; i < blueObjects.size(); i++ )
+			if (object != nullptr)
 			{
-				IRoot* ptr = blueObjects[i];
+				std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
 
-				if( ptr == object )
+				for( size_t i = 0; i < blueObjects.size(); i++ )
 				{
-					found = true;
-					break;
+					IRoot* ptr = blueObjects[i];
+
+					if( ptr == object )
+					{
+						found = true;
+						break;
+					}
 				}
 			}
+
+			CCP_LOGERR( "Picking result: pointer: %p (found: %s), extra1: %d, extra2: %d", object, found ? "yes" : "NO!!!", data1, data2 );
 
 			if( !found )
 			{
 				object = nullptr;
 			}
 
-			area = extraData1;
+			extraData1 = data1;
+			extraData2 = data2;
 		}
 
-		listener->UpdateResult( pickingReadback.m_pickedX, pickingReadback.m_pickedY, object, area );
+		listener->UpdateResult( pickingReadback.m_pickedX, pickingReadback.m_pickedY, object, extraData1, extraData2 );
 		listener->m_readbacks.erase( listener->m_readbacks.begin() );
 	}
+
+	return { listener->GetObject(), listener->GetExtraData1(), listener->GetExtraData2() };
 }
 
 

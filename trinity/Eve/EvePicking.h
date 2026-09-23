@@ -41,10 +41,11 @@ public:
 
 	EvePickingContext( IRoot* lockobj = NULL );
 
-	void UpdateResult( uint32_t x, uint32_t y, IRootPtr object, uint32_t area );
+	void UpdateResult( uint32_t x, uint32_t y, IRootPtr object, uint32_t extraData1, uint32_t extraData2 );
 
-	IRoot* GetObject();
-	uint32_t GetArea();
+	IRootPtr GetObject() const;
+	uint32_t GetExtraData1() const;
+	uint32_t GetExtraData2() const;
 
 	std::vector<std::unique_ptr<EvePendingPickingReadback>> m_readbacks;
 
@@ -52,7 +53,8 @@ private:
 	uint32_t m_lastPickedX;
 	uint32_t m_lastPickedY;
 	IRootPtr m_lastPickedObject;
-	uint32_t m_lastPickedArea;
+	uint32_t m_lastPickedExtraData1;
+	uint32_t m_lastPickedExtraData2;
 
 	friend class EveSpaceScene;
 };

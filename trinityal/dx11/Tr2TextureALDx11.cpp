@@ -329,13 +329,10 @@ Tr2RenderContextEnum::PixelFormat FromTypeless( Tr2RenderContextEnum::PixelForma
 namespace TrinityALImpl
 {
 
-void Tr2ReadbackAL::Initialize( CComPtr<ID3D11Texture2D> stagingTexture, uint64_t frameNumber )
+Tr2ReadbackAL::Tr2ReadbackAL( CComPtr<ID3D11Texture2D> stagingTexture, uint64_t frameNumber )
 {
 	m_stagingTexture = stagingTexture;
 	m_frameNumber = frameNumber;
-
-	m_context = nullptr;
-	m_pointer = nullptr;
 }
 
 Tr2ReadbackAL::~Tr2ReadbackAL()
@@ -380,6 +377,8 @@ void Tr2ReadbackAL::Destroy()
 	{
 		m_context->Unmap( m_stagingTexture, 0 );
 	}
+	m_pointer = nullptr;
+	m_context = nullptr;
 	m_stagingTexture = nullptr;
 }
 
@@ -931,10 +930,7 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 		renderContext.m_context->CopySubresourceRegion( stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), nullptr );
 	}
 
-	
-	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
-	readback->Initialize( stagingTexture, renderContext.GetRecordingFrameNumber() );
-	return readback;
+	return std::make_shared<Tr2ReadbackAL>( stagingTexture, renderContext.GetRecordingFrameNumber() );
 }
 
 ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )

@@ -618,7 +618,7 @@ void FlushBarriersMaybe( const Tr2TextureAL& tex, Tr2RenderContextAL& renderCont
 
 
 
-void Tr2ReadbackAL::Initialize( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber )
+Tr2ReadbackAL::Tr2ReadbackAL( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber )
 {
 	m_readScratch = readScratch;
 	m_rowPitch = rowPitch;
@@ -666,6 +666,7 @@ void Tr2ReadbackAL::Destroy()
 		m_readScratch->Unmap( 0, nullptr );
 	}
 	m_readScratch = nullptr;
+	m_pointer = nullptr;
 }
 
 void Tr2ReadbackAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
@@ -1608,9 +1609,7 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 	renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 	FlushBarriersMaybe( *this, renderContext );
 
-	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
-	readback->Initialize( scratch, layout.Footprint.RowPitch, renderContext.GetRecordingFrameNumber() );
-	return readback;
+	return std::make_shared<Tr2ReadbackAL>( scratch, layout.Footprint.RowPitch, renderContext.GetRecordingFrameNumber() );
 }
 
 ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )

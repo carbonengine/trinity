@@ -15,7 +15,7 @@ namespace TrinityALImpl
 
 
 
-void Tr2ReadbackAL::Initialize( MetalContext* metalContext, id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber )
+Tr2ReadbackAL::Tr2ReadbackAL( MetalContext* metalContext, id<MTLBuffer> mtlReadBackBuffer, uint32_t rowPitch, uint64_t frameNumber )
 {
     m_metalContext = metalContext;
 	m_mtlReadBackBuffer = mtlReadBackBuffer;
@@ -516,9 +516,7 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 															   readMipLevel,
 															   false );
 
-	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
-	readback->Initialize( metalContext, mtlReadbackBuffer, mipPitch, renderContext.GetRecordingFrameNumber() );
-	return readback;
+	return std::make_shared<Tr2ReadbackAL>(metalContext, mtlReadbackBuffer, mipPitch, renderContext.GetRecordingFrameNumber());
 }
 
 ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region,
