@@ -1,5 +1,3 @@
-// Copyright © 2023 CCP ehf.
-
 #include "Tr2CurveColorMixer.h"
 
 Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj ) :
@@ -9,7 +7,8 @@ Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj ) :
 	m_color2( 0, 0, 0, 1 ),
 	m_lerpValue( 0.f ),
 	m_saturation( 1.f ),
-	m_brightness( 1.f )
+	m_brightness( 1.f ),
+	m_alphaOverride( -1.f )
 {
 }
 
@@ -28,23 +27,27 @@ Color Tr2CurveColorMixer::GetValue( double time ) const
 {
 	Color out = Lerp( m_color1, m_color2, m_lerpValue );
 
-	if( m_saturation == 1.f )
+	if( m_saturation != 1.f )
 	{
-		return out * m_brightness;
+		// color intensity
+		float i = ( out.r * 0.299f ) + ( out.g * 0.587f ) + ( out.b * 0.114f );
+
+		out = Lerp( Color( i, i, i, i ), out, max( 0.0f, m_saturation ) );
 	}
 
-	// color intensity
-	float i = ( out.r * 0.299f ) + ( out.g * 0.587f ) + ( out.b * 0.114f );
+	out *= m_brightness;
 
-	out = Lerp( Color( i, i, i, i ), out, max( 0.0f, m_saturation ) );
+	if( m_alphaOverride != -1.f )
+	{
+		out.a = min( 1.f, max( 0.f, m_alphaOverride ) );
+	}
 
-	return out * m_brightness;
+	return out;
 }
 
 Color* Tr2CurveColorMixer::Update( Color* in, Be::Time time )
 {
 	*in = m_currentValue = GetValue( TimeAsDouble( time ) );
-
 	return in;
 }
 
@@ -72,6 +75,7 @@ void Tr2CurveColorMixer::InvertLinearColor( Color* in, Color* out )
 	out->r = InvertLinearValue( in->r );
 	out->b = InvertLinearValue( in->b );
 	out->g = InvertLinearValue( in->g );
+	out->a = in->a;
 }
 
 float Tr2CurveColorMixer::InvertLinearValue( float x )

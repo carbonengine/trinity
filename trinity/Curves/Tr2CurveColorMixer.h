@@ -44,6 +44,7 @@ private:
 	float m_lerpValue;
 	float m_saturation;
 	float m_brightness;
+	float m_alphaOverride;
 };
 
 TYPEDEF_BLUECLASS( Tr2CurveColorMixer );
