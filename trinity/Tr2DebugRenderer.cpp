@@ -744,7 +744,7 @@ void Tr2DebugRenderer::DrawText( TriDebugFont font, const Vector3& pos, const Co
 	va_end( args );
 }
 
-void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchronize, Tr2RenderContext& renderContext )
+void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, Tr2RenderContext& renderContext )
 {
 	auto shader = m_pickingEffect->GetShaderStateInterface();
 	if( !shader )
@@ -760,29 +760,19 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 		return;
 	}
 
-	Tr2PickBuffer& pickBuffer = readback.m_debugPickBuffer;
-	pickBuffer.SetClearColor( 0 );
-	pickBuffer.PrepareResources();
-
-	if( !pickBuffer.BeginRendering( 0.f, renderContext ) )
-	{
-		return;
-	}
-
 	auto handle = GetVertexDeclarationHandle( renderContext );
 
 	shader->ApplyAllStateForPass( 0, 0, renderContext );
-	m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
 	renderContext.m_esm.ApplyVertexDeclaration( handle );
 
 	auto draw = [&]( const std::vector<Vertex>& geometry,
 					 Tr2RenderContextEnum::Topology topology,
 					 uint32_t verticesPerPrimitive,
-					 std::vector<Tr2DebugObjectReference>& objects,
+					 std::vector<IRootPtr>& blueObjects,
 					 const std::vector<std::pair<Tr2DebugObjectReference, size_t>>& objectOffsets ) {
 		if( !objectOffsets.empty() )
 		{
-			objects.reserve( objectOffsets.size() );
+			blueObjects.reserve( objectOffsets.size() );
 
 			uint32_t stride = uint32_t( sizeof( Vertex ) );
 			uint32_t offset = 0;
@@ -795,12 +785,20 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 				{
 					auto object = objectOffsets[i].first;
 
-					objects.push_back( object );
-
 					if( !object )
 					{
 						continue;
 					}
+
+					IRoot* root = object.m_object;
+					blueObjects.push_back( root );
+
+					uint64_t pointer = (uint64_t)root->GetRootObject();
+
+					m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerLowBits" ), (uint32_t)( ( pointer >> 0 ) & 0xFFFFFFFFUL ) );
+					m_pickingEffect->SetParameter( BlueSharedString( "PickingPointerHighBits" ), (uint32_t)( ( pointer >> 32 ) & 0xFFFFFFFFUL ) );
+					m_pickingEffect->SetParameter( BlueSharedString( "PickingArea" ), object.m_area );
+					m_pickingEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
 
 					auto begin = objectOffsets[i].second;
 					auto end = i + 1 < objectOffsets.size() ? objectOffsets[i + 1].second : geometry.size();
@@ -811,15 +809,8 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, bool synchroni
 		}
 	};
 
-	draw( m_lines, Tr2RenderContextEnum::TOP_LINES, 2, readback.m_debugLineObjects, m_objectLineOffsets );
-	draw( m_triangles, Tr2RenderContextEnum::TOP_TRIANGLES, 3, readback.m_debugTriangleObjects, m_objectTriangleOffsets );
-
-	if( !pickBuffer.EndRendering( renderContext ) )
-	{
-		return;
-	}
-
-	readback.MapDebug( synchronize, renderContext );
+	draw( m_lines, Tr2RenderContextEnum::TOP_LINES, 2, readback.m_blueObjects, m_objectLineOffsets );
+	draw( m_triangles, Tr2RenderContextEnum::TOP_TRIANGLES, 3, readback.m_blueObjects, m_objectTriangleOffsets );
 }
 
 void Tr2DebugRenderer::BeginRender()

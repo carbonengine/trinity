@@ -44,7 +44,7 @@ public:
 	bool BeginRendering( float initialDepth, Tr2RenderContext& renderContext );
 	bool EndRendering( Tr2RenderContext& renderContext );
 
-	bool MapForReading( bool synchronize, const void*& data, uint32_t& pitch, Tr2RenderContext& renderContext );
+	bool MapForReading( const void*& data, uint32_t& pitch, Tr2RenderContext& renderContext );
 	void UnmapForReading( Tr2RenderContext& renderContext );
 
 protected:

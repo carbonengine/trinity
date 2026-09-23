@@ -460,6 +460,7 @@ void EveChildInstancedMeshes::AddMesh(
 		return;
 	}
 
+	uint32_t pickingMeshIndex = (uint32_t)m_meshes.size();
 	for( auto& mesh : m_meshes )
 	{
 		if( mesh.geometryPath != geometryPath || mesh.meshIndex != meshIndex )
@@ -508,6 +509,8 @@ void EveChildInstancedMeshes::AddMesh(
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
 			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
+			instanceData.pickingMeshIndex = pickingMeshIndex;
+			instanceData.pickingInstanceIndex = static_cast<uint32_t>( i );
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
 		}
@@ -553,6 +556,8 @@ void EveChildInstancedMeshes::AddMesh(
 		EveInstancedMeshManager::StaticPerInstanceData instanceData;
 		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
+		instanceData.pickingMeshIndex = pickingMeshIndex;
+		instanceData.pickingInstanceIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
 	}
@@ -709,6 +714,8 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );
 					elements.Add( Tr2VertexDefinition::UINT32_1, Tr2VertexDefinition::TEXCOORD, 14, 1, 1 );
+
+					elements.Add( Tr2VertexDefinition::UINT32_2, Tr2VertexDefinition::TEXCOORD, 15, 1, 1 );
 					mesh.combinedVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( elements );
 				}
 			}

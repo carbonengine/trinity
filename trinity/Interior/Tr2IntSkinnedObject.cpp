@@ -269,7 +269,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 				continue;
 			}
 
-			areaData->SetUserData( skinnedData->GetUserData() );
+			areaData->SetPickingPointer( skinnedData->GetPickingPointer() );
 			unsigned int* animMapping = area->GetJointMappingAnimRig();
 			if( ( m_visualModel->GetSkeleton() != NULL ) && ( animMapping != NULL ) )
 			{

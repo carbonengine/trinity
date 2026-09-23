@@ -34,8 +34,6 @@ struct Tr2RenderContextBase : public IRoot, public ITr2RenderContextEvents
 
 	Tr2EffectStateManager m_esm;
 
-	TriVariable* GetObjectIdVariable();
-
 	void RenderBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName = DEFAULT_TECHNIQUE );
 	void RenderBatchesWithOverride( ITriRenderBatchAccumulator* batches, Tr2Material* overrideEffect, const BlueSharedString& techniqueName = DEFAULT_TECHNIQUE );
 	void RenderBatchesForPicking( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName );
@@ -70,7 +68,8 @@ private:
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	Tr2RenderTargetPtr m_backBuffer;
 #endif
-	TriVariable* m_objectIdVariable;
+	TriVariable* m_pickingObjectLowBitsVariable;
+	TriVariable* m_pickingObjectHighBitsVariable;
 	TriVariable* m_areaIdVariable;
 };
 
