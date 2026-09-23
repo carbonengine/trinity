@@ -635,21 +635,25 @@ bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
 	return renderContext.GetRenderedFrameNumber() >= m_frameNumber;
 }
 
-ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext )
 {
-	//Map first, so that in case we need to wait for the GPU, we can map it while we wait
-	CR_RETURN_HR( m_readScratch->Map( 0, nullptr, (void**)&pointer ) );
-
-	if( !pointer )
+	if( !m_pointer )
 	{
-		return E_FAIL;
+		//Map first, so that in case we need to wait for the GPU, we can map it before we start waiting
+		CR_RETURN_HR( m_readScratch->Map( 0, nullptr, (void**)&m_pointer ) );
+
+		if( !m_pointer )
+		{
+			return E_FAIL;
+		}
+
+		if( !IsReady( renderContext ) )
+		{
+			CR_RETURN_HR( renderContext.FlushAndSyncDx12( renderContext ) );
+		}
 	}
 
-	if( !IsReady( renderContext ) )
-	{
-		CR_RETURN_HR( renderContext.FlushAndSyncDx12( renderContext ) );
-	}
-
+	pointer = m_pointer;
 	rowPitch = m_rowPitch;
 
 	return S_OK;
@@ -657,6 +661,10 @@ ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2Primar
 
 void Tr2ReadbackAL::Destroy()
 {
+	if( m_pointer )
+	{
+		m_readScratch->Unmap( 0, nullptr );
+	}
 	m_readScratch = nullptr;
 }
 

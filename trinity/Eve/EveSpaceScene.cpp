@@ -3606,7 +3606,6 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 	}
 
 
-	//if( !visibleObjects.empty() || m_pickingBatches->GetBatchCount() > 0 )
 	if (m_pickBuffer.IsValid() && m_pickDepthBuffer.IsValid())
 	{
 		{
@@ -3711,7 +3710,7 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 		const void* pointer;
 		uint32_t pitch;
-		if( pickingReadback.m_readback.Map(pointer, pitch, renderContext ) == S_OK )
+		if( pickingReadback.m_readback.Map( pointer, pitch, renderContext ) == S_OK )
 		{
 
 			const uint32_t* data = static_cast<const uint32_t*>( pointer );

@@ -35,7 +35,7 @@ public:
 
 	bool IsReady( Tr2PrimaryRenderContextAL& renderContext ) const;
 
-	ALResult Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const;
+	ALResult Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext );
 
 	void Destroy();
 
@@ -49,6 +49,8 @@ private:
 	CComPtr<ID3D12Resource> m_readScratch;
 	uint32_t m_rowPitch;
 	uint64_t m_frameNumber;
+
+	void* m_pointer;
 };
 
 class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>

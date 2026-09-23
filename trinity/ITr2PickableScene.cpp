@@ -230,7 +230,7 @@ void ITr2PickableScene::GetBatches( std::vector<ITr2Renderable*> const& pickable
 		Tr2PerObjectData* perObjectData = pickableObjects[i]->GetPerObjectData( pOpaquePickingBatches );
 		if( perObjectData )
 		{
-			//perObjectData->SetUserData( i );
+			perObjectData->SetPickingPointer( i );
 
 			size_t curBatchCount = pOpaquePickingBatches->GetBatchCount();
 			pickableObjects[i]->GetBatches( pOpaquePickingBatches, TRIBATCHTYPE_OPAQUE, perObjectData );

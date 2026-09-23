@@ -333,6 +333,9 @@ void Tr2ReadbackAL::Initialize( CComPtr<ID3D11Texture2D> stagingTexture, uint64_
 {
 	m_stagingTexture = stagingTexture;
 	m_frameNumber = frameNumber;
+
+	m_context = nullptr;
+	m_pointer = nullptr;
 }
 
 Tr2ReadbackAL::~Tr2ReadbackAL()
@@ -345,22 +348,38 @@ bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
 	return renderContext.GetRenderedFrameNumber() >= m_frameNumber;
 }
 
-ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
+ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext )
 {
-	//DX11 Map() will always wait if the resource is in use, so no need to wait until the GPU is done manually
-	D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-	HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
-	pointer = ms.pData;
-	rowPitch = ms.RowPitch;
-	if( !ms.pData )
+	if( !m_pointer )
 	{
-		return E_FAIL;
+		//DX11 Map() will always wait if the resource is in use, so no need to wait until the GPU is done manually
+
+		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
+		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
+
+		if( !ms.pData )
+		{
+			return E_FAIL;
+		}
+
+		m_context = renderContext.m_context;
+		m_pointer = ms.pData;
+		m_rowPitch = ms.RowPitch;
 	}
-	return hr;
+
+
+	pointer = m_pointer;
+	rowPitch = m_rowPitch;
+
+	return S_OK;
 }
 
 void Tr2ReadbackAL::Destroy()
 {
+	if( m_pointer )
+	{
+		m_context->Unmap( m_stagingTexture, 0 );
+	}
 	m_stagingTexture = nullptr;
 }
 
