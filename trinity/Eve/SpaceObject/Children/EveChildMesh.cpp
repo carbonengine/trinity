@@ -883,7 +883,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto meshIndex = m_mesh->GetMeshIndex();
-        if( auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize ) )
+		if( auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize ) )
 		{
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{

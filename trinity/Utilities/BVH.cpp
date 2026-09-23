@@ -75,7 +75,7 @@ void CreateNodes(
 			} );
 		}
 
-		node.firstChildIndex = (uint32_t) nodes.size();
+		node.firstChildIndex = (uint32_t)nodes.size();
 		node.numObj = 2;
 		node.leaf = false;
 		Node leftChild;

@@ -407,7 +407,7 @@ void EveChildInstancedMeshes::AddMesh(
 		return;
 	}
 
-	uint32_t pickingMeshIndex = (uint32_t) m_meshes.size();
+	uint32_t pickingMeshIndex = (uint32_t)m_meshes.size();
 	for( auto& mesh : m_meshes )
 	{
 		if( mesh.geometryPath != geometryPath || mesh.meshIndex != meshIndex )

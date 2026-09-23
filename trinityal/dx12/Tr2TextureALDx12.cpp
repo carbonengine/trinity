@@ -617,7 +617,6 @@ void FlushBarriersMaybe( const Tr2TextureAL& tex, Tr2RenderContextAL& renderCont
 
 
 
-
 Tr2ReadbackAL::Tr2ReadbackAL( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber )
 {
 	m_readScratch = readScratch;
@@ -682,13 +681,6 @@ bool Tr2ReadbackAL::IsValid() const
 {
 	return m_readScratch != nullptr;
 }
-
-
-
-
-
-
-
 
 
 
@@ -1577,7 +1569,7 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 		return nullptr;
 	}
 
-	
+
 
 	auto texture = GetResourceDx12();
 
@@ -1586,12 +1578,13 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 	auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_READBACK );
 	auto scratchDesc = BufferDesc( totalSize );
 	CR_RETURN_VAL( m_owner->m_device->CreateCommittedResource(
-		&scratchHeap,
-		D3D12_HEAP_FLAG_NONE,
-		&scratchDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
-		nullptr,
-		IID_PPV_ARGS( &scratch ) ), nullptr );
+					   &scratchHeap,
+					   D3D12_HEAP_FLAG_NONE,
+					   &scratchDesc,
+					   D3D12_RESOURCE_STATE_COPY_DEST,
+					   nullptr,
+					   IID_PPV_ARGS( &scratch ) ),
+				   nullptr );
 
 	renderContext.ResourceBarrierDx12( Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ) );
 	renderContext.FlushBarriersDx12( texture );

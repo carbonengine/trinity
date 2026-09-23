@@ -31,7 +31,7 @@ public:
 	bool IsValid() const;
 
 private:
-    MetalContext* m_metalContext;
+	MetalContext* m_metalContext;
 	id<MTLBuffer> m_mtlReadBackBuffer;
 	uint32_t m_rowPitch;
 	uint64_t m_frameNumber;

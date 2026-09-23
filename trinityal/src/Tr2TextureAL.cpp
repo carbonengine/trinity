@@ -12,7 +12,7 @@ bool g_preloadTextureToDeviceOnPrepare = true;
 namespace
 {
 
-	
+
 
 std::shared_ptr<TrinityALImpl::Tr2TextureAL>& NullTexture()
 {
@@ -32,7 +32,7 @@ bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext )
 	return m_readback && m_readback->IsReady( renderContext );
 }
 
-bool Tr2ReadbackAL::IsValid( )
+bool Tr2ReadbackAL::IsValid()
 {
 	return m_readback && m_readback->IsValid();
 }

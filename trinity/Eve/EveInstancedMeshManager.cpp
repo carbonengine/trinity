@@ -733,7 +733,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	
+
 	std::vector<IRootPtr>& blueObjects = readback.m_blueObjects;
 
 	for( auto& [mesh, meshInfo] : m_meshInstances )

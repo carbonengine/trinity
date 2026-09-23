@@ -364,7 +364,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"PickObjectAndAreaID",
 			PickObjectAndAreaID,
 			1,
-			"DEPRECATED! Replaced by PickObjectAndExtraData()!\n" 
+			"DEPRECATED! Replaced by PickObjectAndExtraData()!\n"
 			"Given a position and a view setup, returns the object at that point on the screen, as well as an additional value depending on what has been clicked.\n"
 			"This function is slow. It can be used intermittently when up-to-date results are needed (e.g. mouse clicks), but should not be called too often.\n"
 			"returns (<Object>,<AreaID>) or None if nothing pickable was hit by the ray\n"

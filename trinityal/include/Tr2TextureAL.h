@@ -25,7 +25,6 @@ class Tr2ReadbackAL
 {
 
 public:
-
 	Tr2ReadbackAL();
 
 	bool IsReady( Tr2PrimaryRenderContextAL& renderContext );
@@ -35,7 +34,6 @@ public:
 	ALResult Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext );
 
 private:
-
 	Tr2ReadbackAL( std::shared_ptr<TrinityALImpl::Tr2ReadbackAL> readback );
 
 	std::shared_ptr<TrinityALImpl::Tr2ReadbackAL> m_readback;

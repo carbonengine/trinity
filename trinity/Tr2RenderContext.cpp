@@ -935,7 +935,7 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 			uint32_t areaID = batch.m_pickingData;
 			if( m_areaIdVariable )
 			{
-				m_areaIdVariable->SetValue( (int) areaID );
+				m_areaIdVariable->SetValue( (int)areaID );
 			}
 		}
 

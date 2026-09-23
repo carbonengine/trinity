@@ -10,7 +10,7 @@
 namespace TrinityALImpl
 {
 
-	
+
 class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
 {
 public:

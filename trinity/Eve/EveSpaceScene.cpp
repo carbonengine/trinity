@@ -3655,7 +3655,7 @@ std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePicki
 	}
 
 
-	if (m_pickBuffer.IsValid() && m_pickDepthBuffer.IsValid())
+	if( m_pickBuffer.IsValid() && m_pickDepthBuffer.IsValid() )
 	{
 		{
 			renderContext.m_esm.SetInvertedDepthTest( true );
@@ -3741,7 +3741,7 @@ std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePicki
 	{
 		EvePendingPickingReadback& pickingReadback = *listener->m_readbacks[0];
 
-		if (!pickingReadback.m_readback.IsValid())
+		if( !pickingReadback.m_readback.IsValid() )
 		{
 			//this readback is dead (most likely GPU device lost)
 			listener->m_readbacks.erase( listener->m_readbacks.begin() );
@@ -3774,7 +3774,7 @@ std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePicki
 
 			bool found = false;
 
-			if (object != nullptr)
+			if( object != nullptr )
 			{
 				std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
 
