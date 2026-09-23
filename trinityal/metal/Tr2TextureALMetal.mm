@@ -35,7 +35,7 @@ bool Tr2ReadbackAL::IsReady( Tr2PrimaryRenderContextAL& renderContext ) const
 
 ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext ) const
 {
-	if( IsReady( renderContext ) )
+	if( !IsReady( renderContext ) )
 	{
         renderContext.GetMetalWorkQueue()->ReadBackBufferToCPU( m_mtlReadBackBuffer, true );
 	}
