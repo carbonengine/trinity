@@ -92,7 +92,7 @@ public:
 	using IInitialize::Unlock;
 
 	static constexpr const char* DEFAULT_DRIVE_NAME = "ThrustMain";
-	static constexpr const char* WARP_DRIVE_NAME = "WarpState";
+	static constexpr const char* WARP_DRIVE_NAME = "WarpIntensity";
 	static constexpr const char* DEFAULT_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/Booster/ChildBoosterVolumetric.fx";
 
 	EveChildBoosterSet( IRoot* lockobj = NULL );
