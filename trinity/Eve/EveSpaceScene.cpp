@@ -3790,8 +3790,6 @@ std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePicki
 				}
 			}
 
-			CCP_LOGERR( "Picking result: pointer: %p (found: %s), extra1: %d, extra2: %d", object, found ? "yes" : "NO!!!", data1, data2 );
-
 			if( !found )
 			{
 				object = nullptr;
