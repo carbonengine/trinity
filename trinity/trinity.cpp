@@ -75,6 +75,17 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 }
 #endif
 
+#ifndef PYTHON2_SUPPORT
+
+const CcpTelemetryCategory& TrinityTelemetryCategory()
+{
+	static const CcpTelemetryCategory& category =
+		CcpTelemetryCategoryRegister( "trinity", CcpColor::PowderBlue ).first;
+	return category;
+}
+
+#endif
+
 #if BLUE_WITH_PYTHON
 
 #if PY_MAJOR_VERSION == 2

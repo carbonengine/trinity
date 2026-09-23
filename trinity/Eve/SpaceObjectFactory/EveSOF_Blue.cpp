@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "EveSOF.h"
 
+#include "Eve/SpaceObject/Children/EveChildTurret.h"
 #include "Eve/Turret/EveTurretSet.h"
 
 BLUE_DEFINE( EveSOF );
@@ -45,6 +46,12 @@ const Be::ClassInfo* EveSOF::ExposeToBlue()
 			SetupTurretMaterialFromFaction,
 			"Change the material of the turret according to the faction in SOF\n"
 			":param turretSet: turret set that will be modified\n"
+			":param faction: faction name" )
+		MAP_METHOD_AND_WRAP(
+			"SetupChildTurretMaterialFromFaction",
+			SetupChildTurretMaterialFromFaction,
+			"Change the material of every opaque area of a child turret according to the faction in SOF\n"
+			":param childTurret: child turret whose mesh materials will be modified\n"
 			":param faction: faction name" )
 
 

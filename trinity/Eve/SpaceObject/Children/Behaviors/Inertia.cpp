@@ -34,7 +34,7 @@ void Inertia::InitializeScratch( void* scratchMemory )
 
 std::vector<Vector3> Inertia::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto data = static_cast<InertiaData*>( scratchData );
 

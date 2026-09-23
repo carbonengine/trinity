@@ -360,7 +360,7 @@ bool Tr2MainWindow::ProcessMessages()
 
 LRESULT Tr2MainWindow::StaticWndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Tr2MainWindow* window = nullptr;
 	if( msg == WM_CREATE )

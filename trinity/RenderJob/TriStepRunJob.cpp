@@ -14,7 +14,7 @@ TriStepRunJob::~TriStepRunJob( void )
 
 TriStepResult TriStepRunJob::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( m_name.c_str() );
+	TRINITY_STATS_ZONE( m_name.c_str() );
 
 	if( !m_job )
 	{

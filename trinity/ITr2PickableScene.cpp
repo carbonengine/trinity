@@ -36,7 +36,7 @@
 // --------------------------------------------------------------------------------------
 void ITr2PickableScene::PickObject( Tr2RenderContext& renderContext, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, PickResults& results )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Backup current state
 	Tr2Renderer::PushProjection();

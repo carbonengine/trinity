@@ -63,7 +63,7 @@ Tr2TextureLodManager& Tr2TextureLodManager::Instance()
 
 void Tr2TextureLodManager::OnTick( Be::Time, Be::Time, void* )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto& it : m_textures )
 	{

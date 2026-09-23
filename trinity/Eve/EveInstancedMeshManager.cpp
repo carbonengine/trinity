@@ -44,7 +44,7 @@ ITriRenderBatchAccumulator* FindBatchAccumulator( const T& batches, TriBatchType
 
 void EveInstancedMeshManager::CollectMeshes( EveComponentRegistry& registry )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	auto renderedFrame = renderContext.GetRenderedFrameNumber();
@@ -479,7 +479,7 @@ uint32_t EveInstancedMeshManager::InstanceBuffer::GetSize() const
 
 void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFrustum, float invLodFactor, InstanceFlags filter )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Tr2ParallelDo(
 		begin( m_sphereGroups ),
@@ -524,7 +524,7 @@ void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFru
 
 void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFrustum, const TriFrustum& pickingFrustum, float invLodFactor, InstanceFlags filter )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Tr2ParallelDo(
 		begin( m_sphereGroups ),
@@ -569,7 +569,7 @@ void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFru
 
 void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, float invLodFactor, InstanceFlags filter )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	tbb::parallel_for_each(
 		begin( m_sphereGroups ),
@@ -708,7 +708,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	tbb::parallel_for_each(
 		begin( m_meshInstances ),
@@ -731,7 +731,7 @@ void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<s
 
 void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 
 	std::vector<IRootPtr>& blueObjects = readback.m_blueObjects;
@@ -810,7 +810,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 size_t EveInstancedMeshManager::GetBatches( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	BinVisibleInstances( batches );
 

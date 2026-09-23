@@ -3,8 +3,6 @@
 #include "StdAfx.h"
 #include "EveSpaceScene.h"
 
-#include "include/IEveBallpark.h"
-
 #include "TriProjection.h"
 #include "TriPythonContext.h"
 #include "TriView.h"
@@ -13,6 +11,7 @@
 #include "TriDevice.h"
 #include "Shader/Tr2ShaderBuffer.h"
 #include "Particle/Tr2GpuParticleSystem.h"
+#include <IEveBallpark.h>
 
 BLUE_DEFINE( EveSpaceScene );
 BLUE_DEFINE_INTERFACE( IEveReferencePoint );

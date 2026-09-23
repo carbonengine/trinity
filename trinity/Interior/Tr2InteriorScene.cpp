@@ -404,7 +404,7 @@ void Tr2InteriorScene::SetVisualizationMode( int visualizationMode )
 
 void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( simTime == m_lastUpdateTime )
 		// NB: Multiple calls on the same 'frame' should be ignored,
@@ -423,7 +423,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	m_cameraPosVar = Tr2Renderer::GetViewPosition();
 
 	{
-		CCP_STATS_ZONE( "UpdateCurves" );
+		TRINITY_STATS_ZONE( "UpdateCurves" );
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 		{
 			( *it )->Update( realTime, simTime );
@@ -431,7 +431,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PendingLoads" );
+		TRINITY_STATS_ZONE( "PendingLoads" );
 		// Add any dynamics that have finished loading
 		std::vector<ITr2InteriorDynamic*> dynamicsToRemove;
 		for( ssize_t index = 0; index < m_dynamicsPendingLoad.GetSize(); ++index )
@@ -455,7 +455,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PrePhysicsUpdate" );
+		TRINITY_STATS_ZONE( "PrePhysicsUpdate" );
 		// Do the pre-physics update on the dynamics
 		// Note: this used to happen in the cell pre-physics update, but that can cause double animation ticks
 		// when a skinned object is intersecting multiple cells (e.g. crossing a portal)
@@ -466,7 +466,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PostPhysicsUpdate" );
+		TRINITY_STATS_ZONE( "PostPhysicsUpdate" );
 		// Do the post-physics update on the dynamics
 		// Note: this used to happen in the cell post-physics update, but that can cause double animation ticks
 		// when a skinned object is intersecting multiple cells (e.g. crossing a portal)
@@ -477,7 +477,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "Update" );
+		TRINITY_STATS_ZONE( "Update" );
 		for( PITr2InteriorLightVector::iterator it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
 			( *it )->Update( simTime );
@@ -510,7 +510,7 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::VisibilityQuery( Tr2VisibilityResults* results, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !results )
 	{
@@ -586,7 +586,7 @@ void Tr2InteriorScene::ResolveVisibility( const Matrix& view, const Matrix& proj
 
 void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	D3DPERF_EVENT( L"Tr2InteriorScene::RenderFullForward" );
 
@@ -682,7 +682,7 @@ void Tr2InteriorScene::SetupShadowMaps()
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::RenderShadows( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_renderShadows )
 	{
@@ -810,7 +810,7 @@ void Tr2InteriorScene::RenderShadows( Tr2RenderContext& renderContext )
 
 void Tr2InteriorScene::RenderGeometry( Tr2Material* overrideEffect, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// From now on its managed!
 	renderContext.m_esm.BeginManagedRendering();
@@ -1099,7 +1099,7 @@ void Tr2InteriorScene::DoQueryBegin( const Tr2VisibilityEvent& event )
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event )
 {
-	CCP_STATS_ZONE( "DoInstanceVisible" );
+	TRINITY_STATS_ZONE( "DoInstanceVisible" );
 
 	{
 		ITr2Interior* interior = dynamic_cast<ITr2Interior*>( event.m_userData.p );
