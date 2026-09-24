@@ -33,7 +33,7 @@ void Tr2PyValueBinding::CopyValue()
 	if( m_isValid )
 	{
 		// We need to hold a reference to ourselves while we are copying the value, because custom Python getters/setters may 
-		// end up removed this binding from the parent curve set.
+		// end up removing this binding from the parent curve set.
 		Tr2PyValueBindingPtr self( this );
 
 		auto gil = PyGILState_Ensure();
