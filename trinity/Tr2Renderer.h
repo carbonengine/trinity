@@ -124,6 +124,7 @@ public:
 
 	static void ReserveQuadListIndexBuffer( uint32_t numOfQuads );
 	[[nodiscard]] static Tr2SuballocatedBuffer::Allocation& GetQuadListIndexBuffer();
+	[[nodiscard]] static Tr2SuballocatedBuffer::Allocation& GetReversedQuadListIndexBuffer();
 
 	static void BeginFrame();
 	static void EndFrame();
