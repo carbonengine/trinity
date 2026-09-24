@@ -1603,7 +1603,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	auto& frustum = updateContext.GetFrustum();
 	auto minLodThreshold = updateContext.GetLowDetailThreshold();
 	auto mediumLodThreshold = updateContext.GetMediumDetailThreshold();
-	auto invLodFactor = updateContext.GetLodFactor();
+	auto invLodFactor = updateContext.GetInvLodFactor();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
