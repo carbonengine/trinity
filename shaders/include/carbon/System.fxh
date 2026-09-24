@@ -78,4 +78,14 @@
 #define SHADER_QUALITY SHADERMODEL
 #endif
 
+
+// Hits for the shader compiler signifying per-object and per-frame constant buffers.
+// Used in global variable declarations. The actual register numbers specified in macros are
+// just hints to the compiler, and have nothing to do with the actual binding. Declaration example:
+// PerFrameStructType PerFrameVS : register( PERFRAME_VS_STARTREGISTER );
+#define PERFRAME_VS_STARTREGISTER vs, c220
+#define PERFRAME_PS_STARTREGISTER ps, c200
+#define PEROBJECT_VS_STARTREGISTER vs, c16
+#define PEROBJECT_PS_STARTREGISTER ps, c40
+
 #endif

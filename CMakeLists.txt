@@ -131,4 +131,22 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
     endif()
 endif()
 
+set(_SHADER_SOURCES
+    shaders/include/carbon/SpaceScene/EnvironmentMap.fxh
+    shaders/include/carbon/SpaceScene/PerSceneData.fxh
+    shaders/include/carbon/SpaceScene/Volumetrics.fxh
+    shaders/include/carbon/Bindless.fxh
+    shaders/include/carbon/Intersections.fxh
+    shaders/include/carbon/Math.fxh
+    shaders/include/carbon/PackedTangents.fxh
+    shaders/include/carbon/ParticleAnnotations.fxh
+    shaders/include/carbon/System.fxh
+    )
+
+add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
+source_group(
+    TREE "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
+    FILES ${_SHADER_SOURCES}
+)
+
 install(DIRECTORY shaders/ DESTINATION shaders)

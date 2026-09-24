@@ -3,7 +3,7 @@
 #ifndef CARBON_BINDLESS_FXH
 #define CARBON_BINDLESS_FXH
 
-#include "system.fxh"
+#include "System.fxh"
 
 // Support for bindless rendering with Trinity. Difines types and functions to work with
 // bindless resources and heap views in a platform-independent manner.
