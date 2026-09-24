@@ -64,6 +64,10 @@ private:
 
 	CcpMath::Sphere m_boundingSphere;
 
+	bool m_enabled;
+	float m_intensityMultiplier;
+	float m_minimumTransitionTime;
+
 	// post process attributes
 	Tr2PostProcessAttributesPtr m_postProcessAttributes;
 };
