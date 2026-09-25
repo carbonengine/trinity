@@ -30,7 +30,7 @@ sl::Resource GenerateTextureResource( const Tr2TextureAL* texture )
 
 Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	Tr2UpscalingTechniqueDx11( renderContext, technique, setting, frameGeneration, adapter ),
-	m_adapter( 0 ),
+	m_adapter( adapter ),
 	m_contextIndex( 0 ),
 	m_frameToken( nullptr )
 {
@@ -39,63 +39,33 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 	m_streamlineSetup = false;
 
-
-	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
-
-	{
-		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
-		{
-			CCP_LOGERR( "Streamline initialization failed with error %d", res );
-			return;
-		}
-
-
-		CComPtr<IDXGIAdapter1> dxgiAdapter;
-		CComPtr<IDXGIOutput> output;
-		Tr2VideoAdapterInfo::GetVideoAdapterDX11( adapter, &dxgiAdapter, &output );
-
-
-		const D3D_FEATURE_LEVEL levelWanted = D3D_FEATURE_LEVEL_11_0;
-
-		D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_UNKNOWN;
-
-		CComPtr<ID3D11Device> device;
-		D3D_FEATURE_LEVEL levelSupported;
-		CComPtr<ID3D11DeviceContext> m_context;
-
-
-		if( SUCCEEDED( D3D11CreateDevice( dxgiAdapter, driverType, 0, 0, &levelWanted, 1, D3D11_SDK_VERSION, &device, &levelSupported, &m_context ) ) )
-		{
-			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
-			{
-				m_isAvailable = Tr2StreamlineAL::IsDLSSAvailable();
-			}
-		}
-
-		Tr2StreamlineAL::ReleaseStreamline();
-	}
-
-	//We're done gathering info, initialize Streamline again and await the actual device!
+	// Initialize Streamline first so the support query reuses this instance and doesn't need a device,
+	// the actual device is attached in AttachToDevice.
 	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
 	{
 		CCP_LOGERR( "Streamline initialization failed with error %d", res );
 		return;
 	}
 
-	// framegen is not available on dx11!
-
 	m_streamlineSetup = true;
+
+	// framegen is not available on dx11!
+	m_support = Tr2StreamlineAL::QueryFeatureSupport( adapter, g_streamlineAppID );
+
 	SanitizeState();
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	Tr2StreamlineAL::ReleaseStreamline();
+	if( m_streamlineSetup )
+	{
+		Tr2StreamlineAL::ReleaseStreamline();
+	}
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable() const
 {
-	return m_isAvailable;
+	return m_streamlineSetup && m_support.dlss;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSettings() const
@@ -139,6 +109,14 @@ void Tr2DlssUpscalingTechnique::AttachToDevice( CComPtr<ID3D11Device>& device )
 		return;
 	}
 	CCP_LOGNOTICE( "NVidia Streamline successfully attached to device and adapter" );
+
+	// Support was queried by adapter before the device existed, Streamline may report less now
+	auto deviceSupport = Tr2StreamlineAL::GetDeviceFeatureSupport();
+	if( deviceSupport != m_support )
+	{
+		CCP_LOGWARN( "NVidia Streamline support changed after attaching device: DLSS %d", deviceSupport.dlss );
+		m_support = deviceSupport;
+	}
 }
 
 Tr2UpscalingContextAL* Tr2DlssUpscalingTechnique::CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params )
