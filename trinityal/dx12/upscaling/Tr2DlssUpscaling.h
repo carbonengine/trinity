@@ -5,13 +5,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include "include/upscaling/Tr2UpscalingAL.h"
 #include "dx12/Tr2TextureALDx12.h"
-
-#include <sl.h>
-#include <sl_consts.h>
-#include <sl_dlss.h>
-#include <sl_dlss_g.h>
-#include <sl_reflex.h>
-#include <sl_pcl.h>
+#include "include/Tr2StreamlineAL.h"
 
 
 namespace DlssUtils
@@ -24,6 +18,10 @@ class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx1
 public:
 	Tr2DlssUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2DlssUpscalingTechnique();
+
+	// Queries support without constructing a technique, which avoids initializing Streamline when it
+	// has already been queried for this adapter. Returns false if DLSS is not available.
+	static bool GetSupport( uint32_t adapter, std::vector<Tr2UpscalingAL::Setting>& settings, bool& supportsFrameGeneration );
 
 	// Tr2UpscalingTechniqueAL overrides
 	virtual bool IsAvailable() const override;
@@ -43,12 +41,18 @@ public:
 	virtual CComPtr<IDXGIFactory4> ReplaceFactory( CComPtr<IDXGIFactory4>& factory ) override;
 
 private:
+	static constexpr Tr2UpscalingAL::Setting SUPPORTED_SETTINGS[] = {
+		Tr2UpscalingAL::Setting::QUALITY,
+		Tr2UpscalingAL::Setting::BALANCED,
+		Tr2UpscalingAL::Setting::PERFORMANCE,
+		Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
+	};
+
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
 	uint32_t m_adapter;
 
-	bool m_isAvailable;
-	bool m_supportsFrameGeneration;
+	Tr2StreamlineAL::FeatureSupport m_support;
 
 	bool m_streamlineSetup;
 

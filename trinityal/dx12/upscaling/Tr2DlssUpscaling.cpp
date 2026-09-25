@@ -37,41 +37,12 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 	TrinityALImpl::Tr2UpscalingTechniqueDx12( renderContext, technique, setting, frameGeneration, adapter ),
 	m_adapter( adapter ),
 	m_frameToken( 0 ),
-	m_supportsFrameGeneration( false ),
 	m_contextIndex( 0 )
 {
-	m_isAvailable = false;
 	m_streamlineSetup = false;
 
-
-	//We need to create a dummy device to figure out if DLSS and frame generation actually is supported.
-	{
-		if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
-		{
-			CCP_LOGERR( "Streamline initialization failed with error %d", res );
-			return;
-		}
-
-
-		CComPtr<ID3D12Device> device;
-		CComPtr<IDXGIAdapter1> dxgiAdapter;
-		CComPtr<IDXGIOutput> output;
-		TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output );
-		if( SUCCEEDED( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) ) )
-		{
-
-			if( Tr2StreamlineAL::SetDevice( device, adapter ) == sl::Result::eOk )
-			{
-				m_isAvailable = Tr2StreamlineAL::IsDLSSAvailable();
-				m_supportsFrameGeneration = Tr2StreamlineAL::IsFrameGenerationAvailable();
-			}
-		}
-
-		Tr2StreamlineAL::ReleaseStreamline();
-	}
-
-
-	//We're done gathering info, initialize Streamline again and await the actual device!
+	// Initialize Streamline first so the support query reuses this instance and doesn't need a device,
+	// the actual device is attached in ReplaceDevice.
 	if( SL_FAILED( res, Tr2StreamlineAL::InitializeStreamline( g_streamlineAppID ) ) )
 	{
 		CCP_LOGERR( "Streamline initialization failed with error %d", res );
@@ -80,29 +51,42 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2RenderContextAL& render
 
 	m_streamlineSetup = true;
 
+	m_support = Tr2StreamlineAL::QueryFeatureSupport( adapter, g_streamlineAppID );
+
 	SanitizeState();
+}
+
+bool Tr2DlssUpscalingTechnique::GetSupport( uint32_t adapter, std::vector<Tr2UpscalingAL::Setting>& settings, bool& supportsFrameGeneration )
+{
+	auto support = Tr2StreamlineAL::QueryFeatureSupport( adapter, g_streamlineAppID );
+	if( !support.dlss )
+	{
+		return false;
+	}
+
+	settings.assign( std::begin( SUPPORTED_SETTINGS ), std::end( SUPPORTED_SETTINGS ) );
+	supportsFrameGeneration = support.frameGeneration;
+	return true;
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
-	m_renderContext.FlushAndSyncDx12();
+	if( m_streamlineSetup )
+	{
+		m_renderContext.FlushAndSyncDx12();
 
-	Tr2StreamlineAL::ReleaseStreamline(); //this should be enough, no need to shut down plugins manually.
+		Tr2StreamlineAL::ReleaseStreamline(); //this should be enough, no need to shut down plugins manually.
+	}
 }
 
 bool Tr2DlssUpscalingTechnique::IsAvailable() const
 {
-	return m_streamlineSetup && m_isAvailable;
+	return m_streamlineSetup && m_support.dlss;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSettings() const
 {
-	return {
-		Tr2UpscalingAL::Setting::QUALITY,
-		Tr2UpscalingAL::Setting::BALANCED,
-		Tr2UpscalingAL::Setting::PERFORMANCE,
-		Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
-	};
+	return { std::begin( SUPPORTED_SETTINGS ), std::end( SUPPORTED_SETTINGS ) };
 }
 
 bool Tr2DlssUpscalingTechnique::IsTemporal() const
@@ -112,7 +96,7 @@ bool Tr2DlssUpscalingTechnique::IsTemporal() const
 
 bool Tr2DlssUpscalingTechnique::SupportsFrameGeneration() const
 {
-	return m_supportsFrameGeneration;
+	return m_support.frameGeneration;
 }
 
 bool Tr2DlssUpscalingTechnique::ReplacesDevice() const
@@ -137,15 +121,23 @@ CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12De
 		CCP_LOGWARN( "Could not attach NVidia Streamline to device (%d)", res );
 		return nativeDevice;
 	}
+
+	// Support was queried by adapter before the device existed. Streamline may report less (never more)
+	// now that the device is set, so go with its final answer.
+	auto deviceSupport = Tr2StreamlineAL::GetDeviceFeatureSupport();
+	if( deviceSupport != m_support )
+	{
+		CCP_LOGWARN( "NVidia Streamline support changed after attaching device: DLSS %d, frame generation %d", deviceSupport.dlss, deviceSupport.frameGeneration );
+		m_support = deviceSupport;
+		SanitizeState();
+	}
+
 	CComPtr<ID3D12Device> proxy = nativeDevice;
 	if( SL_FAILED( res, Tr2StreamlineAL::UpgradeInterface( (void**)&proxy.p ) ) )
 	{
 		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
 		return nativeDevice;
 	}
-
-	CCP_ASSERT_M( m_isAvailable == Tr2StreamlineAL::IsDLSSAvailable(), "DLSS is unexpectedly unavailable!" );
-	CCP_ASSERT_M( m_supportsFrameGeneration == Tr2StreamlineAL::IsFrameGenerationAvailable(), "Frame generation is unexpectedly unavailable!" );
 
 	if( m_frameGeneration )
 	{
