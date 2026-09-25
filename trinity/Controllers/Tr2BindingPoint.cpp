@@ -304,7 +304,9 @@ void Tr2BindingPoint::Unlink()
 
 bool Tr2BindingPoint::IsValid() const
 {
-	return m_destination != nullptr;
+	// Path-resolved targets are held weakly and m_destination is a raw address inside them,
+	// so it dangles once the target is destroyed
+	return m_destination != nullptr && ( m_path.empty() || !!m_resolvedObject );
 }
 
 void Tr2BindingPoint::SetValue( float value ) const
