@@ -3,6 +3,8 @@
 package _Self.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
+import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.vcsLabeling
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.buildSteps.python
@@ -33,7 +35,7 @@ class Publish(perforce_publish_path: String) : BuildType({
         param("env.P4PORT", "p4is.ccp.ad.local:1666")
         param("env.TC_EVE_BRANCH_SHORTNAME", "%eve_branch_shortname%")
         param("env.TC_EVE_PROJECT", "%project%")
-        param("carbon-pipeline-tools-ref", "refs/heads/main")
+        param("carbon-pipeline-tools-ref", "refs/tags/v0.1.0")
         select("eve_branch_path", "//%project%/%eve_branch_shortname%/", label = "Perforce branch", description = "Is this a regular perforce branch or a perforce stream? Used for setting the proper branch path.", display = ParameterDisplay.PROMPT,
                 options = listOf("Regular" to "//%project%/branches/%eve_branch_type%/%eve_branch_shortname%/", "Frontier Stream" to "//%project%/%eve_branch_shortname%/"))
         select("eve_branch_type", "sandbox", label = "Branch type", description = "The type of branch to publish into", display = ParameterDisplay.PROMPT,
@@ -47,6 +49,7 @@ class Publish(perforce_publish_path: String) : BuildType({
     }
 
     vcs {
+        root(DslContext.settingsRootId, "-:.")
         root(AbsoluteId("CarbonPipelineTools"), "+:carbon/.=>carbon")
 
         checkoutMode = CheckoutMode.ON_AGENT
@@ -252,6 +255,18 @@ class Publish(perforce_publish_path: String) : BuildType({
         artifacts(AbsoluteId("Infrastructure_MetaTeamCity_Tools_TeamcityChanges")) {
             buildRule = lastSuccessful()
             artifactRules = "binaries.zip!*=>"
+        }
+    }
+
+    features {
+        pullRequests {
+            vcsRootExtId = "${DslContext.settingsRootId.id}"
+            provider = github {
+                authType = token {
+                    token = "%GITHUB_CARBON_PAT%"
+                }
+                filterAuthorRole = PullRequests.GitHubRoleFilter.EVERYBODY
+            }
         }
     }
 
