@@ -1,38 +1,45 @@
 # Carbon trinity
-Rendering engine for the Carbon Game Engine
+Rendering engine for the Carbon Game Engine, the technology behind EVE Online and EVE Frontier.
+
+Trinity is a C++ renderer with DirectX 11, DirectX 12 and Metal backends, a shader compiler, and a Python
+exposure layer through Blue. It is one of the [Carbon Engine components](https://carbonengine.github.io/documentation/components.html).
 
 ## 🛠️ Building
 
 ### Prerequisites
 
-- CMake 3.31 or newer
-- Visual Studio with the **v141 (VS 2017) C++ build tools** component
-- GitHub SSH access — the dependencies are submodules cloned over SSH
+- Git, with SSH access to GitHub. The two submodules clone over HTTPS, but the `carbon-*` packages that vcpkg
+  builds from our registry are fetched over SSH (`git@github.com:carbonengine/...`).
+- CMake 3.31 or newer (required by `CMakePresets.json`).
+- Windows: Visual Studio with the **v141 (VS 2017) C++ build tools** component. The toolset is pinned by the
+  registry triplets, so it must match the `-T` argument below.
+- macOS: Xcode command line tools.
 
 ```powershell
-git clone --recurse-submodules <url>
+git clone --recurse-submodules https://github.com/carbonengine/trinity.git
 ```
 
 Or if already cloned then `git submodule update --init --recursive`
 
+Dependencies come through vcpkg: `vendor/github.com/microsoft/vcpkg` plus the
+[Carbon vcpkg registry](https://github.com/carbonengine/vcpkg-registry) for the `carbon-*` components and a few SDKs.
+The first configure builds them, which takes a while.
+
 ### Generate a solution
 
-Generate a solution, then you can handle the rest from you IDE for local dev workflows:
+Generate a solution, then you can handle the rest from your IDE for local dev workflows:
 
 ```powershell
 cmake --preset x64-windows-internal -A x64 -T v141
 ```
 
-This will generate an .slnx at `.cmake-build-<preset-name>/`. Run `cmake --list-presets` to see the presets.
+This will generate an .slnx at `.cmake-build-<preset-name>/`. Run `cmake --list-presets` to see the presets
+(`x64-windows-*`, `arm64-osx-*`, `x64-osx-*`, each in `internal`, `release`, `debug` and `trinitydev` flavours).
 
-### Working with Monolith
-
-To install to a trinity next to the rest of the engine components, add the destination when generating the solution.
+Or build from the command line:
 
 ```powershell
-cmake --preset x64-windows-internal -A x64 -T v141 `
-  -DINSTALL_TO_MONOLITH=ON `
-  -DCMAKE_INSTALL_PREFIX="<vendor-folder>"
+cmake --build .cmake-build-x64-windows-internal --config Release
 ```
 
 - `-A x64` is required, otherwise you get a 32-bit solution
@@ -57,17 +64,44 @@ generating; each one pulls extra vcpkg packages on that configure.
 | `BUILD_SHADER_COMPILER` | Build the shader compiler |
 | `WITH_GRANNY` | Granny `.gr2` support |
 
-## 🤝 Contributing
-Contribution follows the standard GIT PR model.
+### Working with Monolith
 
-By submitting a pull request or otherwise contributing to this project, you agree to license your contribution under the [MIT License](LICENSE.md) License, and you confirm that you have the right to do so.
+To install trinity next to the rest of the engine components, add the destination when generating the solution:
+
+```powershell
+cmake --preset x64-windows-internal -A x64 -T v141 `
+  -DINSTALL_TO_MONOLITH=ON `
+  -DCMAKE_INSTALL_PREFIX="<vendor-folder>"
+```
+
+### Testing
+
+The `trinityal` and `shadercompiler` test suites (GoogleTest) build by default (`BUILD_TESTING=ON`). Run them from
+the build folder:
+
+```powershell
+ctest --test-dir .cmake-build-x64-windows-internal -C Release
+```
+
+The backend tests only exist for the backends you enabled.
+
+### Formatting
+
+C++ formatting is defined by `.clang-format` in the repo root and checked on every pull request by the
+`cpp-linter` workflow. Run `clang-format` on the files you touch before pushing.
+
+## 🤝 Contributing
+
+Contributions are welcome. Please read the Carbon Engine [contributing guide](https://github.com/carbonengine/.github/blob/main/CONTRIBUTING.md) before opening an issue or pull request. It covers the workflow, the CLA and the pull request template, and applies to every `carbonengine` repository. Please also follow the [Code of Conduct](https://github.com/carbonengine/.github/blob/main/CODE_OF_CONDUCT.md), and report security issues privately as described in the [Security Policy](https://github.com/carbonengine/.github/blob/main/SECURITY.md) rather than in a public issue.
+
+By submitting a pull request or otherwise contributing to this project, you agree to license your contribution under the [MIT License](LICENSE.md), and you confirm that you have the right to do so.
 
 ## 📄 License and Legal Notices
 
-© 2026 CCP Games
+© 2026 Fenris Creations
 
-This software is provided by CCP Games. See [NOTICE](NOTICE.md) for included 3rd party code.
+This software is provided by Fenris Creations. See [NOTICE](NOTICE.md) for included 3rd party code.
 
-Trademark Notice: CCP Games is a trademark of CCP ehf.
+Trademark Notice: Fenris Creations is a trademark of CCP ehf.
 
-This project is licensed under the [MIT License](LICENSE.md). Nothing in the [MIT License](LICENSE.md) grants any rights to CCP Games' trademarks or game content.
+This project is licensed under the [MIT License](LICENSE.md). Nothing in the [MIT License](LICENSE.md) grants any rights to Fenris Creations' trademarks or game content.
