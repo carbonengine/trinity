@@ -3,6 +3,7 @@
 #pragma once
 
 #include <ccpparser.h>
+#include "Tr2BindingPoint.h"
 
 
 BLUE_DECLARE( Tr2StateMachine );
@@ -27,11 +28,23 @@ public:
 	static const uint32_t OWNER_BUFFER_INDEX = 1;
 	static const uint32_t STATE_MACHINE_BUFFER_INDEX = 2;
 	static const uint32_t EXTRA_BUFFER_INDEX = 3;
+	static const uint32_t REFERENCE_BUFFER_INDEX = 4;
 
 private:
 	std::string CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions );
 
 	CcpParser::Program m_program;
+
+	// bindable refs
+	std::string BindReferences( const char* expression, std::string& rewritten );
+	std::string AddReference( const std::string& reference );
+	void ClearReferences();
+
+	std::vector<std::string> m_referencePaths;
+	std::vector<std::string> m_referenceNames;
+	std::vector<std::unique_ptr<Tr2BindingPoint>> m_references;
+	std::vector<CcpParser::Variable> m_referenceVariables;
+	mutable std::vector<float> m_referenceValues;
 
 	const Tr2StateMachine* m_stateMachine;
 	const ITr2ActionController* m_controller;

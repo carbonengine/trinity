@@ -235,6 +235,20 @@ bool IsValidVariableName( const char* name )
 	return true;
 }
 
+bool IsIdentifierChar( char ch )
+{
+	return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' ) || ( ch >= '0' && ch <= '9' ) || ch == '_';
+}
+
+bool IsIdentifier( const char* begin, const char* end )
+{
+	if( begin == end || ( *begin >= '0' && *begin <= '9' ) )
+	{
+		return false;
+	}
+	return std::all_of( begin, end, IsIdentifierChar );
+}
+
 #ifdef _WIN32
 // We really need something like FileTimeToSystemTime in blue and platform-independent
 
@@ -542,24 +556,150 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const ITr2
 
 std::string Tr2ControllerExpression::CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions )
 {
+	std::string rewritten;
+	auto error = BindReferences( expression, rewritten );
+	if( !error.empty() )
+	{
+		ClearReferences();
+		return error;
+	}
+
 	CcpParser::Externals externals;
-	CcpParser::VariableView varViews[] = { m_controller->GetVariableView() };
+	CcpParser::VariableView varViews[] = { m_controller->GetVariableView(), m_referenceVariables };
 	externals.variables = varViews;
 	CcpParser::FunctionView funcViews[2] = { extraFunctions, s_functions };
 	externals.functions = { funcViews, 2 };
 	ParserObserver observer;
 	observer.m_variables = varViews[0];
-	auto parsed = CcpParser::Parse( expression, externals, m_program, &observer );
+	auto parsed = CcpParser::Parse( rewritten.c_str(), externals, m_program, &observer );
 	if( parsed )
 	{
 		m_controller->EnsureTempArenaSize( m_program.GetTempArenaSize() );
-		m_variableMask = observer.m_maskOverflow || observer.m_hasNonPureFunctions ? 0ull : observer.m_mask;
+		if( observer.m_maskOverflow || observer.m_hasNonPureFunctions || !m_references.empty() )
+		{
+			m_variableMask = 0;
+		}
+		else
+		{
+			m_variableMask = observer.m_mask;
+		}
 		return std::string();
 	}
 	else
 	{
-		return ToString( parsed, expression );
+		ClearReferences();
+		return ToString( parsed, rewritten.c_str() );
 	}
+}
+
+std::string Tr2ControllerExpression::BindReferences( const char* expression, std::string& rewritten )
+{
+	const auto& roots = m_controller->GetBindingPathRoots();
+	rewritten.clear();
+	const char* p = expression;
+	while( *p )
+	{
+		if( *p == '"' )
+		{
+			auto close = strchr( p + 1, '"' );
+			auto end = close ? close + 1 : p + strlen( p );
+			rewritten.append( p, end );
+			p = end;
+			continue;
+		}
+		bool identifierStart = ( ( *p >= 'a' && *p <= 'z' ) || ( *p >= 'A' && *p <= 'Z' ) || *p == '_' ) && ( p == expression || ( !IsIdentifierChar( p[-1] ) && p[-1] != '.' ) );
+		if( !identifierStart )
+		{
+			rewritten.push_back( *p++ );
+			continue;
+		}
+		auto rootEnd = p;
+		while( IsIdentifierChar( *rootEnd ) )
+		{
+			++rootEnd;
+		}
+		auto pathEnd = Tr2BindingPoint::MatchPath( p );
+		auto rootLength = size_t( rootEnd - p );
+		auto isRoot = std::any_of( begin( roots ), end( roots ), [&]( const auto& x ) {
+			return x.first.length() == rootLength && strncmp( x.first.c_str(), p, rootLength ) == 0;
+		} );
+		if( !isRoot || pathEnd == rootEnd )
+		{
+			rewritten.append( p, rootEnd );
+			p = rootEnd;
+			continue;
+		}
+		std::string reference( p, pathEnd );
+		auto found = std::find( begin( m_referencePaths ), end( m_referencePaths ), reference );
+		if( found == end( m_referencePaths ) )
+		{
+			auto error = AddReference( reference );
+			if( !error.empty() )
+			{
+				return error;
+			}
+			rewritten += m_referenceNames.back();
+		}
+		else
+		{
+			rewritten += m_referenceNames[found - begin( m_referencePaths )];
+		}
+		p = pathEnd;
+	}
+
+	m_referenceVariables.clear();
+	for( size_t i = 0; i < m_referenceNames.size(); ++i )
+	{
+		m_referenceVariables.push_back( { m_referenceNames[i].c_str(), REFERENCE_BUFFER_INDEX, CcpParser::OffsetType( i * sizeof( float ) ) } );
+	}
+	m_referenceValues.assign( m_references.size(), 0.f );
+	return std::string();
+}
+
+std::string Tr2ControllerExpression::AddReference( const std::string& reference )
+{
+	const auto& roots = m_controller->GetBindingPathRoots();
+	auto error = "cannot bind \"" + reference + "\" to a float attribute";
+
+	auto lastDot = reference.rfind( '.' );
+	if( lastDot == std::string::npos || !IsIdentifier( reference.c_str() + lastDot + 1, reference.c_str() + reference.length() ) )
+	{
+		return error;
+	}
+
+	auto binding = std::make_unique<Tr2BindingPoint>();
+	auto prevDot = reference.rfind( '.', lastDot - 1 );
+
+	if( reference.length() - lastDot == 2 && prevDot != std::string::npos && IsIdentifier( reference.c_str() + prevDot + 1, reference.c_str() + lastDot ) )
+	{
+		binding->m_path = reference.substr( 0, prevDot );
+		binding->m_attribute = reference.substr( prevDot + 1 );
+		binding->Link( roots );
+	}
+	if( !binding->IsValid() )
+	{
+		binding->m_path = reference.substr( 0, lastDot );
+		binding->m_attribute = reference.substr( lastDot + 1 );
+		binding->Link( roots );
+	}
+	if( !binding->IsValid() )
+	{
+		return error;
+	}
+
+	m_referenceNames.push_back( "__ref" + std::to_string( m_references.size() ) );
+	m_referencePaths.push_back( reference );
+	m_references.push_back( std::move( binding ) );
+	return std::string();
+}
+
+void Tr2ControllerExpression::ClearReferences()
+{
+	m_referencePaths.clear();
+	m_referenceNames.clear();
+	m_references.clear();
+	m_referenceVariables.clear();
+	m_referenceValues.clear();
 }
 
 std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
@@ -568,8 +708,15 @@ std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
 	{
 		return std::make_pair( false, 0.f );
 	}
+	for( size_t i = 0; i < m_references.size(); ++i )
+	{
+		if( !m_references[i]->GetValue( m_referenceValues[i] ) )
+		{
+			m_referenceValues[i] = 0.f;
+		}
+	}
 	auto owner = m_controller->GetOwner();
-	void* externals[] = { m_controller->GetVariableBuffer(), &owner, (void*)&m_stateMachine, extraBuffer };
+	void* externals[] = { m_controller->GetVariableBuffer(), &owner, (void*)&m_stateMachine, extraBuffer, m_referenceValues.data() };
 	float result = m_program.Eval( externals, m_controller->GetTempArena() );
 	return std::make_pair( true, result );
 }
@@ -580,6 +727,7 @@ void Tr2ControllerExpression::Clear()
 	{
 		m_program = CcpParser::Program();
 	}
+	ClearReferences();
 	m_stateMachine = nullptr;
 	m_controller = nullptr;
 }

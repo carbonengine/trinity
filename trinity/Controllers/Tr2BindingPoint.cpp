@@ -365,6 +365,10 @@ bool Tr2BindingPoint::GetValue( float& value ) const
 	{
 		return false;
 	}
+	if( !m_path.empty() && !m_resolvedObject )
+	{
+		return false;
+	}
 	switch( m_entry->mType )
 	{
 	case Be::FLOAT:
@@ -485,6 +489,37 @@ IRoot* Tr2BindingPoint::GetBoundObject() const
 		return m_resolvedObject;
 	}
 	return m_object;
+}
+
+const char* Tr2BindingPoint::MatchPath( const char* path )
+{
+	auto end = MatchRoot( path );
+	if( end == path )
+	{
+		return path;
+	}
+	while( true )
+	{
+		auto next = MatchProperty( end );
+		if( next > end + 1 )
+		{
+			end = next;
+			continue;
+		}
+		next = MatchNumericIndex( end );
+		if( next != end )
+		{
+			end = next;
+			continue;
+		}
+		next = MatchNameIndex( end );
+		if( next != end )
+		{
+			end = next;
+			continue;
+		}
+		return end;
+	}
 }
 
 
