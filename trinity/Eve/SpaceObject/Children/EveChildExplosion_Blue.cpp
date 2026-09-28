@@ -12,6 +12,7 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 		MAP_INTERFACE( EveChildExplosion )
 		MAP_INTERFACE( EveChildContainer )
 		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
@@ -141,5 +142,8 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 			"Sets the global explosion offset.\n"
 			":param offset: Vector3 that to be used as the global explosion offset should be in local coordinates" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

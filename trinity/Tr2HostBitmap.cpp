@@ -444,7 +444,7 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 
 bool Tr2HostBitmap::Save( const wchar_t* path )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !IsValid() )
 	{

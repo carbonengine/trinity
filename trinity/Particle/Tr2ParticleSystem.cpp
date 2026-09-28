@@ -484,7 +484,7 @@ void Tr2ParticleSystem::OnSimClockRebase( Be::Time oldTime, Be::Time newTime )
 // --------------------------------------------------------------------------------------
 void Tr2ParticleSystem::Update( const ITr2GenericEmitter::UpdateArguments& globalArguments )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto arguments = globalArguments;
 	arguments.parentTransform = m_worldTransform;
@@ -843,7 +843,7 @@ bool Tr2ParticleSystem::CompareParticles( unsigned particle1, unsigned particle2
 // --------------------------------------------------------------------------------------
 void Tr2ParticleSystem::UpdateAllSystems( const ITr2GenericEmitter::UpdateArguments& arguments )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	static Be::Time previousUpdateTime = -1;
 
@@ -1020,7 +1020,7 @@ void Tr2ParticleSystem::ShiftOffsets( Tr2ParticleElementData::BufferType bufferT
 // --------------------------------------------------------------------------------------
 void Tr2ParticleSystem::UpdateViewDependentData( const TriFrustum* frustum, const Matrix& worldTransform )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_shouldSortVisible = false;
 

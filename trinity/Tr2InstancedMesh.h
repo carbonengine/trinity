@@ -85,14 +85,8 @@ public:
 	void GetBatches( ITriRenderBatchAccumulator * batches,
 					 const Tr2MeshAreaVector* areas,
 					 const Tr2PerObjectData* data,
-					 float screenSize = std::numeric_limits<float>::max() ) const override;
-
-
-	void GetBatches( ITriRenderBatchAccumulator * batches,
-					 const Tr2MeshAreaVector* areas,
-					 const Tr2PerObjectData* data,
-					 float screenSize,
-					 bool reverseAreas ) const;
+					 float screenSize = std::numeric_limits<float>::max(),
+					 bool reverseAreas = false ) const override;
 
 	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;

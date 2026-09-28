@@ -838,7 +838,7 @@ bool Tr2DxtCompressSurface( Tr2DxtCompressionFormat eCompressFmt,
 							volatile const bool& cancel,
 							Tr2DxtCompressionSquishQuality squishQualityEnum )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	int squishQuality = squish::kColourRangeFit;
 

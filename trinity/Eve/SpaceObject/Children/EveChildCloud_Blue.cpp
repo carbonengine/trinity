@@ -13,6 +13,7 @@ const Be::ClassInfo* EveChildCloud::ExposeToBlue()
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 
 		MAP_ATTRIBUTE( "name", m_name, "The name of the cloud", Be::READWRITE | Be::PERSIST )
@@ -36,5 +37,8 @@ const Be::ClassInfo* EveChildCloud::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "cellScreenSize", m_cellScreenSize, "Target size of a single cell in a grid on the screen (in pixels)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentLod", m_currentIB, "Current cloud LOD", Be::READ )
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

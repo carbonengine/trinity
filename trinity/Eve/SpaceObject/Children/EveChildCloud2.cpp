@@ -205,24 +205,6 @@ bool EveChildCloud2::OnModified( Be::Var* value )
 	return true;
 }
 
-const char* EveChildCloud2::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildCloud2::SetName( const char* name )
-{
-	m_name = name;
-}
-
-void EveChildCloud2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
-{
-}
-
-void EveChildCloud2::GetRenderables( std::vector<ITr2Renderable*>& )
-{
-}
-
 bool EveChildCloud2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery ) const
 {
 	sphere = Vector4( m_boundingSphere.center, m_boundingSphere.radius );
@@ -595,7 +577,7 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 		if( radius > 0 )
 		{
 			data.lights[i].innerRadius = std::max( std::min( light->GetLightData().innerRadius / radius, 1.f ), 0.f );
-			data.lights[i].color = ( Vector4( color ) * light->GetBrightnessMultiplier() ).GetXYZ() * pow( data.lights[i].innerRadius * 2 + 1, 3 );
+			data.lights[i].color = ( Vector4( color ) * light->GetBrightnessMultiplier() ).GetXYZ() * pow( data.lights[i].innerRadius * 2 + 1, 3.f );
 		}
 		else
 		{
@@ -791,7 +773,7 @@ void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo, Vector3 su
 
 bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_receiveShadows )
 	{

@@ -4,7 +4,7 @@
 #ifndef EveChildParticleSystem_H
 #define EveChildParticleSystem_H
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "ITr2Renderable.h"
 
@@ -25,7 +25,7 @@ BLUE_DECLARE_INTERFACE( ITr2GenericEmitter );
 BLUE_DECLARE_IVECTOR( ITr2GenericEmitter );
 
 BLUE_CLASS( EveChildParticleSystem ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2Renderable,
 	public IInitialize,
@@ -40,9 +40,7 @@ public:
 	~EveChildParticleSystem();
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
+	// EveSpaceObjectChild
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
@@ -85,8 +83,6 @@ public:
 	PITr2GenericEmitterVector m_particleEmitters;
 
 private:
-	BlueSharedString m_name;
-
 	Vector4 m_boundingSphere;
 	Vector4 m_lodSphere;
 

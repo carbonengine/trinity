@@ -186,16 +186,6 @@ void EveChildLineSet::UpdateBoundingSphere( bool reCalculateChildren )
 	m_boundingSphere = sphere;
 }
 
-const char* EveChildLineSet::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildLineSet::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 void EveChildLineSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )

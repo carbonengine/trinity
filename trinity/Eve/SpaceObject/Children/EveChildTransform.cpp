@@ -97,3 +97,8 @@ void EveChildTransform::UpdateTransform( const Matrix& parentTransform )
 		}
 	}
 }
+
+Matrix EveChildTransform::ComputeLocalTransform() const
+{
+	return ( m_staticTransform || !m_useSRT ) ? m_localTransform : TransformationMatrix( m_scaling, m_rotation, m_translation );
+}

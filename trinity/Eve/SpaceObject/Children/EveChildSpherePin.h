@@ -37,7 +37,7 @@ public:
 	~EveChildSpherePin();
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
+	// EveSpaceObjectChild
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
 

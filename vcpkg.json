@@ -7,11 +7,15 @@
     },
     {
       "name": "carbon-core",
-      "version>=": "2.4.0"
+      "version>=": "3.0.0"
+    },
+    {
+      "name": "carbon-destiny",
+      "version>=": "3.1.1#1"
     },
     {
       "name": "carbon-imageio",
-      "version>=": "2.0.5"
+      "version>=": "2.0.6#1"
     },
     {
       "name": "libsquish",
@@ -47,11 +51,11 @@
     },
     {
       "name": "carbon-pdmprotowrapper",
-      "version>=": "2.0.4"
+      "version>=": "3.0.0#1"
     },
     {
       "name": "carbon-blue",
-      "version>=": "5.1.2"
+      "version>=": "6.2.0"
     },
     {
       "name": "carbon-math",
@@ -75,7 +79,7 @@
     },
     {
       "name": "carbon-mesh",
-      "version>=": "0.0.1"
+      "version>=": "1.0.1"
     }
   ],
   "features": {
@@ -183,10 +187,6 @@
     }
   },
   "overrides": [
-    {
-      "name": "protobuf",
-      "version": "3.6.0.1"
-    },
     {
       "name": "openssl",
       "version": "1.1.1k#8"

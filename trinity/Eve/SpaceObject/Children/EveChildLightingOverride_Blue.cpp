@@ -13,6 +13,7 @@ const Be::ClassInfo* EveChildLightingOverride::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildLightingOverride, "" )
 		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( IEveLightingOverride )
 		MAP_INTERFACE( IInitialize )
@@ -56,5 +57,8 @@ const Be::ClassInfo* EveChildLightingOverride::ExposeToBlue()
 			m_volumes,
 			"The volumes that affect the light overrides",
 			Be::READ | Be::PERSIST )
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

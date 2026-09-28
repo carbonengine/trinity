@@ -16,6 +16,7 @@ EveChildRef::EveChildRef( IRoot* lockobj ) :
 
 EveChildRef::~EveChildRef()
 {
+	UnregisterChild( m_child );
 }
 
 const char* EveChildRef::GetResPath() const
@@ -74,16 +75,6 @@ bool EveChildRef::OnModified( Be::Var* value )
 	return true;
 }
 
-const char* EveChildRef::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildRef::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
 void EveChildRef::RegisterComponents()
 {
 	if( IsInRegistry() && m_child != nullptr && m_display )
@@ -106,7 +97,7 @@ void EveChildRef::UnRegisterComponents()
 	}
 }
 
-IEveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) const
+EveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) const
 {
 	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
@@ -115,7 +106,7 @@ IEveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) co
 	return nullptr;
 }
 
-void EveChildRef::AddToEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildRef::AddToEffectChildrenList( EveSpaceObjectChild* child )
 {
 	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
@@ -123,7 +114,7 @@ void EveChildRef::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 	}
 }
 
-void EveChildRef::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildRef::RemoveFromEffectChildrenList( EveSpaceObjectChild* child )
 {
 	if( auto ref = dynamic_cast<IEveEffectChildrenOwner*>( m_child.p ) )
 	{
@@ -163,7 +154,7 @@ bool EveChildRef::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query 
 {
 	bool success = false;
 	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
-	if( m_child && m_child->GetBoundingSphere( bSphere ) )
+	if( m_child && m_child->GetBoundingSphere( bSphere, EVE_BOUNDS_NORMAL ) )
 	{
 		BoundingSphereSetOrUpdate( bSphere, sphere, success );
 		success = true;
@@ -352,14 +343,16 @@ bool EveChildRef::LoadChild()
 {
 	// unregister the old child
 	UnRegisterComponents();
+	UnregisterChild( m_child );
 
 	CCP_LOG( "Loading child red file %s", m_resPath.c_str() );
-	m_child = BeResMan->LoadObject<IEveSpaceObjectChild>( m_resPath.c_str() );
+	m_child = BeResMan->LoadObject<EveSpaceObjectChild>( m_resPath.c_str() );
 	if( !m_child )
 	{
 		CCP_LOGERR( "Red file %s is invalid or not an Eve Child type.", m_resPath.c_str() );
 		return false;
 	}
+	RegisterChild( m_child );
 
 	RegisterComponents();
 
@@ -373,4 +366,28 @@ ITr2AudEmitterPtr EveChildRef::FindSoundEmitter( const char* name )
 		return owner->FindSoundEmitter( name );
 	}
 	return nullptr;
+}
+
+void EveChildRef::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		if( m_child )
+		{
+			m_child->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildRef::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		if( m_child )
+		{
+			m_child->SetPartTag( tag );
+		}
+	}
 }

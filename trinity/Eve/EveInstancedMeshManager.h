@@ -27,14 +27,14 @@ public:
 
 	struct DynamicPerInstanceData
 	{
-		Vector4 worldTransform[3];
-		Vector4 prevWorldTransform[3];
+		Float4x3 worldTransform;
+		Float4x3 prevWorldTransform;
 		uint32_t sphereIndex = 0;
 	};
 
 	struct StaticPerInstanceData
 	{
-		Vector4 worldTransform[3];
+		Float4x3 worldTransform;
 		uint32_t sphereIndex = 0;
 	};
 
@@ -46,15 +46,32 @@ public:
 		DataHandle& operator=( const DataHandle& ) = delete;
 		DataHandle( DataHandle&& other ) noexcept
 		{
-			if( owner )
-			{
-				owner->ReplaceHandle( this, &other );
-			}
 			owner = other.owner;
 			index = other.index;
+			if( owner )
+			{
+				owner->ReplaceHandle( &other, this );
+			}
 			other.owner = nullptr;
 			other.index = InvalidIndex;
 		}
+		DataHandle& operator=( DataHandle&& other ) noexcept
+		{
+			if( this != &other )
+			{
+				CCP_ASSERT( !*this );
+				owner = other.owner;
+				index = other.index;
+				if( owner )
+				{
+					owner->ReplaceHandle( &other, this );
+				}
+				other.owner = nullptr;
+				other.index = InvalidIndex;
+			}
+			return *this;
+		}
+
 
 		operator bool() const
 		{
@@ -125,14 +142,14 @@ public:
 private:
 	struct StaticPerInstanceBufferElement
 	{
-		Vector4 worldTransform[3];
+		Float4x3 worldTransform;
 		uint32_t perObjectDataIndex = 0;
 	};
 
 	struct DynamicPerInstanceBufferElement
 	{
-		Vector4 worldTransform[3];
-		Vector4 prevWorldTransform[3];
+		Float4x3 worldTransform;
+		Float4x3 prevWorldTransform;
 		uint32_t perObjectDataIndex = 0;
 	};
 

@@ -13,6 +13,7 @@ const Be::ClassInfo* EveRootTransform::ExposeToBlue()
 		MAP_INTERFACE( ITriTargetable )
 		MAP_INTERFACE( ITr2Pickable )
 		MAP_INTERFACE( IWorldPosition )
+		MAP_INTERFACE( ITr2BoundingBox )
 
 		MAP_ATTRIBUTE(
 			"translationCurve",

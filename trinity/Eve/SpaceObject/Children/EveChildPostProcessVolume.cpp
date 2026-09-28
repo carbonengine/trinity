@@ -23,7 +23,7 @@ EveChildPostProcessVolume::~EveChildPostProcessVolume()
 
 void EveChildPostProcessVolume::RebuildBoundingSphere()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_boundingSphere.center *= 0.0f;
 	m_boundingSphere.radius *= 0.0f;
@@ -70,20 +70,7 @@ void EveChildPostProcessVolume::UnRegisterComponents()
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// IEveSpaceObjectChild
-const char* EveChildPostProcessVolume::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildPostProcessVolume::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
-void EveChildPostProcessVolume::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
-{
-}
+// EveSpaceObjectChild
 
 bool EveChildPostProcessVolume::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
@@ -93,13 +80,9 @@ bool EveChildPostProcessVolume::GetBoundingSphere( Vector4& sphere, BoundingSphe
 	return true;
 }
 
-void EveChildPostProcessVolume::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
-{
-}
-
 void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	UpdateTransformFromParent( params );
 

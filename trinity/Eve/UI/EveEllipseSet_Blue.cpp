@@ -9,6 +9,7 @@ const Be::ClassInfo* EveEllipseSet::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveEllipseSet, "" )
 		MAP_INTERFACE( EveEllipseSet )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( ITr2Pickable )
@@ -33,5 +34,8 @@ const Be::ClassInfo* EveEllipseSet::ExposeToBlue()
 			AddEllipse,
 			"Adds a closed elliptical orbit in the given plane (center, semiMajor, semiMinor, planeNormal, rotationDegrees)" );
 		MAP_METHOD_AND_WRAP( "__init__", py__init__, "Initializes the EveEllipseSet" );
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

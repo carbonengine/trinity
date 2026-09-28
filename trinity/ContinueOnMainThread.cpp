@@ -2,11 +2,13 @@
 
 #include "StdAfx.h"
 #include "ContinueOnMainThread.h"
+#include <ScopedBlockTrap.h>
 
 namespace
 {
 std::vector<std::function<void()>> mainThreadActions;
 std::mutex mainThreadActionsMutex;
+int invocations = 0;
 }
 
 void ContinueOnMainThread( std::function<void()>&& action )
@@ -17,16 +19,35 @@ void ContinueOnMainThread( std::function<void()>&& action )
 
 void ExecuteMainThreadActions()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	static std::vector<std::function<void()>> actionsToProcess;
+
+	invocations++;
+	if( invocations > 1 )
 	{
-		std::lock_guard<std::mutex> lock( mainThreadActionsMutex );
-		actionsToProcess.swap( mainThreadActions );
+		return;
 	}
-	for( auto& action : actionsToProcess )
+
+	ON_BLOCK_EXIT( [] {
+		invocations = 0;
+		actionsToProcess.clear();
+	} );
+
+	while( invocations > 0 )
 	{
-		action();
+		{
+			std::lock_guard<std::mutex> lock( mainThreadActionsMutex );
+			actionsToProcess.swap( mainThreadActions );
+		}
+		{
+			ScopedBlockTrap blockTrap;
+			for( auto& action : actionsToProcess )
+			{
+				action();
+			}
+		}
+		actionsToProcess.clear();
+		invocations--;
 	}
-	actionsToProcess.clear();
 }

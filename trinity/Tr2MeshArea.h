@@ -39,6 +39,9 @@ public:
 	bool IsCastingShadows() const;
 	void SetCastsShadows( bool castShadows );
 
+	bool IsAlphaCutout() const;
+	void SetAlphaCutout( bool alphaCutout );
+
 	bool GetGenerateDepthArea() const;
 	void SetGenerateDepthArea( bool generate );
 
@@ -92,6 +95,8 @@ private:
 	bool m_generateDepthArea;
 	// do we want this area to cast shadows?
 	bool m_castShadows;
+	// is this an alpha cutout object
+	bool m_alphaCutout;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

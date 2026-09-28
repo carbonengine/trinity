@@ -137,7 +137,7 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 	// acyncrounicy between EndScene() and Present(). So if we pump Python
 	// and do all the other stuff between we get a degree of paralization
 	{
-		CCP_STATS_SCOPED_TIME( presentTime );
+		TRINITY_STATS_SCOPED_TIME( presentTime );
 		CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
 	}
 
@@ -169,7 +169,7 @@ bool TriDevice::DeviceExists()
 // --------------------------------------------------------------------------------------
 void TriDevice::ApplicationActivated( ApplicationActivation activated )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !mPresentParam.windowed && mHwnd )
 	{

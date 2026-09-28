@@ -89,7 +89,9 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 
 			TransformLocator( position, rotation, locator.boneIndex, pThis->m_animationUpdater );
 			if( modelTranslationCurve || modelRotationCurve )
+			{
 				ApplyModelTransform( position, rotation, modelTranslationCurve, modelRotationCurve );
+			}
 
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
@@ -124,7 +126,9 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 
 			TransformLocator( position, rotation, boneIndex, pThis->m_animationUpdater );
 			if( modelTranslationCurve || modelRotationCurve )
+			{
 				ApplyModelTransform( position, rotation, modelTranslationCurve, modelRotationCurve );
+			}
 
 			PyObject* tuple = PyTuple_New( 3 );
 			PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
@@ -137,6 +141,43 @@ PyObject* EveSpaceObject2::PyTransformLocators( PyObject* self, PyObject* args )
 	}
 	PyErr_SetString( PyExc_TypeError, "arument must be a sequence of (position, rotation, boneIndex) tuples" );
 	return nullptr;
+}
+
+PyObject* EveSpaceObject2::PyGetTransformedLocatorsFromSet( PyObject* self, PyObject* args )
+{
+	auto pThis = BluePythonCast<EveSpaceObject2*>( self );
+	const char* locatorSetName = nullptr;
+	if( !PyArg_ParseTuple( args, "s", &locatorSetName ) )
+	{
+		return nullptr;
+	}
+
+	auto modelTranslationCurve = pThis->GetModelTranslationCurve();
+	auto modelRotationCurve = pThis->GetModelRotationCurve();
+
+	const LocatorStructureList* locators = pThis->GetLocatorsForSet( BlueSharedString( locatorSetName ) );
+	size_t count = locators ? locators->size() : 0;
+	PyObject* result = PyList_New( ssize_t( count ) );
+	for( size_t i = 0; i < count; ++i )
+	{
+		const Locator& locator = ( *locators )[i];
+
+		Vector3 position = locator.position;
+		Quaternion rotation = locator.direction;
+
+		TransformLocator( position, rotation, locator.boneIndex, pThis->m_animationUpdater );
+		if( modelTranslationCurve || modelRotationCurve )
+		{
+			ApplyModelTransform( position, rotation, modelTranslationCurve, modelRotationCurve );
+		}
+
+		PyObject* tuple = PyTuple_New( 3 );
+		PyTuple_SetItem( tuple, 0, Py_BuildValue( "(fff)", position.x, position.y, position.z ) );
+		PyTuple_SetItem( tuple, 1, Py_BuildValue( "(ffff)", rotation.x, rotation.y, rotation.z, rotation.w ) );
+		PyTuple_SetItem( tuple, 2, ToPython( locator.boneIndex ) );
+		PyList_SetItem( result, ssize_t( i ), tuple );
+	}
+	return result;
 }
 #endif
 
@@ -449,6 +490,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"The last damagelocator hit.",
 			Be::READ )
 
+		MAP_ATTRIBUTE(
+			"damageLocatorAutoFilterEnabled",
+			m_damageLocatorAutoFilterEnabled,
+			"For debug purposes: Filter occluded damage locators whenever there are changes to the modular ship parts.",
+			Be::READWRITE | Be::NOTIFY )
+
 		MAP_METHOD_AND_WRAP( "GetDamageLocatorCount", GetDamageLocatorCount, "Get number of damage locators on this ship" )
 		MAP_METHOD_AND_WRAP(
 			"GetLocatorCount",
@@ -470,6 +517,10 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			GetTransformedDamageLocator,
 			"Get the position of indexed damage locator, (0,0,0) is returned for indices out of range.\n"
 			":param idx: locator index" )
+		MAP_METHOD_AND_WRAP(
+			"RunDamageLocatorFilter",
+			RunDamageLocatorFilter,
+			"Filter occluded damage locators. Damage impact may get displayed at different locator after this call." )
 		MAP_METHOD_AND_WRAP(
 			"SetImpactDamageState",
 			SetImpactDamageState,
@@ -497,29 +548,29 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Get the closest locator in set to target, does not mind about direction of locator.\n"
 			":param position: position of target\n"
 			":param locatorSetName: name of locator set \n" )
-			MAP_METHOD_AND_WRAP(
-				"GetLocatorPositionFromSet",
-				GetLocatorPositionFromSet,
-				"locator position from a set Specified by name\n"
-				":param index: locator index\n"
-				":param inWorldSpace: position of target\n"
-				":param locatorSetName: name of locator set \n" )
-				MAP_METHOD_AND_WRAP(
-					"GetLocatorRotationFromSet",
-					GetLocatorRotationFromSet,
-					"locator rotation in worldspace\n"
-					":param index: locator index\n"
-					":param inWorldSpace: position of target\n"
-					":param locatorSetName: name of locator set \n" )
-					MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
-						MAP_METHOD_AND_WRAP(
-							"CreateImpact",
-							CreateImpact,
-							"debug only\n"
-							":param idx: damage locator index\n"
-							":param direction: incoming damage direction\n"
-							":param lifeTime: effect time\n"
-							":param size: effect size" );
+		MAP_METHOD_AND_WRAP(
+			"GetLocatorPositionFromSet",
+			GetLocatorPositionFromSet,
+			"locator position from a set Specified by name\n"
+			":param index: locator index\n"
+			":param inWorldSpace: position of target\n"
+			":param locatorSetName: name of locator set \n" )
+		MAP_METHOD_AND_WRAP(
+			"GetLocatorRotationFromSet",
+			GetLocatorRotationFromSet,
+			"locator rotation in worldspace\n"
+			":param index: locator index\n"
+			":param inWorldSpace: position of target\n"
+			":param locatorSetName: name of locator set \n" )
+		MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
+		MAP_METHOD_AND_WRAP(
+			"CreateImpact",
+			CreateImpact,
+			"debug only\n"
+			":param idx: damage locator index\n"
+			":param direction: incoming damage direction\n"
+			":param lifeTime: effect time\n"
+			":param size: effect size" );
 		MAP_METHOD_AND_WRAP(
 			"CreateImpactFromPosition",
 			CreateImpactFromPosition,
@@ -593,6 +644,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Transforms a sequence of locators using current bone setup\n"
 			":param locators: Locator data (position, rotation, boneIndex)\n"
 			":type locators: sequence[((float, float, float), (float, float, float, float), int)]" )
+		MAP_METHOD(
+			"GetTransformedLocatorsFromSet",
+			PyGetTransformedLocatorsFromSet,
+			"Locators of a named set, including locators owned by parts, transformed using current bone setup\n"
+			":param locatorSetName: name of locator set\n"
+			":returns: list[((float, float, float), (float, float, float, float), int)] of (position, rotation, boneIndex)" )
 #endif
 
 	EXPOSURE_END()

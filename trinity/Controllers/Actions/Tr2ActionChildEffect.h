@@ -4,7 +4,7 @@
 
 #include "ITr2ControllerAction.h"
 
-BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
+BLUE_DECLARE( EveSpaceObjectChild );
 
 
 BLUE_CLASS( Tr2ActionChildEffect ) :
@@ -21,7 +21,7 @@ public:
 private:
 	std::string m_path;
 	std::string m_childName;
-	IEveSpaceObjectChildPtr m_child;
+	EveSpaceObjectChildPtr m_child;
 	bool m_addOnStart;
 	bool m_removeOnStop;
 	BlueSharedString m_targetAnotherOwner;

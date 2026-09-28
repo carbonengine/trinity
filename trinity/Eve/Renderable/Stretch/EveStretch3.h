@@ -12,13 +12,13 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Lights/ITr2LightOwner.h"
 #include "Lights/Tr2Light.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 
 BLUE_DECLARE( EveStretch3 );
 BLUE_DECLARE( TriFloat );
 BLUE_DECLARE( EveChildModifierStretch );
 
-BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
+BLUE_DECLARE( EveSpaceObjectChild );
 BLUE_DECLARE_INTERFACE( ITr2Controller );
 
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
@@ -126,14 +126,14 @@ public:
 	// ITr2SoundEmitterOwner
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
-	IEveSpaceObjectChild* GetSourceObject();
-	void SetSourceObject( IEveSpaceObjectChild * sourceObject );
-	IEveSpaceObjectChild* GetDestObject();
-	void SetDestObject( IEveSpaceObjectChild * destObject );
-	IEveSpaceObjectChild* GetStretchObject();
-	void SetStretchObject( IEveSpaceObjectChild * stretchObject );
-	IEveSpaceObjectChild* GetMoveObject();
-	void SetMoveObject( IEveSpaceObjectChild * moveObject );
+	EveSpaceObjectChild* GetSourceObject();
+	void SetSourceObject( EveSpaceObjectChild * sourceObject );
+	EveSpaceObjectChild* GetDestObject();
+	void SetDestObject( EveSpaceObjectChild * destObject );
+	EveSpaceObjectChild* GetStretchObject();
+	void SetStretchObject( EveSpaceObjectChild * stretchObject );
+	EveSpaceObjectChild* GetMoveObject();
+	void SetMoveObject( EveSpaceObjectChild * moveObject );
 
 private:
 	enum StretchState
@@ -144,8 +144,8 @@ private:
 		STRETCH_STATE_STOPPING
 	};
 
-	void RunOnComponents( std::function<void( IEveSpaceObjectChild* )> func ) const;
-	float RunOnComponentsGetMax( std::function<float( IEveSpaceObjectChild* )> func ) const;
+	void RunOnComponents( std::function<void( EveSpaceObjectChild* )> func ) const;
+	float RunOnComponentsGetMax( std::function<float( EveSpaceObjectChild* )> func ) const;
 
 	void SetSourceSpaceObject( IEveSpaceObject2 * spaceObject );
 	void SetDestSpaceObject( IEveSpaceObject2 * spaceObject );
@@ -169,10 +169,10 @@ private:
 	BlueWeakRef<IEveSpaceObject2> m_sourceSpaceObject;
 	BlueWeakRef<IEveSpaceObject2> m_destSpaceObject;
 
-	IEveSpaceObjectChildPtr m_sourceObject;
-	IEveSpaceObjectChildPtr m_destObject;
-	IEveSpaceObjectChildPtr m_stretchObject;
-	IEveSpaceObjectChildPtr m_moveObject;
+	EveSpaceObjectChildPtr m_sourceObject;
+	EveSpaceObjectChildPtr m_destObject;
+	EveSpaceObjectChildPtr m_stretchObject;
+	EveSpaceObjectChildPtr m_moveObject;
 	PTriCurveSetVector m_curveSets;
 
 	Be::Time m_startTime;

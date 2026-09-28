@@ -59,6 +59,10 @@ public:
 	virtual Vector3 GetWorldPosition();
 	virtual Quaternion GetWorldRotation();
 
+	// ITr2BoundingBox
+	bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const override;
+	bool IsBoundingBoxReady() const override;
+
 	// ITr2SecondaryLightSource
 	virtual void RegisterSecondaryLightSource( Tr2ShLightingManager& );
 	virtual void UnregisterSecondaryLightSource( Tr2ShLightingManager& );

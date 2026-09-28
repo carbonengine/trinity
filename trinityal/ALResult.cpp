@@ -9,6 +9,7 @@ bool g_requestDeviceDebugLayer = true;
 #else
 bool g_requestDeviceDebugLayer = false;
 #endif
+bool g_requestDred = false;
 ICrashReporter* TrinityALCrashes = nullptr;
 
 

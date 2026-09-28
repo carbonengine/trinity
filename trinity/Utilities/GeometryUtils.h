@@ -79,4 +79,10 @@ extern granny_data_type_definition MeshBoundsInfoType[];
 //////////////////////////////////////////////////////////////////////////
 #endif
 
+void ConvertDataToVector3( Tr2VertexDefinition::DataType elementType, const void* src, Vector3* dest );
+bool IntersectTri( const Vector3& vertex0, const Vector3& vertex1, const Vector3& vertex2, const Vector3& rayPos, const Vector3& rayDir, float& u, float& v, float& dist );
+bool IntersectTriXM( const XMVECTOR& vertex0, const XMVECTOR& edge1, const XMVECTOR& edge2, const XMVECTOR& rayPos, const XMVECTOR& rayDir, float& u, float& v, float& dist );
+bool GetBoneIndex( Tr2VertexDefinition::DataType elementType, const void* src, int& dest );
+bool GetColor( Tr2VertexDefinition::DataType elementType, const void* src, Color& dest );
+
 #endif

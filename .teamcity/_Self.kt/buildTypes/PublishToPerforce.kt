@@ -39,7 +39,7 @@ class Publish(perforce_publish_path: String) : BuildType({
         select("eve_branch_type", "sandbox", label = "Branch type", description = "The type of branch to publish into", display = ParameterDisplay.PROMPT,
                 options = listOf("Sandbox" to "sandbox", "Development" to "development", "Release" to "release", "Staging" to "staging", "Stream" to ""))
         param("env.TC_PERFORCE_PATH_TO_PUBLISH_INTO", "%perforce_path_to_publish_into%")
-        param("env.EXECUTABLE_FILENAMES_MATCH", "")
+        param("env.EXECUTABLE_FILENAMES_MATCH", "ShaderCompiler")
 
         select("reverse.dep.*.env.VISUAL_STUDIO_PLATFORM_TOOLSET", "v141", label = "Visual Studio Platform Toolset", description = "Specify the toolset for the build. e.g. v141 or v143.", display = ParameterDisplay.PROMPT,
                 options = listOf("v141 (2017)" to "v141", "v143 (2022)" to "v143"))

@@ -14,6 +14,7 @@
 #endif
 #include "TriDebugTextRenderer.h"
 #include "Eve/EvePicking.h"
+#include "Tr2DynamicRingBuffer.h"
 
 BLUE_CLASS( Tr2DebugRenderer ) :
 	public ITr2DebugRenderer2
@@ -134,6 +135,8 @@ private:
 	std::map<IRootPtr, Tr2DebugRendererOptions> m_options;
 	std::set<Tr2DebugObjectReference> m_selectedObjects;
 	std::map<Tr2DebugRendererOption, Color> m_optionColors;
+
+	Tr2RingVertexBuffer m_vertexBuffer;
 };
 
 TYPEDEF_BLUECLASS( Tr2DebugRenderer );

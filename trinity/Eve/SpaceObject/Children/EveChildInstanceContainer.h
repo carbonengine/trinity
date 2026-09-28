@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "IEveEffectChildrenOwner.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
@@ -28,11 +28,11 @@ BLUE_DECLARE( EveChildInheritProperties );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   A child container that copies a source IEveSpaceObjectChild across locatorsets
+//   A child container that copies a source EveSpaceObjectChild across locatorsets
 //   and or transforms
 // --------------------------------------------------------------------------------------
 BLUE_CLASS( EveChildInstanceContainer ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public ITr2CurveSetOwner,
 	public INotify,
 	public IEveEffectChildrenOwner,
@@ -53,9 +53,7 @@ public:
 	float GetOwnerMaxSpeed() const;
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
+	// EveSpaceObjectChild
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
 	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
@@ -73,12 +71,14 @@ public:
 	void GetWorldVelocity( Vector3 & velocity ) const;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
+	void SetOwner( IEveSpaceObject2 * owner ) override;
+	void SetPartTag( PartTag tag ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ControllerOwner
@@ -125,19 +125,18 @@ public:
 	void PopFront();
 	void DisableEditMode( bool disable );
 
-	void SetSourceEffect( IEveSpaceObjectChildPtr sourceEffect );
+	void SetSourceEffect( EveSpaceObjectChildPtr sourceEffect );
 	void AddInstanceTransform( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, int32_t boneIndex = -1 );
 	void UpdateInstance( const uint32_t index, const Vector3& scale, const Quaternion& rotation, const Vector3& translation );
 
-	IEveSpaceObjectChildPtr GetSource();
-	void SetSource( IEveSpaceObjectChild * source );
+	EveSpaceObjectChildPtr GetSource();
+	void SetSource( EveSpaceObjectChild * source );
 
 protected:
 	void CreateInstances( IEveSpaceObject2 * parent );
-	void RunOnInstances( std::function<void( IEveSpaceObjectChild* )> func ) const;
+	void RunOnInstances( std::function<void( EveSpaceObjectChild* )> func ) const;
 
 protected:
-	BlueSharedString m_name;
 	Vector3 m_worldVelocity;
 	float m_ownerMaxSpeed;
 	bool m_display;
@@ -152,8 +151,8 @@ protected:
 	Origin m_origin;
 	std::vector<std::pair<std::string, float>> m_controllerVariables;
 
-	IEveSpaceObjectChildPtr m_source;
-	PIEveSpaceObjectChildVector m_instances;
+	EveSpaceObjectChildPtr m_source;
+	PEveSpaceObjectChildVector m_instances;
 
 	bool m_reset;
 	BlueSharedString m_locatorSetName;

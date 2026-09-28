@@ -97,7 +97,7 @@ bool EveLineSet::OnPrepareResources()
 // IEveSpaceObject2
 void EveLineSet::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Quaternion rotation( 0.0f, 0.0f, 0.0f, 1.0f );
 	Vector3 translation( 0.0f, 0.0f, 0.0f );

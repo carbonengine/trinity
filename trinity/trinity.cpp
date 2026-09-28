@@ -34,7 +34,7 @@ BLUE_DEFINE_INTERFACE( IBlueObjectProxy );
 #include "TriSettingsRegistrar.h"
 
 #include "Eve/IEveSpaceObject2.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 
 #ifndef TRINITYNAME
 #error Please add TRINITYNAME=<PythonModuleName> to compiler preprocessor definitions (/D)
@@ -73,6 +73,17 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 {
 	return CCPAlignedFreeWithTracking( memory );
 }
+#endif
+
+#ifndef PYTHON2_SUPPORT
+
+const CcpTelemetryCategory& TrinityTelemetryCategory()
+{
+	static const CcpTelemetryCategory& category =
+		CcpTelemetryCategoryRegister( "trinity", CcpColor::PowderBlue ).first;
+	return category;
+}
+
 #endif
 
 #if BLUE_WITH_PYTHON
@@ -173,6 +184,7 @@ PyObject* InitializeForPython()
 
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
+extern bool g_requestDred;
 extern bool g_gpuTimersEnabled;
 bool g_bindlessRenderingEnabled = true;
 TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
@@ -239,6 +251,12 @@ void InitializeTrinity()
 	if( !debugArg.empty() )
 	{
 		g_requestDeviceDebugLayer = debugArg == L"1";
+	}
+
+	auto dredArg = BeOS->GetStartupArgValue( L"dred" );
+	if( !dredArg.empty() )
+	{
+		g_requestDred = dredArg == L"1";
 	}
 
 	auto markersArg = BeOS->GetStartupArgValue( L"gpuMarkers" );
@@ -400,7 +418,7 @@ MAP_FUNCTION_AND_WRAP( "GetGrannyProductVersion", GetGrannyProductVersion, "Retu
 
 static BlueStdResult GetObjectWorldTransform( IRoot* object, Matrix& result )
 {
-	if( IEveSpaceObjectChildPtr child = BlueCastPtr( object ) )
+	if( EveSpaceObjectChildPtr child = BlueCastPtr( object ) )
 	{
 		child->GetLocalToWorldTransform( result );
 		return BlueStdResult( BLUE_STD_RESULT_OK );
@@ -418,7 +436,7 @@ MAP_FUNCTION_AND_WRAP(
 	"GetObjectWorldTransform",
 	GetObjectWorldTransform,
 	"Returns world transform for some supported object interfaces. Currently only\n"
-	"IEveSpaceObject2 and IEveSpaceObjectChild interfaces are supported.\n"
+	"IEveSpaceObject2 and EveSpaceObjectChild interfaces are supported.\n"
 	":param obj: blue object to get world transform from\n"
 	":raies TypeError: if the function does not support the object type" );
 

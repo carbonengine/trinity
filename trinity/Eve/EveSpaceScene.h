@@ -6,7 +6,6 @@
 
 
 #include "include/ITr2Scene.h"
-#include "include/IEveBallpark.h"
 #include "TriFrustum.h"
 #include "SpaceObject/EveSpaceObject2.h"
 #include "TriRenderBatch.h"
@@ -30,6 +29,7 @@
 #include "EvePicking.h"
 
 #include <ITriFunction.h>
+#include <IEveBallpark.h>
 
 class TriProjection;
 class TriView;

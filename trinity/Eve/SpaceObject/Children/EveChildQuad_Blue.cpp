@@ -9,6 +9,7 @@ const Be::ClassInfo* EveChildQuad::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildQuad, "" )
 		MAP_INTERFACE( EveChildQuad )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( IInitialize )
 
@@ -34,5 +35,8 @@ const Be::ClassInfo* EveChildQuad::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "Screen size for last frame\n:jessica-group: LOD", Be::READ )
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform if useSRT is set." )
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

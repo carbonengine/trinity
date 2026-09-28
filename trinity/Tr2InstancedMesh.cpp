@@ -213,15 +213,6 @@ void Tr2InstancedMesh::SetInstanceGeometryRes( ITr2InstanceData* res )
 void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 								   const Tr2MeshAreaVector* areas,
 								   const Tr2PerObjectData* data,
-								   float screenSize ) const
-{
-	GetBatches( batches, areas, data, screenSize, false );
-}
-
-
-void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
-								   const Tr2MeshAreaVector* areas,
-								   const Tr2PerObjectData* data,
 								   float screenSize,
 								   bool reverseAreas ) const
 {

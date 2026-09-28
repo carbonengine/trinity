@@ -113,7 +113,10 @@ BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
 BreakStringLiterals: false
-ColumnLimit: 120
+# Kept at 0 to match the Cpp section: some tools (e.g. CLion's ClangFormat
+# integration) misclassify C++ .h files as ObjC and would otherwise re-wrap
+# lines at the column limit.
+ColumnLimit: 0
 CompactNamespaces: false
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4

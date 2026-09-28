@@ -4,6 +4,8 @@
 #ifndef EveLocatorSets_H
 #define EveLocatorSets_H
 
+#include "../Children/EveSpaceObjectChild.h"
+
 // decalre structured list here
 struct Locator
 {
@@ -11,8 +13,11 @@ struct Locator
 	Quaternion direction;
 	Vector3 scale;
 	int boneIndex;
+	EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG; ///< Part of a modular object this locator belongs to; NO_PART_TAG when not part-scoped.
 };
 BLUE_DECLARE_STRUCTURE_LIST( Locator );
+
+void EveGetLocatorPose( const class Tr2GrannyAnimation* animationUpdater, const Locator& locator, Vector3& position, Vector3& direction );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -37,6 +42,7 @@ public:
 	bool HasName( const char* name ) const;
 	bool HasName( const BlueSharedString& name ) const;
 	const LocatorStructureList* GetLocators() const;
+	LocatorStructureList* GetLocators();
 	const char* GetName() const;
 	void SetName( BlueSharedString name );
 

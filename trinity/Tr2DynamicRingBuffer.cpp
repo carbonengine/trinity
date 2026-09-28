@@ -30,7 +30,7 @@ Tr2DynamicRingBuffer::~Tr2DynamicRingBuffer()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Puts new data into the buffer. If the data size is larget than the buffer size, the
+//   Puts new data into the buffer. If the data size is larger than the buffer size, the
 //   buffer is resized.
 // Arguments:
 //   data - Pointer to data
@@ -73,7 +73,7 @@ ALResult Tr2DynamicRingBuffer::PutData(
 
 	if( !GetUnusedRegion( allocationSize, allocationOffset ) )
 	{
-		CCP_STATS_ZONE( "Tr2DynamicRingBuffer full buffer lock" );
+		TRINITY_STATS_ZONE( "Tr2DynamicRingBuffer full buffer lock" );
 		allocationOffset = 0;
 		RemoveRegions( m_regions.begin(), m_regions.end() );
 		if( m_bufferSize < allocationSize + m_sizeIncrement )

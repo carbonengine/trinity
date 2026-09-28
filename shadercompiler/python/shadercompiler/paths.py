@@ -1,4 +1,4 @@
-# Copyright © 2023 CCP ehf.
+# Copyright (c) 2023 CCP ehf.
 
 import os
 import re

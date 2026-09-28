@@ -1,6 +1,8 @@
-# Copyright © 2023 CCP ehf.
+# Copyright (c) 2023 CCP ehf.
 
 #!/usr/bin/env python3
+
+# This is a example script to show how shaders should be compiled on a project using carbon-trinty. Changes are recommended to be made to suite the project requirements
 
 import argparse
 import json

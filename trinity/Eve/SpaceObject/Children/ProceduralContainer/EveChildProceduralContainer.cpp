@@ -14,16 +14,7 @@ EveChildProceduralContainer::EveChildProceduralContainer( IRoot* lockobj ) :
 
 EveChildProceduralContainer::~EveChildProceduralContainer()
 {
-}
-
-const char* EveChildProceduralContainer::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildProceduralContainer::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
+	UnregisterChild( m_selectedObject );
 }
 
 bool EveChildProceduralContainer::Initialize()
@@ -60,7 +51,7 @@ bool EveChildProceduralContainer::GetBoundingSphere( Vector4& sphere, BoundingSp
 {
 	bool success = false;
 	Vector4 bSphere( 0.f, 0.f, 0.f, -1.f );
-	if( m_selectedObject && m_selectedObject->GetBoundingSphere( bSphere ) )
+	if( m_selectedObject && m_selectedObject->GetBoundingSphere( bSphere, EVE_BOUNDS_NORMAL ) )
 	{
 		BoundingSphereSetOrUpdate( bSphere, sphere, success );
 		success = true;
@@ -148,7 +139,9 @@ void EveChildProceduralContainer::ConfigureSelectedObject()
 	{
 		entity->UnRegister( registry );
 	}
+	UnregisterChild( m_selectedObject );
 	m_selectedObject = child;
+	RegisterChild( m_selectedObject );
 	if( EveEntityPtr entity = BlueCastPtr( m_selectedObject ) )
 	{
 		entity->Register( registry );
@@ -386,6 +379,30 @@ void EveChildProceduralContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer 
 			{
 				( *volume )->RenderDebugInfo( renderer, m_worldTransform );
 			}
+		}
+	}
+}
+
+void EveChildProceduralContainer::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		if( m_selectedObject )
+		{
+			m_selectedObject->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildProceduralContainer::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		if( m_selectedObject )
+		{
+			m_selectedObject->SetPartTag( tag );
 		}
 	}
 }

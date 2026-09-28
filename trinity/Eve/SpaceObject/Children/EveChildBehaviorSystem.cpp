@@ -578,7 +578,7 @@ std::vector<std::pair<int, int>> EveChildBehaviorSystem::GetVertexElementAddedTh
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-// IEveSpaceObjectChild
+// EveSpaceObjectChild
 void EveChildBehaviorSystem::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	Matrix localToWorldTransform;
@@ -615,11 +615,6 @@ void EveChildBehaviorSystem::UpdateAsyncronous( const EveUpdateContext& updateCo
 	m_hasUpdated = true;
 }
 
-const char* EveChildBehaviorSystem::GetName() const
-{
-	return m_name;
-}
-
 void EveChildBehaviorSystem::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
 	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
@@ -648,10 +643,6 @@ void EveChildBehaviorSystem::GetRenderables( std::vector<ITr2Renderable*>& rende
 	}
 }
 
-void EveChildBehaviorSystem::SetName( const char* name )
-{
-}
-
 void EveChildBehaviorSystem::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
@@ -665,21 +656,12 @@ void EveChildBehaviorSystem::UpdateVisibility( const EveUpdateContext& updateCon
 	}
 }
 
-bool EveChildBehaviorSystem::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
-{
-	return true;
-}
-
 bool EveChildBehaviorSystem::GetInstanceBufferBoundingBox( unsigned int bufferIndex, Vector3& minBounds, Vector3& maxBounds ) const
 {
 	return false;
 }
 
 void EveChildBehaviorSystem::GetLocalToWorldTransform( Matrix& transform ) const
-{
-}
-
-void EveChildBehaviorSystem::ChangeLOD( Tr2Lod lod )
 {
 }
 

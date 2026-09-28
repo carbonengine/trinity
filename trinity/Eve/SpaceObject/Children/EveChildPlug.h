@@ -5,7 +5,7 @@
 #define EveChildPlug_H
 
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "IEveEffectChildrenOwner.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
@@ -19,7 +19,7 @@ BLUE_DECLARE_VECTOR( Tr2ExternalParameter );
 
 
 BLUE_CLASS( EveChildPlug ) :
-	public IEveSpaceObjectChild,
+	public EveSpaceObjectChild,
 	public EveChildTransform,
 	public ITr2CurveSetOwner,
 	public IInitialize,
@@ -51,17 +51,14 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
-	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( IEveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( IEveSpaceObjectChild * child );
+	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
+	void AddToEffectChildrenList( EveSpaceObjectChild * child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
-
-	const char* GetName() const;
-	void SetName( const char* name );
 
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
@@ -76,6 +73,9 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
+
+	void SetOwner( IEveSpaceObject2 * owner ) override;
+	void SetPartTag( PartTag tag ) override;
 
 	void PlayAllCurveSets();
 	void StopAllCurveSets();
@@ -102,9 +102,7 @@ public:
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
 protected:
-	PIEveSpaceObjectChildVector m_objects;
-
-	BlueSharedString m_name;
+	PEveSpaceObjectChildVector m_objects;
 
 	PITr2ControllerVector m_controllers;
 	std::vector<std::pair<std::string, float>> m_controllerVariables;

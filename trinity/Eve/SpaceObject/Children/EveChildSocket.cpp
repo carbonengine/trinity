@@ -15,7 +15,6 @@
 EveChildSocket::EveChildSocket( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters ),
 	m_plug(),
-	m_name(),
 	m_plugResPath(),
 	m_display( true )
 {
@@ -23,6 +22,7 @@ EveChildSocket::EveChildSocket( IRoot* lockobj ) :
 
 EveChildSocket::~EveChildSocket()
 {
+	UnregisterChild( m_plug );
 }
 
 const char* EveChildSocket::GetPlugResPath() const
@@ -236,17 +236,7 @@ void EveChildSocket::UnRegisterComponents()
 }
 
 
-const char* EveChildSocket::GetName() const
-{
-	return m_name.c_str();
-}
-
-void EveChildSocket::SetName( const char* name )
-{
-	m_name = BlueSharedString( name );
-}
-
-IEveSpaceObjectChildPtr EveChildSocket::GetEffectChildByName( const char* name ) const
+EveSpaceObjectChildPtr EveChildSocket::GetEffectChildByName( const char* name ) const
 {
 	if( m_plug )
 	{
@@ -255,11 +245,11 @@ IEveSpaceObjectChildPtr EveChildSocket::GetEffectChildByName( const char* name )
 	return nullptr;
 }
 
-void EveChildSocket::AddToEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildSocket::AddToEffectChildrenList( EveSpaceObjectChild* child )
 {
 }
 
-void EveChildSocket::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
+void EveChildSocket::RemoveFromEffectChildrenList( EveSpaceObjectChild* child )
 {
 }
 
@@ -490,6 +480,7 @@ bool EveChildSocket::LoadChild()
 {
 	// unregister the current child
 	UnRegisterComponents();
+	UnregisterChild( m_plug );
 
 	CCP_LOG( "Loading child red file %s", m_plugResPath.c_str() );
 	m_plug = BeResMan->LoadObject<EveChildPlug>( m_plugResPath.c_str() );
@@ -498,6 +489,7 @@ bool EveChildSocket::LoadChild()
 		CCP_LOGERR( "Red file %s is invalid or not an Eve Child type.", m_plugResPath.c_str() );
 		return false;
 	}
+	RegisterChild( m_plug );
 
 	RegisterComponents();
 
@@ -511,4 +503,28 @@ ITr2AudEmitterPtr EveChildSocket::FindSoundEmitter( const char* name )
 		return m_plug->FindSoundEmitter( name );
 	}
 	return nullptr;
+}
+
+void EveChildSocket::SetOwner( IEveSpaceObject2* owner )
+{
+	if( GetOwner() != owner )
+	{
+		EveSpaceObjectChild::SetOwner( owner );
+		if( m_plug )
+		{
+			m_plug->SetOwner( owner );
+		}
+	}
+}
+
+void EveChildSocket::SetPartTag( PartTag tag )
+{
+	if( GetPartTag() != tag )
+	{
+		EveSpaceObjectChild::SetPartTag( tag );
+		if( m_plug )
+		{
+			m_plug->SetPartTag( tag );
+		}
+	}
 }

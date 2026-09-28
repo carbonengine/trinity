@@ -78,18 +78,6 @@ bool EveChildBulletStorm::OnModified( Be::Var* val )
 }
 
 // --------------------------------------------------------------------------------
-const char* EveChildBulletStorm::GetName() const
-{
-	return m_name.c_str();
-}
-
-// --------------------------------------------------------------------------------
-void EveChildBulletStorm::SetName( const char* name )
-{
-	m_name = name;
-}
-
-// --------------------------------------------------------------------------------
 // Description:
 //   Trinity's way of rendering
 // --------------------------------------------------------------------------------
@@ -223,14 +211,6 @@ bool EveChildBulletStorm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuer
 	return true;
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Syncronous updates happen here
-// --------------------------------------------------------------------------------
-void EveChildBulletStorm::UpdateSyncronous( const EveUpdateContext&, const EveChildUpdateParams& )
-{
-}
-
 void EveChildBulletStorm::StartEffect()
 {
 	m_clipShereMul = 1.0f;
@@ -315,14 +295,6 @@ void EveChildBulletStorm::UpdateAsyncronous( const EveUpdateContext& updateConte
 void EveChildBulletStorm::GetLocalToWorldTransform( Matrix& transform ) const
 {
 	transform = m_worldTransform;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Used by state machine to animate state-related stuff
-// --------------------------------------------------------------------------------
-void EveChildBulletStorm::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
-{
 }
 
 // --------------------------------------------------------------------------------

@@ -5,11 +5,11 @@
 
 
 Be::VarChooser EveSpaceObjectChildOriginChooser[] = {
-	{ "SPACE", BeCast( IEveSpaceObjectChild::SPACE ), "Origin in Space" },
-	{ "SOF", BeCast( IEveSpaceObjectChild::SOF ), "Origin in SOF" },
+	{ "SPACE", BeCast( EveSpaceObjectChild::SPACE ), "Origin in Space" },
+	{ "SOF", BeCast( EveSpaceObjectChild::SOF ), "Origin in SOF" },
 	{ 0 }
 };
-BLUE_REGISTER_ENUM_EX( "EveSpaceObjectChildOrigin", IEveSpaceObjectChild::Origin, EveSpaceObjectChildOriginChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+BLUE_REGISTER_ENUM_EX( "EveSpaceObjectChildOrigin", EveSpaceObjectChild::Origin, EveSpaceObjectChildOriginChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 Be::VarChooser EveChildContainerDataSetShaderChooser[] = {
 	{ "None_", BeCast( EveChildContainer::SHADER_ALL ), "Visible to users with all shader settings" },
@@ -33,6 +33,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 		MAP_INTERFACE( EveChildContainer )
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( IInitialize )
@@ -106,5 +107,8 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 			StartControllers,
 			"Start all controllers" )
 
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

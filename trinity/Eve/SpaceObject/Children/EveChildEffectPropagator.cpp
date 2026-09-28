@@ -39,6 +39,7 @@ EveChildEffectPropagator::EveChildEffectPropagator( IRoot* lockobj ) :
 
 EveChildEffectPropagator::~EveChildEffectPropagator()
 {
+	UnregisterChild( m_effect );
 }
 
 
@@ -130,6 +131,7 @@ void EveChildEffectPropagator::Stop()
 
 bool EveChildEffectPropagator::Initialize()
 {
+	RegisterChild( m_effect );
 	if( m_effect != nullptr )
 	{
 		m_effect->DisableEditMode( true );
@@ -168,7 +170,7 @@ void EveChildEffectPropagator::ManageTriggers()
 
 // --------------------------------------------
 // Description:
-//   Implements IEveSpaceObjectChild interface.
+//   Implements EveSpaceObjectChild interface.
 // --------------------------------------------
 void EveChildEffectPropagator::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
@@ -646,10 +648,12 @@ void EveChildEffectPropagator::SetEffect( EveChildInstanceContainer* effect )
 {
 	// unregister the current effect
 	UnRegisterComponents();
+	UnregisterChild( m_effect );
 
 	m_effect = effect;
 
 	// register again
+	RegisterChild( m_effect );
 	RegisterComponents();
 }
 

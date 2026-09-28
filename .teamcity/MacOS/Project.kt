@@ -179,7 +179,7 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
         perfmon {
         }
         freeDiskSpace {
-            requiredSpace = "10gb"
+            requiredSpace = "30gb"
             failBuild = true
         }
         sshAgent {

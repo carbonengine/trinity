@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "EveChildMesh.h"
 
+BLUE_DEFINE_INTERFACE( IMultiPartObjectElement );
 BLUE_DEFINE( EveChildMesh );
 
 const Be::ClassInfo* EveChildMesh::ExposeToBlue()
@@ -11,6 +12,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_INTERFACE( EveChildMesh )
 		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveSpaceObjectDecalOwner )
+		MAP_INTERFACE( EveSpaceObjectChild )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
@@ -23,6 +25,9 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "inheritOverlayEffects", m_inheritOverlayEffects, "If true, the parent space object's overlay effects (e.g. cloak) also render over this child mesh.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "overlayEffects", m_overlayEffects, "Overlay effects owned by this child mesh. Rendered over the child's mesh areas, underneath any inherited parent overlay effects.", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "damageOverlay", m_damageOverlay, "Armor/hull damage owned by this part. Renders whether or not the part is attached to a ship.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "castShadow", m_castShadow, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "updateAnimation", m_updateAnimation, "Should the object update its animation updater every frame", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "mesh", m_mesh, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
@@ -40,10 +45,10 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "Screen size for last frame\n:jessica-group: LOD", Be::READ )
 		MAP_ATTRIBUTE( "currentInstanceScreenSize", m_currentInstanceScreenSize, "Screen size of instances for last frame\n:jessica-group: LOD", Be::READ )
-		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "localTransform", m_localTransform, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "localTransform", m_localTransform, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "worldTransform", m_worldTransform, "", Be::READ )
 		MAP_ATTRIBUTE( "useSRT", m_useSRT, "Should local transform be built from scaling, rotation and translation attributes.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "staticTransform", m_staticTransform, "Does local transform need to be rebuilt every frame.", Be::READWRITE | Be::PERSIST )
@@ -88,5 +93,8 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			"GetMorphTargetWeight( name )\n\n"
 			"Returns the weight of the morph target. Returns 0 if no morph target with that name was found.\n"
 			":param name: morph target name\n" )
+		MAP_PROPERTY_READONLY( "partTag", GetPartTag, "Part tag for multi-part space objects" )
+		MAP_METHOD_AND_WRAP( "GetParent", GetParent, "Returns the parent space object child in the hierarchy" )
+		MAP_METHOD_AND_WRAP( "GetOwner", GetOwner, "Returns the owner space object" )
 	EXPOSURE_END()
 }

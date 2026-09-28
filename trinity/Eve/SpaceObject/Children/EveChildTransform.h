@@ -32,6 +32,7 @@ protected:
 	// Do we want scale from the parent
 	bool m_useStaticScale;
 
+	Matrix ComputeLocalTransform() const;
 	void UpdateTransform( const Matrix& parentTransform );
 };
 

@@ -1,4 +1,4 @@
-# Copyright © 2023 CCP ehf.
+# Copyright (c) 2023 CCP ehf.
 
 from . import paths, PLATFORM_NAMES, SHADER_MODEL_NAMES, ShaderModel, Platform
 import struct

@@ -2,6 +2,31 @@
 
 #include "StdAfx.h"
 #include "EveLocatorSets.h"
+#include "Tr2GrannyAnimation.h"
+#include "Utilities/MatrixUtils.h"
+
+static_assert( sizeof( EveSpaceObjectChild::PartTag ) == sizeof( uint32_t ), "Size mismatch for PartTag: need to update LocatorStructureDef" );
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Get locator position and direction, transformed by animationUpdater.
+//   We're assuming for now that the bone 0 isn't animated for performance reasons.
+// --------------------------------------------------------------------------------
+void EveGetLocatorPose( const Tr2GrannyAnimation* animationUpdater, const Locator& locator, Vector3& position, Vector3& direction )
+{
+	position = locator.position;
+	direction = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), locator.direction );
+
+	if( locator.boneIndex > 0 && animationUpdater && animationUpdater->IsInitialized() &&
+		locator.boneIndex < animationUpdater->GetMeshBoneCount() )
+	{
+		const Float4x3* bones = animationUpdater->GetMeshBoneMatrixList();
+		Matrix boneTF = IdentityMatrix();
+		TriMatrixCopyFrom3x4( &boneTF, &bones[locator.boneIndex] );
+		position = XMVector3TransformCoord( locator.position, boneTF );
+		direction = XMVector3TransformNormal( direction, boneTF );
+	}
+}
 
 // locator item definition
 static BlueStructureDefinition LocatorStructureDef[] = {
@@ -9,6 +34,7 @@ static BlueStructureDefinition LocatorStructureDef[] = {
 	{ "direction", Be::FLOAT32_4, 12 },
 	{ "scale", Be::FLOAT32_3, 28 },
 	{ "boneIndex", Be::INT32_1, 40 },
+	{ "partTag", Be::UINT32_1, 44 },
 	{ 0 }
 };
 
@@ -74,6 +100,11 @@ bool EveLocatorSets::HasName( const BlueSharedString& name ) const
 //   Give out pointer to list
 // --------------------------------------------------------------------------------
 const LocatorStructureList* EveLocatorSets::GetLocators() const
+{
+	return &m_locators;
+}
+
+LocatorStructureList* EveLocatorSets::GetLocators()
 {
 	return &m_locators;
 }

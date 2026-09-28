@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "IEveSpaceObjectChild.h"
+#include "EveSpaceObjectChild.h"
 #include "EveChildTransform.h"
 #include "Tr2DebugRenderer.h"
 #include "TriRenderBatch.h"

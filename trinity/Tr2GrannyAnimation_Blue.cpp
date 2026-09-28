@@ -85,6 +85,12 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
 			ClearAnimations,
 			"ClearAnimations()\n\n"
 			"Abruptly ends all animations." )
+		MAP_METHOD_AND_WRAP(
+			"StopAnimations",
+			StopAnimations,
+			"StopAnimations( delay )\n\n"
+			"Stops all animations, current and queued.\n"
+			":param delay: time (in seconds) from now until playing animations stop" )
 
 		MAP_METHOD_AND_WRAP(
 			"PlayLayerAnimation",

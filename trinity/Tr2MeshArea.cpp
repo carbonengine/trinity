@@ -16,6 +16,7 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ) :
 	m_useSHLighting( false ),
 	m_generateDepthArea( false ),
 	m_castShadows( true ),
+	m_alphaCutout( false ),
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL ),
 	m_minLod( TR2_LOD_UNSPECIFIED )
@@ -44,6 +45,7 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_display = other.m_display;
 	m_useSHLighting = other.m_useSHLighting;
 	m_generateDepthArea = other.m_generateDepthArea;
+	m_alphaCutout = other.m_alphaCutout;
 
 	return *this;
 }
@@ -114,6 +116,18 @@ void Tr2MeshArea::SetCastsShadows( bool castShadows )
 	m_castShadows = castShadows;
 }
 
+// --------------------------------------------------------------------------------
+bool Tr2MeshArea::IsAlphaCutout() const
+{
+	return m_alphaCutout;
+}
+
+// --------------------------------------------------------------------------------
+void Tr2MeshArea::SetAlphaCutout( bool alphaCutout )
+{
+	m_alphaCutout = alphaCutout;
+}
+
 // -------------------------------------------------------------
 // Description:
 //   Returns a flag indicating that the area requires rendering
@@ -138,12 +152,6 @@ bool Tr2MeshArea::GetReversed() const
 void Tr2MeshArea::SetReversed( bool reversed )
 {
 	m_reversed = reversed;
-	if( m_reversed )
-	{
-		for_each( begin( m_ownerMeshes ), end( m_ownerMeshes ), []( auto mesh ) {
-			mesh->ReverseIndexBuffers();
-		} );
-	}
 }
 
 // -------------------------------------------------------------

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Eve/EveUpdateContext.h"
-#include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
+#include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 
 #include "IEveFxAttribute.h"
 

@@ -210,7 +210,7 @@ void* Tr2DirectInstanceData::GetData( unsigned count )
 // --------------------------------------------------------------------------------------
 void Tr2DirectInstanceData::UpdateData()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	if( !m_vertexBuffer.IsValid() )
 	{
 		return;
