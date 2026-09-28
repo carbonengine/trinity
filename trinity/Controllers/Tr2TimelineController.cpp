@@ -340,7 +340,7 @@ std::optional<float> Tr2TimelineController::GetFloatVariableByName( const char* 
 void Tr2TimelineController::GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr>& out ) const
 {
 	out.push_back( Tr2ExpressionTermInfo::Variable( "Bindings", "Owner", "the object this controller is attached to - follow it with a path to a float attribute, e.g. Owner.translation.x" ) );
-	out.push_back( Tr2ExpressionTermInfo::Variable( "Bindings", "spaceObjectParent", "the space object this controller's owner belongs to, or the owner itself if it is a space object" ) );
+	out.push_back( Tr2ExpressionTermInfo::Variable( "Bindings", "SpaceObjectParent", "the space object this controller's owner belongs to, or the owner itself if it is a space object" ) );
 	for( auto it = begin( m_variables ); it != end( m_variables ); ++it )
 	{
 		out.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );

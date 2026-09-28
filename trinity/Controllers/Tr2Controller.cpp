@@ -21,7 +21,7 @@ CcpMutex g_controllerMutex( "", "g_controllerMutex" );
 
 namespace
 {
-const char* const SPACE_OBJECT_PARENT = "spaceObjectParent";
+const char* const SPACE_OBJECT_PARENT = "SpaceObjectParent";
 
 bool TryGetSpaceObjectParent( IRoot* owner, IRoot*& spaceObjectParent )
 {
