@@ -11,7 +11,7 @@
 
 
 
-class EvePendingPickingReadback : public Tr2DeviceResource
+class EvePendingPickingReadback
 {
 public:
 	EvePendingPickingReadback( uint32_t pickedX, uint32_t pickedY );
@@ -22,14 +22,6 @@ public:
 	std::vector<IRootPtr> m_blueObjects;
 
 	Tr2ReadbackAL m_readback;
-
-
-	/////////////////////////////////////////////////////////////
-	// ITriDeviceResource
-	void ReleaseResources( TriStorage s ) override;
-
-private:
-	bool OnPrepareResources() override;
 };
 
 

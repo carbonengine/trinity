@@ -13,17 +13,6 @@ EvePendingPickingReadback::EvePendingPickingReadback( uint32_t pickedX, uint32_t
 {
 }
 
-// ------------------------------------------------------------------------------------------------------
-void EvePendingPickingReadback::ReleaseResources( TriStorage s )
-{
-}
-
-// ------------------------------------------------------------------------------------------------------
-bool EvePendingPickingReadback::OnPrepareResources()
-{
-	return true;
-}
-
 EvePickingContext::EvePickingContext( IRoot* lockobj ) :
 	m_lastPickedX( 0 ),
 	m_lastPickedY( 0 ),

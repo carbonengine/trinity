@@ -39,8 +39,10 @@ bool Tr2ReadbackAL::IsValid()
 
 ALResult Tr2ReadbackAL::Map( const void*& pointer, uint32_t& rowPitch, Tr2PrimaryRenderContextAL& renderContext )
 {
-	if( !m_readback )
+	if( !IsValid() )
 	{
+		pointer = nullptr;
+		rowPitch = 0u;
 		return E_INVALIDCALL;
 	}
 	return m_readback->Map( pointer, rowPitch, renderContext );

@@ -765,6 +765,10 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, Tr2RenderConte
 	shader->ApplyAllStateForPass( 0, 0, renderContext );
 	renderContext.m_esm.ApplyVertexDeclaration( handle );
 
+
+	readback.m_blueObjects.reserve( m_objectLineOffsets.size() + m_objectTriangleOffsets.size() );
+
+
 	auto draw = [&]( const std::vector<Vertex>& geometry,
 					 Tr2RenderContextEnum::Topology topology,
 					 uint32_t verticesPerPrimitive,
@@ -772,7 +776,6 @@ void Tr2DebugRenderer::Pick( EvePendingPickingReadback& readback, Tr2RenderConte
 					 const std::vector<std::pair<Tr2DebugObjectReference, size_t>>& objectOffsets ) {
 		if( !objectOffsets.empty() )
 		{
-			blueObjects.reserve( objectOffsets.size() );
 
 			uint32_t stride = uint32_t( sizeof( Vertex ) );
 			uint32_t offset = 0;

@@ -14,7 +14,7 @@ namespace TrinityALImpl
 class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
 {
 public:
-	void Initialize( size_t size, uint32_t rowPitch );
+	Tr2ReadbackAL( CcpMallocBuffer& data, uint32_t rowPitch );
 
 	~Tr2ReadbackAL();
 

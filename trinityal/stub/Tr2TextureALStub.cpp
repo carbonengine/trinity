@@ -10,9 +10,12 @@
 namespace TrinityALImpl
 {
 
-void Tr2ReadbackAL::Initialize( size_t size, uint32_t rowPitch )
+Tr2ReadbackAL::Tr2ReadbackAL( CcpMallocBuffer& data, uint32_t rowPitch )
 {
-	m_data.resize( "Dummy redback buffer", size );
+	m_data.resize( "Dummy redback buffer", data.size() );
+
+	memcpy( m_data.get(), data.get(), data.size() );
+
 	m_rowPitch = rowPitch;
 }
 
@@ -206,9 +209,16 @@ std::shared_ptr<Tr2ReadbackAL> Tr2TextureAL::CreateReadback( const Tr2TextureSub
 	auto mipPitch = m_desc.GetMipPitch( region.m_startMipLevel );
 	auto size = mipPitch * m_desc.GetMipHeight( region.m_startMipLevel );
 
-	std::shared_ptr<Tr2ReadbackAL> readback = std::make_shared<Tr2ReadbackAL>();
-	readback->Initialize( size, mipPitch ); //mipPitch here is probably wrong.
-	return readback;
+	if( m_data.size() != size )
+	{
+		m_data.resize( "Tr2TextureAL::m_data", size );
+		if( m_data.empty() )
+		{
+			return nullptr;
+		}
+	}
+
+	return std::make_shared<Tr2ReadbackAL>( m_data, mipPitch );
 }
 
 

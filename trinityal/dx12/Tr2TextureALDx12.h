@@ -29,7 +29,7 @@ namespace TrinityALImpl
 class Tr2ReadbackAL : public Tr2DeviceResourceAL<Tr2ReadbackAL>
 {
 public:
-	Tr2ReadbackAL( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber );
+	Tr2ReadbackAL( CComPtr<ID3D12Resource> readScratch, uint32_t rowPitch, uint64_t frameNumber, Tr2PrimaryRenderContextAL* owner );
 
 	~Tr2ReadbackAL();
 
@@ -49,6 +49,7 @@ private:
 	CComPtr<ID3D12Resource> m_readScratch = nullptr;
 	uint32_t m_rowPitch = 0;
 	uint64_t m_frameNumber = 0;
+	Tr2PrimaryRenderContextAL* m_owner;
 
 	void* m_pointer = nullptr;
 };
