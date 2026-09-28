@@ -12,9 +12,9 @@
 #include "Tr2ConstantBufferALMetal.h"
 #include "Tr2RenderContextMetal.h"
 #include "Tr2VertexLayoutALMetal.h"
-#include "Tr2ResourceSetALMetal.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include "Tr2TextureALMetal.h"
+#include "Tr2SamplerStateALMetal.h"
 #include "Tr2SwapChainALMetal.h"
 #include "Tr2RtPipelineStateALMetal.h"
 #include "Tr2RtShaderTableALMetal.h"
@@ -93,7 +93,6 @@ Tr2RenderContextAL::~Tr2RenderContextAL()
 	}
 
 	m_vertexLayout = Tr2VertexLayoutAL();
-	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
 
 	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
@@ -121,7 +120,6 @@ void Tr2RenderContextAL::SetAsPrimary()
 	m_caMetalLayer = nil;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 	m_boundDepthStencil.m_texture = nullptr;
-	m_needsDrawResourceCheck = true;
 
 	m_swapChain.m_swapChain = std::make_shared<TrinityALImpl::Tr2SwapChainAL>();
 }
@@ -153,6 +151,7 @@ void Tr2RenderContextAL::Destroy()
 		m_boundRenderTargets[i] = {};
 	}
 	m_boundDepthStencil = Tr2TextureAL();
+	m_bindings.Discard();
 	m_isValid = false;
 }
 
@@ -523,12 +522,7 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 
 void Tr2RenderContextAL::CheckDrawResources()
 {
-	// Only need to check resources if we don't have a resource set and the shader has changed since the last draw.
-	if( m_needsDrawResourceCheck && !m_resourceSet.IsValid() )
-	{
-		m_shaderProgram.m_program->SetDummyResources( *m_workQueue );
-		m_needsDrawResourceCheck = false;
-	}
+	UseResourceBindings();
 
 	if( m_vertexLayout.IsValid() )
 	{
@@ -617,6 +611,8 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP( uint32_t numVertices,
 
 ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ )
 {
+	UseResourceBindings();
+
 	m_workQueue->Dispatch( groupDimX, groupDimY, groupDimZ );
 
 	return S_OK;
@@ -628,6 +624,8 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	{
 		return E_FAIL;
 	}
+
+	UseResourceBindings();
 
 	m_workQueue->Dispatch( indirectParams.m_buffer->GetMetalBuffer(), offset );
 
@@ -654,11 +652,26 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline,
 	{
 		// pass on shaderTable to bind it to the RayGen shader
 		SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram( *rayGen ) );
+		UseResourceBindings();
 		m_workQueue->DispatchRays(
 			pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), *rayGen, width, height, depth );
 	}
 
 	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader )
+{
+	if( !pipeline.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	auto rayGen = pipeline.TrinityALImpl_GetObject()->GetRayGenIndex( rayGenShader );
+	if( !rayGen )
+	{
+		return E_INVALIDARG;
+	}
+	return SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram( *rayGen ) );
 }
 
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer,
@@ -869,9 +882,8 @@ ALResult Tr2RenderContextAL::EndScene()
 	m_workQueue->EndFrame();
 
 	m_vertexLayout = Tr2VertexLayoutAL();
-	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
-	m_needsDrawResourceCheck = true;
+	m_bindings.Discard();
 
 	return S_OK;
 }
@@ -914,7 +926,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderP
 							 shaderProgram.m_program->GetThreadGroupSize(),
 							 shaderProgram.m_program->GetResourceMasks() );
 
-	m_needsDrawResourceCheck = true;
+	m_bindings.SetProgram( shaderProgram.IsValid() ? shaderProgram.TrinityALImpl_GetObject() : nullptr );
 
 	return S_OK;
 }
@@ -1134,47 +1146,72 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage,
+									 uint32_t registerIndex,
+									 const Tr2BufferAL& buffer ) throw()
 {
-#if 0
-	if( m_resourceSet.m_resourceSet == resourceSet.m_resourceSet )
+	return m_bindings.SetSrv( stage, registerIndex, buffer );
+}
+
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage,
+									 uint32_t registerIndex,
+									 const Tr2TextureAL& texture,
+									 Tr2RenderContextEnum::ColorSpace colorSpace ) throw()
+{
+	return m_bindings.SetSrv( stage, registerIndex, texture, colorSpace );
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage,
+									 uint32_t registerIndex,
+									 const Tr2BufferAL& buffer ) throw()
+{
+	return m_bindings.SetUav( stage, registerIndex, buffer );
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage,
+									 uint32_t registerIndex,
+									 const Tr2TextureAL& texture,
+									 uint32_t mip ) throw()
+{
+	return m_bindings.SetUav( stage, registerIndex, texture, mip );
+}
+
+ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetSrvHeapView( stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetUavHeapView( stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage,
+												 uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetSamplerHeapView( stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType stage,
+										 uint32_t registerIndex,
+										 const Tr2SamplerStateAL& sampler ) throw()
+{
+	return m_bindings.SetSampler( stage, registerIndex, sampler );
+}
+
+ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
+{
+	return m_bindings.Reset();
+}
+
+ALResult Tr2RenderContextAL::UseResourceBindings() throw()
+{
+	if( !m_bindings.GetProgram() )
 	{
-        return S_OK;
-    }
-#endif
-
-	TrinityALImpl::MetalContext* metalContext = GetMetalContext();
-
-	m_resourceSet = resourceSet;
-	auto& rs = *resourceSet.m_resourceSet;
-
-	if( rs.IsValid() )
-	{
-		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
-		for( auto stage : stages )
-		{
-			m_workQueue->SetBuffers( stage,
-									 rs.m_buffers[stage],
-									 rs.m_buffersMask[stage],
-									 GetMetalContext()->GetHeapViewBuffer(),
-									 rs.m_heapViewMask[stage] );
-			m_workQueue->SetTextures( stage, rs.m_textures[stage], rs.m_texturesRange[stage] );
-			m_workQueue->SetSamplers( stage, rs.m_samplers[stage], rs.m_samplersRange[stage] );
-		}
+		return S_OK;
 	}
-	else
-	{
-		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
-		for( auto stage : stages )
-		{
-			m_workQueue->ResetBuffers( stage );
-			m_workQueue->ResetTextures( stage );
-			m_workQueue->ResetSamplers( stage );
-		}
-	}
 
-	m_needsDrawResourceCheck = true;
-	return S_OK;
+	return m_bindings.Commit( *this );
 }
 
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )
@@ -1399,9 +1436,7 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	context->m_depthCompareFunction = m_depthCompareFunction;
 
 	context->m_vertexLayout = Tr2VertexLayoutAL();
-	context->m_resourceSet = Tr2ResourceSetAL();
 	context->m_shaderProgram = Tr2ShaderProgramAL();
-	context->m_needsDrawResourceCheck = true;
 
 	return S_OK;
 }
