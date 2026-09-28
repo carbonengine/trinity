@@ -39,6 +39,9 @@ protected:
 	// Should the coordinates be rounded to the nearest integer? Defaults to true.
 	bool m_integerCoordinates;
 
+	// Draw the consumed bounds and the published rect through the debug renderer.
+	bool m_debugDraw;
+
 	float m_minProjectedWidth;
 	float m_minProjectedHeight;
 	float m_maxProjectedWidth;

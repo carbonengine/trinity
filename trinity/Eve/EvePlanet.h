@@ -60,7 +60,7 @@ public:
 	virtual Quaternion GetWorldRotation();
 
 	// ITr2BoundingBox
-	bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const override;
+	bool GetWorldBoundingObb( Obb & obb ) const override;
 	bool IsBoundingBoxReady() const override;
 
 	// ITr2SecondaryLightSource
