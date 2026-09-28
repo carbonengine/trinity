@@ -74,22 +74,6 @@ cmake --preset x64-windows-internal -A x64 -T v141 `
   -DCMAKE_INSTALL_PREFIX="<vendor-folder>"
 ```
 
-### Testing
-
-The `trinityal` and `shadercompiler` test suites (GoogleTest) build by default (`BUILD_TESTING=ON`). Run them from
-the build folder:
-
-```powershell
-ctest --test-dir .cmake-build-x64-windows-internal -C Release
-```
-
-The backend tests only exist for the backends you enabled.
-
-### Formatting
-
-C++ formatting is defined by `.clang-format` in the repo root and checked on every pull request by the
-`cpp-linter` workflow. Run `clang-format` on the files you touch before pushing.
-
 ## 🤝 Contributing
 
 Contributions are welcome. Please read the Carbon Engine [contributing guide](https://github.com/carbonengine/.github/blob/main/CONTRIBUTING.md) before opening an issue or pull request. It covers the workflow, the CLA and the pull request template, and applies to every `carbonengine` repository. Please also follow the [Code of Conduct](https://github.com/carbonengine/.github/blob/main/CODE_OF_CONDUCT.md), and report security issues privately as described in the [Security Policy](https://github.com/carbonengine/.github/blob/main/SECURITY.md) rather than in a public issue.
