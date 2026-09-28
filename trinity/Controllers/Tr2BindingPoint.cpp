@@ -142,8 +142,8 @@ const char* MatchProperty( const char* path )
 	{
 		return path;
 	}
-	++path;
-	return MatchRoot( path );
+	auto nameEnd = MatchRoot( path + 1 );
+	return nameEnd == path + 1 ? path : nameEnd;
 }
 
 const char* MatchNumericIndex( const char* path )
@@ -304,7 +304,7 @@ void Tr2BindingPoint::Unlink()
 
 bool Tr2BindingPoint::IsValid() const
 {
-	return m_destination != nullptr;
+	return m_destination != nullptr && ( m_path.empty() || !!m_resolvedObject );
 }
 
 void Tr2BindingPoint::SetValue( float value ) const
@@ -362,10 +362,6 @@ void Tr2BindingPoint::SetValue( float value ) const
 bool Tr2BindingPoint::GetValue( float& value ) const
 {
 	if( !IsValid() )
-	{
-		return false;
-	}
-	if( !m_path.empty() && !m_resolvedObject )
 	{
 		return false;
 	}
@@ -501,24 +497,19 @@ const char* Tr2BindingPoint::MatchPath( const char* path )
 	while( true )
 	{
 		auto next = MatchProperty( end );
-		if( next > end + 1 )
+		if( next == end )
 		{
-			end = next;
-			continue;
+			next = MatchNumericIndex( end );
 		}
-		next = MatchNumericIndex( end );
-		if( next != end )
+		if( next == end )
 		{
-			end = next;
-			continue;
+			next = MatchNameIndex( end );
 		}
-		next = MatchNameIndex( end );
-		if( next != end )
+		if( next == end )
 		{
-			end = next;
-			continue;
+			return end;
 		}
-		return end;
+		end = next;
 	}
 }
 

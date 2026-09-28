@@ -31,18 +31,20 @@ public:
 	static const uint32_t REFERENCE_BUFFER_INDEX = 4;
 
 private:
+	struct Reference
+	{
+		std::string path;
+		std::string name;
+		std::unique_ptr<Tr2BindingPoint> binding;
+	};
+
 	std::string CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions );
-
-	CcpParser::Program m_program;
-
-	// bindable refs
 	std::string BindReferences( const char* expression, std::string& rewritten );
-	std::string AddReference( const std::string& reference );
+	std::string AddReference( const std::string& path );
 	void ClearReferences();
 
-	std::vector<std::string> m_referencePaths;
-	std::vector<std::string> m_referenceNames;
-	std::vector<std::unique_ptr<Tr2BindingPoint>> m_references;
+	CcpParser::Program m_program;
+	std::vector<Reference> m_references;
 	std::vector<CcpParser::Variable> m_referenceVariables;
 	mutable std::vector<float> m_referenceValues;
 

@@ -13,6 +13,7 @@
 #include "Tr2ExpressionTermInfo.h"
 #include "TriSettingsRegistrar.h"
 #include <regex>
+#include <string_view>
 
 
 bool g_controllerFunctionOverrideEnabled = false;
@@ -211,42 +212,40 @@ float BoosterIntensity( void* ctx )
 	return 0.0f;
 }
 
-bool IsValidVariableName( const char* name )
+bool IsIdentifierStart( char ch )
 {
-	auto isLetter = []( char x ) {
-		return ( x >= 'a' && x <= 'z' ) || ( x >= 'A' && x <= 'Z' ) || ( x == '_' );
-	};
-	auto isDigit = []( char x ) {
-		return x >= '0' && x <= '9';
-	};
-	if( !isLetter( *name ) )
-	{
-		return false;
-	}
-	++name;
-	while( *name )
-	{
-		if( !isLetter( *name ) && !isDigit( *name ) )
-		{
-			return false;
-		}
-		++name;
-	}
-	return true;
+	return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' ) || ch == '_';
 }
 
 bool IsIdentifierChar( char ch )
 {
-	return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' ) || ( ch >= '0' && ch <= '9' ) || ch == '_';
+	return IsIdentifierStart( ch ) || ( ch >= '0' && ch <= '9' );
 }
 
 bool IsIdentifier( const char* begin, const char* end )
 {
-	if( begin == end || ( *begin >= '0' && *begin <= '9' ) )
+	return begin != end && IsIdentifierStart( *begin ) && std::all_of( begin, end, IsIdentifierChar );
+}
+
+const char* SkipIdentifier( const char* text )
+{
+	while( IsIdentifierChar( *text ) )
 	{
-		return false;
+		++text;
 	}
-	return std::all_of( begin, end, IsIdentifierChar );
+	return text;
+}
+
+bool IsBindingRoot( const std::vector<std::pair<std::string, IRoot*>>& roots, std::string_view name )
+{
+	return std::any_of( begin( roots ), end( roots ), [&]( const auto& root ) {
+		return root.first == name;
+	} );
+}
+
+std::string CannotBindError( const std::string& path )
+{
+	return "cannot bind \"" + path + "\" to a float attribute";
 }
 
 #ifdef _WIN32
@@ -575,14 +574,8 @@ std::string Tr2ControllerExpression::CreateParser( const char* expression, const
 	if( parsed )
 	{
 		m_controller->EnsureTempArenaSize( m_program.GetTempArenaSize() );
-		if( observer.m_maskOverflow || observer.m_hasNonPureFunctions || !m_references.empty() )
-		{
-			m_variableMask = 0;
-		}
-		else
-		{
-			m_variableMask = observer.m_mask;
-		}
+		bool maskIsUsable = !observer.m_maskOverflow && !observer.m_hasNonPureFunctions && m_references.empty();
+		m_variableMask = maskIsUsable ? observer.m_mask : 0ull;
 		return std::string();
 	}
 	else
@@ -596,107 +589,90 @@ std::string Tr2ControllerExpression::BindReferences( const char* expression, std
 {
 	const auto& roots = m_controller->GetBindingPathRoots();
 	rewritten.clear();
-	const char* p = expression;
-	while( *p )
+	for( const char* p = expression; *p; )
 	{
 		if( *p == '"' )
 		{
 			auto close = strchr( p + 1, '"' );
-			auto end = close ? close + 1 : p + strlen( p );
-			rewritten.append( p, end );
-			p = end;
+			auto literalEnd = close ? close + 1 : p + strlen( p );
+			rewritten.append( p, literalEnd );
+			p = literalEnd;
 			continue;
 		}
-		bool identifierStart = ( ( *p >= 'a' && *p <= 'z' ) || ( *p >= 'A' && *p <= 'Z' ) || *p == '_' ) && ( p == expression || ( !IsIdentifierChar( p[-1] ) && p[-1] != '.' ) );
-		if( !identifierStart )
+		bool startsToken = p == expression || ( !IsIdentifierChar( p[-1] ) && p[-1] != '.' );
+		if( !startsToken || !IsIdentifierStart( *p ) )
 		{
 			rewritten.push_back( *p++ );
 			continue;
 		}
-		auto rootEnd = p;
-		while( IsIdentifierChar( *rootEnd ) )
-		{
-			++rootEnd;
-		}
+		auto rootEnd = SkipIdentifier( p );
 		auto pathEnd = Tr2BindingPoint::MatchPath( p );
-		auto rootLength = size_t( rootEnd - p );
-		auto isRoot = std::any_of( begin( roots ), end( roots ), [&]( const auto& x ) {
-			return x.first.length() == rootLength && strncmp( x.first.c_str(), p, rootLength ) == 0;
-		} );
-		if( !isRoot || pathEnd == rootEnd )
+		if( pathEnd == rootEnd || !IsBindingRoot( roots, std::string_view( p, size_t( rootEnd - p ) ) ) )
 		{
+			// variable or function name
 			rewritten.append( p, rootEnd );
 			p = rootEnd;
 			continue;
 		}
-		std::string reference( p, pathEnd );
-		auto found = std::find( begin( m_referencePaths ), end( m_referencePaths ), reference );
-		if( found == end( m_referencePaths ) )
+
+		std::string path( p, pathEnd );
+		auto found = std::find_if( begin( m_references ), end( m_references ), [&]( const Reference& reference ) {
+			return reference.path == path;
+		} );
+		if( found == end( m_references ) )
 		{
-			auto error = AddReference( reference );
+			auto error = AddReference( path );
 			if( !error.empty() )
 			{
 				return error;
 			}
-			rewritten += m_referenceNames.back();
+			found = end( m_references ) - 1;
 		}
-		else
-		{
-			rewritten += m_referenceNames[found - begin( m_referencePaths )];
-		}
+		rewritten += found->name;
 		p = pathEnd;
 	}
 
 	m_referenceVariables.clear();
-	for( size_t i = 0; i < m_referenceNames.size(); ++i )
+	m_referenceVariables.reserve( m_references.size() );
+	for( size_t i = 0; i < m_references.size(); ++i )
 	{
-		m_referenceVariables.push_back( { m_referenceNames[i].c_str(), REFERENCE_BUFFER_INDEX, CcpParser::OffsetType( i * sizeof( float ) ) } );
+		m_referenceVariables.push_back( { m_references[i].name.c_str(), REFERENCE_BUFFER_INDEX, CcpParser::OffsetType( i * sizeof( float ) ) } );
 	}
 	m_referenceValues.assign( m_references.size(), 0.f );
 	return std::string();
 }
 
-std::string Tr2ControllerExpression::AddReference( const std::string& reference )
+std::string Tr2ControllerExpression::AddReference( const std::string& path )
 {
 	const auto& roots = m_controller->GetBindingPathRoots();
-	auto error = "cannot bind \"" + reference + "\" to a float attribute";
-
-	auto lastDot = reference.rfind( '.' );
-	if( lastDot == std::string::npos || !IsIdentifier( reference.c_str() + lastDot + 1, reference.c_str() + reference.length() ) )
-	{
-		return error;
-	}
-
 	auto binding = std::make_unique<Tr2BindingPoint>();
-	auto prevDot = reference.rfind( '.', lastDot - 1 );
+	auto linkAt = [&]( size_t dot ) {
+		binding->m_path = path.substr( 0, dot );
+		binding->m_attribute = path.substr( dot + 1 );
+		binding->Link( roots );
+		return binding->IsValid();
+	};
 
-	if( reference.length() - lastDot == 2 && prevDot != std::string::npos && IsIdentifier( reference.c_str() + prevDot + 1, reference.c_str() + lastDot ) )
+	auto attributeDot = path.rfind( '.' );
+	if( attributeDot == std::string::npos || !IsIdentifier( path.c_str() + attributeDot + 1, path.c_str() + path.length() ) )
 	{
-		binding->m_path = reference.substr( 0, prevDot );
-		binding->m_attribute = reference.substr( prevDot + 1 );
-		binding->Link( roots );
-	}
-	if( !binding->IsValid() )
-	{
-		binding->m_path = reference.substr( 0, lastDot );
-		binding->m_attribute = reference.substr( lastDot + 1 );
-		binding->Link( roots );
-	}
-	if( !binding->IsValid() )
-	{
-		return error;
+		return CannotBindError( path );
 	}
 
-	m_referenceNames.push_back( "__ref" + std::to_string( m_references.size() ) );
-	m_referencePaths.push_back( reference );
-	m_references.push_back( std::move( binding ) );
+	// swizzle? f.ex ->  "thing.color.r" binds to the attribute "color.r" if there is one
+	auto swizzleDot = path.length() - attributeDot == 2 ? path.rfind( '.', attributeDot - 1 ) : std::string::npos;
+	bool hasSwizzle = swizzleDot != std::string::npos && IsIdentifier( path.c_str() + swizzleDot + 1, path.c_str() + attributeDot );
+	if( !( hasSwizzle && linkAt( swizzleDot ) ) && !linkAt( attributeDot ) )
+	{
+		return CannotBindError( path );
+	}
+
+	m_references.push_back( Reference{ path, "__ref" + std::to_string( m_references.size() ), std::move( binding ) } );
 	return std::string();
 }
 
 void Tr2ControllerExpression::ClearReferences()
 {
-	m_referencePaths.clear();
-	m_referenceNames.clear();
 	m_references.clear();
 	m_referenceVariables.clear();
 	m_referenceValues.clear();
@@ -710,7 +686,7 @@ std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
 	}
 	for( size_t i = 0; i < m_references.size(); ++i )
 	{
-		if( !m_references[i]->GetValue( m_referenceValues[i] ) )
+		if( !m_references[i].binding->GetValue( m_referenceValues[i] ) )
 		{
 			m_referenceValues[i] = 0.f;
 		}
@@ -730,6 +706,7 @@ void Tr2ControllerExpression::Clear()
 	ClearReferences();
 	m_stateMachine = nullptr;
 	m_controller = nullptr;
+	m_variableMask = 0;
 }
 
 bool Tr2ControllerExpression::IsExpressionValid() const
