@@ -1,4 +1,4 @@
-// Copyright © 2021 CCP ehf.
+// Copyright © 2023 CCP ehf.
 
 #pragma once
 
