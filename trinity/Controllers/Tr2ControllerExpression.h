@@ -36,15 +36,18 @@ private:
 		std::string path;
 		std::string name;
 		std::unique_ptr<Tr2BindingPoint> binding;
+		bool pending;
 	};
 
 	std::string CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions );
 	std::string BindReferences( const char* expression, std::string& rewritten );
 	std::string AddReference( const std::string& path );
 	void ClearReferences();
+	void ResolvePendingReferences() const;
 
 	CcpParser::Program m_program;
-	std::vector<Reference> m_references;
+	mutable std::vector<Reference> m_references;
+	mutable bool m_hasPendingReferences;
 	std::vector<CcpParser::Variable> m_referenceVariables;
 	mutable std::vector<float> m_referenceValues;
 

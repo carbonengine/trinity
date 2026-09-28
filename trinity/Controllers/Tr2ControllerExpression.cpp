@@ -236,11 +236,46 @@ const char* SkipIdentifier( const char* text )
 	return text;
 }
 
-bool IsBindingRoot( const std::vector<std::pair<std::string, IRoot*>>& roots, std::string_view name )
+using BindingPathRoots = std::vector<std::pair<std::string, IRoot*>>;
+
+const std::pair<std::string, IRoot*>* FindBindingRoot( const BindingPathRoots& roots, std::string_view name )
 {
-	return std::any_of( begin( roots ), end( roots ), [&]( const auto& root ) {
+	auto found = std::find_if( begin( roots ), end( roots ), [&]( const auto& root ) {
 		return root.first == name;
 	} );
+	return found == end( roots ) ? nullptr : &*found;
+}
+
+bool HasBindableAttribute( const std::string& path )
+{
+	auto dot = path.rfind( '.' );
+	return dot != std::string::npos && IsIdentifier( path.c_str() + dot + 1, path.c_str() + path.length() );
+}
+
+bool HasUnattachedRoot( const BindingPathRoots& roots, const std::string& path )
+{
+	auto rootEnd = SkipIdentifier( path.c_str() );
+	auto root = FindBindingRoot( roots, std::string_view( path.c_str(), size_t( rootEnd - path.c_str() ) ) );
+	return root && !root->second;
+}
+
+bool LinkReference( Tr2BindingPoint& binding, const std::string& path, const BindingPathRoots& roots )
+{
+	if( !HasBindableAttribute( path ) )
+	{
+		return false;
+	}
+	auto linkAt = [&]( size_t dot ) {
+		binding.m_path = path.substr( 0, dot );
+		binding.m_attribute = path.substr( dot + 1 );
+		binding.Link( roots );
+		return binding.IsValid();
+	};
+
+	auto attributeDot = path.rfind( '.' );
+	auto swizzleDot = path.length() - attributeDot == 2 ? path.rfind( '.', attributeDot - 1 ) : std::string::npos;
+	bool hasSwizzle = swizzleDot != std::string::npos && IsIdentifier( path.c_str() + swizzleDot + 1, path.c_str() + attributeDot );
+	return ( hasSwizzle && linkAt( swizzleDot ) ) || linkAt( attributeDot );
 }
 
 std::string CannotBindError( const std::string& path )
@@ -531,6 +566,7 @@ struct ParserObserver : public CcpParser::Observer
 
 
 Tr2ControllerExpression::Tr2ControllerExpression() :
+	m_hasPendingReferences( false ),
 	m_stateMachine( nullptr ),
 	m_controller( nullptr ),
 	m_variableMask( 0 )
@@ -607,7 +643,7 @@ std::string Tr2ControllerExpression::BindReferences( const char* expression, std
 		}
 		auto rootEnd = SkipIdentifier( p );
 		auto pathEnd = Tr2BindingPoint::MatchPath( p );
-		if( pathEnd == rootEnd || !IsBindingRoot( roots, std::string_view( p, size_t( rootEnd - p ) ) ) )
+		if( pathEnd == rootEnd || !FindBindingRoot( roots, std::string_view( p, size_t( rootEnd - p ) ) ) )
 		{
 			// variable or function name
 			rewritten.append( p, rootEnd );
@@ -646,36 +682,42 @@ std::string Tr2ControllerExpression::AddReference( const std::string& path )
 {
 	const auto& roots = m_controller->GetBindingPathRoots();
 	auto binding = std::make_unique<Tr2BindingPoint>();
-	auto linkAt = [&]( size_t dot ) {
-		binding->m_path = path.substr( 0, dot );
-		binding->m_attribute = path.substr( dot + 1 );
-		binding->Link( roots );
-		return binding->IsValid();
-	};
-
-	auto attributeDot = path.rfind( '.' );
-	if( attributeDot == std::string::npos || !IsIdentifier( path.c_str() + attributeDot + 1, path.c_str() + path.length() ) )
+	bool linked = LinkReference( *binding, path, roots );
+	bool pending = !linked && HasUnattachedRoot( roots, path );
+	if( !linked && !pending )
 	{
 		return CannotBindError( path );
 	}
 
-	// swizzle? f.ex ->  "thing.color.r" binds to the attribute "color.r" if there is one
-	auto swizzleDot = path.length() - attributeDot == 2 ? path.rfind( '.', attributeDot - 1 ) : std::string::npos;
-	bool hasSwizzle = swizzleDot != std::string::npos && IsIdentifier( path.c_str() + swizzleDot + 1, path.c_str() + attributeDot );
-	if( !( hasSwizzle && linkAt( swizzleDot ) ) && !linkAt( attributeDot ) )
-	{
-		return CannotBindError( path );
-	}
-
-	m_references.push_back( Reference{ path, "__ref" + std::to_string( m_references.size() ), std::move( binding ) } );
+	m_references.push_back( Reference{ path, "__ref" + std::to_string( m_references.size() ), std::move( binding ), pending } );
+	m_hasPendingReferences = m_hasPendingReferences || pending;
 	return std::string();
 }
 
 void Tr2ControllerExpression::ClearReferences()
 {
 	m_references.clear();
+	m_hasPendingReferences = false;
 	m_referenceVariables.clear();
 	m_referenceValues.clear();
+}
+
+void Tr2ControllerExpression::ResolvePendingReferences() const
+{
+	if( !m_hasPendingReferences )
+	{
+		return;
+	}
+	const auto& roots = m_controller->GetBindingPathRoots();
+	m_hasPendingReferences = false;
+	for( auto& reference : m_references )
+	{
+		if( reference.pending )
+		{
+			reference.pending = !LinkReference( *reference.binding, reference.path, roots );
+			m_hasPendingReferences = m_hasPendingReferences || reference.pending;
+		}
+	}
 }
 
 std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
@@ -684,6 +726,7 @@ std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
 	{
 		return std::make_pair( false, 0.f );
 	}
+	ResolvePendingReferences();
 	for( size_t i = 0; i < m_references.size(); ++i )
 	{
 		if( !m_references[i].binding->GetValue( m_referenceValues[i] ) )
