@@ -22,7 +22,6 @@ LightData::LightData() :
 	rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	innerAngle( 0.0f ),
 	outerAngle( 0.0f ),
-	falloff( uint8_t( LightFalloffType::INVERSE ) ),
 	lightingQuality( EnumFilter<LightingQuality>::AllBits() ),
 	texturePath( L"" ),
 	boneIndex( -1 ),
@@ -68,14 +67,6 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 		data.flags |= Tr2LightManager::FLAG_CASTS_SHADOWS;
 	}
 	data.flags |= isVolumetric ? Tr2LightManager::FLAG_IS_VOLUMETRIC : 0;
-	if( falloff == uint8_t( LightFalloffType::INVERSE_SQUARE ) )
-	{
-		data.flags |= Tr2LightManager::FLAG_FALLOFF_INV_SQUARE;
-	}
-	else
-	{
-		data.flags &= ~Tr2LightManager::FLAG_FALLOFF_INV_SQUARE;
-	}
 
 	return data;
 }

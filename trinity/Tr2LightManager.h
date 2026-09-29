@@ -109,9 +109,8 @@ public:
 	static const uint16_t FLAG_AFFECTS_PARTICLES = 1 << 1;
 	static const uint16_t FLAG_CASTS_SHADOWS = 1 << 2;
 	static const uint16_t FLAG_IS_VOLUMETRIC = 1 << 3;
-	static const uint16_t FLAG_FALLOFF_INV_SQUARE = 1 << 4;
 
-	static const uint16_t FLAG_BITS = 5;
+	static const uint16_t FLAG_BITS = 4;
 
 	static const uint16_t FLAG_DEFAULT = FLAG_AFFECTS_SURFACES;
 

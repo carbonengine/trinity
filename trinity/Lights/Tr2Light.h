@@ -18,12 +18,6 @@ struct LightFeatures
 	float parentBrightness;
 };
 
-enum class LightFalloffType : uint8_t
-{
-	INVERSE,
-	INVERSE_SQUARE
-};
-
 struct LightData
 {
 	LightData();
@@ -45,8 +39,6 @@ struct LightData
 	float outerAngle;
 	float innerAngle;
 
-	// This should be LightFalloffType, but it can't be used because of a bug in MAP_ATTRIBUTE
-	uint8_t falloff;
 	EnumFilter<LightingQuality> lightingQuality;
 
 	// Textured light specifics
@@ -121,5 +113,4 @@ TYPEDEF_BLUECLASS( Tr2Light );
 
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
-extern const Be::VarChooser LightFalloffTypeChooser[];
 extern const Be::VarChooser LightingQualityFilterChooser[];
