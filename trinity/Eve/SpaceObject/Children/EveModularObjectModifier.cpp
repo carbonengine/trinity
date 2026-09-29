@@ -101,16 +101,16 @@ EveSpaceObjectChild::PartTag EveModularObjectModifier::AddHull( const char* hull
 		return INVALID_PART_TAG;
 	}
 
-	for( size_t i = size; i < m_object->GetEffectChildren().size(); ++i )
+	for( auto& child : m_object->GetEffectChildren() )
 	{
-		m_object->GetEffectChildren()[i]->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
+		child->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
 
 	if( !m_instancedMeshes )
 	{
-		for( size_t i = size; i < m_object->GetEffectChildren().size(); ++i )
+		for( auto& child : m_object->GetEffectChildren() )
 		{
-			if( EveChildInstancedMeshesPtr instancedMesh = BlueCastPtr( m_object->GetEffectChildren()[i] ) )
+			if( EveChildInstancedMeshesPtr instancedMesh = BlueCastPtr( child ) )
 			{
 				m_instancedMeshes = instancedMesh;
 				break;
