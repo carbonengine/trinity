@@ -664,10 +664,13 @@ void Tr2ReadbackAL::Destroy()
 	if( m_pointer )
 	{
 		m_readScratch->Unmap( 0, nullptr );
+		m_pointer = nullptr;
 	}
-	RELEASE_LATER( m_owner, m_readScratch );
-	m_readScratch = nullptr;
-	m_pointer = nullptr;
+	if( m_readScratch )
+	{
+		RELEASE_LATER( m_owner, m_readScratch );
+		m_readScratch = nullptr;
+	}
 	m_owner = nullptr;
 }
 
