@@ -1156,7 +1156,11 @@ void Tr2TextureAL::Destroy()
 	}
 	m_writeScratches.clear();
 	m_mappedScratch = m_writeScratches.end();
-	m_readScratch = nullptr;
+	if( m_readScratch )
+	{
+		RELEASE_LATER( m_owner, m_readScratch );
+		m_readScratch = nullptr;
+	}
 	m_currentTextureIndex = 0;
 	memset( &m_desc, 0, sizeof( m_desc ) );
 	m_msaa = Tr2MsaaDesc();
