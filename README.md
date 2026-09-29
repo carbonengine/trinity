@@ -11,8 +11,7 @@ exposure layer through Blue. It is one of the [Carbon Engine components](https:/
 - Git, with SSH access to GitHub. The two submodules clone over HTTPS, but the `carbon-*` packages that vcpkg
   builds from our registry are fetched over SSH (`git@github.com:carbonengine/...`).
 - CMake 3.31 or newer (required by `CMakePresets.json`).
-- Windows: Visual Studio with the **v141 (VS 2017) C++ build tools** component. The toolset is pinned by the
-  registry triplets, so it must match the `-T` argument below.
+- Windows: Visual Studio 2026 with the **v145** C++ build tools.
 - macOS: Xcode command line tools.
 
 ```powershell
@@ -30,7 +29,7 @@ The first configure builds them, which takes a while.
 Generate a solution, then you can handle the rest from your IDE for local dev workflows:
 
 ```powershell
-cmake --preset x64-windows-internal -A x64 -T v141
+cmake --preset x64-windows-internal
 ```
 
 This will generate an .slnx at `.cmake-build-<preset-name>/`. Run `cmake --list-presets` to see the presets
@@ -42,11 +41,8 @@ Or build from the command line:
 cmake --build .cmake-build-x64-windows-internal --config Release
 ```
 
-- `-A x64` is required, otherwise you get a 32-bit solution
-- `-T` must match `VCPKG_PLATFORM_TOOLSET` in your preset's triplet
-- `-G`, `-A` and `-T` apply only to a **new** build folder — delete it to change them
 - Open the generated solution, not the repo folder. Opening the folder makes Visual Studio
-  reconfigure the same build directory and drop these settings
+  reconfigure the same build directory
 
 > **Configure fails on a missing `/scripts/toolchains/windows.cmake`?**
 > Set `PATH_TO_VCPKG_ROOT` in your environment to `<repo>/vendor/github.com/microsoft/vcpkg`.
@@ -69,7 +65,7 @@ generating; each one pulls extra vcpkg packages on that configure.
 To install trinity next to the rest of the engine components, add the destination when generating the solution:
 
 ```powershell
-cmake --preset x64-windows-internal -A x64 -T v141 `
+cmake --preset x64-windows-internal `
   -DINSTALL_TO_MONOLITH=ON `
   -DCMAKE_INSTALL_PREFIX="<vendor-folder>"
 ```
