@@ -1773,6 +1773,11 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 	// set the current reflection
 	GPU_REGION( renderContext, "Reflection" );
 
+	m_volumetricsRenderer->SetIsReflectionProbe( true );
+	ON_BLOCK_EXIT( [&] {
+		m_volumetricsRenderer->SetIsReflectionProbe( false );
+	} );
+
 	// lower the reflection intensity for the objects rendered into the reflection
 	// (so the reflections in the reflections don't get brighter and brighter)
 	// we cap it at 0.8 for no good reason, just felt like a good number to cap the reflection intensity in the reflections

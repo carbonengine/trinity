@@ -109,6 +109,11 @@ public:
 	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool & gpuResourcePool );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
+	void SetIsReflectionProbe( bool isReflectionProbe )
+	{
+		m_isReflectionProbe = isReflectionProbe;
+	}
+
 	void UpdateVariableStore();
 	void SetPlanets( const CcpMath::Sphere* planets, size_t planetCount );
 	void SetSunAngle( float angle );
@@ -129,7 +134,7 @@ public:
 		float EnvironmentIntensity;
 
 		float EnvironmentG;
-		float _pad0;
+		float FogMultiplier;
 		float _pad1;
 		float _pad2;
 
@@ -201,6 +206,7 @@ private:
 	bool m_logBlending;
 	double m_logBlendingSmoothness;
 	ITr2FroxelFogSettings::FroxelFogSettings m_froxelFogSettings;
+	bool m_isReflectionProbe;
 
 	float m_gameBackClip;
 
@@ -209,7 +215,7 @@ private:
 
 	double m_godRayNoiseAnimation;
 	Vector3d m_fogNoiseMovement;
-	
+
 	double m_godRayNoiseMatrix[16];
 
 	FogViewDependentResources m_fogResources;
@@ -278,7 +284,21 @@ private:
 		CcpMath::Sphere planets[2];
 	};
 
-	void UpdatePerObjectData( FogPerObjectData * data, const Matrix& view, const Matrix& projection, const Matrix& viewLast, const Matrix& projectionLast, const Vector3d& origin, const Vector3d& originShift, const Vector3& sunDirection, const Color& sunColor, uint32_t width, uint32_t height, uint32_t depth, const Vector3& jitter, const Tr2ShadowMap* cascadedShadowMap );
+	void UpdatePerObjectData(
+		FogPerObjectData * data,
+		const Matrix& view,
+		const Matrix& projection,
+		const Matrix& viewLast,
+		const Matrix& projectionLast,
+		const Vector3d& origin,
+		const Vector3d& originShift,
+		const Vector3& sunDirection,
+		const Color& sunColor,
+		uint32_t width,
+		uint32_t height,
+		uint32_t depth,
+		const Vector3& jitter,
+		const Tr2ShadowMap* cascadedShadowMap );
 
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 

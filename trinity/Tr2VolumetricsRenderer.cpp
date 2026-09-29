@@ -482,7 +482,6 @@ void Tr2VolumetricsRenderer::UpdateFogEnvironmentMap( Tr2RenderContext& renderCo
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "EnvironmentG" ), environmentG );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "BlendWeight" ), blendWeight );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Random" ), m_environmentRandom );
-		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "Intensity" ), m_froxelFogSettings.reflectionIntensity.value );
 		m_updateMieEnvironmentMap->SetParameter( BlueSharedString( "PrecomputedMieEnvironmentMap" ), m_mieEnvironmentMap );
 		Tr2Renderer::RunComputeShader( m_updateMieEnvironmentMap, environmentMapResolution / 8, environmentMapResolution / 8, 6, renderContext );
 	}
@@ -800,7 +799,6 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 
 		resources.applyFroxels->SetOption( BlueSharedString( "ENVIRONMENT_LIGHTING" ), BlueSharedString( m_froxelFogSettings.environmentIntensity.value > 0 ? "ENVIRONMENT_LIGHTING_ENABLED" : "ENVIRONMENT_LIGHTING_DISABLED" ) );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), fogFroxels );
-		resources.applyFroxels->SetParameter( BlueSharedString( "Intensity" ), 1.0f );
 		Tr2Renderer::DrawScreenQuad( renderContext, resources.applyFroxels );
 		resources.applyFroxels->SetParameter( BlueSharedString( "EveSceneFroxelFogMap" ), Tr2TextureAL{} );
 	}
@@ -1062,6 +1060,7 @@ void Tr2VolumetricsRenderer::PopulatePerFrameData( FroxelPerFrameData& data )
 	data.EnvironmentIntensity = m_froxelFogSettings.environmentIntensity.value;
 
 	data.EnvironmentG = environmentG;
+	data.FogMultiplier = m_isReflectionProbe ? std::clamp( m_froxelFogSettings.reflectionIntensity.value, 0.0f, 1.0f ) : 1.0f;
 
 	for( int32_t i = 0; i < m_planets.size(); i++ )
 	{
