@@ -3,6 +3,8 @@
 package _Self.buildTypes
 
 import jetbrains.buildServer.configs.kotlin.*
+import jetbrains.buildServer.configs.kotlin.buildFeatures.PullRequests
+import jetbrains.buildServer.configs.kotlin.buildFeatures.pullRequests
 import jetbrains.buildServer.configs.kotlin.buildFeatures.vcsLabeling
 import jetbrains.buildServer.configs.kotlin.triggers.vcs
 import jetbrains.buildServer.configs.kotlin.buildSteps.python
@@ -13,7 +15,7 @@ class UniversalBuild() : BuildType({
     name = "Create MacOS Universal Binaries"
 
     params{
-        param("carbon-pipeline-tools-ref", "refs/heads/main")
+        param("carbon-pipeline-tools-ref", "refs/tags/v0.1.0")
         param("universal-output-dir", "%system.teamcity.build.workingDir%/output_build")
         param("universal-lib-path", "lib/macOS/universal/AppleClang/")
         param("universal-bin-path", "bin/macOS/universal/AppleClang/")
@@ -35,6 +37,7 @@ class UniversalBuild() : BuildType({
     artifactRules = "%universal-output-dir% => artifact.zip"
 
     vcs {
+        root(DslContext.settingsRootId, "-:.")
         root(AbsoluteId("CarbonPipelineTools"), "+:carbon/.=>carbon")
 
         checkoutMode = CheckoutMode.ON_AGENT
@@ -161,6 +164,18 @@ class UniversalBuild() : BuildType({
 
             artifacts {
                 artifactRules = "artifact.zip!**=>%system.teamcity.build.workingDir%/x64"
+            }
+        }
+    }
+
+    features {
+        pullRequests {
+            vcsRootExtId = "${DslContext.settingsRootId.id}"
+            provider = github {
+                authType = token {
+                    token = "%GITHUB_CARBON_PAT%"
+                }
+                filterAuthorRole = PullRequests.GitHubRoleFilter.EVERYBODY
             }
         }
     }
