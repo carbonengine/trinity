@@ -504,13 +504,15 @@ void EveChildInstancedMeshes::AddMesh(
 		const size_t existingCount = mesh.instances.size();
 		mesh.instances.reserve( existingCount + count );
 		mesh.partTags.reserve( mesh.partTags.size() + count );
+
+		uint32_t instanceIndex = static_cast<uint32_t>( mesh.instances.size() );
 		for( size_t i = 0; i < count; ++i )
 		{
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
 			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
-			instanceData.pickingMeshIndex = pickingMeshIndex;
-			instanceData.pickingInstanceIndex = static_cast<uint32_t>( i );
+			instanceData.pickingMeshIndex = std::distance( m_meshes.data(), &mesh );
+			instanceData.pickingInstanceIndex = instanceIndex++;
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
 		}
