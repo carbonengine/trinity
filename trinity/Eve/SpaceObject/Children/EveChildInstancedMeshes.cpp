@@ -511,7 +511,7 @@ void EveChildInstancedMeshes::AddMesh(
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
 			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
-			instanceData.pickingMeshIndex = std::distance( m_meshes.data(), &mesh );
+			instanceData.pickingMeshIndex = static_cast<uint32_t>( std::distance( m_meshes.data(), &mesh ) );
 			instanceData.pickingInstanceIndex = instanceIndex++;
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
