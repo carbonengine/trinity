@@ -540,17 +540,19 @@ struct ParserObserver : public CcpParser::Observer
 
 	void OnVariable( const CcpParser::Variable* variable ) override
 	{
-		auto offset = variable - m_variables.data;
-		if( offset >= 0 && offset < ptrdiff_t( m_variables.count ) )
+		std::less<const CcpParser::Variable*> less;
+		if( less( variable, m_variables.data ) || !less( variable, m_variables.data + m_variables.count ) )
 		{
-			if( offset >= 64 )
-			{
-				m_maskOverflow = true;
-			}
-			else
-			{
-				m_mask |= 1ull << offset;
-			}
+			return;
+		}
+		auto offset = variable - m_variables.data;
+		if( offset >= 64 )
+		{
+			m_maskOverflow = true;
+		}
+		else
+		{
+			m_mask |= 1ull << offset;
 		}
 	}
 
