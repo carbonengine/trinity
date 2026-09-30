@@ -41,6 +41,38 @@ ITriRenderBatchAccumulator* FindBatchAccumulator( const T& batches, TriBatchType
 }
 }
 
+EveInstancedMeshManager::~EveInstancedMeshManager()
+{
+	for( auto& [key, mesh] : m_meshInstances )
+	{
+		for( auto& group : mesh.meshGroups )
+		{
+			if( group.handle )
+			{
+				group.handle->index = MeshGroupHandle::InvalidIndex;
+				group.handle->owner = nullptr;
+			}
+		}
+	}
+
+	for( auto& [data, handle] : m_perObjectData )
+	{
+		if( handle )
+		{
+			handle->index = PerObjectDataHandle::InvalidIndex;
+			handle->owner = nullptr;
+		}
+	}
+
+	for( auto& group : m_sphereGroups )
+	{
+		if( group.handle )
+		{
+			group.handle->index = BoundingSphereHandle::InvalidIndex;
+			group.handle->owner = nullptr;
+		}
+	}
+}
 
 void EveInstancedMeshManager::CollectMeshes( EveComponentRegistry& registry )
 {
@@ -811,15 +843,21 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				{
 					continue;
 				}
-				InstanceBuffer::Allocation allocation = AllocateInstanceData( uint32_t( meshInfo.lodIndices[lod].size() ), mesh.isDynamic );
-				UploadLodData( mesh, meshInfo, lod, allocation );
 
 				auto lodData = mesh.geometry->GetMeshLod( mesh.meshIndex, int( lod ) );
+				if( !lodData || !lodData->m_allocationsValid )
+				{
+					continue;
+				}
+
 				auto primCount = GetPrimitiveCount( *lodData, mesh.areaIndex, mesh.areaCount );
 				if( !primCount )
 				{
 					continue;
 				}
+
+				InstanceBuffer::Allocation allocation = AllocateInstanceData( uint32_t( meshInfo.lodIndices[lod].size() ), mesh.isDynamic );
+				UploadLodData( mesh, meshInfo, lod, allocation );
 
 				uint32_t stride = uint32_t( mesh.isDynamic ? sizeof( DynamicPerInstanceBufferElement ) : sizeof( StaticPerInstanceBufferElement ) );
 
@@ -905,10 +943,16 @@ size_t EveInstancedMeshManager::GetBatches( const std::initializer_list<std::pai
 			}
 
 			auto lodData = mesh.geometry->GetMeshLod( mesh.meshIndex, int( lod ) );
+			if( !lodData || !lodData->m_allocationsValid )
+			{
+				instanceOffset += static_cast<uint32_t>( meshInfo.lodIndices[lod].size() );
+				continue;
+			}
 
 			auto primCount = GetPrimitiveCount( *lodData, mesh.areaIndex, mesh.areaCount );
 			if( !primCount )
 			{
+				instanceOffset += static_cast<uint32_t>( meshInfo.lodIndices[lod].size() );
 				continue;
 			}
 

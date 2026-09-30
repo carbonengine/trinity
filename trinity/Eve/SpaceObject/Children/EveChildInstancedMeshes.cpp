@@ -29,6 +29,7 @@ EveChildInstancedMeshes::EveChildInstancedMeshes( IRoot* lockobj )
 
 EveChildInstancedMeshes::~EveChildInstancedMeshes()
 {
+	UnregisterFromMeshManager();
 	for( Mesh& mesh : m_meshes )
 	{
 		if( mesh.geometry )
@@ -735,7 +736,7 @@ void EveChildInstancedMeshes::AddMeshesToManager( EveInstancedMeshManager& manag
 	{
 		UnregisterFromMeshManager();
 	}
-	if( m_allRegistered )
+	if( m_allRegistered && m_perObjectDataHandle )
 	{
 		return;
 	}
