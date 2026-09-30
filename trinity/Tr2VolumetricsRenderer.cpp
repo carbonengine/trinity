@@ -191,7 +191,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderVolumetrics(
 		return GetEmptyVolumetricTexture( gpuResourcePool );
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Volumetrics" );
@@ -716,7 +716,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 				Tr2RtLocalMaterialDescriptionAL material;
 				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
 
-				CCP_STATS_ZONE( "Create shader table" );
+				TRINITY_STATS_ZONE( "Create shader table" );
 				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
 				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
 
@@ -734,7 +734,7 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
 
 				{
-					CCP_STATS_ZONE( "renderContext.UseResources" );
+					TRINITY_STATS_ZONE( "renderContext.UseResources" );
 					renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
 				}
 

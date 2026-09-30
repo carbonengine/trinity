@@ -356,7 +356,7 @@ void Tr2CurveLineSet::WriteParticleVerticesToBuffer(
 // ------------------------------------------------------------------------------------------------------
 bool Tr2CurveLineSet::FillVertexBuffer()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 

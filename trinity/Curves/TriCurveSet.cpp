@@ -77,7 +77,7 @@ void TriCurveSet::OnSimClockRebase( Be::Time oldTime, Be::Time newTime )
 
 void TriCurveSet::Update( double time )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_driver != nullptr )
 	{

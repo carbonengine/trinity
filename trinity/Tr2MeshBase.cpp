@@ -134,7 +134,7 @@ unsigned int Tr2MeshBase::FindJoint( const std::string* boneList, const int numB
 
 bool Tr2MeshBase::BindToRig( const std::string* boneList, const int numBones, TriGeometryResSkeletonData* renderRig, bool forceRebind )
 {
-	CCP_STATS_ZONE( "Tr2Mesh::BindToRig" );
+	TRINITY_STATS_ZONE( "Tr2Mesh::BindToRig" );
 
 	CCP_STATS_INC( tr2MeshBindToRig );
 

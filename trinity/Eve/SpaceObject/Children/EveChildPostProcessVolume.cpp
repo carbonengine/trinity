@@ -23,7 +23,7 @@ EveChildPostProcessVolume::~EveChildPostProcessVolume()
 
 void EveChildPostProcessVolume::RebuildBoundingSphere()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_boundingSphere.center *= 0.0f;
 	m_boundingSphere.radius *= 0.0f;
@@ -82,7 +82,7 @@ bool EveChildPostProcessVolume::GetBoundingSphere( Vector4& sphere, BoundingSphe
 
 void EveChildPostProcessVolume::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	UpdateTransformFromParent( params );
 

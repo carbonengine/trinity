@@ -54,11 +54,17 @@ ITriTargetablePtr EveTurretTarget::GetTargetable() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Set the target object. Since this most liekly has changed, trigger
+//   Set the target object. Since this most likely has changed, trigger
 //   the targetposition smoothing (interpolating)
 // --------------------------------------------------------------------------------
 bool EveTurretTarget::SetTargetable( IRoot* object )
 {
+	if( !object )
+	{
+		m_object = nullptr;
+		m_objectPos = nullptr;
+		return true;
+	}
 	// set new target object
 	ITriTargetablePtr newTarget;
 	if( !object->QueryInterface( BlueInterfaceIID<ITriTargetable>(), (void**)&newTarget ) )

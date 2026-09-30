@@ -965,6 +965,10 @@ void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2Pi
 		}
 	}
 }
+Tr2MeshBase* EveChildMesh::GetMesh() const
+{
+	return m_mesh;
+}
 
 void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
 {
@@ -1737,7 +1741,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	m_morphTargetOffsets.AdvanceFrame();
 	m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-	CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
+	TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 
 	MergeMorphsConstantBuffer* data;
@@ -2053,6 +2057,7 @@ void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::
 		EveChildLocatorSetsSource source;
 		source.childToObject = localTransform * parentTransform;
 		source.owner = this;
+		source.partTag = GetPartTag();
 		source.sets = entry;
 		out.push_back( source );
 	}
@@ -2090,18 +2095,17 @@ void EveChildMesh::InvalidateOwnerMergedLocators( LocatorInvalidationReason reas
 	}
 }
 
-EveDamageOverlayPtr EveChildMesh::GetDamageOverlay() const
+EveDamageOverlayPtr EveChildMesh::GetPartDamageOverlay( PartTag ) const
 {
 	return m_damageOverlay;
 }
 
-EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
+void EveChildMesh::CreatePartDamageOverlay( PartTag )
 {
 	if( !m_damageOverlay )
 	{
 		m_damageOverlay.CreateInstance();
 	}
-	return m_damageOverlay;
 }
 
 void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
@@ -2109,7 +2113,7 @@ void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
 	m_armorDamageShader = effect;
 }
 
-Tr2Effect* EveChildMesh::GetArmorDamageShaderEffect() const
+Tr2Effect* EveChildMesh::GetPartArmorDamageShaderEffect( PartTag ) const
 {
 	return m_armorDamageShader;
 }
@@ -2138,7 +2142,7 @@ bool EveChildMesh::GetDamageLocatorBindPositionLocal( int index, Vector3& out ) 
 	return true;
 }
 
-bool EveChildMesh::GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const
+bool EveChildMesh::GetPartDamageLocatorAnimatedLocal( PartTag, int index, Vector3& position, Vector3& direction ) const
 {
 	const LocatorStructureList* locators = GetOwnedDamageLocators();
 	if( !locators || index < 0 || index >= int( locators->size() ) )

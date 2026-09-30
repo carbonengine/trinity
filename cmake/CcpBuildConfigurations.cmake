@@ -98,7 +98,7 @@ if (MSVC)
     # https://docs.microsoft.com/en-us/cpp/build/reference/z7-zi-zi-debug-information-format?view=msvc-150
     add_compile_options($<IF:$<OR:$<CONFIG:Release>,$<CONFIG:Internal>>,/Zi,>)
     # Generate Debug Info
-    add_link_options($<IF:$<CONFIG:Release>,/DEBUG:FULL,/DEBUG:FASTLINK>)
+    add_link_options(/DEBUG:FULL)
 
     # Take manual control over these flags: https://gitlab.kitware.com/cmake/cmake/-/issues/19084
     set(CMAKE_CXX_FLAGS_DEBUG "")
