@@ -53,6 +53,8 @@ BLUE_INTERFACE( ITr2Controller ) :
 	}
 };
 
+void UpdateSpaceObjectParentRoot( std::vector<std::pair<std::string, IRoot*>>& roots, IRoot* owner );
+
 // A controller that supports controller actions
 BLUE_INTERFACE( ITr2ActionController ) :
 	public ITr2Controller
