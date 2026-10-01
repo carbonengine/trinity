@@ -7,6 +7,30 @@
 
 BLUE_DECLARE_INTERFACE( IEveVolume );
 
+// Debug colors shared by the volume shapes. The outline stays faintly visible where the volume is hidden
+// behind other geometry, and the fill is a faint tint that also carries through to whatever is inside it.
+inline Tr2DebugColor EveVolumeDebugColor( const Color& color )
+{
+	Color occluded = color;
+	occluded.a *= 0.25f;
+	return Tr2DebugColor( color, occluded );
+}
+
+inline Tr2DebugColor EveVolumeFillColor( const Color& color )
+{
+	Color fill = color;
+	fill.a *= 0.15f;
+	return EveVolumeDebugColor( fill );
+}
+
+// The debug renderer culls back faces, so a solid shape is invisible from inside. Drawing it a second time
+// with this transform mirrors it, which reverses the winding so the inner faces render as well: together the
+// two draws are a two-sided solid.
+inline Matrix EveVolumeInsideOut( const Matrix& transform )
+{
+	return ScalingMatrix( -1.0f, 1.0f, 1.0f ) * transform;
+}
+
 BLUE_INTERFACE( IEveVolume ) :
 	public IRoot
 {

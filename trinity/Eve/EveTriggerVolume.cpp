@@ -242,6 +242,10 @@ void EveTriggerVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		{
 			volume->RenderDebugInfo( renderer, m_worldTransform, color );
 		}
+
+		// the volume edges are hard to read from inside, so label the volume with the trigger state
+		const Vector3 center = Transform( m_boundingSphere.center, m_worldTransform ).GetXYZ();
+		renderer.DrawText( TRI_DBG_FONT_MEDIUM, center, color, "%s: %s (%.2f)", m_name.c_str(), m_isInside ? "INSIDE" : "outside", m_currentIntensity );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Trigger Exclusion Volumes" ) )

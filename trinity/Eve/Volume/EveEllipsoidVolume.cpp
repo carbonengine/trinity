@@ -56,11 +56,14 @@ void EveEllipsoidVolume::Setup()
 
 void EveEllipsoidVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
-	Matrix outerTransform = TransformationMatrix( m_shape, m_rotation, m_position ) * parentTransform;
-	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), outerTransform, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
+	const Matrix outerTransform = TransformationMatrix( m_shape, m_rotation, m_position ) * parentTransform;
+	const Tr2DebugColor fill = EveVolumeFillColor( baseColor );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), outerTransform, 20, Tr2DebugRenderer::Solid, fill );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), EveVolumeInsideOut( outerTransform ), 20, Tr2DebugRenderer::Solid, fill );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), outerTransform, 20, Tr2DebugRenderer::Wireframe, EveVolumeDebugColor( baseColor * 0.5f ) );
 
 	Matrix innerTransform = TransformationMatrix( m_innerShape, m_rotation, m_position ) * parentTransform;
-	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), innerTransform, 20, Tr2DebugRenderer::Wireframe, baseColor * 0.6f );
+	renderer.DrawSphere( Tr2DebugObjectReference( this, 200 ), innerTransform, 20, Tr2DebugRenderer::Wireframe, EveVolumeDebugColor( baseColor * 0.6f ) );
 
 	if( m_debugShowIntersection )
 	{
