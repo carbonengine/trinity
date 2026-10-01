@@ -40,8 +40,12 @@ bool EveBoxVolume::Initialize()
 
 void EveBoxVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const Color& baseColor )
 {
-	renderer.DrawBox( this, m_boxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, baseColor * 0.5f );
-	renderer.DrawBox( this, m_innerBoxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, baseColor * 0.6f );
+	const Matrix boxTransform = m_boxTransform * parentTransform;
+	const Tr2DebugColor fill = EveVolumeFillColor( baseColor );
+	renderer.DrawBox( this, boxTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Solid, fill );
+	renderer.DrawBox( this, EveVolumeInsideOut( boxTransform ), MIN_AABB, MAX_AABB, Tr2DebugRenderer::Solid, fill );
+	renderer.DrawBox( this, boxTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, EveVolumeDebugColor( baseColor * 0.5f ) );
+	renderer.DrawBox( this, m_innerBoxTransform * parentTransform, MIN_AABB, MAX_AABB, Tr2DebugRenderer::Wireframe, EveVolumeDebugColor( baseColor * 0.6f ) );
 
 	if( m_debugShowIntersection )
 	{
