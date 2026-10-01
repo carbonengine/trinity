@@ -552,7 +552,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 		return;
 	}
 
-	if( m_grannyRes )
+	if( p == m_grannyRes )
 	{
 		if( m_grannyRes->IsUsingCMF() )
 		{
@@ -572,6 +572,13 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 			}
 		}
 #endif
+	}
+
+	BlueAsyncRes* dataSource = m_grannyRes ? static_cast<BlueAsyncRes*>( m_grannyRes ) : m_geometryRes;
+	if( !dataSource->IsGood() )
+	{
+		// DoPrepare of the resource might have earlied out due to IsResourceCreationAllowed.
+		return;
 	}
 
 	if( IsUsingCMF() )
@@ -661,6 +668,8 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 			m_pose.skeleton = nullptr;
 			m_tmpPose.boneTransforms.clear();
 			m_tmpPose.skeleton = nullptr;
+			m_sampledPose.boneTransforms.clear();
+			m_sampledPose.skeleton = nullptr;
 			m_skeletonBoneIndices.clear();
 			m_worldTransforms.clear();
 
@@ -1696,7 +1705,10 @@ void Tr2GrannyAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& model
 	{
 		if( IsInitialized() && m_animationEnabled )
 		{
-			auto& skeleton = GetCMFData()->skeletons[m_modelIndex];
+			auto skeletonPtr = GetSkeleton();
+			CCP_ASSERT_M( skeletonPtr, "Tr2GrannyAnimation::PrePhysicsAnimation IsInitialized is true, but skeletonPtr is null!" );
+
+			auto& skeleton = *skeletonPtr;
 			float animationTime = GetAnimationTime();
 
 			m_morphAnimations.clear();
@@ -1884,6 +1896,10 @@ void Tr2GrannyAnimation::Cleanup()
 
 	m_pose.boneTransforms.clear();
 	m_pose.skeleton = nullptr;
+	m_tmpPose.boneTransforms.clear();
+	m_tmpPose.skeleton = nullptr;
+	m_sampledPose.boneTransforms.clear();
+	m_sampledPose.skeleton = nullptr;
 	m_skeletonBoneIndices.clear();
 	m_worldTransforms.clear();
 	m_boneBounds.clear();
@@ -2068,8 +2084,10 @@ void Tr2GrannyAnimation::AddAnimationLayer( const char* layerName, float layerWe
 	{
 		if( !m_tmpPose.skeleton )
 		{
-			auto& skeleton = GetCMFData()->skeletons[m_modelIndex];
-			cmf::RestPose( m_tmpPose, skeleton );
+			auto skeletonPtr = GetSkeleton();
+			CCP_ASSERT_M( skeletonPtr, "Tr2GrannyAnimation::AddAnimationLayer IsInitialized is true, but skeletonPtr is null!" );
+
+			cmf::RestPose( m_tmpPose, *skeletonPtr );
 		}
 	}
 #if WITH_GRANNY
@@ -2209,8 +2227,10 @@ void Tr2GrannyAnimation::AddAnimationLayerWithTrackMask( const char* layerName, 
 	{
 		if( !m_tmpPose.skeleton )
 		{
-			auto& skeleton = GetCMFData()->skeletons[m_modelIndex];
-			cmf::RestPose( m_tmpPose, skeleton );
+			auto skeletonPtr = GetSkeleton();
+			CCP_ASSERT_M( skeletonPtr, "Tr2GrannyAnimation::AddAnimationLayerWithTrackMask IsInitialized is true, but skeletonPtr is null!" );
+
+			cmf::RestPose( m_tmpPose, *skeletonPtr );
 		}
 	}
 #if WITH_GRANNY
