@@ -115,15 +115,22 @@ public:
 		Tr2Sprite2dD3DVertex* verticesSrc,
 		unsigned int vertexCount,
 		unsigned short* indices,
-		unsigned short indexCount );
+		unsigned int indexCount );
 
 	void RenderTriangleVerts(
 		Tr2BufferAL& verticesSrc,
 		unsigned int vertexCount,
 		Tr2BufferAL& indices,
-		unsigned short indexCount );
+		unsigned int indexCount );
 
-	bool EnsureBufferSpace( unsigned int vertexCount, unsigned short indexCount, int& vertexOffset );
+	// 32-bit index overload for large text batches (glyph index counts/values can exceed 65535)
+	void RenderTriangleVerts(
+		Tr2Sprite2dD3DVertex* verticesSrc,
+		unsigned int vertexCount,
+		unsigned int* indices,
+		unsigned int indexCount );
+
+	bool EnsureBufferSpace( unsigned int vertexCount, unsigned int indexCount, int& vertexOffset );
 
 	bool IsCapturing() const;
 	bool StartCapture( ITr2SpriteObject* owner );
@@ -157,7 +164,8 @@ private:
 
 	// Copies vertices from source to destination and adds clipping and transform information
 	void ProcessVertices( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount );
-	void CopyIndicesWithOffset( unsigned short* indices, unsigned short indexCount, int vertexOffset );
+	void CopyIndicesWithOffset( unsigned short* indices, unsigned int indexCount, int vertexOffset );
+	void CopyIndicesWithOffset( unsigned int* indices, unsigned int indexCount, int vertexOffset );
 
 	void FlashDefaultTexture();
 	void RemoveFinishedCurveSets();
@@ -169,7 +177,7 @@ private:
 	void PrepareRenderContextForRendering( Tr2RenderContext& renderContext );
 	void CleanUpStacksAfterRender();
 	void PrepareStacksBeforeRender();
-	void GrowCaptureIndexBuffer( unsigned short indexCount );
+	void GrowCaptureIndexBuffer( unsigned int indexCount );
 	void GrowCaptureVertexBuffer( unsigned int vertexCount );
 
 
