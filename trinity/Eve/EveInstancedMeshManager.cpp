@@ -694,7 +694,7 @@ size_t EveInstancedMeshManager::GetShadowBatches( const TriFrustum& cameraFrustu
 	return GetBatches( batches );
 }
 
-void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	InstanceFlags filter;
 	for( auto& pair : batches )
@@ -703,40 +703,8 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 	}
 	PerformFrustumCulling( viewFrustum, pickingFrustum, invLodFactor, filter );
 
-	GetPickingBatches( readback, objectIdOffset, batches );
+	GetPickingBatches( readback, batches );
 }
-
-std::pair<IRootPtr, uint32_t> EveInstancedMeshManager::GetPickedObject( uint32_t objectId, uint32_t areaId )
-{
-	for( auto& [mesh, meshInfo] : m_meshInstances )
-	{
-		for( auto& group : meshInfo.meshGroups )
-		{
-			if( group.pickingObjectId == 0xffffffff )
-			{
-				continue;
-			}
-			if( group.pickingObjectId > objectId || group.pickingObjectId + meshInfo.lodIndices.size() <= objectId )
-			{
-				continue;
-			}
-			if( m_sphereGroups[group.sphereGroupIndex].lastTestResult == TriFrustumTestResult::Outside )
-			{
-				continue;
-			}
-			BinVisibleInstances( mesh, meshInfo, group );
-			auto& lod = meshInfo.lodIndices[objectId - group.pickingObjectId];
-			uint32_t instanceId = 0;
-			if( areaId < lod.size() )
-			{
-				instanceId = uint32_t( mesh.isDynamic ? static_cast<const DynamicPerInstanceData*>( lod[areaId].first ) - group.dynamicInstances : static_cast<const StaticPerInstanceData*>( lod[areaId].first ) - group.staticInstances );
-			}
-			return { group.owner, instanceId | ( group.ownerIndex << 16 ) };
-		}
-	}
-	return { nullptr, 0 };
-}
-
 
 void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
@@ -761,22 +729,18 @@ void EveInstancedMeshManager::BinVisibleInstances( const std::initializer_list<s
 }
 
 
-void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
+void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& readback, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 
-	std::vector<std::pair<IRootPtr, uint32_t>>& traceback = readback.m_instancedTraceback;
+	std::vector<IRootPtr>& blueObjects = readback.m_blueObjects;
 
 	for( auto& [mesh, meshInfo] : m_meshInstances )
 	{
 		auto accumulator = FindBatchAccumulator( batches, mesh.batchType );
 		if( !accumulator )
 		{
-			for( auto& group : meshInfo.meshGroups )
-			{
-				group.pickingObjectId = 0xffffffff;
-			}
 			continue;
 		}
 		for( auto& group : meshInfo.meshGroups )
@@ -799,11 +763,8 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 			}
 			if( !hasVisibleInstances )
 			{
-				group.pickingObjectId = 0xffffffff;
 				continue;
 			}
-
-			group.pickingObjectId = objectIdOffset;
 
 			for( uint32_t lod = 0; lod < static_cast<uint32_t>( meshInfo.lodIndices.size() ); ++lod )
 			{
@@ -835,14 +796,12 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 					allocation.offset / stride );
 
 				auto perObjectData = accumulator->Allocate<PickingPerObjectData>();
-				perObjectData->SetUserData( objectIdOffset + lod );
+				perObjectData->SetPickingPointer( (uint64_t)group.owner->GetRootObject() );
+				blueObjects.push_back( group.owner->GetRootObject() );
 				batch.SetPerObjectData( perObjectData );
 
 				accumulator->Commit( batch );
-
-				traceback.push_back( { group.owner, group.ownerIndex } );
 			}
-			objectIdOffset += static_cast<uint32_t>( meshInfo.lodIndices.size() );
 		}
 	}
 	m_staticInstanceBuffer.DoneCopying();
@@ -943,8 +902,17 @@ void EveInstancedMeshManager::UploadLodData( const MeshKey& mesh, MeshData& mesh
 	{
 		for( auto [instance, perObjectDataIndex] : meshInfo.lodIndices[lod] )
 		{
-			memcpy( allocation.data, instance, sizeof( DynamicPerInstanceBufferElement ) );
-			reinterpret_cast<DynamicPerInstanceBufferElement*>( allocation.data )->perObjectDataIndex = perObjectDataIndex;
+			const DynamicPerInstanceData* instanceData = reinterpret_cast<const DynamicPerInstanceData*>( instance );
+			DynamicPerInstanceBufferElement* bufferElement = reinterpret_cast<DynamicPerInstanceBufferElement*>( allocation.data );
+
+			bufferElement->worldTransform = instanceData->worldTransform;
+			bufferElement->prevWorldTransform = instanceData->prevWorldTransform;
+
+			bufferElement->perObjectDataIndex = perObjectDataIndex;
+
+			bufferElement->pickingMeshIndex = instanceData->pickingMeshIndex;
+			bufferElement->pickingInstanceIndex = instanceData->pickingInstanceIndex;
+
 			allocation.data += sizeof( DynamicPerInstanceBufferElement );
 		}
 	}
@@ -952,8 +920,16 @@ void EveInstancedMeshManager::UploadLodData( const MeshKey& mesh, MeshData& mesh
 	{
 		for( auto [instance, perObjectDataIndex] : meshInfo.lodIndices[lod] )
 		{
-			memcpy( allocation.data, instance, sizeof( StaticPerInstanceBufferElement ) );
-			reinterpret_cast<StaticPerInstanceBufferElement*>( allocation.data )->perObjectDataIndex = perObjectDataIndex;
+			const StaticPerInstanceData* instanceData = reinterpret_cast<const StaticPerInstanceData*>( instance );
+			StaticPerInstanceBufferElement* bufferElement = reinterpret_cast<StaticPerInstanceBufferElement*>( allocation.data );
+
+			bufferElement->worldTransform = instanceData->worldTransform;
+
+			bufferElement->perObjectDataIndex = perObjectDataIndex;
+
+			bufferElement->pickingMeshIndex = instanceData->pickingMeshIndex;
+			bufferElement->pickingInstanceIndex = instanceData->pickingInstanceIndex;
+
 			allocation.data += sizeof( StaticPerInstanceBufferElement );
 		}
 	}
