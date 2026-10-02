@@ -1,4 +1,4 @@
-// Copyright © 2021 CCP ehf.
+// Copyright © 2023 CCP ehf.
 
 #pragma once
 
@@ -44,6 +44,7 @@ private:
 	float m_lerpValue;
 	float m_saturation;
 	float m_brightness;
+	float m_alphaOverride;
 };
 
 TYPEDEF_BLUECLASS( Tr2CurveColorMixer );
