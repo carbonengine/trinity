@@ -343,7 +343,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	{
 		return;
 	}
-	if( !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
+	if( ( data.flags & FLAG_IS_VOLUMETRIC ) == 0 && !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
 	{
 		return;
 	}
