@@ -332,6 +332,14 @@ void GetDimensions( texturecube<T> tex, thread W& w, thread H& h )
 	h = H( tex.get_height() );
 }
 
+template <typename T, typename W, typename H, typename M>
+void GetDimensions( texturecube<T> tex, uint mip, thread W& w, thread H& h, thread M& m )
+{
+	w = W( tex.get_width() );
+	h = H( tex.get_height() );
+	m = M( tex.get_num_mip_levels() );
+}
+
 template <typename T, typename W, typename H, typename D>
 void GetDimensions( texture3d<T> tex, thread W& w, thread H& h, thread D& d )
 {
