@@ -32,6 +32,9 @@ public:
 
 TrinityALImpl::Tr2UpscalingTechniqueDx12* CreateUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 
+// Returns false if the technique is not available. Avoids constructing the technique where that is expensive.
+bool GetUpscalingTechniqueSupport( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, uint32_t adapter, uint32_t& supportedSettings, bool& supportsFrameGeneration );
+
 }
 
 #endif
