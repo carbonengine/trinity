@@ -132,18 +132,18 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
 endif()
 
 set(_SHADER_SOURCES
-    shaders/include/carbon/SpaceScene/DepthMap.fxh
-    shaders/include/carbon/SpaceScene/DynamicLighting.fxh
-    shaders/include/carbon/SpaceScene/EnvironmentMap.fxh
-    shaders/include/carbon/SpaceScene/PerSceneData.fxh
-    shaders/include/carbon/SpaceScene/Volumetrics.fxh
-    shaders/include/carbon/Bindless.fxh
-    shaders/include/carbon/BoneTransforms.fxh
-    shaders/include/carbon/Intersections.fxh
-    shaders/include/carbon/Math.fxh
-    shaders/include/carbon/PackedTangents.fxh
-    shaders/include/carbon/ParticleAnnotations.fxh
-    shaders/include/carbon/System.fxh
+    shaders/include/Carbon/SpaceScene/DepthMap.fxh
+    shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
+    shaders/include/Carbon/SpaceScene/EnvironmentMap.fxh
+    shaders/include/Carbon/SpaceScene/PerSceneData.fxh
+    shaders/include/Carbon/SpaceScene/Volumetrics.fxh
+    shaders/include/Carbon/Bindless.fxh
+    shaders/include/Carbon/BoneTransforms.fxh
+    shaders/include/Carbon/Intersections.fxh
+    shaders/include/Carbon/Math.fxh
+    shaders/include/Carbon/PackedTangents.fxh
+    shaders/include/Carbon/ParticleAnnotations.fxh
+    shaders/include/Carbon/System.fxh
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
