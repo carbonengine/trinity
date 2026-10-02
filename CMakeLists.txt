@@ -135,6 +135,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/DepthMap.fxh
     shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
     shaders/include/Carbon/SpaceScene/EnvironmentMap.fxh
+    shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
     shaders/include/Carbon/Bindless.fxh
