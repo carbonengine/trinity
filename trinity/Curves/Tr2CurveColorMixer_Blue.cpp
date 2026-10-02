@@ -49,6 +49,12 @@ const Be::ClassInfo* Tr2CurveColorMixer::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
+			"alphaOverride",
+			m_alphaOverride,
+			"[-1: disabled] 0=transparent, 1=opaque. value is clamped [0:1]",
+			Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
 			"currentValue",
 			m_currentValue,
 			"Curve value after the last update",

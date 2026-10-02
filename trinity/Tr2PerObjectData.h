@@ -10,7 +10,7 @@ class Tr2PerObjectData
 {
 public:
 	Tr2PerObjectData() :
-		m_userData( 0 )
+		m_pickingPointer( 0 )
 	{
 	}
 
@@ -20,17 +20,17 @@ public:
 
 	virtual void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const;
 
-	unsigned int GetUserData() const
+	uint64_t GetPickingPointer() const
 	{
-		return m_userData;
+		return m_pickingPointer;
 	}
-	void SetUserData( unsigned int val )
+	void SetPickingPointer( uint64_t pickingPointer )
 	{
-		m_userData = val;
+		m_pickingPointer = pickingPointer;
 	}
 
 private:
-	unsigned int m_userData;
+	uint64_t m_pickingPointer;
 };
 
 // -------------------------------------------------------------

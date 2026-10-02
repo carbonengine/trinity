@@ -460,6 +460,7 @@ void EveChildInstancedMeshes::AddMesh(
 		return;
 	}
 
+	uint32_t pickingMeshIndex = (uint32_t)m_meshes.size();
 	for( auto& mesh : m_meshes )
 	{
 		if( mesh.geometryPath != geometryPath || mesh.meshIndex != meshIndex )
@@ -503,12 +504,16 @@ void EveChildInstancedMeshes::AddMesh(
 		const size_t existingCount = mesh.instances.size();
 		mesh.instances.reserve( existingCount + count );
 		mesh.partTags.reserve( mesh.partTags.size() + count );
+
+		uint32_t instanceIndex = static_cast<uint32_t>( mesh.instances.size() );
 		for( size_t i = 0; i < count; ++i )
 		{
 			EveInstancedMeshManager::StaticPerInstanceData instanceData;
 			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
 			instanceData.mirrored = IsMirrored( instanceTransforms[i] );
+			instanceData.pickingMeshIndex = static_cast<uint32_t>( std::distance( m_meshes.data(), &mesh ) );
+			instanceData.pickingInstanceIndex = instanceIndex++;
 			mesh.instances.push_back( instanceData );
 			mesh.partTags.push_back( partTag );
 		}
@@ -555,6 +560,8 @@ void EveChildInstancedMeshes::AddMesh(
 		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
 		instanceData.sphereIndex = static_cast<uint32_t>( i );
 		instanceData.mirrored = IsMirrored( instanceTransforms[i] );
+		instanceData.pickingMeshIndex = pickingMeshIndex;
+		instanceData.pickingInstanceIndex = static_cast<uint32_t>( i );
 		mesh.instances.push_back( instanceData );
 		mesh.partTags.push_back( partTag );
 	}
@@ -713,6 +720,8 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 12, 1, 1 );
 					elements.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 13, 1, 1 );
 					elements.Add( Tr2VertexDefinition::UINT32_1, Tr2VertexDefinition::TEXCOORD, 14, 1, 1 );
+
+					elements.Add( Tr2VertexDefinition::UINT32_2, Tr2VertexDefinition::TEXCOORD, 15, 1, 1 );
 					mesh.combinedVertexDeclaration = Tr2EffectStateManager::GetVertexDeclarationHandle( elements );
 				}
 			}
