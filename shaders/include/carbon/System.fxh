@@ -88,4 +88,20 @@
 #define PEROBJECT_VS_STARTREGISTER vs, c16
 #define PEROBJECT_PS_STARTREGISTER ps, c40
 
+
+#if __INTELLISENSE__
+
+// Intellisense stub definions for custom types used by the shader compiler. 
+
+// DepthTexture2D is a custom type recognized by the shader compiler. It is used to declare depth textures in a platform-independent way.
+#define DepthTexture2D Texture2D
+
+// Bindless handles are essentially uint values on all supported platforms, but the shader compiler recognizes them as custom types for additional semantics.
+#define BindlessHandleTexture2D uint
+#define BindlessHandleTexture3D uint
+#define BindlessHandleTextureCube uint
+#define BindlessHandleSampler uint
+
+#endif
+
 #endif

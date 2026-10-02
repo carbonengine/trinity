@@ -46,8 +46,8 @@ float RoughnessToMip( TextureCube envMap, float roughness )
 {
     uint width;
     uint height;
-    uint mipLevels;    
-    envMap.GetDimensions( width, height, mipLevels );
+    uint mipLevels;
+    envMap.GetDimensions( 0, width, height, mipLevels );
 
 	return ( 1.0f - RoughnessToGloss( roughness ) ) * float( mipLevels - 1 );
 }
@@ -62,12 +62,6 @@ float RoughnessToMip( float roughness )
 float3 SampleEnvironmentMap( TextureCube envMap, float3 dir, float roughness )
 {
 	return envMap.SampleLevel( EveSpaceSceneEnvMapSampler, dir, RoughnessToMip( envMap, roughness ) ).rgb;
-}
-
-// Sample EveSpaceSceneEnvMap with given direction and surface roughness
-float3 SampleEnvironmentMap( float3 dir, float roughness )
-{
-	return SampleEnvironmentMap( EveSpaceSceneEnvMap, dir, roughness );
 }
 
 #endif
