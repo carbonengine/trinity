@@ -30,6 +30,7 @@ public:
 		Float4x3 worldTransform;
 		Float4x3 prevWorldTransform;
 		uint32_t sphereIndex = 0;
+		bool mirrored = false;
 		uint32_t pickingMeshIndex = 0;
 		uint32_t pickingInstanceIndex = 0;
 	};
@@ -38,6 +39,7 @@ public:
 	{
 		Float4x3 worldTransform;
 		uint32_t sphereIndex = 0;
+		bool mirrored = false;
 		uint32_t pickingMeshIndex = 0;
 		uint32_t pickingInstanceIndex = 0;
 	};
@@ -132,6 +134,7 @@ public:
 		uint32_t meshIndex,
 		uint32_t areaIndex,
 		uint32_t areaCount,
+		bool areaReversed,
 		Tr2Effect* material,
 		uint64_t materialHash,
 		const PerObjectDataHandle& perObjectDataHandle,
@@ -170,6 +173,7 @@ private:
 		uint32_t meshIndex = 0;
 		uint32_t areaIndex = 0;
 		uint32_t areaCount = 1;
+		bool areaReversed = false;
 		bool isDynamic = false;
 
 		bool operator==( const MeshKey& other ) const
@@ -179,6 +183,7 @@ private:
 				meshIndex == other.meshIndex &&
 				areaIndex == other.areaIndex &&
 				areaCount == other.areaCount &&
+				areaReversed == other.areaReversed &&
 				materialHash == other.materialHash;
 		}
 	};

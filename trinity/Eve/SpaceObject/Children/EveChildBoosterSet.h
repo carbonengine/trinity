@@ -228,6 +228,7 @@ private:
 
 	Matrix m_parentTransform;
 	float m_parentScale;
+	bool m_parentMirrored = false;
 	bool m_boosterHighLod;
 	bool m_boostersVisible;
 	bool m_isVisible;
