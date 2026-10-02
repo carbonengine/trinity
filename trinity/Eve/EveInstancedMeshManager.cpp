@@ -88,7 +88,7 @@ void EveInstancedMeshManager::CollectMeshes( EveComponentRegistry& registry )
 		{
 			m_perObjectDataBuffer.CreateInstance();
 		}
-		auto count = uint32_t( m_perObjectData.size() );
+		auto count = static_cast<uint32_t>( m_perObjectData.size() );
 		if( m_perObjectDataBuffer->GetCount() < count )
 		{
 			auto newCount = std::max( count, m_perObjectDataBuffer->GetCount() * 2u );
@@ -798,7 +798,6 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 
 			for( uint32_t lod = 0; lod < static_cast<uint32_t>( meshInfo.lodIndices.size() ); ++lod )
 			{
-				traceback.push_back( { nullptr, 0 } );
 				if( meshInfo.lodIndices[lod].empty() )
 				{
 					continue;
@@ -830,8 +829,6 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				batch.SetPerObjectData( perObjectData );
 
 				accumulator->Commit( batch );
-
-				traceback.back() = { group.owner, group.ownerIndex };
 			}
 		}
 	}
