@@ -48,6 +48,10 @@ struct EveSpaceSceneDataVS
 	float4 MiscParams; // x - time, y - upscaling amount, zw - viewport size
 };
 
+static const uint SHADOW_QUALITY_FLAG_DISABLED = 1;
+static const uint SHADOW_QUALITY_FLAG_LOW = 1 << 1;
+static const uint SHADOW_QUALITY_FLAG_HIGH = 1 << 2;
+static const uint SHADOW_QUALITY_FLAG_RAYTRACED = 1 << 3;
 
 // Per-scene (per-frame) constant buffer data for the pixel shader.
 struct EveSpaceSceneDataPS
@@ -67,7 +71,7 @@ struct EveSpaceSceneDataPS
 	float4 ViewportOffsetSize; // .xy - viewport offset, .zw - viewport size
 	float4 RenderTargetData; // .xy - RT size in pixel, z - MSAA sample count (legacy, always 1 nowadays), w - debug
 	float4 ShadowMapSettings; // .xyzw - various shadow filter parameters
-	float4 ShadowMapSettings2; // .xy - shadow camera range, .z - shadow lightness, .w - shadow quality
+    float4 ShadowMapSettings2; // .xy - shadow camera range, .z - shadow lightness, .w - shadow quality, uint (SHADOW_QUALITY_FLAG_*)
 	float4 ProjectionData; // x - projection[3][2], y - projection[2][2], .zw = FoV
 	float4 MiscData; // x - time, y - scenemiplodbias, z - upscaling amount, w - gamma brightness
 	uint4 MiscData2; // x - frame counter, y - Jittering (bool), z - InverseShadowMapAtlasSize (float), w - ShadowMapAtlasEntryMinSizeLog2 (uint)

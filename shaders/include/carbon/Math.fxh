@@ -3,8 +3,8 @@
 #ifndef CARBON_MATH_FXH
 #define CARBON_MATH_FXH
 
-static float PI = 3.1415926535897932384626433832795;
-static float _2PI = 6.283185307179586476925286766559;
+static const float PI = 3.1415926535897932384626433832795;
+static const float _2PI = 6.283185307179586476925286766559;
 static const float4x4 IDENTITY_MATRIX = float4x4(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0);
 
 
