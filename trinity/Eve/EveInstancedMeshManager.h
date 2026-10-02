@@ -30,12 +30,18 @@ public:
 		Float4x3 worldTransform;
 		Float4x3 prevWorldTransform;
 		uint32_t sphereIndex = 0;
+		bool mirrored = false;
+		uint32_t pickingMeshIndex = 0;
+		uint32_t pickingInstanceIndex = 0;
 	};
 
 	struct StaticPerInstanceData
 	{
 		Float4x3 worldTransform;
 		uint32_t sphereIndex = 0;
+		bool mirrored = false;
+		uint32_t pickingMeshIndex = 0;
+		uint32_t pickingInstanceIndex = 0;
 	};
 
 	template <typename T>
@@ -91,7 +97,7 @@ public:
 	void CollectMeshes( EveComponentRegistry& registry );
 	size_t GetBatches( const TriFrustum& frustum, float invLodFactor, const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	size_t GetShadowBatches( const TriFrustum& frustum, const IEveShadowFrustum& shadowFrustum, float invLodFactor, const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetPickingBatches( EvePendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
+	void GetPickingBatches( EvePendingPickingReadback& readback, const TriFrustum& viewFrustum, const TriFrustum& pickingFrustum, float invLodFactor, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
 	std::pair<IRootPtr, uint32_t> GetPickedObject( uint32_t objectId, uint32_t areaId );
 	void ReportUsedScreenSizes() const;
 
@@ -128,6 +134,7 @@ public:
 		uint32_t meshIndex,
 		uint32_t areaIndex,
 		uint32_t areaCount,
+		bool areaReversed,
 		Tr2Effect* material,
 		uint64_t materialHash,
 		const PerObjectDataHandle& perObjectDataHandle,
@@ -144,6 +151,8 @@ private:
 	{
 		Float4x3 worldTransform;
 		uint32_t perObjectDataIndex = 0;
+		uint32_t pickingMeshIndex = 0;
+		uint32_t pickingInstanceIndex = 0;
 	};
 
 	struct DynamicPerInstanceBufferElement
@@ -151,6 +160,8 @@ private:
 		Float4x3 worldTransform;
 		Float4x3 prevWorldTransform;
 		uint32_t perObjectDataIndex = 0;
+		uint32_t pickingMeshIndex = 0;
+		uint32_t pickingInstanceIndex = 0;
 	};
 
 	struct MeshKey
@@ -162,6 +173,7 @@ private:
 		uint32_t meshIndex = 0;
 		uint32_t areaIndex = 0;
 		uint32_t areaCount = 1;
+		bool areaReversed = false;
 		bool isDynamic = false;
 
 		bool operator==( const MeshKey& other ) const
@@ -171,6 +183,7 @@ private:
 				meshIndex == other.meshIndex &&
 				areaIndex == other.areaIndex &&
 				areaCount == other.areaCount &&
+				areaReversed == other.areaReversed &&
 				materialHash == other.materialHash;
 		}
 	};
@@ -188,7 +201,6 @@ private:
 		uint32_t perObjectDataIndex = 0;
 		uint32_t ownerIndex = 0;
 		IRootPtr owner; // Used for picking
-		uint32_t pickingObjectId = 0;
 	};
 
 	class InstanceBuffer
@@ -264,7 +276,7 @@ private:
 	void BinVisibleInstances( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
 
 	size_t GetBatches( const std::initializer_list<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
-	void GetPickingBatches( EvePendingPickingReadback& readback, uint32_t objectIdOffset, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
+	void GetPickingBatches( EvePendingPickingReadback& readback, const std::vector<std::pair<TriBatchType, ITriRenderBatchAccumulator&>>& batches );
 	static uint32_t GetMeshLod( const MeshData& meshInfo, float screenSize );
 	void UploadLodData( const MeshKey& mesh, MeshData& meshInfo, uint32_t lod, InstanceBuffer::Allocation& allocation );
 	InstanceBuffer::Allocation AllocateInstanceData( uint32_t count, bool isDynamic );

@@ -1929,7 +1929,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 			auto transform = TransformationMatrix( locator->scale, locator->direction, locator->position ) * childLocatorSet.childToObject;
 			Locator transformedLocator;
 			transformedLocator.boneIndex = -1;
-			Decompose( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
+			DecomposeMirrorAware( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
 			transformedLocator.partTag = locator->partTag;
 			( *mergedLocatorSet )->Append( &transformedLocator, 1 );
 		}
