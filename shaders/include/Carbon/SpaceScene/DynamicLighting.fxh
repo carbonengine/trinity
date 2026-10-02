@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #ifndef CARBON_DYNAMICLIGHTING_FXH
 #define CARBON_DYNAMICLIGHTING_FXH
 

@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #ifndef CARBON_DEPTHMAP_FXH
 #define CARBON_DEPTHMAP_FXH
 

@@ -1,3 +1,5 @@
+// Copyright © 2026 CCP ehf.
+
 #ifndef CARBON_BONETRANSFORMS_FXH_
 #define CARBON_BONETRANSFORMS_FXH_
 
