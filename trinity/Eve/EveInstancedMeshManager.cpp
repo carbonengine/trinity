@@ -55,6 +55,26 @@ struct LodSlotDraw
 	bool valid = false;
 };
 
+LodSlotDraw GetLodSlotDraw( TriGeometryRes& geometry, uint32_t meshIndex, uint32_t areaIndex, uint32_t areaCount, bool areaReversed, uint32_t slot )
+{
+	LodSlotDraw draw;
+	draw.lodData = geometry.GetMeshLod( meshIndex, int( slot / SLOTS_PER_LOD ) );
+	if( !draw.lodData || !draw.lodData->m_allocationsValid )
+	{
+		draw.valid = false;
+	}
+	else
+	{
+		draw.primCount = GetPrimitiveCount( *draw.lodData, areaIndex, areaCount );
+		bool reversed = areaReversed != ( ( slot % SLOTS_PER_LOD ) != 0 );
+		draw.indexRange = GetAreaIndexRange( *draw.lodData, areaIndex, draw.primCount, reversed );
+		draw.valid = draw.primCount != 0 && draw.indexRange.valid;
+	}
+	return draw;
+}
+}
+
+
 EveInstancedMeshManager::~EveInstancedMeshManager()
 {
 	for( auto& [key, mesh] : m_meshInstances )
@@ -87,19 +107,6 @@ EveInstancedMeshManager::~EveInstancedMeshManager()
 		}
 	}
 }
-
-LodSlotDraw GetLodSlotDraw( TriGeometryRes& geometry, uint32_t meshIndex, uint32_t areaIndex, uint32_t areaCount, bool areaReversed, uint32_t slot )
-{
-	LodSlotDraw draw;
-	draw.lodData = geometry.GetMeshLod( meshIndex, int( slot / SLOTS_PER_LOD ) );
-	draw.primCount = GetPrimitiveCount( *draw.lodData, areaIndex, areaCount );
-	bool reversed = areaReversed != ( ( slot % SLOTS_PER_LOD ) != 0 );
-	draw.indexRange = GetAreaIndexRange( *draw.lodData, areaIndex, draw.primCount, reversed );
-	draw.valid = draw.primCount != 0 && draw.indexRange.valid;
-	return draw;
-}
-}
-
 
 void EveInstancedMeshManager::CollectMeshes( EveComponentRegistry& registry )
 {
@@ -841,6 +848,9 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				{
 					continue;
 				}
+
+				InstanceBuffer::Allocation allocation = AllocateInstanceData( uint32_t( meshInfo.lodIndices[lod].size() ), mesh.isDynamic );
+				UploadLodData( mesh, meshInfo, lod, allocation );
 
 				uint32_t stride = uint32_t( mesh.isDynamic ? sizeof( DynamicPerInstanceBufferElement ) : sizeof( StaticPerInstanceBufferElement ) );
 
