@@ -132,9 +132,12 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
 endif()
 
 set(_SHADER_SOURCES
+    shaders/include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
     shaders/include/Carbon/SpaceScene/DepthMap.fxh
     shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
     shaders/include/Carbon/SpaceScene/EnvironmentMap.fxh
+    shaders/include/Carbon/SpaceScene/EveBoosterSet.fxh
+    shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
