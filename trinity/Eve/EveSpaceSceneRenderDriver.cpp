@@ -539,7 +539,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		if( auto lightManager = Tr2LightManager::GetInstance() )
 		{
 			GPU_REGION( renderContext, "Lighting" );
-			CCP_STATS_SCOPED_TIME( updateDynamicLightLists );
+			TRINITY_STATS_SCOPED_TIME( updateDynamicLightLists );
 			renderContext.SetReadOnlyDepth( true );
 			lightManager->UpdateLists( depthBuffer, renderContext );
 			renderContext.SetReadOnlyDepth( false );

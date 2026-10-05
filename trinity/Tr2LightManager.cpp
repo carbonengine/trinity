@@ -825,7 +825,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
 	{
@@ -900,7 +900,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	}
 
 	{
-		CCP_STATS_ZONE( "Create shader table" );
+		TRINITY_STATS_ZONE( "Create shader table" );
 		Tr2RtLocalMaterialDescriptionAL material;
 		material.SetConstants( 7, m_Raytracing.m_perFrameData );
 
@@ -916,7 +916,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
 
 	{
-		CCP_STATS_ZONE( "renderContext.UseResources" );
+		TRINITY_STATS_ZONE( "renderContext.UseResources" );
 		renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, geometry->GetBindlessResources() );
 	}
 

@@ -72,7 +72,7 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 				continue;
 			}
 
-			areaData->SetUserData( skinnedData->GetUserData() );
+			areaData->SetPickingPointer( skinnedData->GetPickingPointer() );
 			unsigned int* animMapping = area->GetJointMappingAnimRig();
 			if( ( m_skeletonIx != NO_SKELETON ) && ( animMapping != NULL ) )
 			{

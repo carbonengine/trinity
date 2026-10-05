@@ -448,7 +448,7 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 
 		if( rebuild )
 		{
-			CCP_STATS_ZONE( "BLAS rebuild" );
+			TRINITY_STATS_ZONE( "BLAS rebuild" );
 
 			auto capacity = geometry;
 			auto highestLod = mesh.GetHighestLodData();
@@ -735,7 +735,7 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	CCP_ASSERT_M( numRaycasters > 0, "numRaycasters has to be greater than zero! Why are you preparing shader tables when you have no raycasters?" );
 
 	GPU_REGION( renderContext, "PrepareShaderTableDescription" );
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	if( g_rtRetainedShaderTable )
 	{
 		PrepareRetainedShaderTableDescription( renderContext, numRaycasters, shaderTableDescs, pipelineManagers );
@@ -1183,7 +1183,7 @@ struct SkinningShaderCBuffer
 void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 {
 	GPU_REGION( renderContext, "TransformMeshes" );
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.PushDisableUAVBarriersDx12();
@@ -1191,11 +1191,11 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 #endif
 
 	{
-		CCP_STATS_ZONE( "Prepare BoneTransformBuffer" );
+		TRINITY_STATS_ZONE( "Prepare BoneTransformBuffer" );
 		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
 	}
 	{
-		CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
+		TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
 		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 	}
 
@@ -1280,7 +1280,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	if( !outdatedMeshes.empty() )
 	{
-		CCP_STATS_ZONE( "Dispatch" );
+		TRINITY_STATS_ZONE( "Dispatch" );
 
 		auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
 
@@ -1397,7 +1397,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& renderContext )
 {
 	GPU_REGION( renderContext, "BuildAccelerationStructures" );
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.FlushBarriersDx12();
@@ -1452,14 +1452,14 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 	}
 
 	{
-		CCP_STATS_ZONE( "TLAS update" );
+		TRINITY_STATS_ZONE( "TLAS update" );
 		if( instances.empty() )
 		{
 			m_tlas = Tr2RtTopLevelAccelerationStructureAL();
 		}
 		else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
 		{
-			CCP_STATS_ZONE( "TLAS create" );
+			TRINITY_STATS_ZONE( "TLAS create" );
 			m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
 		}
 	}

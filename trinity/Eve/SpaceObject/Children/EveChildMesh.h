@@ -171,6 +171,7 @@ public:
 	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	// access
+	Tr2MeshBase* GetMesh() const;
 	void SetMesh( Tr2MeshBase * mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );
@@ -212,12 +213,13 @@ public:
 	void SetOwnedLocatorSets( const std::vector<EveLocatorSetsPtr>& sets );
 	void InvalidateOwnerMergedLocators( LocatorInvalidationReason reason );
 
-	EveDamageOverlayPtr GetDamageOverlay() const;
-	EveDamageOverlayPtr EnsureDamageOverlay();
+	EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const override;
+	void CreatePartDamageOverlay( PartTag partTag ) override;
+	Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const override;
+	bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const override;
+
 	void SetArmorDamageShaderEffect( Tr2Effect * effect );
-	Tr2Effect* GetArmorDamageShaderEffect() const;
 	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
-	bool GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const;
 
 protected:
 	const LocatorStructureList* GetOwnedDamageLocators() const;
@@ -291,6 +293,7 @@ protected:
 	float m_rtMeshUpdatedScreenSize = -1.0f;
 	// Has UpdateSyncronous/UpdateAsyncronous been called: until it has, the object cannot be rendered
 	bool m_hasUpdated = false;
+	bool m_reverseWinding = false;
 
 	// last frame's update inputs; UpdateAsyncronous is skipped once they have stayed unchanged for two frames
 	IEveSpaceObject2* m_lastParent = nullptr;

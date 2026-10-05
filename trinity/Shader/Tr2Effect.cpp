@@ -309,7 +309,7 @@ bool Tr2Effect::OnPrepareResources()
 
 static bool ConvertEffectPath( const std::string& path, std::string& actualPath )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	actualPath = std::string( path.size() + 8 + 10, 0 );
 	const char* str = actualPath.c_str();
@@ -374,7 +374,7 @@ static bool ConvertEffectPath( const std::string& path, std::string& actualPath 
 // ---------------------------------------------------------------
 bool Tr2Effect::Initialize()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 	{
@@ -684,7 +684,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 		m_shader = m_effectResource->GetShader( m_options.empty() ? nullptr : &m_options[0], m_options.size() );
 		if( m_shader )
 		{
-			CCP_STATS_ZONE( __FUNCTION__ );
+			TRINITY_STATS_ZONE( __FUNCTION__ );
 			USE_MAIN_THREAD_RENDER_CONTEXT();
 
 			for( auto& over : m_samplerOverrides )
@@ -824,7 +824,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 
 void Tr2Effect::RebuildCachedData( BlueAsyncRes* p )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	CCP_ASSERT( p == m_effectResource );
 	if( p == m_effectResource )
@@ -843,7 +843,7 @@ void Tr2Effect::RebuildCachedData()
 
 void Tr2Effect::ReleaseCachedData( BlueAsyncRes* p )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	CCP_ASSERT( p == m_effectResource );
 	if( p == m_effectResource )
 	{
@@ -873,7 +873,7 @@ void Tr2Effect::ReleaseCachedData( BlueAsyncRes* p )
 // ---------------------------------------------------------------
 bool Tr2Effect::OnModified( Be::Var* value )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	// m_effectFilePath is the only attribute with a notify flag
 
 	Initialize();
@@ -903,7 +903,7 @@ void Tr2Effect::EndUpdate()
 // ---------------------------------------------------------------
 void Tr2Effect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* currvalue, const IList* theList )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( ( event & BELIST_LOADING ) == 0 )
 	{
@@ -943,7 +943,7 @@ void Tr2Effect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* cu
 // ---------------------------------------------------------------
 bool Tr2Effect::PopulateParameters()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_shader )
 	{
@@ -1079,7 +1079,7 @@ bool Tr2Effect::PopulateParameters()
 // ---------------------------------------------------------------
 bool Tr2Effect::PruneParameters()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_shader )
 	{
@@ -1225,7 +1225,7 @@ const char* Tr2Effect::GetEffectPathName() const
 
 ITriEffectParameter* Tr2Effect::GetParameterByName( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	ITriEffectParameter* result = FindParameterByName( name );
 
@@ -1438,7 +1438,7 @@ bool ExtractLodingAnnotations( std::array<float, ITriEffectTextureParameter::UV_
 
 void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2EffectParamVector& pv, bool& compatibleWithGdr )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = resources.begin(); it != resources.end(); ++it )
 	{
@@ -1493,7 +1493,7 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 
 void Tr2Effect::Render( IRenderCallback* cb, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto effectResource = GetShaderStateInterface();
 
@@ -1554,7 +1554,7 @@ unsigned Tr2Effect::GetHashValue() const
 
 ITriEffectParameter* Tr2Effect::FindParameterByName( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = m_parameters.cbegin(); it != m_parameters.cend(); ++it )
 	{
@@ -1571,7 +1571,7 @@ ITriEffectParameter* Tr2Effect::FindParameterByName( const char* name ) const
 
 ITriEffectParameter* Tr2Effect::GetResourceByName( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = m_resources.cbegin(); it != m_resources.cend(); ++it )
 	{
@@ -1593,7 +1593,7 @@ ITriEffectParameter* Tr2Effect::GetResourceByName( const char* name ) const
 // -------------------------------------------------------------------------------------
 bool Tr2Effect::HasSamplerOverride( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = m_samplerOverrides.begin(); it != m_samplerOverrides.end(); ++it )
 	{
@@ -1613,7 +1613,7 @@ bool Tr2Effect::HasSamplerOverride( const char* name ) const
 // -------------------------------------------------------------------------------------
 bool Tr2Effect::HasParameter( const char* name ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = m_constParameters.begin(); it != m_constParameters.end(); ++it )
 	{
@@ -1640,7 +1640,7 @@ bool Tr2Effect::HasParameter( const char* name ) const
 // -------------------------------------------------------------------------------------
 bool GetBool( const Tr2EffectParameterAnnotationMap* map, const char* annotationName, bool defaultValue )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !map || !annotationName )
 	{
@@ -1670,7 +1670,7 @@ bool GetBool( const Tr2EffectParameterAnnotationMap* map, const char* annotation
 // -------------------------------------------------------------------------------------
 bool GetBool( const Tr2Shader* shaderState, const char* paramName, const char* annotationName, bool defaultValue )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	return ( shaderState && paramName ) ? GetBool( shaderState->GetParameterAnnotations( paramName ), annotationName, defaultValue ) : defaultValue;
 }
@@ -1730,7 +1730,7 @@ void Tr2Effect::MapPassParameters(
 	const Tr2EffectDescription& descriptionDesc,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	static const size_t MAX_PARAMS = 128;
 
