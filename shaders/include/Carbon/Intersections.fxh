@@ -44,8 +44,8 @@ float GetDistanceToPlane( Plane plane, Ray ray )
 		plane.normal = -plane.normal;
 	}
 
-    const float FLT_EPSILON = 0.0000001;
-	if( d >= FLT_EPSILON )
+    const float epsilon = 0.0000001;
+	if( d >= epsilon )
 	{
 		float3 rayToPlanePoint = plane.planePoint - ray.origin;
 
@@ -171,9 +171,9 @@ bool PointInCone( Ray ray, float t, Cone cone )
 	float3 pointInConeSpace = ray.origin + t * ray.dir - cone.tip;
 	
 	float cone_dist = dot( pointInConeSpace, cone.axis );
-    const float FLT_EPSILON = 0.0000001;
+    const float epsilon = 0.0000001;
 
-	if( cone.tipOffset - cone_dist > 0 || cone_dist > cone.height + FLT_EPSILON )
+	if( cone.tipOffset - cone_dist > 0 || cone_dist > cone.height + epsilon )
 	{
 		return false;
 	}

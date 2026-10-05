@@ -136,9 +136,15 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/DepthMap.fxh
     shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
     shaders/include/Carbon/SpaceScene/EnvironmentMap.fxh
+    shaders/include/Carbon/SpaceScene/EveBannerSet.fxh
     shaders/include/Carbon/SpaceScene/EveBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
+    shaders/include/Carbon/SpaceScene/EveChildBulletStorm.fxh
+    shaders/include/Carbon/SpaceScene/EveHazeSet.fxh
+    shaders/include/Carbon/SpaceScene/EvePlaneSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
+    shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
+    shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
