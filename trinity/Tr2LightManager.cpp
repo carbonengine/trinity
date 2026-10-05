@@ -339,16 +339,21 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	}
 
 	float brightness = std::max( std::max( data.color.x, data.color.y ), data.color.z );
+
 	if( brightness <= 0 || data.radius <= 0 )
 	{
 		return;
 	}
-	if( ( data.flags & FLAG_IS_VOLUMETRIC ) == 0 && !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
+
+	bool isVolumetric = ( data.flags & FLAG_IS_VOLUMETRIC ) != 0;
+	const Vector4* sphere = reinterpret_cast<const Vector4*>( &data.position );
+
+	if( !isVolumetric && !m_frustum.IsSphereVisible( sphere ) )
 	{
 		return;
 	}
+	float size = isVolumetric ? m_frustum.GetPixelSizeAccrossEst( sphere ) : m_frustum.GetPixelSizeAccross( sphere );
 
-	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
 	if( size > m_adjustedCutoff )
 	{
 		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
