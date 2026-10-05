@@ -10,6 +10,8 @@ BLUE_DECLARE( Tr2GpuStructuredBuffer );
 class EveInstancedMeshManager
 {
 public:
+	~EveInstancedMeshManager();
+
 	struct InstanceFlags
 	{
 		void AddBatchType( TriBatchType type );
@@ -238,7 +240,7 @@ private:
 	{
 		std::vector<MeshGroup> meshGroups;
 
-		Tr2Effect* material = nullptr;
+		Tr2EffectPtr material = nullptr;
 		float radius = 0.0f;
 		float maxScreenSize = 0.0f;
 		uint32_t totalVisibleInstances = 0;
