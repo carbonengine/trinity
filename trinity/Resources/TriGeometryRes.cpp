@@ -199,6 +199,25 @@ uint32_t GetPrimitiveCount( const TriGeometryResLodData& lod, uint32_t index, ui
 	return primCount;
 }
 
+TriGeometryAreaIndexRange GetAreaIndexRange( const TriGeometryResLodData& lod, uint32_t areaIndex, uint32_t primCount, bool reversed )
+{
+	TriGeometryAreaIndexRange range;
+	if( primCount == 0 || areaIndex >= lod.m_areas.size() )
+	{
+		return range;
+	}
+	if( reversed && !lod.m_reversedIndicesValid )
+	{
+		return range;
+	}
+	range.indices = reversed ? &lod.m_reversedIndexAllocation : &lod.m_indexAllocation;
+	range.startIndex = reversed ?
+		range.indices->GetStartIndex() + lod.m_primitiveCount * 3 - lod.m_areas[areaIndex].m_firstIndex - primCount * 3 :
+		range.indices->GetStartIndex() + lod.m_areas[areaIndex].m_firstIndex;
+	range.valid = true;
+	return range;
+}
+
 
 TriGeometryRes::TriGeometryRes( IRoot* lockobj ) :
 #if WITH_GRANNY
@@ -1928,30 +1947,18 @@ bool TriGeometryRes::RenderAreas( float screenSize, unsigned int meshIx, unsigne
 
 	if( primCount )
 	{
-		if( reversed )
+		auto indexRange = GetAreaIndexRange( *lod, areaIx, primCount, reversed );
+		if( !indexRange.valid )
 		{
-			if( !lod->m_reversedIndicesValid )
-			{
-				return false;
-			}
+			return false;
 		}
 
-		const TriGeometryResAreaData& area = lod->m_areas[areaIx];
 		renderContext.m_esm.ApplyVertexDeclaration( mesh->m_vertexDeclarationHandle );
 		renderContext.m_esm.ApplyStreamSource( 0, lod->m_vertexAllocation );
-
-		auto& indices = reversed ? lod->m_reversedIndexAllocation : lod->m_indexAllocation;
-		renderContext.m_esm.ApplyIndexBuffer( indices );
+		renderContext.m_esm.ApplyIndexBuffer( *indexRange.indices );
 
 		renderContext.SetTopology( TOP_TRIANGLES );
-		if( reversed )
-		{
-			renderContext.DrawIndexedPrimitive( lod->m_vertexCount, indices.GetStartIndex() + lod->m_primitiveCount * 3 - area.m_firstIndex - primCount * 3, primCount );
-		}
-		else
-		{
-			renderContext.DrawIndexedPrimitive( lod->m_vertexCount, indices.GetStartIndex() + area.m_firstIndex, primCount );
-		}
+		renderContext.DrawIndexedPrimitive( lod->m_vertexCount, indexRange.startIndex, primCount );
 	}
 
 	return true;

@@ -1603,7 +1603,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	auto& frustum = updateContext.GetFrustum();
 	auto minLodThreshold = updateContext.GetLowDetailThreshold();
 	auto mediumLodThreshold = updateContext.GetMediumDetailThreshold();
-	auto invLodFactor = updateContext.GetLodFactor();
+	auto invLodFactor = updateContext.GetInvLodFactor();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
@@ -1929,7 +1929,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 			auto transform = TransformationMatrix( locator->scale, locator->direction, locator->position ) * childLocatorSet.childToObject;
 			Locator transformedLocator;
 			transformedLocator.boneIndex = -1;
-			Decompose( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
+			DecomposeMirrorAware( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
 			transformedLocator.partTag = locator->partTag;
 			( *mergedLocatorSet )->Append( &transformedLocator, 1 );
 		}
