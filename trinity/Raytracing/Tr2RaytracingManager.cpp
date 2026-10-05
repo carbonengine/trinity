@@ -89,7 +89,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced shadows" );
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto destination = gpuResourcePool.GetTempTexture( "raytracing_shadow_dest", depth.GetWidth(), depth.GetHeight(), Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE );
 
@@ -128,7 +128,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 	}
 
 	{
-		CCP_STATS_ZONE( "Create shader table" );
+		TRINITY_STATS_ZONE( "Create shader table" );
 		m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
 		m_shaderTableDesc.AddMissShader( missName.c_str() );
 		m_shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
@@ -172,7 +172,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 		renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
 
 		{
-			CCP_STATS_ZONE( "renderContext.UseResources" );
+			TRINITY_STATS_ZONE( "renderContext.UseResources" );
 			renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, m_geometry->GetBindlessResources() );
 		}
 

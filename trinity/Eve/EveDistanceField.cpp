@@ -107,7 +107,7 @@ float EveDistanceField::CalculateFieldCoverageAndDistance( Be::Time t, const Vec
 
 void EveDistanceField::Update( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Vector3 posRef( 0, 0, 0 );
 	if( m_cameraView )

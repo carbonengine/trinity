@@ -28,5 +28,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "colorCorrection", m_colorCorrection, "Accesses the color correction effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "genericEffect", m_generic, "Accesses the generic effect", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "sharpeningStrength", m_sharpeningStrength, "CAS sharpening strength: from 0 to 1", Be::READWRITE | Be::PERSIST )
+
 	EXPOSURE_END()
 }

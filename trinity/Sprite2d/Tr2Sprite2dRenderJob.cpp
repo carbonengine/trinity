@@ -16,7 +16,7 @@ Tr2Sprite2dRenderJob::~Tr2Sprite2dRenderJob()
 
 void Tr2Sprite2dRenderJob::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_renderJob && m_display )
 	{

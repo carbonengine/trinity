@@ -52,7 +52,7 @@ void SeekTarget::InitializeScratch( void* scratchMemory )
 
 std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	m_arrivalPoints.resize( agents.size() );
 	std::vector<Vector3> m_returnForces;
 
