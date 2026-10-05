@@ -135,6 +135,13 @@ const Be::ClassInfo* Tr2VolumetricsRenderer::ExposeToBlue()
 			":jessica-group: Froxel Fog",
 			Be::READ )
 
+		MAP_ATTRIBUTE(
+			"reflectionIntensity",
+			m_froxelFogSettings.reflectionIntensity.value,
+			"A color multiplier for the reflections of the fog. \n"
+			":jessica-group: Froxel Fog",
+			Be::READ )
+
 
 		MAP_ATTRIBUTE(
 			"logBlending",

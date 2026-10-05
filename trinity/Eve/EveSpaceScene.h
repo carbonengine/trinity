@@ -543,6 +543,9 @@ protected:
 
 	// Picking
 
+	Tr2TextureAL m_pickBuffer;
+	Tr2TextureAL m_pickDepthBuffer;
+
 	ITriRenderBatchAccumulator* m_pickingBatches;
 
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2RenderContext& renderContext );
@@ -551,13 +554,14 @@ protected:
 
 
 public:
-	IRoot* PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
-	IRoot* PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+	IRootPtr PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
+	BluePy PickObjectAndAreaID( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
+	BluePy PickObjectAndExtraData( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
 
-	IRoot* PickAsyncObject( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
-	IRoot* PickAsyncObjectAndArea( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+	IRootPtr PickAsyncObject( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
+	BluePy PickAsyncObjectAndExtraData( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
 
-	void PerformPicking( EvePickingContext * listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+	std::tuple<IRootPtr, uint32_t, uint32_t> PerformPicking( EvePickingContext * listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
 
 
 

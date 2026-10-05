@@ -112,7 +112,8 @@ void EmitOverlayBatches(
 	TriBatchType batchType,
 	const PEveMeshOverlayEffectVector& overlayEffects,
 	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
-	const TriGeometryResLodData& lod );
+	const TriGeometryResLodData& lod,
+	bool reverseWinding = false );
 
 void EmitOverlayBatches(
 	ITriRenderBatchAccumulator* batches,
@@ -120,13 +121,15 @@ void EmitOverlayBatches(
 	TriBatchType batchType,
 	const std::vector<EveMeshOverlayEffectPtr>& overlayEffects,
 	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
-	const TriGeometryResLodData& lod );
+	const TriGeometryResLodData& lod,
+	bool reverseWinding = false );
 
 void EmitDamageOverlayBatches(
 	ITriRenderBatchAccumulator* batches,
 	const Tr2PerObjectData* perObjectData,
 	Tr2Effect* effect,
 	const std::vector<TriRenderBatchAreaBlock> ( &areaBlocks )[EveMeshOverlayEffect::TYPE_COUNT],
-	const TriGeometryResLodData& lod );
+	const TriGeometryResLodData& lod,
+	bool reverseWinding = false );
 
 #endif // EveMeshOverlayEffect_H
