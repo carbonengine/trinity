@@ -1472,6 +1472,9 @@ set(_SOURCES
     StdAfx.h
     TbbStub.h
     Tr2AddSafeGrowableBuffer.h
+    Tr2AnimationRetargeter.cpp
+    Tr2AnimationRetargeter.h
+    Tr2AnimationRetargeter_Blue.cpp
     Tr2AtlasTexture.cpp
     Tr2AtlasTexture.h
     Tr2AtlasTexture_Blue.cpp
