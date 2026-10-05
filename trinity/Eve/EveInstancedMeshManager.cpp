@@ -59,11 +59,7 @@ LodSlotDraw GetLodSlotDraw( TriGeometryRes& geometry, uint32_t meshIndex, uint32
 {
 	LodSlotDraw draw;
 	draw.lodData = geometry.GetMeshLod( meshIndex, int( slot / SLOTS_PER_LOD ) );
-	if( !draw.lodData || !draw.lodData->m_allocationsValid )
-	{
-		draw.valid = false;
-	}
-	else
+	if( draw.lodData && draw.lodData->m_allocationsValid )
 	{
 		draw.primCount = GetPrimitiveCount( *draw.lodData, areaIndex, areaCount );
 		bool reversed = areaReversed != ( ( slot % SLOTS_PER_LOD ) != 0 );
@@ -195,6 +191,7 @@ void EveInstancedMeshManager::RemovePerObjectData( PerObjectDataHandle& handle )
 	m_perObjectData.pop_back();
 
 	handle.index = PerObjectDataHandle::InvalidIndex;
+	handle.owner = nullptr;
 }
 
 void EveInstancedMeshManager::ReplaceHandle( PerObjectDataHandle* oldHandle, PerObjectDataHandle* newHandle )
@@ -419,6 +416,7 @@ void EveInstancedMeshManager::RemoveMeshGroup( MeshGroupHandle& handle )
 			}
 		}
 		handle.index = MeshGroupHandle::InvalidIndex;
+		handle.owner = nullptr;
 	}
 }
 
