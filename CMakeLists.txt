@@ -141,6 +141,8 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBulletStorm.fxh
     shaders/include/Carbon/SpaceScene/EveHazeSet.fxh
+    shaders/include/Carbon/SpaceScene/EveLensflare.fxh
+    shaders/include/Carbon/SpaceScene/EveOccluder.fxh
     shaders/include/Carbon/SpaceScene/EvePlaneSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
@@ -155,6 +157,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/PackedTangents.fxh
     shaders/include/Carbon/ParticleAnnotations.fxh
     shaders/include/Carbon/System.fxh
+    shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
