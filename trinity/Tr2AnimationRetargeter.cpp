@@ -547,7 +547,7 @@ void Tr2AnimationRetargeter::CalibrateGround( const cmf::Skeleton& skeleton, con
 
 void Tr2AnimationRetargeter::ModifyPose( const cmf::Skeleton& skeleton, cmf::SkeletonPose& pose )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	UpdateClock();
 
