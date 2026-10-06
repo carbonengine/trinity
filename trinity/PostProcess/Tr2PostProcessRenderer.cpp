@@ -852,6 +852,14 @@ void Tr2PostProcessRenderer::Execute(
 		auto tonemappedOutput = gpuResourcePool.GetTempTexture( "Tonemapping Result", displaySize, upscaledSource->GetFormat(), RENDER_TARGET );
 		RenderTonemapping( tonemappedOutput, postProcess, renderContext );
 		RenderSharpening( postProcess->m_sharpeningStrength, tonemappedOutput, output, renderContext );
+		if( postProcess )
+		{
+			auto newOutput = RenderGenericEffects( postProcess->m_genericEffects.effects[Tr2PPGenericEffect::AFTER_TONEMAP], output, gpuResourcePool, renderContext );
+			if( !( newOutput.Get() == output.Get() ) )
+			{
+				DrawInto( output, Tr2LoadAction::DONT_CARE, newOutput, renderContext );
+			}
+		}
 		Tr2Renderer::DrawTexture( renderContext, output );
 	}
 	else
