@@ -38,6 +38,7 @@ public:
 
 protected:
 	bool m_display;
+	bool m_scaleBrightness;
 	LightData m_lightGroupData;
 	Tr2Light::LIGHT_TYPE m_lightType;
 	Vector3 m_staticOffsetTranslation;

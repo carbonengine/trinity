@@ -20,7 +20,7 @@ EveTriggerVolume::~EveTriggerVolume()
 
 void EveTriggerVolume::RebuildBoundingSphere()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_boundingSphere = CcpMath::Sphere();
 
@@ -97,7 +97,7 @@ void EveTriggerVolume::UpdateWorldTransform( Be::Time time )
 // IEveSpaceObject2
 void EveTriggerVolume::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	UpdateWorldTransform( updateContext.GetTime() );
 

@@ -163,7 +163,7 @@ void Tr2IntSkinnedObject::AddToApexScene( Tr2ApexScene* apexScene )
 
 void Tr2IntSkinnedObject::RemoveFromApexScene( void )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_isInApexScene )
 	{
@@ -269,7 +269,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 				continue;
 			}
 
-			areaData->SetUserData( skinnedData->GetUserData() );
+			areaData->SetPickingPointer( skinnedData->GetPickingPointer() );
 			unsigned int* animMapping = area->GetJointMappingAnimRig();
 			if( ( m_visualModel->GetSkeleton() != NULL ) && ( animMapping != NULL ) )
 			{

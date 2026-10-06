@@ -370,6 +370,7 @@ void EveSpaceScene::UpdatePostProcessAttributes()
 		{
 			m_combinedPostProcess.CreateInstance();
 		}
+		m_combinedPostProcess->m_sharpeningStrength = m_sceneDefaultPostProcess ? m_sceneDefaultPostProcess->m_sharpeningStrength : 0.5f;
 
 		std::sort(
 			begin( postProcessAttributes ),
@@ -429,12 +430,17 @@ Tr2PostProcess2Ptr EveSpaceScene::GetPostProcess()
 
 bool EveSpaceScene::OnPrepareResources()
 {
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	CR( m_pickBuffer.Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_R32G32B32A32_UINT ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ_OFTEN, renderContext ) );
+	CR( m_pickDepthBuffer.Create( Tr2BitmapDimensions( 1, 1, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, renderContext ) );
+
 	return true;
 }
 
 void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -486,7 +492,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
-		CCP_STATS_ZONE( "UpdateBackgroundObjects" );
+		TRINITY_STATS_ZONE( "UpdateBackgroundObjects" );
 
 		for( auto it = m_backgroundObjects.begin(); it != m_backgroundObjects.end(); ++it )
 		{
@@ -545,7 +551,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "UpdateSyncronous" );
+		TRINITY_STATS_ZONE( "UpdateSyncronous" );
 
 		for( IEveSpaceObject2Vector::const_iterator it = m_objects.begin(); it != m_objects.end(); ++it )
 		{
@@ -558,7 +564,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		}
 	}
 	{
-		CCP_STATS_ZONE( "UpdateAsyncronous" );
+		TRINITY_STATS_ZONE( "UpdateAsyncronous" );
 		ScopedBlockTrap blockTrap;
 
 		Tr2ParallelTaskGroup taskGroup = {};
@@ -606,7 +612,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_componentRegistry )
 	{
@@ -678,7 +684,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 	}
 
 	{
-		CCP_STATS_ZONE( "GetBatches" );
+		TRINITY_STATS_ZONE( "GetBatches" );
 		unsigned int shadowMapSize = shadowMap.GetShadowMapSize();
 		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 		for( auto& vector : shadowCasterInfo )
@@ -687,7 +693,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		}
 
 		{
-			CCP_STATS_ZONE( "Find shadow casters" );
+			TRINITY_STATS_ZONE( "Find shadow casters" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
 				auto cameraFrustum = cameraFrustums[frustumIndex];
 				auto casters = shadowCasterInfo[frustumIndex];
@@ -708,7 +714,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 			} );
 		}
 		{
-			CCP_STATS_ZONE( "Per object data" );
+			TRINITY_STATS_ZONE( "Per object data" );
 
 			// This is not thread safe, hence no threading...
 			for( unsigned int frustumIndex = 0; frustumIndex < SHADOW_FRUSTUM_COUNT; ++frustumIndex )
@@ -722,7 +728,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 		}
 
 		{
-			CCP_STATS_ZONE( "get batches" );
+			TRINITY_STATS_ZONE( "get batches" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
 				for( const auto& info : shadowCasterInfo[frustumIndex] )
 				{
@@ -772,7 +778,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::SetupCascadedShadows( Tr2RenderRea
 
 				//***** Do the actual shadow rendering to the atlas (cascaded shadow depth map)
 				{
-					CCP_STATS_ZONE( "ShadowRendering" );
+					TRINITY_STATS_ZONE( "ShadowRendering" );
 
 					renderContext.m_esm.SetInvertedDepthTest( false );
 					ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
@@ -836,7 +842,7 @@ void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Sort objects front to back
 	std::stable_sort( objectsWithTransparencies.begin(), objectsWithTransparencies.end() );
@@ -852,7 +858,7 @@ void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithT
 
 void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const unsigned renderableCount, Tr2RenderableSortList* const objectsWithTransparencies, EveSpaceScene::BatchMap& batches, const TriBatchType* batchTypes, const unsigned batchTypeCount, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( unsigned i = 0; i != renderableCount; ++i )
 	{
@@ -885,13 +891,13 @@ void GetBatchesFromRenderables(
 	const unsigned batchTypeCount,
 	Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Tr2PerObjectData*> perObjectData;
 	perObjectData.reserve( renderableCount );
 
 	{
-		CCP_STATS_ZONE( "PerObjectData" );
+		TRINITY_STATS_ZONE( "PerObjectData" );
 
 		for( unsigned i = 0; i != renderableCount; ++i )
 		{
@@ -901,7 +907,7 @@ void GetBatchesFromRenderables(
 		}
 	}
 	{
-		CCP_STATS_ZONE( "GetBatches" );
+		TRINITY_STATS_ZONE( "GetBatches" );
 
 		Tr2ParallelFor( unsigned( 0 ), renderableCount, [&]( unsigned i ) {
 			ITr2Renderable* r = objectRenderables[i];
@@ -912,7 +918,7 @@ void GetBatchesFromRenderables(
 		} );
 	}
 	{
-		CCP_STATS_ZONE( "Combine" );
+		TRINITY_STATS_ZONE( "Combine" );
 
 		for( unsigned type = 0; type != batchTypeCount; ++type )
 		{
@@ -925,7 +931,7 @@ void GetBatchesFromRenderables(
 	}
 	if( objectsWithTransparencies )
 	{
-		CCP_STATS_ZONE( "Transparencies" );
+		TRINITY_STATS_ZONE( "Transparencies" );
 
 		objectsWithTransparencies->reserve( renderableCount );
 
@@ -985,7 +991,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1009,7 +1015,7 @@ void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1034,7 +1040,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -1122,7 +1128,7 @@ void EveSpaceScene::RenderBatch( ITriRenderBatchAccumulator* batch,
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1154,7 +1160,7 @@ void EveSpaceScene::RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& re
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderTransparentBatches( BatchMap& batches, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1178,7 +1184,7 @@ void EveSpaceScene::RenderTransparentBatches( BatchMap& batches, Tr2RenderContex
 }
 void EveSpaceScene::RenderTransparentBatches2( BatchMap& batches, Tr2RenderContext& renderContext, bool pass )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& visualizerEffect = m_visualizerEffects[m_visualizeMethod];
 
@@ -1222,7 +1228,7 @@ void EveSpaceScene::RenderTransparentBatches2( BatchMap& batches, Tr2RenderConte
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !batches[TRIBATCHTYPE_DISTORTION]->GetBatchCount() )
 	{
@@ -1296,7 +1302,7 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -1374,18 +1380,6 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 
-	if( g_eveSpaceSceneDynamicLighting )
-	{
-		if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
-		{
-			lightManager->SetVariableStore();
-		}
-	}
-	else
-	{
-		Tr2LightManager::DeleteInstance();
-	}
-
 	GatherBatches( enableDistortion, renderContext );
 
 	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
@@ -1397,7 +1391,7 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		CCP_STATS_SCOPED_TIME( gatherDynamicLights );
+		TRINITY_STATS_SCOPED_TIME( gatherDynamicLights );
 
 		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
 		lightManager->Clear( renderContext );
@@ -1434,7 +1428,7 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 
 	std::vector<IEveSpaceObject2*> allObjects;
@@ -1443,7 +1437,7 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 	const Matrix& identity = IdentityMatrix();
 
 	{
-		CCP_STATS_ZONE( "UpdateVisibility" );
+		TRINITY_STATS_ZONE( "UpdateVisibility" );
 		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) {
 			obj->UpdateVisibility( m_updateContext, identity );
 		} );
@@ -1538,7 +1532,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
+	TRINITY_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
 
 	ProcessOutdatedRTAnimations( renderContext );
@@ -1575,7 +1569,7 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	GPU_REGION( renderContext, "Impostors Update" );
 
 	CTriViewport fakeViewport;
@@ -1687,7 +1681,7 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 void EveSpaceScene::UpdateShLighting(
 	const std::vector<IEveSpaceObject2*>& allObjects )
 {
-	CCP_STATS_SCOPED_TIME( shLightingUpdateTime );
+	TRINITY_STATS_SCOPED_TIME( shLightingUpdateTime );
 
 	if( m_shLightingManager )
 	{
@@ -1716,7 +1710,7 @@ void EveSpaceScene::UpdateQuadRenderer(
 	const std::vector<IEveSpaceObject2*>& allObjects,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& quadRenderer = *Tr2QuadRenderer::Instance();
 
@@ -1736,7 +1730,7 @@ void EveSpaceScene::UpdateQuadRenderer(
 	PIEveSpaceObject2Vector& objects,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto& quadRenderer = *Tr2QuadRenderer::Instance();
 
@@ -1767,10 +1761,15 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// set the current reflection
 	GPU_REGION( renderContext, "Reflection" );
+
+	m_volumetricsRenderer->SetIsReflectionProbe( true );
+	ON_BLOCK_EXIT( [&] {
+		m_volumetricsRenderer->SetIsReflectionProbe( false );
+	} );
 
 	// lower the reflection intensity for the objects rendered into the reflection
 	// (so the reflections in the reflections don't get brighter and brighter)
@@ -2003,7 +2002,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	bool hasBackgroundDistortionBatches = false;
 
@@ -2080,7 +2079,7 @@ bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr
 // --------------------------------------------------------------------------------------
 bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, Tr2RenderContext& renderContext, BackgroundRenderingReason reason )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<ITr2Renderable*> visible;
 	Tr2RenderableSortList transparentObjects;
@@ -2199,7 +2198,7 @@ bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, c
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -2356,7 +2355,7 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 
@@ -2374,7 +2373,7 @@ void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Get distance from camera to zFar
 	auto direction = Tr2Renderer::GetViewPosition() - cloudShadowInformation->aabbMax;
@@ -2388,7 +2387,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	frustum.ExtractFrustum( &viewProj );
 
 	{
-		CCP_STATS_ZONE( "get shadowbatches for volumetrics" );
+		TRINITY_STATS_ZONE( "get shadowbatches for volumetrics" );
 		auto shadowFrustum = TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld );
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
@@ -2477,7 +2476,7 @@ std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScen
 
 bool EveSpaceScene::PrepareShadowMapForLights( Tr2RenderContext& renderContext, const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Using depth stencil as shadow map
 	renderContext.m_esm.PushRenderTarget( Tr2TextureAL() ); //empty texture
@@ -2501,7 +2500,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 	const Matrix& projection,
 	const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	renderContext.m_esm.PushViewport();
 	renderContext.m_esm.UpdateRenderTargetViewport( shadowMap.GetWidth(), shadowMap.GetHeight() );
@@ -2515,7 +2514,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 	TriFrustum shadowFrustum;
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
-		CCP_STATS_ZONE( "get shadowbatches for light" );
+		TRINITY_STATS_ZONE( "get shadowbatches for light" );
 		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
@@ -2561,7 +2560,7 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 
 void EveSpaceScene::RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( lightData.innerAngle <= 0. )
 	{
@@ -2694,7 +2693,7 @@ bool EveSpaceScene::RenderMainPass(
 	Tr2GpuResourcePool& gpuResourcePool,
 	Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	bool hasForegroundDistortionBatches = false;
 
@@ -2793,7 +2792,7 @@ void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, 
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display )
 	{
@@ -2972,7 +2971,7 @@ void EveSpaceScene::ClearBatches( BatchMap& batches )
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::FinalizeBatches( BatchMap& batches )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( auto it = batches.begin(); it != batches.end(); ++it )
 	{
@@ -3496,70 +3495,101 @@ void EveSpaceScene::OnListModified(
 	}
 }
 
-namespace
-{
-void DecodeMainPickPixel( const void* pBuffer, uint32_t& objId, uint32_t& areaId )
-{
-	// helpers: get each channel
-	uint32_t b = (uint32_t)( *( (unsigned char*)pBuffer + 0 ) );
-	uint32_t g = (uint32_t)( *( (unsigned char*)pBuffer + 1 ) );
-	uint32_t r = (uint32_t)( *( (unsigned char*)pBuffer + 2 ) );
-	uint32_t a = (uint32_t)( *( (unsigned char*)pBuffer + 3 ) );
 
-	// put it "together"
-	objId = ( ( r & 0xff ) << 8 ) | ( g & 0xff );
-	objId--;
-	areaId = ( ( b & 0xff ) << 8 ) | ( a & 0xff );
-	areaId--;
-}
-}
+//Blue-exposed Python functions for picking
 
-
-
-IRoot* EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+IRootPtr EveSpaceScene::PickObject( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	uint32_t areaID;
-	return PickObjectAndArea( x, y, proj, view, viewport, areaID, pickTypes, renderContext );
-}
 
-IRoot* EveSpaceScene::PickObjectAndArea( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
-{
 	EvePickingContextPtr listener;
 	listener.CreateInstance();
 
-	PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
 
-	areaID = listener->GetArea();
-	return listener->GetObject();
+	return object;
 }
 
-IRoot* EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+BluePy EveSpaceScene::PickObjectAndAreaID( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	uint32_t areaID;
-	return PickAsyncObjectAndArea( listener, x, y, proj, view, viewport, areaID, pickTypes, renderContext );
+
+	EvePickingContextPtr listener;
+	listener.CreateInstance();
+
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	if( object )
+	{
+		PyObject* tuple = PyTuple_New( 2 );
+		PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+		PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+		return BluePy( tuple, false );
+	}
+
+	return BluePy( Py_None, true );
 }
 
-IRoot* EveSpaceScene::PickAsyncObjectAndArea( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, uint32_t& areaID, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+BluePy EveSpaceScene::PickObjectAndExtraData( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	EvePickingContextPtr listener;
+	listener.CreateInstance();
+
+	auto [object, extra1, extra2] = PerformPicking( listener, true, x, y, proj, view, viewport, pickTypes, renderContext );
+
+	if( object )
+	{
+		PyObject* tuple = PyTuple_New( 3 );
+		PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+		PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+		PyTuple_SET_ITEM( tuple, 2, PyLong_FromUnsignedLong( extra2 ) );
+		return BluePy( tuple, false );
+	}
+
+	return BluePy( Py_None, true );
+}
+
+IRootPtr EveSpaceScene::PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
 {
 	if( !listener )
 	{
-		areaID = 0;
 		return nullptr;
 	}
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
+	auto [object, extra1, extra2] = PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
 
-	areaID = listener->GetArea();
-	return listener->GetObject();
+	return object;
 }
 
-void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
+BluePy EveSpaceScene::PickAsyncObjectAndExtraData( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes )
+{
+	if( listener )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		auto [object, extra1, extra2] = PerformPicking( listener, false, x, y, proj, view, viewport, pickTypes, renderContext );
+
+		if( object )
+		{
+			PyObject* tuple = PyTuple_New( 3 );
+			PyTuple_SET_ITEM( tuple, 0, PyOS->WrapBlueObject( object ) );
+			PyTuple_SET_ITEM( tuple, 1, PyLong_FromUnsignedLong( extra1 ) );
+			PyTuple_SET_ITEM( tuple, 2, PyLong_FromUnsignedLong( extra2 ) );
+			return BluePy( tuple, false );
+		}
+	}
+
+	return BluePy( Py_None, true );
+}
+
+std::tuple<IRootPtr, uint32_t, uint32_t> EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext )
 {
 	if( !renderContext.IsValid() )
 	{
-		return;
+		return { nullptr, 0, 0 };
 	}
 
 	float fx, fy;
@@ -3574,7 +3604,7 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 	ConvertProjectionCoordToWorldPickRay( fx, fy, &projTransform, &viewTransform, &startWorld, &dirWorld );
 
-	EvePendingPickingReadback& readback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
+	EvePendingPickingReadback& pickingReadback = *listener->m_readbacks.emplace_back( std::make_unique<EvePendingPickingReadback>( x, y ) );
 
 
 
@@ -3589,27 +3619,13 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 	// Render for picking, limit our view to the pick ray
 	SetupTransformsForPicking( fx, fy, proj, view, viewport, renderContext );
 
+	std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
 
-	if( m_debugRenderer )
-	{
-		m_debugRenderer->Pick( readback, immediate, renderContext );
-	}
 
 	std::vector<ITr2Renderable*> visibleObjects;
 	GetPickingObjectsToRender( visibleObjects );
 
 
-	std::vector<std::pair<ITr2PickablePtr, ITr2Renderable*>>& collisionSet = readback.m_collisionSet;
-	collisionSet.reserve( visibleObjects.size() );
-
-	for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
-	{
-		ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
-		if( pickedObj )
-		{
-			collisionSet.push_back( std::make_pair( pickedObj, *it ) );
-		}
-	}
 
 	// Get batches from shared instanced meshes
 	{
@@ -3627,143 +3643,160 @@ void EveSpaceScene::PerformPicking( EvePickingContext* listener, bool immediate,
 
 		if( !batches.empty() )
 		{
-			m_instancedMeshManager->GetPickingBatches( readback, m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), uint32_t( collisionSet.size() ), batches );
+			m_instancedMeshManager->GetPickingBatches( pickingReadback, m_updateContext.GetFrustum(), CreatePickingFrustum(), m_updateContext.GetInvLodFactor(), batches );
 		}
 	}
 
-	Tr2PickBuffer& pickBuffer = readback.m_mainPickBuffer;
 
-	if( !collisionSet.empty() || m_pickingBatches->GetBatchCount() > 0 )
+	if( m_pickBuffer.IsValid() && m_pickDepthBuffer.IsValid() )
 	{
-		renderContext.m_esm.SetInvertedDepthTest( true );
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-		renderContext.m_esm.BeginManagedRendering();
-		ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
-
-		CR_RETURN( Tr2Renderer::BeginRenderContext() );
-		ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
-
-		pickBuffer.PrepareResources();
-
-		if( pickBuffer.BeginRendering( 0.0f, renderContext ) )
 		{
-			for( unsigned int i = 0; i < collisionSet.size(); i++ )
+			renderContext.m_esm.SetInvertedDepthTest( true );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
+
+			renderContext.m_esm.BeginManagedRendering();
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.EndManagedRendering(); } );
+
+			Tr2Renderer::BeginRenderContext();
+			ON_BLOCK_EXIT( [&] { Tr2Renderer::EndRenderContext(); } );
+
+			renderContext.m_esm.PushRenderTarget( m_pickBuffer );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.PopRenderTarget(); } );
+
+			renderContext.m_esm.PushDepthStencilBuffer( m_pickDepthBuffer );
+			ON_BLOCK_EXIT( [&] { renderContext.m_esm.PopDepthStencilBuffer(); } );
+
+			renderContext.Clear( CLEARFLAGS_TARGET | CLEARFLAGS_ZBUFFER, 0, 0.0f );
+
+			renderContext.m_esm.SetFullScreenViewport();
 			{
 
-				ITr2Renderable* renderable = collisionSet[i].second;
-				ITr2Pickable* pickable = collisionSet[i].first;
 
-				Tr2PerObjectData* perObjectData = renderable->GetPerObjectData( m_pickingBatches );
-				if( perObjectData )
+				for( std::vector<ITr2Renderable*>::const_iterator it = visibleObjects.begin(); it != visibleObjects.end(); ++it )
 				{
-					perObjectData->SetUserData( i );
+
+					ITr2PickablePtr pickedObj( BlueCastPtr( *it ) );
+					if( !pickedObj )
+					{
+						continue;
+					}
+
+					ITr2Pickable* pickable = pickedObj;
+					ITr2Renderable* renderable = *it;
+
+					Tr2PerObjectData* perObjectData = renderable->GetPerObjectData( m_pickingBatches );
+					if( perObjectData )
+					{
+						perObjectData->SetPickingPointer( (uint64_t)pickable->GetRootObject() );
+					}
+
+					// We always pick against the opaque geometry that's rendered
+					if( pickTypes != PICK_TYPE_PICKING )
+					{
+						pickable->GetPickingBatches( m_pickingBatches, pickTypes & ~PICK_TYPE_PICKING, perObjectData );
+					}
+					// Additionally, we can pick against geometry that's only rendered for picking,
+					// allowing us to put placeholders in for things that are partly transparent, but still should be pickable
+					if( ( pickTypes & PICK_TYPE_PICKING ) != 0 )
+					{
+						pickable->GetPickingBatches( m_pickingBatches, PICK_TYPE_PICKING, perObjectData );
+					}
+
+					blueObjects.push_back( pickable->GetRootObject() );
 				}
 
-				// We always pick against the opaque geometry that's rendered
-				if( pickTypes != PICK_TYPE_PICKING )
+
+				Tr2Renderer::SetWorldTransform( IdentityMatrix() );
+
+				m_pickingBatches->Finalize();
+
+				renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
+				renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
+
+
+				//clear depth for debug rendering
+				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0.0f );
+
+				if( m_debugRenderer )
 				{
-					pickable->GetPickingBatches( m_pickingBatches, pickTypes & ~PICK_TYPE_PICKING, perObjectData );
+					m_debugRenderer->Pick( pickingReadback, renderContext );
 				}
-				// Additionally, we can pick against geometry that's only rendered for picking,
-				// allowing us to put placeholders in for things that are partly transparent, but still should be pickable
-				if( ( pickTypes & PICK_TYPE_PICKING ) != 0 )
-				{
-					pickable->GetPickingBatches( m_pickingBatches, PICK_TYPE_PICKING, perObjectData );
-				}
+
+
+				m_pickingBatches->Clear();
 			}
-
-			Tr2Renderer::SetWorldTransform( IdentityMatrix() );
-
-			m_pickingBatches->Finalize();
-
-			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_PICKING );
-			renderContext.RenderBatchesForPicking( m_pickingBatches, BlueSharedString( "Picking" ) );
-
-			pickBuffer.EndRendering( renderContext );
-
-			m_pickingBatches->Clear();
-
-			readback.MapMain( immediate, renderContext );
 		}
-	}
 
-	readback.m_frameIndex = immediate ? 0u : renderContext.GetRecordingFrameNumber();
+		pickingReadback.m_readback = m_pickBuffer.CreateReadback( Tr2TextureSubresource( 0 ), renderContext );
+	}
 
 	while( !listener->m_readbacks.empty() )
 	{
-		EvePendingPickingReadback& readback = *listener->m_readbacks[0];
-		if( readback.m_frameIndex >= renderContext.GetRenderedFrameNumber() )
+		EvePendingPickingReadback& pickingReadback = *listener->m_readbacks[0];
+
+		if( !pickingReadback.m_readback.IsValid() )
+		{
+			//this readback is dead (most likely GPU device lost)
+			listener->m_readbacks.erase( listener->m_readbacks.begin() );
+			continue;
+		}
+
+		bool ready = immediate || pickingReadback.m_readback.IsReady( renderContext );
+		if( !ready )
 		{
 			break;
 		}
 
-		IRootPtr object = nullptr;
-		uint32_t area = 0;
+		IRoot* object = nullptr;
+		uint32_t extraData1 = 0;
+		uint32_t extraData2 = 0;
 
-		if( readback.m_debugPickData )
+		const void* pointer;
+		uint32_t pitch;
+		if( pickingReadback.m_readback.Map( pointer, pitch, renderContext ) == S_OK )
 		{
-			const float* pixels = static_cast<const float*>( readback.m_debugPickData );
-			uint32_t index = uint32_t( pixels[0] + 0.5f ) - 1;
-			bool isLine = pixels[1] != 0;
 
-			if( isLine )
-			{
-				if( index < readback.m_debugLineObjects.size() )
-				{
-					Tr2DebugObjectReference debugObject = readback.m_debugLineObjects[index];
-					object = debugObject.m_object;
-					area = debugObject.m_area;
-				}
-			}
-			else
-			{
-				if( index < readback.m_debugTriangleObjects.size() )
-				{
-					Tr2DebugObjectReference debugObject = readback.m_debugTriangleObjects[index];
-					object = debugObject.m_object;
-					area = debugObject.m_area;
-				}
-			}
-		}
-		if( object == nullptr && readback.m_mainPickData )
-		{
-			uint32_t objectID;
-			uint32_t areaID;
-			DecodeMainPickPixel( readback.m_mainPickData, objectID, areaID );
+			const uint32_t* data = static_cast<const uint32_t*>( pointer );
 
-			if( objectID < readback.m_collisionSet.size() )
+			uint64_t pickingObjectLowBits = data[0];
+			uint64_t pickingObjectHighBits = data[1];
+			uint32_t data1 = data[2];
+			uint32_t data2 = data[3];
+
+			object = (IRoot*)( pickingObjectLowBits | ( pickingObjectHighBits << 32 ) );
+
+			bool found = false;
+
+			if( object != nullptr )
 			{
-				object = readback.m_collisionSet[objectID].first->GetID( areaID );
-				area = areaID;
-			}
-			else
-			{
-				if( immediate )
+				std::vector<IRootPtr>& blueObjects = pickingReadback.m_blueObjects;
+
+				for( size_t i = 0; i < blueObjects.size(); i++ )
 				{
-					auto picked = m_instancedMeshManager->GetPickedObject( objectID, areaID );
-					object = picked.first;
-					area = picked.second;
-				}
-				else
-				{
-					uint32_t instanceIndex = objectID - (uint32_t)readback.m_collisionSet.size();
-					if( instanceIndex < readback.m_instancedTraceback.size() )
+					IRoot* ptr = blueObjects[i];
+
+					if( ptr == object )
 					{
-						std::pair<IRootPtr, uint32_t> traceback = readback.m_instancedTraceback[instanceIndex];
-						object = traceback.first;
-						uint32_t instanceID = 0; //Not supported for async queries yet, as it is very hard to reconstruct.
-						uint32_t ownerIndex = traceback.second;
-						area = instanceID | ( ownerIndex << 16 );
+						found = true;
+						break;
 					}
 				}
 			}
+
+			if( !found )
+			{
+				object = nullptr;
+			}
+
+			extraData1 = data1;
+			extraData2 = data2;
 		}
 
-		readback.Unmap( renderContext );
-		listener->UpdateResult( readback.m_pickedX, readback.m_pickedY, object, area );
+		listener->UpdateResult( pickingReadback.m_pickedX, pickingReadback.m_pickedY, object, extraData1, extraData2 );
 		listener->m_readbacks.erase( listener->m_readbacks.begin() );
 	}
+
+	return { listener->GetObject(), listener->GetExtraData1(), listener->GetExtraData2() };
 }
 
 
