@@ -147,6 +147,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
+    shaders/include/Carbon/SpaceScene/EveTransform.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
@@ -157,6 +158,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/PackedTangents.fxh
     shaders/include/Carbon/ParticleAnnotations.fxh
     shaders/include/Carbon/System.fxh
+    shaders/include/Carbon/Tr2CurveLineSet.fxh
     shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
     )
 
