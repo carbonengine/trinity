@@ -34,7 +34,7 @@ const Be::ClassInfo* Tr2PPGenericEffect::ExposeToBlue()
 			"The effect to use. The Tr2PostProcessRenderer passes the pre upscaled source into the Blit texture parameter of this effect",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "executionSlot", m_executionSlot, "The execution slot for this effect", Be::READWRITE | Be::PERSIST | Be::ENUM, PostProcessEnums::Tr2PostProcessExecutionSlotChooser );
-		MAP_ATTRIBUTE( "order", m_order, "Affects the order of rendering for this effect in relation to other generic effects", Be::READWRITE | Be::PERSIST );
+		MAP_ATTRIBUTE( "order", m_order, "Affects the order of rendering for this effect in relation to other generic effects within the same execution slot", Be::READWRITE | Be::PERSIST );
 
 	EXPOSURE_CHAINTO( Tr2PPEffect )
 }
