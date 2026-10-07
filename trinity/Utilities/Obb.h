@@ -36,6 +36,7 @@ struct Obb
 	void CreateFromSphere( const CcpMath::Sphere& worldSphere );
 
 	Vector3 GetPoint( unsigned N ) const;
+	bool Contains( const Vector3& point ) const;
 
 	void ComputeAABB( Vector3& min, Vector3& max, const Matrix& transform ) const;
 };

@@ -4166,9 +4166,11 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
-bool EveSpaceObject2::GetWorldBoundingObb( Obb& obb ) const
+bool EveSpaceObject2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	obb.CreateWorldBoundingObb( m_localAabbMin, m_localAabbMax, m_worldTransform );
+	localMin = m_localAabbMin;
+	localMax = m_localAabbMax;
+	localToWorld = m_worldTransform;
 	return true;
 }
 

@@ -136,14 +136,13 @@ bool Tr2InteriorPlaceable::GetWorldBoundingBox( Vector3& min, Vector3& max ) con
 	return true;
 }
 
-bool Tr2InteriorPlaceable::GetWorldBoundingObb( Obb& obb ) const
+bool Tr2InteriorPlaceable::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	Vector3 min, max;
-	if( !GetLocalBoundingBox( min, max ) )
+	if( !GetLocalBoundingBox( localMin, localMax ) )
 	{
 		return false;
 	}
-	obb.CreateWorldBoundingObb( min, max, m_transform );
+	localToWorld = m_transform;
 	return true;
 }
 

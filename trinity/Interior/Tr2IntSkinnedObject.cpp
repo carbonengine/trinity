@@ -148,14 +148,13 @@ bool Tr2IntSkinnedObject::GetWorldBoundingBox( Vector3& min, Vector3& max ) cons
 	return true;
 }
 
-bool Tr2IntSkinnedObject::GetWorldBoundingObb( Obb& obb ) const
+bool Tr2IntSkinnedObject::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	Vector3 min, max;
-	if( !GetLocalBoundingBox( min, max ) )
+	if( !GetLocalBoundingBox( localMin, localMax ) )
 	{
 		return false;
 	}
-	obb.CreateWorldBoundingObb( min, max, GetSkinningTransform() );
+	localToWorld = GetSkinningTransform();
 	return true;
 }
 

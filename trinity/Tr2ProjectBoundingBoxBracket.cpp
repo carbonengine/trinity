@@ -135,23 +135,6 @@ void AddNearPlaneIntersection( const Vector4& a, const Vector4& b, Vector4* poin
 	}
 }
 
-// The axes are the raw local-to-world rows, so scale folds into their length;
-// |Dot(d, axis)| <= sizes * LengthSq(axis) is the half-extent test with the
-// normalization divide multiplied through.
-bool ObbContainsPoint( const Obb& obb, const Vector3& point )
-{
-	const Vector3 d = point - obb.center;
-	const Vector3* axes[3] = { &obb.x, &obb.y, &obb.z };
-	for( int i = 0; i < 3; ++i )
-	{
-		if( fabsf( Dot( d, *axes[i] ) ) > obb.sizes[i] * LengthSq( *axes[i] ) )
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
 bool ProjectClipPoint( const Vector4& point, const TriViewport& viewport, Vector3& projected )
 {
 	if( !CanPerspectiveDivide( point ) )
@@ -376,12 +359,16 @@ Tr2ProjectBoundingBoxBracket::Tr2ProjectBoundingBoxBracket( IRoot* lockobj /*= N
 
 void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 {
-	Obb obb;
-	if( !m_object || !m_object->IsBoundingBoxReady() || !m_object->GetWorldBoundingObb( obb ) )
+	Vector3 localMin, localMax;
+	Matrix localToWorld;
+	if( !m_object || !m_object->IsBoundingBoxReady() || !m_object->GetOrientedBoundingBox( localMin, localMax, localToWorld ) )
 	{
 		SetEmptyProjection();
 		return;
 	}
+
+	Obb obb;
+	obb.CreateWorldBoundingObb( localMin, localMax, localToWorld );
 
 	const bool debugDraw = m_debugDraw && g_debugRenderer;
 	if( debugDraw )
@@ -393,7 +380,7 @@ void Tr2ProjectBoundingBoxBracket::UpdateValue( double time )
 	m_cameraDistance = Length( viewPosition - obb.center );
 
 	const TriViewport& viewport = Tr2Renderer::GetViewport();
-	if( ObbContainsPoint( obb, viewPosition ) )
+	if( obb.Contains( viewPosition ) )
 	{
 		SetFullViewportProjection( viewport );
 		return;

@@ -27,7 +27,7 @@ void Obb::CreateWorldBoundingObb( const Vector3& localMin, const Vector3& localM
 	center = Vector3( centerWorld.x, centerWorld.y, centerWorld.z );
 
 
-	sizes = 0.5 * ( localMax - localMax );
+	sizes = 0.5 * ( localMax - localMin );
 	x = Vector3( localToWorld._11, localToWorld._12, localToWorld._13 );
 	y = Vector3( localToWorld._21, localToWorld._22, localToWorld._23 );
 	z = Vector3( localToWorld._31, localToWorld._32, localToWorld._33 );
@@ -214,6 +214,21 @@ void Obb::CreateFromSphere( const CcpMath::Sphere& worldSphere )
 	z = Vector3( 0.0f, 0.0f, 1.0f );
 	center = worldSphere.center;
 	sizes = Vector3( worldSphere.radius, worldSphere.radius, worldSphere.radius );
+}
+
+// Axes carry scale, so Dot(d, axis) / LengthSq(axis) is d's local coordinate along that axis.
+bool Obb::Contains( const Vector3& point ) const
+{
+	const Vector3 d = point - center;
+	const Vector3* axes[3] = { &x, &y, &z };
+	for( int i = 0; i < 3; ++i )
+	{
+		if( fabsf( Dot( d, *axes[i] ) ) > sizes[i] * LengthSq( *axes[i] ) )
+		{
+			return false;
+		}
+	}
+	return true;
 }
 
 // -------------------------------------------------------------

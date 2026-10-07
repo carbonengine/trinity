@@ -92,7 +92,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2BoundingBox
-	bool GetWorldBoundingObb( Obb & obb ) const override;
+	bool GetOrientedBoundingBox( Vector3 & localMin, Vector3 & localMax, Matrix & localToWorld ) const override;
 	bool IsBoundingBoxReady() const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////

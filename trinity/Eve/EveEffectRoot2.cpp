@@ -432,7 +432,7 @@ void EveEffectRoot2::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_lastUpdateMatrix;
 }
 
-bool EveEffectRoot2::GetWorldBoundingObb( Obb& obb ) const
+bool EveEffectRoot2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
 	if( m_boundingSphere.w <= 0.0f )
 	{
@@ -441,7 +441,8 @@ bool EveEffectRoot2::GetWorldBoundingObb( Obb& obb ) const
 
 	CcpMath::Sphere worldSphere( m_boundingSphere );
 	worldSphere.Transform( m_lastUpdateMatrix );
-	obb.CreateFromSphere( worldSphere );
+	BoundingBoxInitialize( Vector4( worldSphere.center, worldSphere.radius ), localMin, localMax );
+	localToWorld = IdentityMatrix();
 	return true;
 }
 

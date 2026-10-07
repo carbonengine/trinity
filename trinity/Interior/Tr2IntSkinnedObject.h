@@ -93,7 +93,7 @@ public:
 	virtual bool IsBoundingBoxReady( void ) const;
 
 	// ITr2BoundingBox
-	virtual bool GetWorldBoundingObb( Obb& obb ) const;
+	virtual bool GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const;
 
 	// Apex
 	void AddToApexScene( Tr2ApexScene* apexScene );

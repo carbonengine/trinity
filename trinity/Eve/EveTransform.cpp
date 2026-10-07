@@ -382,14 +382,13 @@ bool EveTransform::GetLocalBoundingBox( Vector3& min, Vector3& max )
 	return true;
 }
 
-bool EveTransform::GetWorldBoundingObb( Obb& obb ) const
+bool EveTransform::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	Vector3 min, max;
-	if( !GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, min, max ) )
+	if( !GetDirectLocalBounds( m_overrideBoundsMin, m_overrideBoundsMax, m_mesh, localMin, localMax ) )
 	{
 		return false;
 	}
-	obb.CreateWorldBoundingObb( min, max, m_worldTransform );
+	localToWorld = m_worldTransform;
 	return true;
 }
 

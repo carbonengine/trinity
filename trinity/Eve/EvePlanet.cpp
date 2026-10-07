@@ -151,7 +151,7 @@ Quaternion EvePlanet::GetWorldRotation()
 	return m_rotation;
 }
 
-bool EvePlanet::GetWorldBoundingObb( Obb& obb ) const
+bool EvePlanet::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
 	if( m_radius <= 0.0f )
 	{
@@ -161,8 +161,8 @@ bool EvePlanet::GetWorldBoundingObb( Obb& obb ) const
 	const float renderScale = m_renderScale > 0.0f ? m_renderScale : 1.0f;
 	const Matrix scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 	const float radius = m_radius / renderScale;
-	CcpMath::Sphere worldSphere( scaledTransform.GetTranslation(), radius );
-	obb.CreateFromSphere( worldSphere );
+	BoundingBoxInitialize( Vector4( scaledTransform.GetTranslation(), radius ), localMin, localMax );
+	localToWorld = IdentityMatrix();
 	return true;
 }
 
