@@ -48,7 +48,8 @@ Tr2PostProcessAttributes::Tr2PostProcessAttributes( IRoot* lockobj ) :
 	depthOfFieldFocalDistance( Attribute( 0.0f ) ),
 	depthOfFieldFocalLength( Attribute( 0.0f ) ),
 	depthOfFieldShape( Attribute( Tr2Bokeh::Disk ) ),
-	depthOfFieldForegroundBlurNeeded( Attribute( false ) )
+	depthOfFieldForegroundBlurNeeded( Attribute( false ) ),
+	PARENTLOCK( genericEffects )
 {
 }
 
@@ -145,6 +146,8 @@ void Tr2PostProcessAttributes::MergeInto( Tr2PostProcess2& postprocess, std::vec
 	auto colorGamma = Accumulate( &Tr2PostProcessAttributes::colorGamma, sources, debugObserver );
 	auto colorGain = Accumulate( &Tr2PostProcessAttributes::colorGain, sources, debugObserver );
 	auto colorOffset = Accumulate( &Tr2PostProcessAttributes::colorOffset, sources, debugObserver );
+
+	AccumulateGenericEffects( postprocess, sources );
 
 	postprocess.SetBloom( nullptr );
 	postprocess.SetDesaturate( nullptr );
