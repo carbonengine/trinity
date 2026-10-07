@@ -6,30 +6,20 @@
 #include "Tr2Renderer.h"
 #include "Resources/TriGrannyRes.h"
 
+#include <TriMath.h>
 #include <cmf/transforms.h>
 
 #include <cfloat>
+#include <cmath>
 
 // Quaternions compose like the rest of the cmf code: XMQuaternionMultiply( a, b ) applies a, then b, and
 // XMVector3Rotate applies a rotation to a vector.  A world rotation takes bone space to model space.
 
 namespace
 {
-constexpr uint32_t NO_BONE = 0xFFFFFFFF;
 constexpr uint32_t GROUND_SAMPLES = 32;	// poses per cycle looked at to find where the feet come down
 constexpr float FOOT_BAND = 0.05f;	// mapped bones this close to the lowest in the target bind pose are feet
-
-uint32_t FindBone( const cmf::Skeleton& skeleton, const std::string& name )
-{
-	for( uint32_t i = 0; i < skeleton.bones.size(); ++i )
-	{
-		if( cmf::ToStdStringView( skeleton.bones[i] ) == name )
-		{
-			return i;
-		}
-	}
-	return NO_BONE;
-}
+constexpr float MIN_PELVIS_HEIGHT = 1e-3f;	// below this height above the feet, the bob is left unscaled
 
 // Parents precede children, so a real parent always has the smaller index
 bool HasParent( const cmf::Skeleton& skeleton, uint32_t bone )
@@ -44,27 +34,6 @@ void ComputeWorld( const cmf::Skeleton& skeleton, const cmf::Transform* locals, 
 	{
 		world[i] = HasParent( skeleton, i ) ? cmf::Multiply( locals[i], world[skeleton.parents[i]] ) : locals[i];
 	}
-}
-
-// The shortest rotation taking unit vector from onto unit vector to
-Quaternion ArcBetween( const Vector3& from, const Vector3& to )
-{
-	const float cosAngle = Dot( from, to );
-	if( cosAngle > 0.99999f )
-	{
-		return IdentityQuaternion();
-	}
-	// Opposite vectors: half a turn about any perpendicular axis
-	const Vector3 axis = Normalize( cosAngle < -0.99999f ? Cross( from, fabsf( from.x ) < 0.9f ? Vector3( 1.f, 0.f, 0.f ) : Vector3( 0.f, 1.f, 0.f ) ) : Cross( from, to ) );
-	Quaternion arc = XMQuaternionRotationNormal( axis, acosf( std::max( -1.f, cosAngle ) ) );
-
-	// Keep whichever sense actually turns from onto to
-	const Quaternion other = XMQuaternionConjugate( arc );
-	if( Dot( Vector3( XMVector3Rotate( from, other ) ), to ) > Dot( Vector3( XMVector3Rotate( from, arc ) ), to ) )
-	{
-		arc = other;
-	}
-	return arc;
 }
 
 const cmf::Data* GetData( const TriGrannyResPtr& res )
@@ -83,8 +52,13 @@ const cmf::Data* GetClipData( const TriGrannyResPtr& res )
 	return data && !data->animations.empty() ? data : nullptr;
 }
 
+// NaN and infinity come out as 0: the clip sampling does no validation of the time it is given
 float Wrap01( float x )
 {
+	if( !std::isfinite( x ) )
+	{
+		return 0.f;
+	}
 	x = fmodf( x, 1.f );
 	return x < 0.f ? x + 1.f : x;
 }
@@ -95,47 +69,35 @@ float Clamp01( float x )
 }
 }
 
-Tr2AnimationRetargeter::Tr2AnimationRetargeter( IRoot* lockobj ) :
-	m_weight( 1.f ),
-	m_speed( 1.f ),
-	m_blend( 0.f ),
-	m_sourcePhaseOffset( 0.f ),
-	m_blendSourcePhaseOffset( 0.f ),
-	m_phase( 0.f ),
-	m_lastTime( 0.f ),
-	m_clockStarted( false ),
-	m_needsBind( true ),
-	m_groundCalibrated( false ),
-	m_boundTarget( nullptr ),
-	m_boundTargetBoneCount( 0 ),
-	m_clipCount( 0 ),
-	m_pelvisTarget( NO_BONE ),
-	m_pelvisSourceBindHeight( 0.f ),
-	m_pelvisTargetBindPosition( 0.f, 0.f, 0.f ),
-	m_pelvisHeightScale( 1.f )
+Tr2AnimationRetargeter::Tr2AnimationRetargeter( IRoot* lockobj )
 {
 }
 
 Tr2AnimationRetargeter::~Tr2AnimationRetargeter()
 {
-	if( m_animation && m_animation->GetPoseModifier() == this )
-	{
-		m_animation->SetPoseModifier( nullptr );
-	}
+	SetAnimation( nullptr );
 
-	// The players point into the clips' data, so they go before the resources
+	// The players point into the clips' data, so they go before the files
 	Unbind();
 
-	auto release = [this]( TriGrannyResPtr& res ) {
-		if( res )
+	for( Clip& clip : m_clips )
+	{
+		ReleaseRes( clip.res );
+	}
+	ReleaseRes( m_sourceBindPoseRes );
+	ReleaseRes( m_targetBindPoseRes );
+}
+
+uint32_t Tr2AnimationRetargeter::FindBone( const cmf::Skeleton& skeleton, const std::string& name )
+{
+	for( uint32_t i = 0; i < skeleton.bones.size(); ++i )
+	{
+		if( cmf::ToStdStringView( skeleton.bones[i] ) == name )
 		{
-			res->RemoveNotifyTarget( this );
+			return i;
 		}
-	};
-	release( m_sourceRes );
-	release( m_blendSourceRes );
-	release( m_sourceBindPoseRes );
-	release( m_targetBindPoseRes );
+	}
+	return NO_BONE;
 }
 
 Tr2GrannyAnimation* Tr2AnimationRetargeter::GetAnimation() const
@@ -145,9 +107,13 @@ Tr2GrannyAnimation* Tr2AnimationRetargeter::GetAnimation() const
 
 void Tr2AnimationRetargeter::SetAnimation( Tr2GrannyAnimation* animation )
 {
-	if( m_animation && m_animation->GetPoseModifier() == this )
+	if( m_animation )
 	{
-		m_animation->SetPoseModifier( nullptr );
+		m_animation->RemoveNotifyTarget( this );
+		if( m_animation->GetPoseModifier() == this )
+		{
+			m_animation->SetPoseModifier( nullptr );
+		}
 	}
 
 	m_animation = animation;
@@ -159,6 +125,9 @@ void Tr2AnimationRetargeter::SetAnimation( Tr2GrannyAnimation* animation )
 			CCP_LOGWARN( "Tr2AnimationRetargeter: replacing the animation's existing pose modifier" );
 		}
 		m_animation->SetPoseModifier( this );
+
+		// Hear when the animation's skeleton is released or rebuilt, as Tr2AnimationMeshBinding does
+		m_animation->AddNotifyTarget( this );
 	}
 
 	m_needsBind = true;
@@ -166,24 +135,24 @@ void Tr2AnimationRetargeter::SetAnimation( Tr2GrannyAnimation* animation )
 
 const std::string& Tr2AnimationRetargeter::GetSourcePath() const
 {
-	return m_sourcePath;
+	return m_clips[0].path;
 }
 
 void Tr2AnimationRetargeter::SetSourcePath( const std::string& path )
 {
-	m_sourcePath = path;
-	LoadRes( m_sourcePath, m_sourceRes );
+	m_clips[0].path = path;
+	LoadRes( path, m_clips[0].res );
 }
 
 const std::string& Tr2AnimationRetargeter::GetBlendSourcePath() const
 {
-	return m_blendSourcePath;
+	return m_clips[1].path;
 }
 
 void Tr2AnimationRetargeter::SetBlendSourcePath( const std::string& path )
 {
-	m_blendSourcePath = path;
-	LoadRes( m_blendSourcePath, m_blendSourceRes );
+	m_clips[1].path = path;
+	LoadRes( path, m_clips[1].res );
 }
 
 const std::string& Tr2AnimationRetargeter::GetSourceBindPosePath() const
@@ -208,6 +177,26 @@ void Tr2AnimationRetargeter::SetTargetBindPosePath( const std::string& path )
 	LoadRes( m_targetBindPosePath, m_targetBindPoseRes );
 }
 
+float Tr2AnimationRetargeter::GetSourcePhaseOffset() const
+{
+	return m_clips[0].phaseOffset;
+}
+
+void Tr2AnimationRetargeter::SetSourcePhaseOffset( float offset )
+{
+	m_clips[0].phaseOffset = offset;
+}
+
+float Tr2AnimationRetargeter::GetBlendSourcePhaseOffset() const
+{
+	return m_clips[1].phaseOffset;
+}
+
+void Tr2AnimationRetargeter::SetBlendSourcePhaseOffset( float offset )
+{
+	m_clips[1].phaseOffset = offset;
+}
+
 void Tr2AnimationRetargeter::MapBone( const std::string& sourceBone, const std::string& targetBone )
 {
 	m_boneMap.push_back( { sourceBone, targetBone, false } );
@@ -228,7 +217,8 @@ void Tr2AnimationRetargeter::ClearBoneMap()
 
 bool Tr2AnimationRetargeter::IsReady() const
 {
-	return GetClipData( m_sourceRes ) && ( m_blendSourcePath.empty() || GetClipData( m_blendSourceRes ) ) && GetData( m_sourceBindPoseRes ) && GetData( m_targetBindPoseRes );
+	return GetClipData( m_clips[0].res ) && ( m_clips[1].path.empty() || GetClipData( m_clips[1].res ) ) &&
+		( m_sourceBindPosePath.empty() || GetData( m_sourceBindPoseRes ) ) && GetData( m_targetBindPoseRes );
 }
 
 void Tr2AnimationRetargeter::LoadRes( const std::string& path, TriGrannyResPtr& res )
@@ -237,21 +227,38 @@ void Tr2AnimationRetargeter::LoadRes( const std::string& path, TriGrannyResPtr& 
 	Unbind();
 	m_needsBind = true;
 
-	if( res )
-	{
-		res->RemoveNotifyTarget( this );
-		res.Unlock();
-	}
+	ReleaseRes( res );
 
 	if( !path.empty() )
 	{
 		BeResMan->GetResource( path.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&res );
 	}
 
-	if( res )
+	// A file can sit in more than one slot, a clip and its bind pose say; it is watched once
+	if( res && CountSlotsHolding( res ) == 1 )
 	{
 		res->AddNotifyTarget( this );
 	}
+}
+
+void Tr2AnimationRetargeter::ReleaseRes( TriGrannyResPtr& res )
+{
+	if( !res )
+	{
+		return;
+	}
+	// Stop watching the file once no other slot holds it
+	if( CountSlotsHolding( res ) == 1 )
+	{
+		res->RemoveNotifyTarget( this );
+	}
+	res.Unlock();
+}
+
+uint32_t Tr2AnimationRetargeter::CountSlotsHolding( const TriGrannyRes* res ) const
+{
+	const TriGrannyRes* slots[] = { m_clips[0].res, m_clips[1].res, m_sourceBindPoseRes, m_targetBindPoseRes };
+	return (uint32_t)std::count( std::begin( slots ), std::end( slots ), res );
 }
 
 void Tr2AnimationRetargeter::ReleaseCachedData( BlueAsyncRes* )
@@ -277,7 +284,6 @@ void Tr2AnimationRetargeter::Unbind()
 		clip.groundOffset = 0.f;
 	}
 	m_clipCount = 0;
-	m_boundTarget = nullptr;
 	m_boundTargetBoneCount = 0;
 	m_links.clear();
 	m_linkForTargetBone.clear();
@@ -289,17 +295,21 @@ void Tr2AnimationRetargeter::Unbind()
 bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 {
 	Unbind();
-	m_needsBind = false;
+	m_boundTargetBoneCount = target.bones.size();
 
-	const cmf::Data* clipData[2] = { GetClipData( m_sourceRes ), m_blendSourcePath.empty() ? nullptr : GetClipData( m_blendSourceRes ) };
-	const uint32_t clipCount = m_blendSourcePath.empty() ? 1 : 2;
-	const auto* sourceBindData = GetData( m_sourceBindPoseRes );
-	const auto* targetBindData = GetData( m_targetBindPoseRes );
-	if( !clipData[0] || ( clipCount == 2 && !clipData[1] ) || !sourceBindData || !targetBindData || m_boneMap.empty() )
+	if( !IsReady() || m_boneMap.empty() )
 	{
-		// Try again once the missing piece arrives (RebuildCachedData, MapBone)
+		// Try again next frame: a file is still loading, or no bone is mapped yet
+		m_needsBind = true;
 		return false;
 	}
+	// From here a failure is not retried until a file, the bone map or the animation's skeleton changes
+	m_needsBind = false;
+
+	const uint32_t clipCount = m_clips[1].path.empty() ? 1 : 2;
+	const cmf::Data* clipData[2] = { GetClipData( m_clips[0].res ), clipCount > 1 ? GetClipData( m_clips[1].res ) : nullptr };
+	const cmf::Data* sourceBindData = m_sourceBindPosePath.empty() ? clipData[0] : GetData( m_sourceBindPoseRes );
+	const cmf::Data* targetBindData = GetData( m_targetBindPoseRes );
 
 	const cmf::Skeleton& sourceBind = sourceBindData->skeletons[0];
 	const cmf::Skeleton& targetBind = targetBindData->skeletons[0];
@@ -334,6 +344,7 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 		}
 		if( resolvedForTarget[r.target] >= 0 )
 		{
+			CCP_LOGWARN( "Tr2AnimationRetargeter: %s is mapped more than once, keeping its first pair", mapping.target.c_str() );
 			continue;
 		}
 		resolvedForTarget[r.target] = (int32_t)resolved.size();
@@ -341,7 +352,17 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 	}
 	if( resolved.empty() )
 	{
+		CCP_LOGWARN( "Tr2AnimationRetargeter: none of the %u bone pairs could be resolved, so nothing plays", (uint32_t)m_boneMap.size() );
 		return false;
+	}
+
+	// The lowest mapped bone in each bind pose: the feet are found and the pelvis heights measured from it
+	float sourceLowest = FLT_MAX;
+	float targetLowest = FLT_MAX;
+	for( const Resolved& r : resolved )
+	{
+		sourceLowest = std::min( sourceLowest, sourceBindWorld[r.sourceBind].position.y );
+		targetLowest = std::min( targetLowest, targetBindWorld[r.targetBind].position.y );
 	}
 
 	// Nearest mapped ancestor of each target bone, from the live skeleton
@@ -380,7 +401,11 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 				m_pelvisTarget = resolved[i].target;
 				m_pelvisSourceBindHeight = sourceBindWorld[resolved[i].sourceBind].position.y;
 				m_pelvisTargetBindPosition = targetBindWorld[resolved[i].targetBind].position;
-				m_pelvisHeightScale = m_pelvisSourceBindHeight > 0.f ? m_pelvisTargetBindPosition.y / m_pelvisSourceBindHeight : 1.f;
+
+				// Heights above the feet: a rig's origin can sit anywhere (Mixamo's is at the hips)
+				const float sourceHeight = m_pelvisSourceBindHeight - sourceLowest;
+				const float targetHeight = m_pelvisTargetBindPosition.y - targetLowest;
+				m_pelvisHeightScale = sourceHeight > MIN_PELVIS_HEIGHT && targetHeight > MIN_PELVIS_HEIGHT ? targetHeight / sourceHeight : 1.f;
 			}
 			continue;
 		}
@@ -401,7 +426,7 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 			const Vector3 sourceDirection = sourceBindWorld[resolved[j].sourceBind].position - sourceBindWorld[resolved[i].sourceBind].position;
 			if( LengthSq( targetDirection ) > 1e-10f && LengthSq( sourceDirection ) > 1e-10f )
 			{
-				correction[i] = ArcBetween( Normalize( targetDirection ), Normalize( sourceDirection ) );
+				TriQuaternionRotationArc( &correction[i], &targetDirection, &sourceDirection );
 			}
 			break;
 		}
@@ -424,14 +449,9 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 	}
 
 	// The feet: the mapped bones lowest in the target bind pose
-	float lowest = FLT_MAX;
 	for( const Resolved& r : resolved )
 	{
-		lowest = std::min( lowest, targetBindWorld[r.targetBind].position.y );
-	}
-	for( const Resolved& r : resolved )
-	{
-		if( targetBindWorld[r.targetBind].position.y < lowest + FOOT_BAND )
+		if( targetBindWorld[r.targetBind].position.y < targetLowest + FOOT_BAND )
 		{
 			m_feet.push_back( r.target );
 		}
@@ -451,8 +471,14 @@ bool Tr2AnimationRetargeter::Bind( const cmf::Skeleton& target )
 		clip.pelvisSource = resolved[pelvis].source[c];
 	}
 	m_clipCount = clipCount;
-	m_boundTarget = &target;
-	m_boundTargetBoneCount = target.bones.size();
+
+	CCP_LOG(
+		"Tr2AnimationRetargeter: bound %u of %u bone pairs and %u clips; pelvis %s, %u foot bones",
+		(uint32_t)resolved.size(),
+		(uint32_t)m_boneMap.size(),
+		clipCount,
+		cmf::ToStdString( target.bones[m_pelvisTarget] ).c_str(),
+		(uint32_t)m_feet.size() );
 	return true;
 }
 
@@ -473,14 +499,11 @@ void Tr2AnimationRetargeter::UpdateClock()
 	m_phase = Wrap01( m_phase );
 }
 
-void Tr2AnimationRetargeter::Retarget( uint32_t clipIndex, float phase, const cmf::Skeleton& skeleton, const cmf::SkeletonPose& base, cmf::SkeletonPose& out )
+void Tr2AnimationRetargeter::Retarget( Clip& clip, float phase, const cmf::Skeleton& skeleton, const cmf::SkeletonPose& base, cmf::SkeletonPose& out )
 {
-	Clip& clip = m_clips[clipIndex];
-	const float offset = clipIndex == 0 ? m_sourcePhaseOffset : m_blendSourcePhaseOffset;
-
 	// Source pose and its world transforms
 	cmf::RestPose( clip.sourcePose, *clip.skeleton );
-	clip.player->SampleAtLocalTime( clip.sourcePose, Wrap01( phase + offset ) * clip.duration );
+	clip.player->SampleAtLocalTime( clip.sourcePose, Wrap01( phase + clip.phaseOffset ) * clip.duration );
 	ComputeWorld( *clip.skeleton, clip.sourcePose.boneTransforms.data(), clip.sourceWorld );
 
 	// Retargeted pose: unmapped bones keep what the animation sampled
@@ -531,7 +554,7 @@ void Tr2AnimationRetargeter::CalibrateGround( const cmf::Skeleton& skeleton, con
 		float lowest = FLT_MAX;
 		for( uint32_t k = 0; k < GROUND_SAMPLES; ++k )
 		{
-			Retarget( c, (float)k / GROUND_SAMPLES, skeleton, base, m_retargetPose );
+			Retarget( m_clips[c], (float)k / GROUND_SAMPLES, skeleton, base, m_retargetPose );
 			for( uint32_t foot : m_feet )
 			{
 				lowest = std::min( lowest, m_targetWorld[foot].position.y );
@@ -556,12 +579,9 @@ void Tr2AnimationRetargeter::ModifyPose( const cmf::Skeleton& skeleton, cmf::Ske
 	{
 		return;
 	}
-	if( m_needsBind || m_boundTarget != &skeleton || m_boundTargetBoneCount != skeleton.bones.size() )
+	if( m_needsBind || m_boundTargetBoneCount != skeleton.bones.size() )
 	{
-		if( !Bind( skeleton ) )
-		{
-			return;
-		}
+		Bind( skeleton );
 	}
 	if( m_clipCount == 0 || pose.boneTransforms.size() != skeleton.bones.size() )
 	{
@@ -573,11 +593,11 @@ void Tr2AnimationRetargeter::ModifyPose( const cmf::Skeleton& skeleton, cmf::Ske
 		CalibrateGround( skeleton, pose );
 	}
 
-	Retarget( 0, m_phase, skeleton, pose, m_retargetPose );
+	Retarget( m_clips[0], m_phase, skeleton, pose, m_retargetPose );
 	const float blend = Clamp01( m_blend );
 	if( m_clipCount > 1 && blend > 0.f )
 	{
-		Retarget( 1, m_phase, skeleton, pose, m_blendPose );
+		Retarget( m_clips[1], m_phase, skeleton, pose, m_blendPose );
 		cmf::BlendPoses( m_retargetPose, m_retargetPose, m_blendPose, blend );
 	}
 
