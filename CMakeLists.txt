@@ -148,6 +148,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
     shaders/include/Carbon/SpaceScene/EveTransform.fxh
+    shaders/include/Carbon/SpaceScene/GpuParticles.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
@@ -157,8 +158,17 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/Math.fxh
     shaders/include/Carbon/PackedTangents.fxh
     shaders/include/Carbon/ParticleAnnotations.fxh
+    shaders/include/Carbon/RandomXOrShift.fxh
     shaders/include/Carbon/System.fxh
     shaders/include/Carbon/Tr2CurveLineSet.fxh
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/SetDrawParameters.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/SetSortArgs.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/Sort.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/SortInner.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/SortStep.fx
+    shaders/Managed/Space/SpecialFX/Particles/Gpu/Update.fx
     shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
     )
 

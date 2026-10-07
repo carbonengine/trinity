@@ -328,4 +328,32 @@ float4x4 MatrixInverse(float4x4 m)
     return result;
 }
 
+
+float4 QuaternionRotationYawPitchRoll( float yaw, float pitch, float roll )
+{
+    float sinYaw = sin( yaw / 2.0f );
+    float cosYaw = cos( yaw / 2.0f );
+    float sinPitch = sin( pitch / 2.0f );
+    float cosPitch = cos( pitch / 2.0f );
+    float sinRoll = sin( roll / 2.0f );
+    float cosRoll = cos( roll / 2.0f );
+
+    float4 result;
+    result.x = sinYaw * cosPitch * sinRoll + cosYaw * sinPitch * cosRoll;
+    result.y = sinYaw * cosPitch * cosRoll - cosYaw * sinPitch * sinRoll;
+    result.z = cosYaw * cosPitch * sinRoll - sinYaw * sinPitch * cosRoll;
+    result.w = cosYaw * cosPitch * cosRoll + sinYaw * sinPitch * sinRoll;
+    return result;
+}
+
+float4 QuaternionMultiply( float4 q1, float4 q2 )
+{
+    float4 result;
+    result.x = q2.w * q1.x + q2.x * q1.w + q2.y * q1.z - q2.z * q1.y;
+    result.y = q2.w * q1.y - q2.x * q1.z + q2.y * q1.w + q2.z * q1.x;
+    result.z = q2.w * q1.z + q2.x * q1.y - q2.y * q1.x + q2.z * q1.w;
+    result.w = q2.w * q1.w - q2.x * q1.x - q2.y * q1.y - q2.z * q1.z;
+    return result;
+}
+
 #endif
