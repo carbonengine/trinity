@@ -140,6 +140,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBulletStorm.fxh
+    shaders/include/Carbon/SpaceScene/EveChildCloud2.fxh
     shaders/include/Carbon/SpaceScene/EveHazeSet.fxh
     shaders/include/Carbon/SpaceScene/EveLensflare.fxh
     shaders/include/Carbon/SpaceScene/EveOccluder.fxh
@@ -177,6 +178,8 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
+    shaders/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
+    shaders/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
