@@ -148,6 +148,8 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
     shaders/include/Carbon/SpaceScene/EveTransform.fxh
+    shaders/include/Carbon/SpaceScene/EveStretch2.fxh
+    shaders/include/Carbon/SpaceScene/EveTacticalOverlay.fxh
     shaders/include/Carbon/SpaceScene/GpuParticles.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
@@ -161,6 +163,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/RandomXOrShift.fxh
     shaders/include/Carbon/System.fxh
     shaders/include/Carbon/Tr2CurveLineSet.fxh
+    shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
     shaders/Managed/Space/SpecialFX/Particles/Gpu/SetDrawParameters.fx
@@ -169,7 +172,11 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/SpecialFX/Particles/Gpu/SortInner.fx
     shaders/Managed/Space/SpecialFX/Particles/Gpu/SortStep.fx
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Update.fx
-    shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
+    shaders/Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx
+    shaders/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
+    shaders/Managed/Space/SpecialFX/Volumetric/Fog/Fog.fxh
+    shaders/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
+    shaders/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
