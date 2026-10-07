@@ -140,14 +140,17 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildBulletStorm.fxh
+    shaders/include/Carbon/SpaceScene/EveChildCloud.fxh
     shaders/include/Carbon/SpaceScene/EveChildCloud2.fxh
     shaders/include/Carbon/SpaceScene/EveHazeSet.fxh
     shaders/include/Carbon/SpaceScene/EveLensflare.fxh
     shaders/include/Carbon/SpaceScene/EveOccluder.fxh
     shaders/include/Carbon/SpaceScene/EvePlaneSet.fxh
+    shaders/include/Carbon/SpaceScene/EveChildQuad.fxh
     shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
+    shaders/include/Carbon/SpaceScene/EveStarfield.fxh
     shaders/include/Carbon/SpaceScene/EveTransform.fxh
     shaders/include/Carbon/SpaceScene/EveStretch2.fxh
     shaders/include/Carbon/SpaceScene/EveTacticalOverlay.fxh
