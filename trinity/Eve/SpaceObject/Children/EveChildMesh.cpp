@@ -7,6 +7,7 @@
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/EveTransform.h"
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/MatrixUtils.h"
 #include "Tr2InstancedMesh.h"
 #include "Tr2GrannyAnimation.h"
 #include "TriFrustumOrtho.h"
@@ -680,8 +681,7 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 	{
 		if( m_mesh )
 		{
-			const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), reverseWinding );
+			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), m_reverseWinding );
 		}
 
 		if( m_activationStrength != 0.0 )
@@ -731,19 +731,19 @@ void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batc
 
 	if( damageShader )
 	{
-		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod );
+		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	// own effects are emitted before the inherited ones so the parent's overlays (e.g. cloak)
 	// draw on top of this child's own overlays (e.g. battle damage)
 	if( !m_overlayEffects.empty() )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	if( hasParentOverlays )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 }
 
@@ -753,8 +753,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	// Fix asap <Logi 27. aug 2015>
 	if( m_display && m_mesh && m_hasUpdated )
 	{
-		const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, reverseWinding );
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, m_reverseWinding );
 	}
 }
 
@@ -883,9 +882,8 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto meshIndex = m_mesh->GetMeshIndex();
-		if( m_mesh->GetGeometryResource()->GetMeshData( meshIndex ) )
+		if( auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize ) )
 		{
-			auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
@@ -965,6 +963,10 @@ void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2Pi
 		}
 	}
 }
+Tr2MeshBase* EveChildMesh::GetMesh() const
+{
+	return m_mesh;
+}
 
 void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
 {
@@ -994,6 +996,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	{
 		m_worldTransform = ( *it )->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
+	m_reverseWinding = IsMirrored( m_worldTransform );
 
 	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
 
@@ -1737,7 +1740,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	m_morphTargetOffsets.AdvanceFrame();
 	m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-	CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
+	TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 
 	MergeMorphsConstantBuffer* data;
@@ -2053,6 +2056,7 @@ void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::
 		EveChildLocatorSetsSource source;
 		source.childToObject = localTransform * parentTransform;
 		source.owner = this;
+		source.partTag = GetPartTag();
 		source.sets = entry;
 		out.push_back( source );
 	}
@@ -2090,18 +2094,17 @@ void EveChildMesh::InvalidateOwnerMergedLocators( LocatorInvalidationReason reas
 	}
 }
 
-EveDamageOverlayPtr EveChildMesh::GetDamageOverlay() const
+EveDamageOverlayPtr EveChildMesh::GetPartDamageOverlay( PartTag ) const
 {
 	return m_damageOverlay;
 }
 
-EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
+void EveChildMesh::CreatePartDamageOverlay( PartTag )
 {
 	if( !m_damageOverlay )
 	{
 		m_damageOverlay.CreateInstance();
 	}
-	return m_damageOverlay;
 }
 
 void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
@@ -2109,7 +2112,7 @@ void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
 	m_armorDamageShader = effect;
 }
 
-Tr2Effect* EveChildMesh::GetArmorDamageShaderEffect() const
+Tr2Effect* EveChildMesh::GetPartArmorDamageShaderEffect( PartTag ) const
 {
 	return m_armorDamageShader;
 }
@@ -2138,7 +2141,7 @@ bool EveChildMesh::GetDamageLocatorBindPositionLocal( int index, Vector3& out ) 
 	return true;
 }
 
-bool EveChildMesh::GetDamageLocatorAnimatedLocal( int index, Vector3& position, Vector3& direction ) const
+bool EveChildMesh::GetPartDamageLocatorAnimatedLocal( PartTag, int index, Vector3& position, Vector3& direction ) const
 {
 	const LocatorStructureList* locators = GetOwnedDamageLocators();
 	if( !locators || index < 0 || index >= int( locators->size() ) )

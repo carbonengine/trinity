@@ -30,6 +30,8 @@ void Tr2SpotLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 	float outerAngle = TRI_2PI * m_lightData.outerAngle / 360.f;
 	float innerAngle = TRI_2PI * m_lightData.innerAngle / 360.f;
 
-	renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 2.0f, baseColor ) );
-	renderer.DrawCone( this, lightMatrix, m_lightData.innerRadius, innerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 3.0f, baseColor + colorMod ) );
+	renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Wireframe, Tr2DebugColor( baseColor + colorMod * 2.0f, baseColor ) );
+	renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Solid, Color( 0, 0, 0, 0 ) );
+	renderer.DrawCone( this, lightMatrix, m_lightData.innerRadius, innerAngle, 15, 15, Tr2DebugRenderer::Wireframe, Tr2DebugColor( baseColor + colorMod * 3.0f, baseColor + colorMod ) );
+	renderer.DrawText( TRI_DBG_FONT_SMALL, lightMatrix.GetTranslation(), baseColor, "%s", m_name.empty() ? "Tr2SpotLight" : m_name.c_str() );
 }

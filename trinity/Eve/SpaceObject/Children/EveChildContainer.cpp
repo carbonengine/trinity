@@ -522,7 +522,7 @@ void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext
 	if( m_isPlacementRoot && updateContext.GetTaskGroup() )
 	{
 		updateContext.GetTaskGroup()->run( [this, &updateContext, params] {
-			CCP_STATS_ZONE( "Placement Child UpdateAsyncronous" );
+			TRINITY_STATS_ZONE( "Placement Child UpdateAsyncronous" );
 			this->DoUpdateAsyncronous( updateContext, params );
 		} );
 	}

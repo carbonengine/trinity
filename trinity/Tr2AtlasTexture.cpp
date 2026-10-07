@@ -206,7 +206,7 @@ BlueAsyncRes::LoadingResult Tr2AtlasTexture::DoLoad()
 
 bool Tr2AtlasTexture::DoPrepare()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_textureAtlas )
 	{
