@@ -18,19 +18,39 @@ const Be::ClassInfo* Tr2AnimationRetargeter::ExposeToBlue()
 			"The Tr2GrannyAnimation whose pose is modified.  Setting it takes the animation's single pose modifier slot.\n"
 			"The animation does not keep the retargeter alive, so hold a reference to it for as long as it should play." )
 
-		MAP_PROPERTY( "sourcePath", GetSourcePath, SetSourcePath, "CMF file holding the clip to play and the skeleton it was authored for; its first animation is played" )
-		MAP_PROPERTY( "blendSourcePath", GetBlendSourcePath, SetBlendSourcePath, "Optional second clip of the same rig, blended over the first by blend (for example a run over a walk)" )
 		MAP_PROPERTY( "sourceBindPosePath", GetSourceBindPosePath, SetSourceBindPosePath, "CMF file whose skeleton holds the source rig's bind pose; empty uses the first clip's skeleton, for clips whose rest pose is the bind pose" )
 		MAP_PROPERTY( "targetBindPosePath", GetTargetBindPosePath, SetTargetBindPosePath, "CMF file whose skeleton holds the target rig's bind pose" )
 
-		MAP_ATTRIBUTE( "weight", m_weight, "How much of the clips replaces the sampled pose, 0 to 1", Be::READWRITE )
-		MAP_ATTRIBUTE( "blend", m_blend, "How much of the second clip replaces the first, 0 to 1", Be::READWRITE )
-		MAP_ATTRIBUTE( "phase", m_phase, "Position in the cycle, 0 to 1, shared by both clips; set it every frame to drive the clips from movement", Be::READWRITE )
-		MAP_ATTRIBUTE( "speed", m_speed, "Cycles the phase advances by itself per clip length; 0 when phase is driven from outside", Be::READWRITE )
-		MAP_PROPERTY( "sourcePhaseOffset", GetSourcePhaseOffset, SetSourcePhaseOffset, "Where in the first clip phase 0 falls, 0 to 1 (for lining up the clips' steps)" )
-		MAP_PROPERTY( "blendSourcePhaseOffset", GetBlendSourcePhaseOffset, SetBlendSourcePhaseOffset, "Where in the second clip phase 0 falls, 0 to 1" )
+		MAP_PROPERTY_READONLY( "isReady", IsReady, "True once every clip and the bind pose files have loaded" )
 
-		MAP_PROPERTY_READONLY( "isReady", IsReady, "True once the clips and both bind pose files have loaded" )
+		MAP_METHOD_AND_WRAP(
+			"AddClip",
+			AddClip,
+			"AddClip( name, path, looping )\n\n"
+			"Adds a clip of the source rig, or replaces the one with that name.  It plays once given a weight.\n"
+			":param name: name to drive the clip by\n"
+			":param path: CMF file holding the clip; its first animation is played\n"
+			":param looping: the phase wraps round; otherwise it stops at the end of the clip" )
+
+		MAP_METHOD_AND_WRAP( "ClearClips", ClearClips, "Removes all clips" )
+
+		MAP_METHOD_AND_WRAP(
+			"SetClipWeight",
+			SetClipWeight,
+			"SetClipWeight( name, weight )\n\n"
+			"Sets how much a clip counts, 0 to 1.  The clips with weight are blended by their weights, and their total\n"
+			"weight, up to 1, is how much of them replaces the sampled pose.  Returns False if there is no such clip.\n"
+			":param name: clip name\n"
+			":param weight: clip weight" )
+
+		MAP_METHOD_AND_WRAP(
+			"SetClipPhase",
+			SetClipPhase,
+			"SetClipPhase( name, phase )\n\n"
+			"Sets where a clip is, 0 at its start and 1 at its end; set it every frame to drive the clip, from movement\n"
+			"for example.  Returns False if there is no such clip.\n"
+			":param name: clip name\n"
+			":param phase: position in the clip" )
 
 		MAP_METHOD_AND_WRAP(
 			"MapBone",
