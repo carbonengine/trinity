@@ -93,6 +93,11 @@ TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
 
 TEST_F( Raytracing, BLASIsValidAfterCreation )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	Tr2BufferAL vb, ib;
 	// UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
 #if TRINITY_PLATFORM == TRINITY_METAL
@@ -112,6 +117,11 @@ TEST_F( Raytracing, BLASIsValidAfterCreation )
 
 TEST_F( Raytracing, BLASIsValidAfterUpdate )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	Tr2BufferAL vb, ib;
 	// UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
 #if TRINITY_PLATFORM == TRINITY_METAL
@@ -140,6 +150,11 @@ TEST_F( Raytracing, TLASIsInvalidBeforeCreation )
 
 TEST_F( Raytracing, TLASIsValidAfterCreation )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	Tr2BufferAL vb, ib;
 	// UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
 #if TRINITY_PLATFORM == TRINITY_METAL
@@ -170,6 +185,11 @@ TEST_F( Raytracing, TLASIsValidAfterCreation )
 
 TEST_F( Raytracing, CanCreateStateObject )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};
@@ -200,6 +220,11 @@ TEST_F( Raytracing, CanCreateStateObject )
 
 TEST_F( Raytracing, CanCreateShaderTable )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};
@@ -238,6 +263,11 @@ TEST_F( Raytracing, CanCreateShaderTable )
 
 TEST_F( Raytracing, ShaderTableCreationFailsWithInvalidShaderName )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};
@@ -440,6 +470,11 @@ void Transpose( float viewMatrix[4][4] )
 
 TEST_F( Raytracing, TraceRays )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};
@@ -566,6 +601,11 @@ TEST_F( Raytracing, TraceRays )
 
 TEST_F( Raytracing, CanUpdateBlas )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};
@@ -709,6 +749,11 @@ TEST_F( Raytracing, CanUpdateBlas )
 
 TEST_F( Raytracing, CanUseLocalConstants )
 {
+	if( !renderContext->GetCaps().SupportsRaytracing() )
+	{
+		GTEST_SKIP() << "Raytracing not supported on this device";
+	}
+
 	uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
 	};

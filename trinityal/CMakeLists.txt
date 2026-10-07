@@ -511,8 +511,6 @@ else()
     message(FATAL_ERROR "Unsupported trinity platform, only stub would be available!")
 endif()
 
-option(BUILD_TESTING "Build and run tests. Enabled by default." ON)
-message(STATUS " BUILD_TESTING VALUE IS ${BUILD_TESTING}")
 if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
