@@ -42,7 +42,7 @@ float RoughnessToGloss( float roughness )
 }
 
 // Helper function to convert PBR roughness to mip level used for environment map lookup
-float RoughnessToMip( TextureCube envMap, float roughness )
+float RoughnessToMip( float roughness, TextureCube envMap )
 {
     uint width;
     uint height;
@@ -55,13 +55,13 @@ float RoughnessToMip( TextureCube envMap, float roughness )
 // Helper function to convert PBR roughness to mip level used for environment map lookup for EveSpaceSceneEnvMap
 float RoughnessToMip( float roughness )
 {
-	return RoughnessToMip( EveSpaceSceneEnvMap, roughness );
+    return RoughnessToMip( roughness, EveSpaceSceneEnvMap );
 }
 
 // Sample an environment map with given direction and surface roughness
 float3 SampleEnvironmentMap( TextureCube envMap, float3 dir, float roughness )
 {
-	return envMap.SampleLevel( EveSpaceSceneEnvMapSampler, dir, RoughnessToMip( envMap, roughness ) ).rgb;
+    return envMap.SampleLevel( EveSpaceSceneEnvMapSampler, dir, RoughnessToMip( roughness, envMap ) ).rgb;
 }
 
 #endif
