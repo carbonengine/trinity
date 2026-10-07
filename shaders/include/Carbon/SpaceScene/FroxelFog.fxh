@@ -1,17 +1,11 @@
 // Copyright © 2026 CCP ehf.
 
-#ifndef FOG_FXH
-#define FOG_FXH
+#ifndef CARBON_FOG_FXH
+#define CARBON_FOG_FXH
 
-#include "../../../../../include/Carbon/System.fxh"
+#include "../System.fxh"
 
-
-static const uint LIGHT_FLAG_AFFECTS_SURFACE = 1 << 16;
-static const uint LIGHT_FLAG_AFFECTS_PARTICLES = 1 << 17;
-static const uint LIGHT_FLAG_CASTS_SHADOWS = 1 << 18;
-static const uint LIGHT_FLAG_IS_VOLUMETRIC = 1 << 19;
-
-struct PerLightData
+struct FroxelPerLightData
 {
     float4 position; // xyz - world position, w - radius
     float4 color; // xyz - color, w -  bits 0..15 - innerRadius (float 16), bits 16..31 - flags
@@ -21,15 +15,6 @@ struct PerLightData
     // z bits 0..15 - outerAngle (float 16), z bits 16..31 - innerAngle (float 16)
     // w bits 0..1 - padding, w bits 2..11 - shadowMapScale, w bits 12..21 - shadowMapOffsetX, w bits 22..31 - shadowMapOffsetY
 };
-
-struct HitInfo
-{
-	float visibility;
-};
-
-#ifndef RAYTRACING
-Texture2D<float> ShadowMapAtlas <bool AutoRegister = true; >;
-#endif
 
 struct FroxelPerObjectData
 {
@@ -61,7 +46,7 @@ struct FroxelPerObjectData
     float4x4 GodRayNoiseMatrix;
 
 
-	float3 FogNoiseOffset;
+    float3 FogNoiseOffset;
     float FogNoiseFrequency;
 
     float FogNoiseLerp;
@@ -83,35 +68,30 @@ struct FroxelPerObjectData
     float LightProfileTextureWidth;
 
     //Directional light shadows
-	float4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
+    float4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
     float4x4 ShadowMatrix[16]; // Matrix that takes a coordinate from view space all the way to the packed cascades
     float4 SplitInfo; // x = NrOfSplits, y = <unused>, z = <unused>, w = <unused>
     
-    PerLightData DynamicLights[16];
+    FroxelPerLightData DynamicLights[16];
     
     float4 Planets[2];
 };
 
-cbuffer FroxelPerObjectCB : register(b3)
+float FroxelDither( uint2 xy, float jitter )
 {
-    FroxelPerObjectData FroxelPerObject;
+    float g = 1.32471795724474602596;
+    return frac( jitter + dot( float2( xy ), 1.0 / float2( g, g * g ) ) );
 }
 
-float Dither(uint2 xy, float jitter)
+float FroxelGetLayerDistance( float normalizedZ, FroxelPerObjectData froxelPerObject )
 {
-	float g = 1.32471795724474602596;
-	return frac(jitter + dot(float2(xy), 1.0 / float2(g, g*g)));
-}
-
-float GetLayerDistance(float normalizedZ)
-{
-    float layerDistance = -log(lerp(1.0, FroxelPerObject.MaxDistanceVisibility, normalizedZ)) / FroxelPerObject.BaseDensity;
+    float layerDistance = -log( lerp( 1.0, froxelPerObject.MaxDistanceVisibility, normalizedZ ) ) / froxelPerObject.BaseDensity;
     return layerDistance;
 }
 
-float GetNormalizedZ(float layerDistance)
+float FroxelGetNormalizedZ( float layerDistance, FroxelPerObjectData froxelPerObject )
 {
-    float normalizedZ = saturate((exp(-layerDistance * FroxelPerObject.BaseDensity) - 1.0) / (FroxelPerObject.MaxDistanceVisibility - 1.0));
+    float normalizedZ = saturate( ( exp( -layerDistance * froxelPerObject.BaseDensity ) - 1.0 ) / ( froxelPerObject.MaxDistanceVisibility - 1.0 ) );
     return normalizedZ;
 }
 
