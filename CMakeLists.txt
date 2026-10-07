@@ -150,6 +150,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveTransform.fxh
     shaders/include/Carbon/SpaceScene/EveStretch2.fxh
     shaders/include/Carbon/SpaceScene/EveTacticalOverlay.fxh
+    shaders/include/Carbon/SpaceScene/FroxelFog.fxh
     shaders/include/Carbon/SpaceScene/GpuParticles.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
@@ -174,7 +175,6 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Update.fx
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/Fog/Fog.fxh
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
     )

@@ -2,7 +2,12 @@
 
 #pragma permutation(INPUT_SOURCE, values = ( INPUT_SOURCE_INPUT_TEXTURE, INPUT_SOURCE_OUTPUT_TEXTURE ) )
 
-#include "Fog.fxh"
+#include "../../../../../include/Carbon/SpaceScene/FroxelFog.fxh"
+
+cbuffer FroxelPerObjectCB : register( b3 )
+{
+    FroxelPerObjectData FroxelPerObject;
+}
 
 Texture3D<float3> InputTexture;
 
@@ -27,14 +32,14 @@ void Test( uint3 coords : SV_DispatchThreadID )
 
         float normalizedZ = ( float( i ) + 1.0 ) * inverseLayers;
 
-        float layerDistance = min( FroxelPerObject.Far, GetLayerDistance( normalizedZ ) );
+        float layerDistance = min( FroxelPerObject.Far, FroxelGetLayerDistance( normalizedZ, FroxelPerObject ) );
         float stepSize = layerDistance - previousDistance;
         previousDistance = layerDistance;
 
 #if INPUT_SOURCE == INPUT_SOURCE_INPUT_TEXTURE
         float3 froxel = InputTexture[uint3( coords.xy, i )];
 #else
-		float3 froxel = OutputTexture[uint3(coords.xy, i)];
+		float3 froxel = OutputTexture[uint3( coords.xy, i )];
 #endif
         float density = stepSize * FroxelPerObject.BaseDensity;
 		

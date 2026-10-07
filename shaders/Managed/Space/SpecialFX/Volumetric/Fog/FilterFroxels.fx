@@ -1,6 +1,11 @@
 // Copyright © 2026 CCP ehf.
 
-#include "Fog.fxh"
+#include "../../../../../include/Carbon/SpaceScene/FroxelFog.fxh"
+
+cbuffer FroxelPerObjectCB : register( b3 )
+{
+    FroxelPerObjectData FroxelPerObject;
+}
 
 SamplerState NearestClampSampler = sampler_state
 {
@@ -68,13 +73,13 @@ void Test( uint3 coords : SV_DispatchThreadID )
 	{
 
 #if 1
-        float layerDistance = GetLayerDistance( texCoords.z );
+        float layerDistance = FroxelGetLayerDistance( texCoords.z, FroxelPerObject );
         float3 viewDirection = float3( texCoords.xy * FroxelPerObject.UnprojectParams.xy + FroxelPerObject.UnprojectParams.zw, -1.0 );
         float3 viewPosition = viewDirection * ( layerDistance * rsqrt( dot( viewDirection, viewDirection ) ) );
 
         float3 previousViewPosition = mul( float4( viewPosition, 1.0 ), FroxelPerObject.ReprojectionMatrix ).xyz; //no need to do perspective divide
         float2 previousCoords = ( previousViewPosition.xy / -previousViewPosition.z ) * FroxelPerObject.PreviousProjectParams.xy + FroxelPerObject.PreviousProjectParams.zw;
-        float previousNormalizedZ = GetNormalizedZ( length( previousViewPosition ) );
+        float previousNormalizedZ = FroxelGetNormalizedZ( length( previousViewPosition ), FroxelPerObject );
 
         float3 previousTexCoords = float3( previousCoords, previousNormalizedZ );
         float4 previous = PreviousTexture.SampleLevel( LinearClampSampler, previousTexCoords, 0 );
