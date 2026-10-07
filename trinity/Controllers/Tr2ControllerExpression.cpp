@@ -13,6 +13,7 @@
 #include "Tr2ExpressionTermInfo.h"
 #include "TriSettingsRegistrar.h"
 #include <regex>
+#include <string_view>
 
 
 bool g_controllerFunctionOverrideEnabled = false;
@@ -211,28 +212,75 @@ float BoosterIntensity( void* ctx )
 	return 0.0f;
 }
 
-bool IsValidVariableName( const char* name )
+bool IsIdentifierStart( char ch )
 {
-	auto isLetter = []( char x ) {
-		return ( x >= 'a' && x <= 'z' ) || ( x >= 'A' && x <= 'Z' ) || ( x == '_' );
-	};
-	auto isDigit = []( char x ) {
-		return x >= '0' && x <= '9';
-	};
-	if( !isLetter( *name ) )
+	return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' ) || ch == '_';
+}
+
+bool IsIdentifierChar( char ch )
+{
+	return IsIdentifierStart( ch ) || ( ch >= '0' && ch <= '9' );
+}
+
+bool IsIdentifier( const char* begin, const char* end )
+{
+	return begin != end && IsIdentifierStart( *begin ) && std::all_of( begin, end, IsIdentifierChar );
+}
+
+const char* SkipIdentifier( const char* text )
+{
+	while( IsIdentifierChar( *text ) )
+	{
+		++text;
+	}
+	return text;
+}
+
+using BindingPathRoots = std::vector<std::pair<std::string, IRoot*>>;
+
+const std::pair<std::string, IRoot*>* FindBindingRoot( const BindingPathRoots& roots, std::string_view name )
+{
+	auto found = std::find_if( begin( roots ), end( roots ), [&]( const auto& root ) {
+		return root.first == name;
+	} );
+	return found == end( roots ) ? nullptr : &*found;
+}
+
+bool HasBindableAttribute( const std::string& path )
+{
+	auto dot = path.rfind( '.' );
+	return dot != std::string::npos && IsIdentifier( path.c_str() + dot + 1, path.c_str() + path.length() );
+}
+
+bool HasUnattachedRoot( const BindingPathRoots& roots, const std::string& path )
+{
+	auto rootEnd = SkipIdentifier( path.c_str() );
+	auto root = FindBindingRoot( roots, std::string_view( path.c_str(), size_t( rootEnd - path.c_str() ) ) );
+	return root && !root->second;
+}
+
+bool LinkReference( Tr2BindingPoint& binding, const std::string& path, const BindingPathRoots& roots )
+{
+	if( !HasBindableAttribute( path ) )
 	{
 		return false;
 	}
-	++name;
-	while( *name )
-	{
-		if( !isLetter( *name ) && !isDigit( *name ) )
-		{
-			return false;
-		}
-		++name;
-	}
-	return true;
+	auto linkAt = [&]( size_t dot ) {
+		binding.m_path = path.substr( 0, dot );
+		binding.m_attribute = path.substr( dot + 1 );
+		binding.Link( roots );
+		return binding.IsValid();
+	};
+
+	auto attributeDot = path.rfind( '.' );
+	auto swizzleDot = path.length() - attributeDot == 2 ? path.rfind( '.', attributeDot - 1 ) : std::string::npos;
+	bool hasSwizzle = swizzleDot != std::string::npos && IsIdentifier( path.c_str() + swizzleDot + 1, path.c_str() + attributeDot );
+	return ( hasSwizzle && linkAt( swizzleDot ) ) || linkAt( attributeDot );
+}
+
+std::string CannotBindError( const std::string& path )
+{
+	return "cannot bind \"" + path + "\" to a float attribute";
 }
 
 #ifdef _WIN32
@@ -492,17 +540,19 @@ struct ParserObserver : public CcpParser::Observer
 
 	void OnVariable( const CcpParser::Variable* variable ) override
 	{
-		auto offset = variable - m_variables.data;
-		if( offset >= 0 && offset < ptrdiff_t( m_variables.count ) )
+		std::less<const CcpParser::Variable*> less;
+		if( less( variable, m_variables.data ) || !less( variable, m_variables.data + m_variables.count ) )
 		{
-			if( offset >= 64 )
-			{
-				m_maskOverflow = true;
-			}
-			else
-			{
-				m_mask |= 1ull << offset;
-			}
+			return;
+		}
+		auto offset = variable - m_variables.data;
+		if( offset >= 64 )
+		{
+			m_maskOverflow = true;
+		}
+		else
+		{
+			m_mask |= 1ull << offset;
 		}
 	}
 
@@ -518,6 +568,7 @@ struct ParserObserver : public CcpParser::Observer
 
 
 Tr2ControllerExpression::Tr2ControllerExpression() :
+	m_hasPendingReferences( false ),
 	m_stateMachine( nullptr ),
 	m_controller( nullptr ),
 	m_variableMask( 0 )
@@ -542,23 +593,132 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const ITr2
 
 std::string Tr2ControllerExpression::CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions )
 {
+	std::string rewritten;
+	auto error = BindReferences( expression, rewritten );
+	if( !error.empty() )
+	{
+		ClearReferences();
+		return error;
+	}
+
 	CcpParser::Externals externals;
-	CcpParser::VariableView varViews[] = { m_controller->GetVariableView() };
+	CcpParser::VariableView varViews[] = { m_controller->GetVariableView(), m_referenceVariables };
 	externals.variables = varViews;
 	CcpParser::FunctionView funcViews[2] = { extraFunctions, s_functions };
 	externals.functions = { funcViews, 2 };
 	ParserObserver observer;
 	observer.m_variables = varViews[0];
-	auto parsed = CcpParser::Parse( expression, externals, m_program, &observer );
+	auto parsed = CcpParser::Parse( rewritten.c_str(), externals, m_program, &observer );
 	if( parsed )
 	{
 		m_controller->EnsureTempArenaSize( m_program.GetTempArenaSize() );
-		m_variableMask = observer.m_maskOverflow || observer.m_hasNonPureFunctions ? 0ull : observer.m_mask;
+		bool maskIsUsable = !observer.m_maskOverflow && !observer.m_hasNonPureFunctions && m_references.empty();
+		m_variableMask = maskIsUsable ? observer.m_mask : 0ull;
 		return std::string();
 	}
 	else
 	{
-		return ToString( parsed, expression );
+		ClearReferences();
+		return ToString( parsed, rewritten.c_str() );
+	}
+}
+
+std::string Tr2ControllerExpression::BindReferences( const char* expression, std::string& rewritten )
+{
+	const auto& roots = m_controller->GetBindingPathRoots();
+	rewritten.clear();
+	for( const char* p = expression; *p; )
+	{
+		if( *p == '"' )
+		{
+			auto close = strchr( p + 1, '"' );
+			auto literalEnd = close ? close + 1 : p + strlen( p );
+			rewritten.append( p, literalEnd );
+			p = literalEnd;
+			continue;
+		}
+		bool startsToken = p == expression || ( !IsIdentifierChar( p[-1] ) && p[-1] != '.' );
+		if( !startsToken || !IsIdentifierStart( *p ) )
+		{
+			rewritten.push_back( *p++ );
+			continue;
+		}
+		auto rootEnd = SkipIdentifier( p );
+		auto pathEnd = Tr2BindingPoint::MatchPath( p );
+		if( pathEnd == rootEnd || !FindBindingRoot( roots, std::string_view( p, size_t( rootEnd - p ) ) ) )
+		{
+			// variable or function name
+			rewritten.append( p, rootEnd );
+			p = rootEnd;
+			continue;
+		}
+
+		std::string path( p, pathEnd );
+		auto found = std::find_if( begin( m_references ), end( m_references ), [&]( const Reference& reference ) {
+			return reference.path == path;
+		} );
+		if( found == end( m_references ) )
+		{
+			auto error = AddReference( path );
+			if( !error.empty() )
+			{
+				return error;
+			}
+			found = end( m_references ) - 1;
+		}
+		rewritten += found->name;
+		p = pathEnd;
+	}
+
+	m_referenceVariables.clear();
+	m_referenceVariables.reserve( m_references.size() );
+	for( size_t i = 0; i < m_references.size(); ++i )
+	{
+		m_referenceVariables.push_back( { m_references[i].name.c_str(), REFERENCE_BUFFER_INDEX, CcpParser::OffsetType( i * sizeof( float ) ) } );
+	}
+	m_referenceValues.assign( m_references.size(), 0.f );
+	return std::string();
+}
+
+std::string Tr2ControllerExpression::AddReference( const std::string& path )
+{
+	const auto& roots = m_controller->GetBindingPathRoots();
+	auto binding = std::make_unique<Tr2BindingPoint>();
+	bool linked = LinkReference( *binding, path, roots );
+	bool pending = !linked && HasUnattachedRoot( roots, path );
+	if( !linked && !pending )
+	{
+		return CannotBindError( path );
+	}
+
+	m_references.push_back( Reference{ path, "__ref" + std::to_string( m_references.size() ), std::move( binding ), pending } );
+	m_hasPendingReferences = m_hasPendingReferences || pending;
+	return std::string();
+}
+
+void Tr2ControllerExpression::ClearReferences()
+{
+	m_references.clear();
+	m_hasPendingReferences = false;
+	m_referenceVariables.clear();
+	m_referenceValues.clear();
+}
+
+void Tr2ControllerExpression::ResolvePendingReferences() const
+{
+	if( !m_hasPendingReferences )
+	{
+		return;
+	}
+	const auto& roots = m_controller->GetBindingPathRoots();
+	m_hasPendingReferences = false;
+	for( auto& reference : m_references )
+	{
+		if( reference.pending )
+		{
+			reference.pending = !LinkReference( *reference.binding, reference.path, roots );
+			m_hasPendingReferences = m_hasPendingReferences || reference.pending;
+		}
 	}
 }
 
@@ -568,8 +728,16 @@ std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
 	{
 		return std::make_pair( false, 0.f );
 	}
+	ResolvePendingReferences();
+	for( size_t i = 0; i < m_references.size(); ++i )
+	{
+		if( !m_references[i].binding->GetValue( m_referenceValues[i] ) )
+		{
+			m_referenceValues[i] = 0.f;
+		}
+	}
 	auto owner = m_controller->GetOwner();
-	void* externals[] = { m_controller->GetVariableBuffer(), &owner, (void*)&m_stateMachine, extraBuffer };
+	void* externals[] = { m_controller->GetVariableBuffer(), &owner, (void*)&m_stateMachine, extraBuffer, m_referenceValues.data() };
 	float result = m_program.Eval( externals, m_controller->GetTempArena() );
 	return std::make_pair( true, result );
 }
@@ -580,8 +748,10 @@ void Tr2ControllerExpression::Clear()
 	{
 		m_program = CcpParser::Program();
 	}
+	ClearReferences();
 	m_stateMachine = nullptr;
 	m_controller = nullptr;
+	m_variableMask = 0;
 }
 
 bool Tr2ControllerExpression::IsExpressionValid() const
