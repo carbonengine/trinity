@@ -3260,6 +3260,8 @@ bool EveSpaceScene::Initialize()
 		( *it )->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
 
+	PrepareResources();
+
 	return true;
 }
 
