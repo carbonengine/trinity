@@ -905,23 +905,27 @@ int GetNodeOrder( ASTNode* t )
 		{
 			if( child->GetNodeType() == NT_CBUFFER )
 			{
-				return 2;
+				return 3;
 			}
 		}
 		if( auto child = t->GetChildOrNull( 1 ) )
 		{
 			if( child->GetNodeType() == NT_CBUFFER )
 			{
-				return 2;
+				return 3;
 			}
 		}
 		if( GetRegisterType( t->GetType() ) )
 		{
-			return 2;
+			return 3;
 		}
 		else
 		{
-			return 1;
+			if ( t->GetType().modifier == OP_CONST && t->GetType().storageClass == OP_STATIC )
+			{
+				return 1;
+			}
+			return 2;
 		}
 	case NT_TECHNIQUE:
 		return 12;
@@ -985,7 +989,7 @@ void CreateGlobalsCB( ParserState& state )
 					continue;
 				}
 			}
-			if( !GetRegisterType( child->GetType() ) )
+			if( !GetRegisterType( child->GetType() ) && !( child->GetType().modifier == OP_CONST && child->GetType().storageClass == OP_STATIC ) )
 			{
 				varStart = std::min( varStart, i );
 				varEnd = std::max( varEnd, i );
