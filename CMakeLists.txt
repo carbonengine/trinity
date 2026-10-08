@@ -133,6 +133,7 @@ endif()
 
 set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/Raytracing/GeometryData.fxh
+    shaders/include/Carbon/SpaceScene/Raytracing/ShadowData.fxh
     shaders/include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
     shaders/include/Carbon/SpaceScene/DepthMap.fxh
     shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
