@@ -132,6 +132,7 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
 endif()
 
 set(_SHADER_SOURCES
+    shaders/include/Carbon/SpaceScene/Raytracing/GeometryData.fxh
     shaders/include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
     shaders/include/Carbon/SpaceScene/DepthMap.fxh
     shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
@@ -168,6 +169,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/RandomXOrShift.fxh
     shaders/include/Carbon/System.fxh
     shaders/include/Carbon/Tr2CurveLineSet.fxh
+    shaders/include/Carbon/VertexBufferUtil.fxh
     shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
     shaders/Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
