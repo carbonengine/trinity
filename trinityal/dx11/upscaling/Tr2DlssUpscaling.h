@@ -5,11 +5,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 #include "Tr2UpscalingAlDx11.h"
 #include "dx11/Tr2TextureALDx11.h"
-
-#include <sl.h>
-#include <sl_consts.h>
-#include <sl_dlss.h>
-#include <sl_nis.h>
+#include "include/Tr2StreamlineAL.h"
 
 namespace DlssUtils
 {
@@ -38,7 +34,7 @@ private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( Tr2UpscalingAL::UpscalingContextParams params ) override;
 
 	uint32_t m_adapter;
-	bool m_isAvailable;
+	Tr2StreamlineAL::FeatureSupport m_support;
 	bool m_streamlineSetup;
 
 	sl::FrameToken* m_frameToken;

@@ -42,6 +42,36 @@ TrinityALImpl::Tr2UpscalingTechniqueDx12* CreateUpscalingTechnique( Tr2RenderCon
 	return nullptr;
 }
 
+bool GetUpscalingTechniqueSupport( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, uint32_t adapter, uint32_t& supportedSettings, bool& supportsFrameGeneration )
+{
+	std::vector<Tr2UpscalingAL::Setting> settings;
+	if( technique == Tr2UpscalingAL::Technique::DLSS )
+	{
+		// constructing a DLSS technique initializes NVidia Streamline, which is slow
+		if( !Tr2DlssUpscalingTechnique::GetSupport( adapter, settings, supportsFrameGeneration ) )
+		{
+			return false;
+		}
+	}
+	else
+	{
+		std::unique_ptr<Tr2UpscalingTechniqueDx12> tech( CreateUpscalingTechnique( renderContext, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter ) );
+		if( !tech )
+		{
+			return false;
+		}
+		settings = tech->GetAvailableSettings();
+		supportsFrameGeneration = tech->SupportsFrameGeneration();
+	}
+
+	supportedSettings = 0;
+	for( auto& setting : settings )
+	{
+		supportedSettings |= setting;
+	}
+	return true;
+}
+
 Tr2UpscalingTechniqueDx12::Tr2UpscalingTechniqueDx12( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) :
 	Tr2UpscalingTechniqueAL( renderContext, technique, setting, frameGeneration, adapter )
 {
