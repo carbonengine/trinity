@@ -186,6 +186,7 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
     shaders/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
     shaders/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
+    shaders/Managed/Space/System/Raytracing/SkinVertices.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
