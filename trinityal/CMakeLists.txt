@@ -29,9 +29,9 @@ set(PUBLIC_AL_HEADER_FILES
     include/Tr2OcclusionQueryAL.h
     include/Tr2PipelineStatsQueryAL.h
     include/Tr2PrimaryRenderContextAL.h
+    include/Tr2RegisterMapAL.h
     include/Tr2RenderContextAL.h
     include/Tr2RenderPassAL.h
-    include/Tr2ResourceSetAL.h
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
     include/Tr2ShaderProgramAL.h
@@ -90,8 +90,8 @@ set(_SOURCES
     dx11/Tr2RenderContextDx11.h
     dx11/Tr2RenderStateEmulationDx11.cpp
     dx11/Tr2RenderStateEmulationDx11.h
-    dx11/Tr2ResourceSetALDx11.cpp
-    dx11/Tr2ResourceSetALDx11.h
+    dx11/Tr2ResourceBindingsDx11.cpp
+    dx11/Tr2ResourceBindingsDx11.h
     dx11/Tr2SamplerStateALDx11.cpp
     dx11/Tr2SamplerStateALDx11.h
     dx11/Tr2ShaderALDx11.cpp
@@ -129,8 +129,6 @@ set(_SOURCES
     dx12/Tr2RenderContextDx12.h
     dx12/Tr2ResourceHelper.cpp
     dx12/Tr2ResourceHelper.h
-    dx12/Tr2ResourceSetALDx12.cpp
-    dx12/Tr2ResourceSetALDx12.h
     dx12/Tr2RtBottomLevelAccelerationStructureALDx12.cpp
     dx12/Tr2RtBottomLevelAccelerationStructureALDx12.h
     dx12/Tr2RtPipelineStateALDx12.cpp
@@ -181,6 +179,8 @@ set(_SOURCES
     dx12/util/GpuMarkerBuffer.h
     dx12/util/PsoDescription.cpp
     dx12/util/PsoDescription.h
+    dx12/util/ResourceBindingsDx12.cpp
+    dx12/util/ResourceBindingsDx12.h
     include/Tr2BufferAL.h
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
@@ -193,13 +193,13 @@ set(_SOURCES
     include/Tr2RtTopLevelAccelerationStructureAL.h
     include/Tr2PipelineStatsQueryAL.h
     include/Tr2PrimaryRenderContextAL.h
+    include/Tr2RegisterMapAL.h
     include/Tr2RenderContextAL.h
     include/Tr2RenderPassAL.h
-    include/Tr2ResourceSetAL.h
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
-    include/Tr2ShaderProgramAL.h    
-    include/Tr2StreamlineAL.h    
+    include/Tr2ShaderProgramAL.h
+    include/Tr2StreamlineAL.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2VertexLayoutAL.h
@@ -239,8 +239,8 @@ set(_SOURCES
     metal/Tr2PrimaryRenderContextMetal.mm
     metal/Tr2RenderContextMetal.h
     metal/Tr2RenderContextMetal.mm
-    metal/Tr2ResourceSetALMetal.h
-    metal/Tr2ResourceSetALMetal.mm
+    metal/Tr2ResourceBindingsMetal.h
+    metal/Tr2ResourceBindingsMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.h
     metal/Tr2RtPipelineStateALMetal.mm
@@ -273,15 +273,15 @@ set(_SOURCES
     src/Tr2GpuTimerAl.cpp
     src/Tr2OcclusionQueryAL.cpp
     src/Tr2PipelineStatsQueryAL.cpp
-    src/Tr2ResourceSetAL.cpp
+    src/Tr2RegisterMapAL.cpp
     src/Tr2RtBottomLevelAccelerationStructureAL.cpp
     src/Tr2RtPipelineStateAL.cpp
     src/Tr2RtShaderTableAL.cpp
     src/Tr2RtTopLevelAccelerationStructureAL.cpp
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
-    src/Tr2ShaderProgramAL.cpp    
-    src/Tr2StreamlineAL.cpp    
+    src/Tr2ShaderProgramAL.cpp
+    src/Tr2StreamlineAL.cpp
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp
     src/Tr2VertexLayoutAL.cpp
@@ -304,8 +304,6 @@ set(_SOURCES
     stub/Tr2PrimaryRenderContextStub.h
     stub/Tr2RenderContextStub.cpp
     stub/Tr2RenderContextStub.h
-    stub/Tr2ResourceSetALStub.cpp
-    stub/Tr2ResourceSetALStub.h
     stub/Tr2SamplerStateALStub.cpp
     stub/Tr2SamplerStateALStub.h
     stub/Tr2ShaderALStub.cpp

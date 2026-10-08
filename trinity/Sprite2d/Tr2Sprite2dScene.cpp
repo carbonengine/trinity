@@ -1125,27 +1125,6 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			}
 			else
 			{
-				if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
-				{
-					for( uint32_t i = 0; i < 2; ++i )
-					{
-						Tr2TextureAL* texAL = nullptr;
-						if( m_texture[i] )
-						{
-							texAL = m_texture[i]->GetTexture();
-							if( !texAL )
-							{
-								if( m_texture[i]->GetRenderTarget() )
-								{
-									texAL = m_texture[i]->GetRenderTarget();
-								}
-							}
-						}
-						auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-						desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
-					}
-				}
-
 				m_drawCallStartIndex /= sizeof( uint32_t );
 				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), vertexBufferOffset, sizeof( Tr2Sprite2dD3DVertex ) );
 				renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer.GetBuffer() );
@@ -1173,6 +1152,24 @@ void Tr2Sprite2dScene::SubmitGeometry( Tr2RenderContext& renderContext )
 	for( unsigned i = 0; i < TR2_SS_MAX_TRANSFORM_COUNT; ++i )
 	{
 		transposedMatrixes[i] = Transpose( m_transformArray[i] );
+	}
+
+	for( uint32_t i = 0; i < 2; ++i )
+	{
+		Tr2TextureAL* texAL = nullptr;
+		if( m_texture[i] )
+		{
+			texAL = m_texture[i]->GetTexture();
+			if( !texAL )
+			{
+				if( m_texture[i]->GetRenderTarget() )
+				{
+					texAL = m_texture[i]->GetRenderTarget();
+				}
+			}
+		}
+		auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+		renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
 	}
 
 	bool result = FillAndSetConstants(
@@ -2112,10 +2109,9 @@ void Tr2Sprite2dScene::ReplayCapture( Tr2Sprite2dDisplayList* dl )
 			m_texelSizeVar[0] = entry.texelSize0;
 			m_texelSizeVar[1] = entry.texelSize1;
 
-			auto desc = entry.effect->GetPassDescription( 0, 0 );
-			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[0], ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[1], ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
+			entry.textureRegisters[0] = m_textureRegisters[0];
+			entry.textureRegisters[1] = m_textureRegisters[1];
+			entry.colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 
 			CCP_STATS_INC( spriteSceneDrawCallCount );
 

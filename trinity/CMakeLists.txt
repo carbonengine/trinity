@@ -1327,6 +1327,8 @@ set(_SOURCES
     Shader/Tr2ShaderBuffer.cpp
     Shader/Tr2ShaderBuffer.h
     Shader/Tr2ShaderBuffer_Blue.cpp
+    Shader/Tr2StaticResourceBindings.cpp
+    Shader/Tr2StaticResourceBindings.h
     Sprite2d/ITr2Sprite2dRenderer.h
     Sprite2d/ITr2Sprite2dTexture.h
     Sprite2d/ITr2SpriteObject.h
