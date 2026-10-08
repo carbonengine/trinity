@@ -1789,6 +1789,13 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				CComPtr<IDxcResult> pCompileResult;
 				HRESULT hrCompilation = compiler->Compile( &sourceBuffer, arguments, argumentsSize, nullptr, IID_PPV_ARGS( &pCompileResult ) );
+				if( SUCCEEDED( hrCompilation ) )
+				{
+					if( FAILED( pCompileResult->GetStatus( &hrCompilation ) ) )
+					{
+						hrCompilation = E_FAIL;
+					}
+				}
 
 				if( FAILED( hrCompilation ) )
 				{
