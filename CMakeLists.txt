@@ -156,6 +156,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveTransform.fxh
     shaders/include/Carbon/SpaceScene/EveStretch2.fxh
     shaders/include/Carbon/SpaceScene/EveTacticalOverlay.fxh
+    shaders/include/Carbon/SpaceScene/EveTurretSet.fxh
     shaders/include/Carbon/SpaceScene/FroxelFog.fxh
     shaders/include/Carbon/SpaceScene/GpuParticles.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
