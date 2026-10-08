@@ -5,6 +5,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
+#include "Utilities/Obb.h"
 
 #include "include/ITr2DebugRenderer.h"
 #include "Include/TriMath.h"
@@ -4202,11 +4203,11 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
-bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveSpaceObject2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	min = m_localAabbMin;
-	max = m_localAabbMax;
-	BoundingBoxTransform( min, max, m_worldTransform );
+	localMin = m_localAabbMin;
+	localMax = m_localAabbMax;
+	localToWorld = m_worldTransform;
 	return true;
 }
 

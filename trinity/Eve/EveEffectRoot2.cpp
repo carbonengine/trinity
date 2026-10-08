@@ -5,6 +5,7 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 #include "TriFrustum.h"
 #include "Lights/Tr2PointLight.h"
 #include "Tr2LightManager.h"
@@ -431,15 +432,17 @@ void EveEffectRoot2::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_lastUpdateMatrix;
 }
 
-bool EveEffectRoot2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveEffectRoot2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
 	if( m_boundingSphere.w <= 0.0f )
 	{
 		return false;
 	}
 
-	BoundingBoxInitialize( m_boundingSphere, min, max );
-	BoundingBoxTransform( min, max, m_lastUpdateMatrix );
+	CcpMath::Sphere worldSphere( m_boundingSphere );
+	worldSphere.Transform( m_lastUpdateMatrix );
+	BoundingBoxInitialize( Vector4( worldSphere.center, worldSphere.radius ), localMin, localMax );
+	localToWorld = IdentityMatrix();
 	return true;
 }
 

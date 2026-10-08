@@ -92,6 +92,9 @@ public:
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
 
+	// ITr2BoundingBox
+	virtual bool GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const;
+
 	// Apex
 	void AddToApexScene( Tr2ApexScene* apexScene );
 	void RemoveFromApexScene( void );

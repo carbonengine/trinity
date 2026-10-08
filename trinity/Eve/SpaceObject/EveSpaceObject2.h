@@ -348,7 +348,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2BoundingBox
-	virtual bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const;
+	virtual bool GetOrientedBoundingBox( Vector3 & localMin, Vector3 & localMax, Matrix & localToWorld ) const;
 	virtual bool IsBoundingBoxReady() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
