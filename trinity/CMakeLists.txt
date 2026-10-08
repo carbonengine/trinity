@@ -789,6 +789,9 @@ set(_SOURCES
     Eve/EveTriggerVolume.cpp
     Eve/EveTriggerVolume.h
     Eve/EveTriggerVolume_Blue.cpp
+    Eve/EveVolumeObject.cpp
+    Eve/EveVolumeObject.h
+    Eve/EveVolumeObject_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
