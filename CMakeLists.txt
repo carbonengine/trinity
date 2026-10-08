@@ -187,6 +187,10 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
     shaders/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
     shaders/Managed/Space/System/Raytracing/SkinVertices.fx
+    shaders/Managed/Space/System/ComputeLightLists.fx
+    shaders/Managed/Space/System/Denoise1D.fx
+    shaders/Managed/Space/System/DenoiseEstimate.fx
+    shaders/Managed/Space/System/EstimateNoise.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
