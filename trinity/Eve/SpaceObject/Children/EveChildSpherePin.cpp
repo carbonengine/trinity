@@ -67,7 +67,7 @@ Tr2PerObjectData* EveChildSpherePin::GetPerObjectData( ITriRenderBatchAccumulato
 // --------------------------------------------------------------------------------
 void EveChildSpherePinPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	const int constantCount = sizeof( EveChildSpherePinPerObjectData ) - sizeof( Tr2PerObjectData );
 	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_worldMatrix, constantCount, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );

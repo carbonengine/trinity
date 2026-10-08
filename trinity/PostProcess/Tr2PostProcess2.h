@@ -86,6 +86,9 @@ public:
 	float GetMipLodBias() const;
 
 	float m_exposureAdjustment = 0;
+	float m_sharpeningStrength = 0.5f;
+
+	Tr2AccumulatedGenericEffects m_genericEffects;
 
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;

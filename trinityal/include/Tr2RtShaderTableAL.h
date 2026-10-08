@@ -6,7 +6,6 @@
 #include "../ALResult.h"
 #include "../Tr2DeviceResourceAL.h"
 #include "Tr2ConstantBufferAL.h"
-#include "Tr2ResourceSetAL.h"
 
 namespace TrinityALImpl
 {

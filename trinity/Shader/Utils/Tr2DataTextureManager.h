@@ -63,7 +63,7 @@ private:
 	// the data
 	int32_t m_blockDataNextIdx;
 	std::map<int32_t, BlockData> m_blockData;
-	std::map<float, int32_t> m_blockPriority;
+	std::multimap<float, int32_t> m_blockPriority;
 
 	// the texture
 	Tr2TextureReferencePtr m_dataTexture;

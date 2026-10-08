@@ -30,7 +30,7 @@ size_t Tr2ImageRes::GetMemoryUsage()
 
 BlueAsyncRes::LoadingResult Tr2ImageRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_dataStream )
 	{

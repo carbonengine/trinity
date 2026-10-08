@@ -520,7 +520,7 @@ void BehaviorGroup::RemoveAgentsByCount( int count )
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// make sure the update isn't too big when e.g. a player resizes his window (in window mode)
 	float deltaTime = TriClamp( dt, 0.0, 0.1 );
@@ -636,7 +636,7 @@ float BehaviorGroup::GetBlendModifier() const
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& worldTransform )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	m_currentScreenSize = 0.0f;
 	float worldRadius = 1;
 
@@ -691,7 +691,7 @@ bool BehaviorGroup::IsGroupVisible() const
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
 	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
 	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
@@ -747,7 +747,7 @@ void BehaviorGroup::GetShipInfoForBuffer( uint8_t* data, const Matrix& parentWor
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::GetBoosterInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
 	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
 	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
@@ -1042,7 +1042,7 @@ void BehaviorGroup::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 
 void BehaviorGroup::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_display && IsGroupVisible() )
 	{

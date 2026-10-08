@@ -38,7 +38,7 @@ Tr2Sprite2dLineTrace::~Tr2Sprite2dLineTrace()
 
 void Tr2Sprite2dLineTrace::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display || m_vertices.empty() || ( m_end <= m_start ) || ( m_spriteEffect == TR2_SFX_NONE ) )
 	{
