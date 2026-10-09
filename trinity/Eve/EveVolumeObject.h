@@ -10,7 +10,6 @@
 #include "EveEntity.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/Volume/IEveVolume.h"
-#include "Eve/Volume/EveBoxVolume.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
 // This is only needed for py2 as the file now belongs in blue.
@@ -22,8 +21,7 @@
 #include <ITriFunction.h>
 #include <ITr2VolumeObject.h>
 
-BLUE_DECLARE_INTERFACE( IEveVolume );
-BLUE_DECLARE_IVECTOR( IEveVolume );
+BLUE_DECLARE( EveBoxVolume );
 BLUE_DECLARE_INTERFACE( ITr2VolumeObject );
 BLUE_DECLARE( EveVolumeObject );
 

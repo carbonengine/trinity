@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "EveVolumeObject.h"
+#include "Eve/Volume/EveBoxVolume.h"
 
 #include <cmath>
 
@@ -47,11 +48,8 @@ EveVolumeObject::~EveVolumeObject()
 		m_boxVolume->UnregisterForChanges( m_boxChangeCallbackID );
 	}
 
-	// Destroying a scene does not unregister its objects, so take the shape back here too.
-	if( m_pushedConsumer )
-	{
-		m_pushedConsumer->Remove();
-	}
+	// scenes don't unregister their objects when they are destroyed
+	RemoveFromConsumer();
 }
 
 void EveVolumeObject::RebuildBoundingSphere()
@@ -116,7 +114,6 @@ void EveVolumeObject::UpdateWorldTransform( Be::Time time )
 
 void EveVolumeObject::ResolveBoxVolume()
 {
-	// The box may be replaced or removed while editing; drop it when it is no longer in the list.
 	if( m_boxVolume )
 	{
 		bool stillListed = false;
@@ -139,7 +136,6 @@ void EveVolumeObject::ResolveBoxVolume()
 			m_boxVolume = nullptr;
 			m_warnedAboutVolumes = false;
 			m_transformDirty = true;
-			// The consumer still holds the old box; nothing is sent until a new box is picked.
 			RemoveFromConsumer();
 		}
 	}
@@ -149,7 +145,6 @@ void EveVolumeObject::ResolveBoxVolume()
 		return;
 	}
 
-	// The consumer takes exactly one shape, so the first box volume defines it.
 	for( const auto& volume : m_volumes )
 	{
 		if( EveBoxVolumePtr box = BlueCastPtr( volume ) )
@@ -173,7 +168,6 @@ void EveVolumeObject::ResolveBoxVolume()
 
 	if( m_boxVolume )
 	{
-		// Fires when the box is edited (e.g. in Graphite); the next update re-sends the transform.
 		m_boxChangeCallbackID = m_boxVolume->RegisterForChanges( [this]()
 		{
 			m_transformDirty = true;
@@ -200,12 +194,11 @@ void EveVolumeObject::RemoveFromConsumer()
 
 void EveVolumeObject::PushToConsumer()
 {
-	// The consumer was replaced or cleared (e.g. in Graphite): take the shape back from the old one.
 	if( m_pushedConsumer.p != m_consumer.p )
 	{
 		RemoveFromConsumer();
 		m_pushedConsumer = m_consumer;
-		// Whatever state the new consumer is in, the enabled state goes out before the first shape.
+		// make sure a new consumer gets the enabled state
 		m_lastSentEnabled = !m_enabled;
 	}
 
@@ -214,16 +207,14 @@ void EveVolumeObject::PushToConsumer()
 		return;
 	}
 
-	// Enabled state goes first: a consumer starts enabled, so a disabled object must say so before it
-	// hands over a shape, otherwise the consumer would activate for one frame and deactivate again.
+	// a consumer starts enabled, so the enabled state goes before the shape
 	if( m_enabled != m_lastSentEnabled )
 	{
 		m_pushedConsumer->SetEnabled( m_enabled );
 		m_lastSentEnabled = m_enabled;
 	}
 
-	// The box lives in this object's space; compose with the world transform, as EveBoxVolume::RenderDebugInfo does.
-	// The world transform is relative to the ego ball, so this changes every frame the player moves.
+	// relative to the ego ball, so this changes whenever the player moves
 	const Matrix unitBoxToWorld = m_boxVolume->GetBoxTransform() * m_worldTransform;
 	if( !m_hasSentTransform || m_transformDirty || !TransformsNearlyEqual( unitBoxToWorld, m_lastSentTransform ) )
 	{
@@ -331,8 +322,7 @@ void EveVolumeObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 // EveEntity
 void EveVolumeObject::RegisterComponents()
 {
-	// Unregistered and registered again in one go (ReregisterEntities): put the same shape straight back
-	// instead of leaving the consumer empty until the next update. A first registration waits for the update.
+	// ReregisterEntities: put the shape straight back
 	if( m_resendOnRegister && m_pushedConsumer && m_boxVolume )
 	{
 		SendTransform( m_lastSentTransform );
@@ -342,7 +332,6 @@ void EveVolumeObject::RegisterComponents()
 
 void EveVolumeObject::UnRegisterComponents()
 {
-	// Left the scene: nothing updates the shape any more, so the consumer must not keep it.
 	m_resendOnRegister = m_hasSentTransform;
 	RemoveFromConsumer();
 }
