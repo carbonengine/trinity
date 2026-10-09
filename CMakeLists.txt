@@ -194,6 +194,23 @@ set(_SHADER_SOURCES
     shaders/Managed/Space/System/Denoise1D.fx
     shaders/Managed/Space/System/DenoiseEstimate.fx
     shaders/Managed/Space/System/EstimateNoise.fx
+    shaders/Managed/Utility/BillboardNoZ.fx
+    shaders/Managed/Utility/BillboardPicking.fx
+    shaders/Managed/Utility/Debug.fx
+    shaders/Managed/Utility/DebugLine.fx
+    shaders/Managed/Utility/DebugPrimitive.fx
+    shaders/Managed/Utility/DebugPrimitivePicking.fx
+    shaders/Managed/Utility/Lines.fxh
+    shaders/Managed/Utility/LinesNoZ.fx
+    shaders/Managed/Utility/LinesRotationTool.fx
+    shaders/Managed/Utility/LinesRotationToolLH.fx
+    shaders/Managed/Utility/LinesWithZ.fx
+    shaders/Managed/Utility/PerFrameVSData.fxh
+    shaders/Managed/Utility/PrimitivePicking.fx
+    shaders/Managed/Utility/SolidNoLightNoCullWithZ.fx
+    shaders/Managed/Utility/Solids.fxh
+    shaders/Managed/Utility/SolidsNoZ.fx
+    shaders/Managed/Utility/SolidsWithZ.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
