@@ -299,6 +299,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_combinedPostProcessAttributes.CreateInstance();
 
 	m_instancedMeshManager = std::make_unique<EveInstancedMeshManager>();
+
+	PrepareResources();
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
