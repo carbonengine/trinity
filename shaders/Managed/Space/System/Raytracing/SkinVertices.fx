@@ -3,16 +3,10 @@
 #include "../../../../include/Carbon/System.fxh"
 #include "../../../../include/Carbon/BoneTransforms.fxh"
 #include "../../../../include/Carbon/VertexBufferUtil.fxh"
+#include "../../../../include/Carbon/SpaceScene/MeshMorphing.fxh"
 
 StructuredBuffer<float> InVB;
 RWStructuredBuffer<float> OutVB;
-
-struct AnimationData
-{
-    uint index;
-    float weight;
-};
-StructuredBuffer<AnimationData> MorphTargetAnimations <bool AutoRegister = true; >;
 RWBuffer<uint> BakedMorphTargetBuffer <bool AutoRegister = true; >;
 
 cbuffer PerObjectVS : register( b3 )
@@ -90,7 +84,7 @@ void SkinVertices( uint3 offset : SV_DispatchThreadID )
         float3 tmpPos = pos;
         for( uint i = 0; i < MorphAnimationDataCount; i++ )
         {
-            AnimationData data = MorphTargetAnimations[MorphAnimationDataOffset + i];
+            MorphTargetAnimationData data = MorphTargetAnimations[MorphAnimationDataOffset + i];
             int offset = morphOffset + MorphTargetSize * data.index;
             float3 morphPos = float3( LoadVB( offset ), LoadVB( offset + 1 ), LoadVB( offset + 2 ) );
             pos += data.weight * ( morphPos - tmpPos );
