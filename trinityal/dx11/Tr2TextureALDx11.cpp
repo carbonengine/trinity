@@ -485,7 +485,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 	}
 
 	// Behold! A workaround for WARP device crash when creating multiple SRVs into a BC7 texture!
-	if( !renderContext.m_dxgiOutput && desc.GetFormat() == Tr2RenderContextEnum::PIXEL_FORMAT_BC7_UNORM )
+	if( renderContext.m_softwareAdapter && desc.GetFormat() == Tr2RenderContextEnum::PIXEL_FORMAT_BC7_UNORM )
 	{
 		// Create a single linear view into the texture
 		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, false, renderContext ) );
