@@ -94,6 +94,7 @@ endif ()
 
 add_subdirectory(trinityal)
 add_subdirectory(trinity)
+add_subdirectory(shaders)
 
 if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
     # Determine if/when to generate/build documentation. The rules are as follows:
@@ -131,99 +132,3 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
     endif()
 endif()
 
-set(_SHADER_SOURCES
-    shaders/include/Carbon/InteriorScene/PerObjectData.fxh
-    shaders/include/Carbon/InteriorScene/PerSceneData.fxh
-    shaders/include/Carbon/SpaceScene/Raytracing/GeometryData.fxh
-    shaders/include/Carbon/SpaceScene/Raytracing/ShadowData.fxh
-    shaders/include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
-    shaders/include/Carbon/SpaceScene/DepthMap.fxh
-    shaders/include/Carbon/SpaceScene/DynamicLighting.fxh
-    shaders/include/Carbon/SpaceScene/EnvironmentMap.fxh
-    shaders/include/Carbon/SpaceScene/EveBannerSet.fxh
-    shaders/include/Carbon/SpaceScene/EveBoosterSet.fxh
-    shaders/include/Carbon/SpaceScene/EveChildBoosterSet.fxh
-    shaders/include/Carbon/SpaceScene/EveChildBulletStorm.fxh
-    shaders/include/Carbon/SpaceScene/EveChildCloud.fxh
-    shaders/include/Carbon/SpaceScene/EveChildCloud2.fxh
-    shaders/include/Carbon/SpaceScene/EveHazeSet.fxh
-    shaders/include/Carbon/SpaceScene/EveLensflare.fxh
-    shaders/include/Carbon/SpaceScene/EveOccluder.fxh
-    shaders/include/Carbon/SpaceScene/EvePlaneSet.fxh
-    shaders/include/Carbon/SpaceScene/EveChildQuad.fxh
-    shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
-    shaders/include/Carbon/SpaceScene/EveSpherePin.fxh
-    shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
-    shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
-    shaders/include/Carbon/SpaceScene/EveStarfield.fxh
-    shaders/include/Carbon/SpaceScene/EveTransform.fxh
-    shaders/include/Carbon/SpaceScene/EveStretch2.fxh
-    shaders/include/Carbon/SpaceScene/EveTacticalOverlay.fxh
-    shaders/include/Carbon/SpaceScene/EveTurretSet.fxh
-    shaders/include/Carbon/SpaceScene/FroxelFog.fxh
-    shaders/include/Carbon/SpaceScene/GpuParticles.fxh
-    shaders/include/Carbon/SpaceScene/MeshMorphing.fxh
-    shaders/include/Carbon/SpaceScene/PerObjectData.fxh
-    shaders/include/Carbon/SpaceScene/PerSceneData.fxh
-    shaders/include/Carbon/SpaceScene/Volumetrics.fxh
-    shaders/include/Carbon/UI/UI.fxh
-    shaders/include/Carbon/Bindless.fxh
-    shaders/include/Carbon/BoneTransforms.fxh
-    shaders/include/Carbon/Intersections.fxh
-    shaders/include/Carbon/Math.fxh
-    shaders/include/Carbon/PackedTangents.fxh
-    shaders/include/Carbon/ParticleAnnotations.fxh
-    shaders/include/Carbon/RandomXOrShift.fxh
-    shaders/include/Carbon/System.fxh
-    shaders/include/Carbon/Tr2CurveLineSet.fxh
-    shaders/include/Carbon/VertexBufferUtil.fxh
-    shaders/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/SetDrawParameters.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/SetSortArgs.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/Sort.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/SortInner.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/SortStep.fx
-    shaders/Managed/Space/SpecialFX/Particles/Gpu/Update.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
-    shaders/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
-    shaders/Managed/Space/System/Raytracing/SkinVertices.fx
-    shaders/Managed/Space/System/ComputeLightLists.fx
-    shaders/Managed/Space/System/Denoise1D.fx
-    shaders/Managed/Space/System/DenoiseEstimate.fx
-    shaders/Managed/Space/System/EstimateNoise.fx
-    shaders/Managed/Utility/BillboardNoZ.fx
-    shaders/Managed/Utility/BillboardPicking.fx
-    shaders/Managed/Utility/Debug.fx
-    shaders/Managed/Utility/DebugLine.fx
-    shaders/Managed/Utility/DebugPrimitive.fx
-    shaders/Managed/Utility/DebugPrimitivePicking.fx
-    shaders/Managed/Utility/Lines.fxh
-    shaders/Managed/Utility/LinesNoZ.fx
-    shaders/Managed/Utility/LinesRotationTool.fx
-    shaders/Managed/Utility/LinesRotationToolLH.fx
-    shaders/Managed/Utility/LinesWithZ.fx
-    shaders/Managed/Utility/PerFrameVSData.fxh
-    shaders/Managed/Utility/PrimitivePicking.fx
-    shaders/Managed/Utility/SolidNoLightNoCullWithZ.fx
-    shaders/Managed/Utility/Solids.fxh
-    shaders/Managed/Utility/SolidsNoZ.fx
-    shaders/Managed/Utility/SolidsWithZ.fx
-    shaders/Utility/CubeTextureViewer.fx
-    shaders/Utility/GeometryViewer.fx
-    shaders/Utility/LineGraph.fx
-    shaders/Utility/TextureViewer.fx
-    )
-
-add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
-source_group(
-    TREE "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
-    FILES ${_SHADER_SOURCES}
-)
-
-install(DIRECTORY shaders/ DESTINATION shaders)
