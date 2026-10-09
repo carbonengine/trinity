@@ -7,6 +7,7 @@
 
 #include "IWorldPosition.h"
 #include "IEveSpaceObject2.h"
+#include "EveEntity.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/Volume/IEveVolume.h"
 #include "Eve/Volume/EveBoxVolume.h"
@@ -36,16 +37,20 @@ BLUE_DECLARE( EveVolumeObject );
  *
  * The shape is pushed every frame it changes, because the scene origin follows the ego ball and so
  * moves the volume whenever the player moves; the consumer has to stay in step with everything else
- * placed in the scene.
+ * placed in the scene. The consumer only holds the shape while this object is in a scene.
  */
 BLUE_CLASS( EveVolumeObject ) :
 	public IWorldPosition,
 	public IEveSpaceObject2,
 	public IInitialize,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
+
+	using IInitialize::Lock;
+	using IInitialize::Unlock;
 
 	EveVolumeObject( IRoot* lockobj = NULL );
 	~EveVolumeObject();
@@ -71,6 +76,10 @@ public:
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
+
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 private:
 	/**
@@ -98,6 +107,11 @@ private:
 	 */
 	void SendTransform( const Matrix& unitBoxToWorld );
 
+	/**
+	 * @brief Takes the shape back from the consumer it was pushed to; the next push sends it again.
+	 */
+	void RemoveFromConsumer();
+
 	std::string m_name;
 	PIEveVolumeVector m_volumes;
 
@@ -118,6 +132,8 @@ private:
 	bool m_hasSentTransform;
 	bool m_lastSentEnabled;
 	bool m_transformDirty;
+	/// Set when leaving a scene with a shape out, so registering again (e.g. ReregisterEntities) puts it straight back.
+	bool m_resendOnRegister;
 };
 
 TYPEDEF_BLUECLASS( EveVolumeObject );

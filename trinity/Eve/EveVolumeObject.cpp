@@ -26,6 +26,7 @@ namespace
 }
 
 EveVolumeObject::EveVolumeObject( IRoot* lockobj ) :
+	EveEntity( lockobj ),
 	PARENTLOCK( m_volumes ),
 	m_worldTransform( IdentityMatrix() ),
 	m_enabled( true ),
@@ -34,7 +35,8 @@ EveVolumeObject::EveVolumeObject( IRoot* lockobj ) :
 	m_lastSentTransform( IdentityMatrix() ),
 	m_hasSentTransform( false ),
 	m_lastSentEnabled( true ),
-	m_transformDirty( false )
+	m_transformDirty( false ),
+	m_resendOnRegister( false )
 {
 }
 
@@ -45,6 +47,7 @@ EveVolumeObject::~EveVolumeObject()
 		m_boxVolume->UnregisterForChanges( m_boxChangeCallbackID );
 	}
 
+	// Destroying a scene does not unregister its objects, so take the shape back here too.
 	if( m_consumer )
 	{
 		m_consumer->Remove();
@@ -184,6 +187,15 @@ void EveVolumeObject::SendTransform( const Matrix& unitBoxToWorld )
 	m_transformDirty = false;
 }
 
+void EveVolumeObject::RemoveFromConsumer()
+{
+	if( m_consumer && m_hasSentTransform )
+	{
+		m_consumer->Remove();
+	}
+	m_hasSentTransform = false;
+}
+
 void EveVolumeObject::PushToConsumer()
 {
 	if( !m_consumer || !m_boxVolume )
@@ -303,4 +315,23 @@ void EveVolumeObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			volume->RenderDebugInfo( renderer, m_worldTransform, color );
 		}
 	}
+}
+
+// EveEntity
+void EveVolumeObject::RegisterComponents()
+{
+	// Unregistered and registered again in one go (ReregisterEntities): put the same shape straight back
+	// instead of leaving the consumer empty until the next update. A first registration waits for the update.
+	if( m_resendOnRegister && m_consumer && m_boxVolume )
+	{
+		SendTransform( m_lastSentTransform );
+	}
+	m_resendOnRegister = false;
+}
+
+void EveVolumeObject::UnRegisterComponents()
+{
+	// Left the scene: nothing updates the shape any more, so the consumer must not keep it.
+	m_resendOnRegister = m_hasSentTransform;
+	RemoveFromConsumer();
 }

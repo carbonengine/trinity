@@ -13,6 +13,7 @@ const Be::ClassInfo* EveVolumeObject::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IWorldPosition )
 		MAP_INTERFACE( ITr2DebugRenderable )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE(
 			"name",
