@@ -164,6 +164,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
+    shaders/include/Carbon/UI/UI.fxh
     shaders/include/Carbon/Bindless.fxh
     shaders/include/Carbon/BoneTransforms.fxh
     shaders/include/Carbon/Intersections.fxh
