@@ -4,28 +4,6 @@
 #include "EveVolumeObject.h"
 #include "Eve/Volume/EveBoxVolume.h"
 
-#include <cmath>
-
-namespace
-{
-	bool NearlyEqual( float a, float b, float epsilon )
-	{
-		return std::fabs( a - b ) <= epsilon;
-	}
-
-	/// True when two transforms are close enough that a consumer would not notice the difference.
-	bool TransformsNearlyEqual( const Matrix& a, const Matrix& b )
-	{
-		constexpr float axisEpsilon = 1e-4f;        // rotation and scale, in unit-box space
-		constexpr float translationEpsilon = 1e-2f; // 1 cm
-
-		return NearlyEqual( a._11, b._11, axisEpsilon ) && NearlyEqual( a._12, b._12, axisEpsilon ) && NearlyEqual( a._13, b._13, axisEpsilon )
-			&& NearlyEqual( a._21, b._21, axisEpsilon ) && NearlyEqual( a._22, b._22, axisEpsilon ) && NearlyEqual( a._23, b._23, axisEpsilon )
-			&& NearlyEqual( a._31, b._31, axisEpsilon ) && NearlyEqual( a._32, b._32, axisEpsilon ) && NearlyEqual( a._33, b._33, axisEpsilon )
-			&& NearlyEqual( a._41, b._41, translationEpsilon ) && NearlyEqual( a._42, b._42, translationEpsilon ) && NearlyEqual( a._43, b._43, translationEpsilon );
-	}
-}
-
 EveVolumeObject::EveVolumeObject( IRoot* lockobj ) :
 	EveEntity( lockobj ),
 	PARENTLOCK( m_volumes ),
@@ -190,6 +168,17 @@ void EveVolumeObject::RemoveFromConsumer()
 		m_pushedConsumer->Remove();
 	}
 	m_hasSentTransform = false;
+}
+
+bool EveVolumeObject::TransformsNearlyEqual( const Matrix& a, const Matrix& b )
+{
+	const XMVECTOR axisEpsilon = XMVectorReplicate( 1e-4f );
+	const XMVECTOR translationEpsilon = XMVectorReplicate( 1e-2f ); // 1 cm
+
+	return XMVector3NearEqual( a.GetX(), b.GetX(), axisEpsilon )
+		&& XMVector3NearEqual( a.GetY(), b.GetY(), axisEpsilon )
+		&& XMVector3NearEqual( a.GetZ(), b.GetZ(), axisEpsilon )
+		&& XMVector3NearEqual( a.GetTranslation(), b.GetTranslation(), translationEpsilon );
 }
 
 void EveVolumeObject::PushToConsumer()

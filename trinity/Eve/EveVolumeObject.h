@@ -12,7 +12,7 @@
 #include "Eve/Volume/IEveVolume.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
-// This is only needed for py2 as the file now belongs in blue.
+
 #include "Include/ITr2DebugRenderer2.h"
 #else
 #include <ITr2DebugRenderer2.h>
@@ -29,14 +29,12 @@ BLUE_DECLARE( EveVolumeObject );
  * @class EveVolumeObject
  * @brief A standalone scene object that places a volume in the world and publishes its shape.
  *
- * This is a trigger volume without the triggering: it owns a box volume and a destiny-ball driven
- * transform, and pushes the unit-box world transform to whatever consumer the scene file attached
- * to it. The object itself knows nothing about what the consumer does with the shape.
  *
- * The shape is pushed every frame it changes, because the scene origin follows the ego ball and so
- * moves the volume whenever the player moves; the consumer has to stay in step with everything else
+ * The shape is pushed every frame it changes, the scene origin follows the ego ball and so
+ * moves the volume whenever the player moves. The consumer has to stay in step with everything else
  * placed in the scene. The consumer only holds the shape while this object is in a scene.
  */
+
 BLUE_CLASS( EveVolumeObject ) :
 	public IWorldPosition,
 	public IEveSpaceObject2,
@@ -110,6 +108,11 @@ private:
 	 */
 	void RemoveFromConsumer();
 
+	/**
+	 * @brief True when two transforms are close enough that a consumer would not notice the difference.
+	 */
+	static bool TransformsNearlyEqual( const Matrix& a, const Matrix& b );
+
 	std::string m_name;
 	PIEveVolumeVector m_volumes;
 
@@ -120,9 +123,9 @@ private:
 	CcpMath::Sphere m_boundingSphere;
 	bool m_enabled;
 
-	/// Whoever the scene file attached to receive the shape. Not created here; the asset decides.
+	/// Whoever the scene file attached to receive the shape.
 	ITr2VolumeObjectPtr m_consumer;
-	/// The consumer the shape was pushed to. Differs from m_consumer for one update after it is replaced or cleared.
+	/// The consumer the shape was pushed to.
 	ITr2VolumeObjectPtr m_pushedConsumer;
 	EveBoxVolumePtr m_boxVolume;
 	uint32_t m_boxChangeCallbackID;
@@ -132,7 +135,7 @@ private:
 	bool m_hasSentTransform;
 	bool m_lastSentEnabled;
 	bool m_transformDirty;
-	/// Set when leaving a scene with a shape out, so registering again (e.g. ReregisterEntities) puts it straight back.
+	/// Set when leaving a scene with a shape out, so registering again.
 	bool m_resendOnRegister;
 };
 
