@@ -212,6 +212,10 @@ set(_SHADER_SOURCES
     shaders/Managed/Utility/Solids.fxh
     shaders/Managed/Utility/SolidsNoZ.fx
     shaders/Managed/Utility/SolidsWithZ.fx
+    shaders/Utility/CubeTextureViewer.fx
+    shaders/Utility/GeometryViewer.fx
+    shaders/Utility/LineGraph.fx
+    shaders/Utility/TextureViewer.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
