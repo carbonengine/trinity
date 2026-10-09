@@ -4,6 +4,8 @@
 
 #include "../../../include/Carbon/System.fxh"
 
+// The code is based on https://sourceforge.net/p/g3d/code/HEAD/tree/G3D10/data-files/shader/BilateralFilter/BilateralFilter_apply.pix
+
 Texture2D<float> Source;
 Texture2D<float> NoiseEstimate;
 Texture2D<float> DepthBuffer;
