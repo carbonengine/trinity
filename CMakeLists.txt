@@ -160,6 +160,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EveTurretSet.fxh
     shaders/include/Carbon/SpaceScene/FroxelFog.fxh
     shaders/include/Carbon/SpaceScene/GpuParticles.fxh
+    shaders/include/Carbon/SpaceScene/MeshMorphing.fxh
     shaders/include/Carbon/SpaceScene/PerObjectData.fxh
     shaders/include/Carbon/SpaceScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Volumetrics.fxh
