@@ -124,6 +124,8 @@ private:
 
 	/// Whoever the scene file attached to receive the shape. Not created here; the asset decides.
 	ITr2VolumeObjectPtr m_consumer;
+	/// The consumer the shape was pushed to. Differs from m_consumer for one update after it is replaced or cleared.
+	ITr2VolumeObjectPtr m_pushedConsumer;
 	EveBoxVolumePtr m_boxVolume;
 	uint32_t m_boxChangeCallbackID;
 	bool m_warnedAboutVolumes;

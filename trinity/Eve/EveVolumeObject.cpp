@@ -48,9 +48,9 @@ EveVolumeObject::~EveVolumeObject()
 	}
 
 	// Destroying a scene does not unregister its objects, so take the shape back here too.
-	if( m_consumer )
+	if( m_pushedConsumer )
 	{
-		m_consumer->Remove();
+		m_pushedConsumer->Remove();
 	}
 }
 
@@ -139,6 +139,8 @@ void EveVolumeObject::ResolveBoxVolume()
 			m_boxVolume = nullptr;
 			m_warnedAboutVolumes = false;
 			m_transformDirty = true;
+			// The consumer still holds the old box; nothing is sent until a new box is picked.
+			RemoveFromConsumer();
 		}
 	}
 
@@ -181,7 +183,7 @@ void EveVolumeObject::ResolveBoxVolume()
 
 void EveVolumeObject::SendTransform( const Matrix& unitBoxToWorld )
 {
-	m_consumer->SetTransform( unitBoxToWorld );
+	m_pushedConsumer->SetTransform( unitBoxToWorld );
 	m_lastSentTransform = unitBoxToWorld;
 	m_hasSentTransform = true;
 	m_transformDirty = false;
@@ -189,16 +191,25 @@ void EveVolumeObject::SendTransform( const Matrix& unitBoxToWorld )
 
 void EveVolumeObject::RemoveFromConsumer()
 {
-	if( m_consumer && m_hasSentTransform )
+	if( m_pushedConsumer && m_hasSentTransform )
 	{
-		m_consumer->Remove();
+		m_pushedConsumer->Remove();
 	}
 	m_hasSentTransform = false;
 }
 
 void EveVolumeObject::PushToConsumer()
 {
-	if( !m_consumer || !m_boxVolume )
+	// The consumer was replaced or cleared (e.g. in Graphite): take the shape back from the old one.
+	if( m_pushedConsumer.p != m_consumer.p )
+	{
+		RemoveFromConsumer();
+		m_pushedConsumer = m_consumer;
+		// Whatever state the new consumer is in, the enabled state goes out before the first shape.
+		m_lastSentEnabled = !m_enabled;
+	}
+
+	if( !m_pushedConsumer || !m_boxVolume )
 	{
 		return;
 	}
@@ -207,7 +218,7 @@ void EveVolumeObject::PushToConsumer()
 	// hands over a shape, otherwise the consumer would activate for one frame and deactivate again.
 	if( m_enabled != m_lastSentEnabled )
 	{
-		m_consumer->SetEnabled( m_enabled );
+		m_pushedConsumer->SetEnabled( m_enabled );
 		m_lastSentEnabled = m_enabled;
 	}
 
@@ -322,7 +333,7 @@ void EveVolumeObject::RegisterComponents()
 {
 	// Unregistered and registered again in one go (ReregisterEntities): put the same shape straight back
 	// instead of leaving the consumer empty until the next update. A first registration waits for the update.
-	if( m_resendOnRegister && m_consumer && m_boxVolume )
+	if( m_resendOnRegister && m_pushedConsumer && m_boxVolume )
 	{
 		SendTransform( m_lastSentTransform );
 	}
