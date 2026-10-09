@@ -132,6 +132,8 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
 endif()
 
 set(_SHADER_SOURCES
+    shaders/include/Carbon/InteriorScene/PerObjectData.fxh
+    shaders/include/Carbon/InteriorScene/PerSceneData.fxh
     shaders/include/Carbon/SpaceScene/Raytracing/GeometryData.fxh
     shaders/include/Carbon/SpaceScene/Raytracing/ShadowData.fxh
     shaders/include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
