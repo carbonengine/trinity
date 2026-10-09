@@ -9,6 +9,7 @@
 #include "IEveSpaceObject2.h"
 #include "Tr2DebugRenderer.h"
 #include "Eve/Volume/IEveVolume.h"
+#include "Eve/Volume/EveBoxVolume.h"
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
 // This is only needed for py2 as the file now belongs in blue.
@@ -18,17 +19,24 @@
 #endif
 
 #include <ITriFunction.h>
+#include <ITr2VolumeObject.h>
 
 BLUE_DECLARE_INTERFACE( IEveVolume );
 BLUE_DECLARE_IVECTOR( IEveVolume );
+BLUE_DECLARE_INTERFACE( ITr2VolumeObject );
 BLUE_DECLARE( EveVolumeObject );
 
 /**
  * @class EveVolumeObject
- * @brief A standalone scene object that places a volume in the world.
+ * @brief A standalone scene object that places a volume in the world and publishes its shape.
  *
- * This is a trigger volume without the triggering: it owns its volumes and a destiny-ball driven
- * transform, and nothing else.
+ * This is a trigger volume without the triggering: it owns a box volume and a destiny-ball driven
+ * transform, and pushes the unit-box world transform to whatever consumer the scene file attached
+ * to it. The object itself knows nothing about what the consumer does with the shape.
+ *
+ * The shape is pushed every frame it changes, because the scene origin follows the ego ball and so
+ * moves the volume whenever the player moves; the consumer has to stay in step with everything else
+ * placed in the scene.
  */
 BLUE_CLASS( EveVolumeObject ) :
 	public IWorldPosition,
@@ -75,6 +83,21 @@ private:
 	 */
 	void UpdateWorldTransform( Be::Time time );
 
+	/**
+	 * @brief Picks the box volume that defines the shape and listens for edits to it.
+	 */
+	void ResolveBoxVolume();
+
+	/**
+	 * @brief Pushes the enabled state and, when it changed, the unit box world transform to the consumer.
+	 */
+	void PushToConsumer();
+
+	/**
+	 * @brief Sends the transform now and records what was sent.
+	 */
+	void SendTransform( const Matrix& unitBoxToWorld );
+
 	std::string m_name;
 	PIEveVolumeVector m_volumes;
 
@@ -84,6 +107,17 @@ private:
 	Matrix m_worldTransform;
 	CcpMath::Sphere m_boundingSphere;
 	bool m_enabled;
+
+	/// Whoever the scene file attached to receive the shape. Not created here; the asset decides.
+	ITr2VolumeObjectPtr m_consumer;
+	EveBoxVolumePtr m_boxVolume;
+	uint32_t m_boxChangeCallbackID;
+	bool m_warnedAboutVolumes;
+
+	Matrix m_lastSentTransform;
+	bool m_hasSentTransform;
+	bool m_lastSentEnabled;
+	bool m_transformDirty;
 };
 
 TYPEDEF_BLUECLASS( EveVolumeObject );

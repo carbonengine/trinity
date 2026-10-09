@@ -36,6 +36,9 @@ public:
 	// INotify
 	bool OnModified( Be::Var * val );
 
+	/// Maps the unit box [-0.5, 0.5]^3 to the owner's object space (scaling, rotation, position).
+	const Matrix& GetBoxTransform() const { return m_boxTransform; }
+
 private:
 	void Setup();
 	BlueSharedString m_name;

@@ -4,10 +4,11 @@
 #include "EveVolumeObject.h"
 
 BLUE_DEFINE( EveVolumeObject );
+BLUE_DEFINE_INTERFACE( ITr2VolumeObject );
 
 const Be::ClassInfo* EveVolumeObject::ExposeToBlue()
 {
-	EXPOSURE_BEGIN( EveVolumeObject, "A standalone scene object that places a volume in the world" )
+	EXPOSURE_BEGIN( EveVolumeObject, "A standalone scene object that places a volume in the world and publishes its shape to the attached consumer" )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IWorldPosition )
@@ -22,13 +23,19 @@ const Be::ClassInfo* EveVolumeObject::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"volumes",
 			m_volumes,
-			"The volumes defining the shape.",
+			"The volumes defining the shape. Only the first box volume is used.",
 			Be::READ | Be::PERSIST )
+
+		MAP_ATTRIBUTE(
+			"consumer",
+			m_consumer,
+			"The object that receives the shape of this volume, attached by the scene file",
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
 			"enabled",
 			m_enabled,
-			"Whether the volume is active",
+			"Whether the volume is active for its consumer",
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
