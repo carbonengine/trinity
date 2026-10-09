@@ -150,6 +150,7 @@ set(_SHADER_SOURCES
     shaders/include/Carbon/SpaceScene/EvePlaneSet.fxh
     shaders/include/Carbon/SpaceScene/EveChildQuad.fxh
     shaders/include/Carbon/SpaceScene/EveSpaceObjectDecal.fxh
+    shaders/include/Carbon/SpaceScene/EveSpherePin.fxh
     shaders/include/Carbon/SpaceScene/EveSpotlightSet.fxh
     shaders/include/Carbon/SpaceScene/EveSpriteSet.fxh
     shaders/include/Carbon/SpaceScene/EveStarfield.fxh
