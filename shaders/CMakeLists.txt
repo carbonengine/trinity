@@ -99,5 +99,5 @@ source_group(
     FILES ${_SHADER_SOURCES}
 )
 
-install(DIRECTORY shaders/include DESTINATION shaders)
-install(DIRECTORY shaders/src DESTINATION shaders)
+install(DIRECTORY include DESTINATION shaders)
+install(DIRECTORY src DESTINATION shaders)
