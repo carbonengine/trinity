@@ -341,7 +341,7 @@ void GetDimensions( texturecube<T> tex, uint mip, thread W& w, thread H& h, thre
 }
 
 )MSL"
-R"MSL(
+	R"MSL(
 
 template <typename T, typename W, typename H, typename D>
 void GetDimensions( texture3d<T> tex, thread W& w, thread H& h, thread D& d )
