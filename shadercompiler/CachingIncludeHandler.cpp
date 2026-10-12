@@ -61,6 +61,26 @@ std::optional<std::string> JoinPath( const char* path1, const char* path2 )
 #endif
 }
 
+std::optional<std::string> JoinPathAndCheckExists( const char* path1, const char* path2 )
+{
+	if( auto joined = JoinPath( path1, path2 ) )
+	{
+#if _WIN32
+		if( PathFileExists( joined->c_str() ) )
+		{
+			return joined;
+		}
+#else
+		struct stat buffer;
+		if( stat( joined->c_str(), &buffer ) == 0 )
+		{
+			return joined;
+		}
+#endif
+	}
+	return std::nullopt;
+}
+
 }
 
 
@@ -110,7 +130,7 @@ std::optional<CachingIncludeHandler::IncludedFile> CachingIncludeHandler::Open( 
 					parentPath = "";
 				}
 			}
-			if( auto joined = JoinPath( parentPath.c_str(), fileName ) )
+			if( auto joined = JoinPathAndCheckExists( parentPath.c_str(), fileName ) )
 			{
 				fullPath = *joined;
 				return true;
@@ -120,7 +140,7 @@ std::optional<CachingIncludeHandler::IncludedFile> CachingIncludeHandler::Open( 
 		auto FindSystemPath = [&]() -> bool {
 			for( auto it = m_systemIncludePaths.begin(); it != m_systemIncludePaths.end(); ++it )
 			{
-				if( auto joined = JoinPath( it->c_str(), fileName ) )
+				if( auto joined = JoinPathAndCheckExists( it->c_str(), fileName ) )
 				{
 					fullPath = *joined;
 					return true;

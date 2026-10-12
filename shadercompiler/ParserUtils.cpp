@@ -921,7 +921,7 @@ int GetNodeOrder( ASTNode* t )
 		}
 		else
 		{
-			if ( t->GetType().modifier == OP_CONST && t->GetType().storageClass == OP_STATIC )
+			if( t->GetType().modifier == OP_CONST && t->GetType().storageClass == OP_STATIC )
 			{
 				return 1;
 			}
