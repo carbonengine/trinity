@@ -50,47 +50,47 @@ set(_SHADER_SOURCES
     include/Carbon/System.fxh
     include/Carbon/Tr2CurveLineSet.fxh
     include/Carbon/VertexBufferUtil.fxh
-    src/Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
-    src/Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/SetDrawParameters.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/SetSortArgs.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/Sort.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/SortInner.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/SortStep.fx
-    src/Managed/Space/SpecialFX/Particles/Gpu/Update.fx
-    src/Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx
-    src/Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
-    src/Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
-    src/Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
-    src/Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
-    src/Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
-    src/Managed/Space/System/Raytracing/SkinVertices.fx
-    src/Managed/Space/System/ComputeLightLists.fx
-    src/Managed/Space/System/Denoise1D.fx
-    src/Managed/Space/System/DenoiseEstimate.fx
-    src/Managed/Space/System/EstimateNoise.fx
-    src/Managed/Utility/BillboardNoZ.fx
-    src/Managed/Utility/BillboardPicking.fx
-    src/Managed/Utility/Debug.fx
-    src/Managed/Utility/DebugLine.fx
-    src/Managed/Utility/DebugPrimitive.fx
-    src/Managed/Utility/DebugPrimitivePicking.fx
-    src/Managed/Utility/Lines.fxh
-    src/Managed/Utility/LinesNoZ.fx
-    src/Managed/Utility/LinesRotationTool.fx
-    src/Managed/Utility/LinesRotationToolLH.fx
-    src/Managed/Utility/LinesWithZ.fx
-    src/Managed/Utility/PerFrameVSData.fxh
-    src/Managed/Utility/PrimitivePicking.fx
-    src/Managed/Utility/SolidNoLightNoCullWithZ.fx
-    src/Managed/Utility/Solids.fxh
-    src/Managed/Utility/SolidsNoZ.fx
-    src/Managed/Utility/SolidsWithZ.fx
-    src/Utility/CubeTextureViewer.fx
-    src/Utility/GeometryViewer.fx
-    src/Utility/LineGraph.fx
-    src/Utility/TextureViewer.fx
+    Managed/Space/SpecialFX/Lensflares/OccluderManagement.fx 
+    Managed/Space/SpecialFX/Particles/Gpu/Clear.fx
+    Managed/Space/SpecialFX/Particles/Gpu/Emit.fx
+    Managed/Space/SpecialFX/Particles/Gpu/SetDrawParameters.fx
+    Managed/Space/SpecialFX/Particles/Gpu/SetSortArgs.fx
+    Managed/Space/SpecialFX/Particles/Gpu/Sort.fx
+    Managed/Space/SpecialFX/Particles/Gpu/SortInner.fx
+    Managed/Space/SpecialFX/Particles/Gpu/SortStep.fx
+    Managed/Space/SpecialFX/Particles/Gpu/Update.fx
+    Managed/Space/SpecialFX/Volumetric/Fog/ApplyFroxels.fx
+    Managed/Space/SpecialFX/Volumetric/Fog/FilterFroxels.fx
+    Managed/Space/SpecialFX/Volumetric/Fog/RaymarchFroxels.fx
+    Managed/Space/SpecialFX/Volumetric/Fog/UpdateMieEnvironmentMap.fx
+    Managed/Space/SpecialFX/Volumetric/BlurVolumetric.fx
+    Managed/Space/SpecialFX/Volumetric/DownsampleDepth.fx
+    Managed/Space/System/Raytracing/SkinVertices.fx
+    Managed/Space/System/ComputeLightLists.fx
+    Managed/Space/System/Denoise1D.fx
+    Managed/Space/System/DenoiseEstimate.fx
+    Managed/Space/System/EstimateNoise.fx
+    Managed/Utility/BillboardNoZ.fx
+    Managed/Utility/BillboardPicking.fx
+    Managed/Utility/Debug.fx
+    Managed/Utility/DebugLine.fx
+    Managed/Utility/DebugPrimitive.fx
+    Managed/Utility/DebugPrimitivePicking.fx
+    Managed/Utility/Lines.fxh
+    Managed/Utility/LinesNoZ.fx
+    Managed/Utility/LinesRotationTool.fx
+    Managed/Utility/LinesRotationToolLH.fx
+    Managed/Utility/LinesWithZ.fx
+    Managed/Utility/PerFrameVSData.fxh
+    Managed/Utility/PrimitivePicking.fx
+    Managed/Utility/SolidNoLightNoCullWithZ.fx
+    Managed/Utility/Solids.fxh
+    Managed/Utility/SolidsNoZ.fx
+    Managed/Utility/SolidsWithZ.fx
+    Utility/CubeTextureViewer.fx
+    Utility/GeometryViewer.fx
+    Utility/LineGraph.fx
+    Utility/TextureViewer.fx
     )
 
 add_custom_target(Shaders SOURCES ${_SHADER_SOURCES})
@@ -99,5 +99,4 @@ source_group(
     FILES ${_SHADER_SOURCES}
 )
 
-install(DIRECTORY include DESTINATION shaders)
-install(DIRECTORY src DESTINATION shaders)
+install(DIRECTORY . DESTINATION shaders FILES_MATCHING PATTERN "*.fx" PATTERN "*.fxh")
