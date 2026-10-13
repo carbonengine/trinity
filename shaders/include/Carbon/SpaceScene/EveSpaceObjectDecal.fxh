@@ -47,6 +47,7 @@ EveSpaceObjectData CreateEveSpaceObjectData( EveSpaceObjectDecalDataVS perObject
     EveSpaceObjectData pod;
     pod.WorldMat = perObjectData.WorldMat;
     pod.WorldMatLast = (float4x4)0;
+    pod.InvWorldMat = perObjectData.InvWorldMat;
     pod.BoneOffsets = (uint4)0;
 
     pod.Shipdata = (float4)0;

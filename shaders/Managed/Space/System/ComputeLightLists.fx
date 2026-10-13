@@ -179,7 +179,7 @@ void AddLight( uint light, uint heapOffset, uint indexBufferSize, bool transpare
     uint head = iHead;
 
     head = head * 2 + heapOffset;
-    if( head < indexBufferSize )
+    if( head + 1 < indexBufferSize )
     {
         if( transparent )
         {

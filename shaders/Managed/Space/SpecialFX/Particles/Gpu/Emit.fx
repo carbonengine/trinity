@@ -121,6 +121,8 @@ void Emit( uint3 grid : SV_GroupID, uint groupIndex : SV_GroupIndex, uint3 threa
         }
         else
         {
+            int ignored;
+            InterlockedAdd( ParticleCounters[0], 1, ignored );
             break;
         }
     }
