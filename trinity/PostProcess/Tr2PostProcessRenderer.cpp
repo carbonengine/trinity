@@ -644,6 +644,18 @@ void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcess::Quality qual
 	m_quality = quality;
 }
 
+Matrix Tr2PostProcessRenderer::GetJitter(uint64_t frameIndex, uint32_t renderWidth, uint32_t renderHeight) const
+{
+	const Vector2 samplingPatterns[] = { Vector2( .125f, -.375f ),
+										 Vector2( -.125f, .375f ),
+										 Vector2( .375f, .125f ),
+										 Vector2( -.375f, -.125f ) };
+
+	auto samplingIndex = frameIndex % ( sizeof( samplingPatterns ) / sizeof( samplingPatterns[0] ) );
+	const auto& sample = samplingPatterns[samplingIndex];
+	return TranslationMatrix( Vector3( 2.0f * sample.x / static_cast<float>( renderWidth ), 2.0f * sample.y / static_cast<float>( renderHeight ), 0.f ) );
+}
+
 
 void Tr2PostProcessRenderer::Execute(
 	const Tr2TextureAL& destination,

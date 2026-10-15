@@ -217,8 +217,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_projectionLast( IdentityMatrix() ),
 	m_jitteredProjection( IdentityMatrix() ),
 	m_reprojectionMatrix( IdentityMatrix() ),
-	m_jitter( 0.f, 0.f, 0.f, 0.f ),
-	m_upscalingAmount( 1.0f )
+	m_upscalingAmount( 1.0f ),
+	m_mipLodBias( 0.0f )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -1255,47 +1255,6 @@ bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2Texture
 	return true;
 }
 
-void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
-{
-	m_projection = Tr2Renderer::GetProjectionTransform();
-
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	if( upscalingInfo.technique != Tr2UpscalingAL::NONE && upscalingInfo.temporal )
-	{
-		m_jitter.x = upscalingInfo.jitterX;
-		m_jitter.y = upscalingInfo.jitterY;
-		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
-		m_jitteredProjection = m_projection * m_jitterMatrix;
-	}
-	else if( m_sceneDefaultPostProcess && m_sceneDefaultPostProcess->GetTaaIfAvailable() != nullptr )
-	{
-		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
-		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
-		const Vector2 samplingPatterns[] = { Vector2( .125f, -.375f ),
-											 Vector2( -.125f, .375f ),
-											 Vector2( .375f, .125f ),
-											 Vector2( -.375f, -.125f ) };
-
-		auto frame = renderContext.GetPrimaryRenderContext().GetRecordingFrameNumber();
-		auto samplingIndex = frame % ( sizeof( samplingPatterns ) / sizeof( samplingPatterns[0] ) );
-
-		m_jitter.x = 2.0f * samplingPatterns[samplingIndex].x / float( rtWidth );
-		m_jitter.y = 2.0f * samplingPatterns[samplingIndex].y / float( rtHeight );
-
-		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
-
-		m_jitterMatrix = TranslationMatrix( currJitterOffset );
-		m_jitteredProjection = m_projection * m_jitterMatrix;
-	}
-	else
-	{
-		m_jitterMatrix = IdentityMatrix();
-		m_jitteredProjection = m_projection;
-		m_jitter.x = m_jitter.y = 0.0f;
-	}
-}
-
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Set up rendering states, frustum and gather all batches.
@@ -1330,12 +1289,7 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 	{
 		m_dataTextureMgr->SetVariables();
 	}
-
-	Jitter( renderContext );
-
-	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
-	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
-
+	
 	m_velocityMapDirty = false;
 
 	{
@@ -3114,10 +3068,10 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
 
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.Upscaling = 1.0f;
+	data.Upscaling = m_upscalingAmount;
 
 	data.FrameIndex = (uint32_t)Tr2Renderer::GetCurrentFrameCounter();
-	data.Jittering = m_jitter != Vector4( 0, 0, 0, 0 );
+	data.Jittering = LengthSq( m_jitterMatrix.GetTranslation() ) > 0.0f ? 1 : 0;
 
 	data.ShadowQuality = 1 << (uint32_t)m_shadowQuality;
 
@@ -3142,24 +3096,8 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.ProjectionToView.x = projection._43;
 	data.ProjectionToView.y = projection._33;
 
-	data.SceneMipLodBias = 0.0f;
-	m_upscalingAmount = 1.0f;
-
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	if( upscalingInfo.technique != Tr2UpscalingAL::NONE )
-	{
-		m_upscalingAmount = upscalingInfo.upscalingAmount;
-		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
-		if( !upscalingInfo.temporal && m_sceneDefaultPostProcess )
-		{
-			data.SceneMipLodBias += m_sceneDefaultPostProcess->GetMipLodBias();
-		}
-		data.Upscaling = m_upscalingAmount;
-	}
-	else if( m_sceneDefaultPostProcess )
-	{
-		data.SceneMipLodBias = m_sceneDefaultPostProcess->GetMipLodBias();
-	}
+	data.SceneMipLodBias = m_mipLodBias;
+	data.Upscaling = m_upscalingAmount;
 
 	if( shadowMap )
 	{
@@ -4295,4 +4233,15 @@ void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowReso
 		"EveSpaceSceneDynamicShadowMap",
 		shadowResources.pointLightShadowMap.IsValid() ? shadowResources.pointLightShadowMap : gpuResourcePool.GetPersistentTexture( "EmptyShadowUint", 1, 1, ImageIO::PIXEL_FORMAT_R8_UINT, Tr2GpuUsage::SHADER_RESOURCE, &initData ) );
 	GlobalStore().RegisterVariable( "ShadowMapAtlas", shadowResources.pointLightShadowDepth );
+}
+
+void EveSpaceScene::SetRenderingInfo( Matrix jitterMatrix, float mipLodBias, float upscaling )
+{
+	m_projection = Tr2Renderer::GetProjectionTransform();
+	m_jitterMatrix = jitterMatrix;
+	m_jitteredProjection = m_projection * m_jitterMatrix;
+	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
+	m_upscalingAmount = upscaling;
+	m_mipLodBias = mipLodBias;
+	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 }

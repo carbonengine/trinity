@@ -134,6 +134,7 @@ public:
 
 	PostProcess::Quality GetPostProcessingQuality() const;
 	void SetPostProcessingQuality( PostProcess::Quality quality );
+	Matrix GetJitter( uint64_t frameIndex, uint32_t renderWidth, uint32_t renderHeight ) const;
 
 private:
 	struct DownsampleData

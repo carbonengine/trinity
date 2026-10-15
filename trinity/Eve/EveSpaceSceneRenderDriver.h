@@ -20,6 +20,7 @@ BLUE_DECLARE( TriStepRenderFps );
 BLUE_DECLARE_IVECTOR( ITr2Scene );
 BLUE_DECLARE( EveCamera );
 BLUE_DECLARE( Tr2Sprite2dScene );
+BLUE_DECLARE( Tr2ReflectionProbe );
 
 
 
@@ -59,6 +60,7 @@ public:
 		PostProcess::Quality postProcessingQuality = PostProcess::Quality::HIGH;
 		Tr2VolumerticQuality volumetricQuality = Tr2VolumerticQuality::High;
 		LightingQuality lightingQuality = LightingQuality::HIGH;
+		ReflectionQuality reflectionQuality = ReflectionQuality::High;
 
 		Color clearColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -69,6 +71,30 @@ public:
 		bool enableDistortion = true; // should be tied to shader quality
 		bool showFPS = false;
 		EveSpaceScene::EveVisualizeMethod visualizeMethod = EveSpaceScene::VM_NONE;
+	};
+
+	struct FeatureSet
+	{
+		bool upscaling = true;
+		bool antiAliasing = true;
+		bool distortion = true;
+		bool reflections = true;
+		bool volumetrics = true;
+		bool ssao = true;
+		bool shadows = true;
+		bool velocityMap = true;
+	};
+
+	struct RenderInfo
+	{
+		TriViewPtr view;
+		TriProjectionPtr projection;
+		Matrix jitterMatrix;
+		float mipLodBias;
+		float upscalingAmount;
+		TextureSize2D renderSize;
+		FeatureSet featureSet;
+		Tr2RenderReason reason;
 	};
 
 	EveSpaceSceneRenderDriver( IRoot* lockobj = nullptr );
@@ -95,16 +121,25 @@ public:
 	EXPOSE_TO_BLUE();
 
 private:
+
+	void RenderOld( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	void RenderNew( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	void RenderView( const RenderInfo& renderInfo, const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
+	void PropagateRenderningInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
 	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
+	void SetCameraToRenderer( TriViewPtr view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
 
-	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size );
-	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
-	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
+	Matrix GetJitterMatrix( uint32_t renderWidth, uint32_t renderHeight, Tr2RenderContext& renderContext ) const;
+	float GetMipLodBias( ) const;
+
+	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, const FeatureSet& featureSet );
+	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
+	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
-	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
+	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
 
 	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
 
@@ -122,13 +157,16 @@ private:
 
 	TriProjectionPtr m_projection;
 	TriViewPtr m_view;
+
 	EveCameraPtr m_camera;
 
 	ImageIO::PixelFormat m_internalPixelFormat = ImageIO::PIXEL_FORMAT_R16G16B16A16_FLOAT;
 	Tr2UpscalingContextAL* m_upscalingContext = nullptr;
+	Tr2UpscalingAL::UpscalingInfo m_upscalingInfo;
 
 	Settings m_settings;
 
+	Tr2ReflectionProbePtr m_reflectionProbe;
 	Tr2EffectPtr m_distortionEffect;
 
 	PITr2SceneVector m_toolsScenes;
@@ -167,6 +205,8 @@ private:
 		Tr2ProfileTimer shadows;
 		Tr2ProfileTimer ssao;
 	} m_timers;
+
+	bool m_newRoute = false;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceSceneRenderDriver );

@@ -149,11 +149,13 @@ public:
 	void BeginRender( bool enableDistortion, Tr2RenderContext& renderContext );
 	void EndRender( Tr2RenderContext & renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
-	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
+	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
 	void GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
+	
+	void SetRenderingInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -337,6 +339,7 @@ public:
 		Vector4 sphere = Vector4( 0, 0, 0, 0 );
 		float pixelSize = 0.0;
 	};
+
 	EvePlanetPerObjData m_planetPerObjData;
 	Tr2ShaderBufferPtr m_planetPerObjBuffer;
 
@@ -625,9 +628,7 @@ protected:
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
 	float m_upscalingAmount;
-	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
-
-	void Jitter( Tr2RenderContext & renderContext );
+	float m_mipLodBias;
 
 	Tr2ImpostorManagerPtr m_impostorManager;
 
@@ -704,7 +705,7 @@ public:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
-
+	
 	std::unique_ptr<EveInstancedMeshManager> m_instancedMeshManager;
 
 	friend class EveSpaceSceneRenderDriver;
