@@ -158,6 +158,7 @@ float4 SampleEveSceneFroxelFog( float2 texCoords, float sceneDepth, EveSpaceScen
 		froxel += ((1.0 - extinction) * shadowing * sceneData.FroxelFogData.EnvironmentIntensity) * (environmentLighting * sceneData.FroxelFogData.FogColor);
 	}
     
+    froxel.rgb *= sceneData.FroxelFogData.FogMultiplier;
 
     return float4( froxel, extinction );
 }

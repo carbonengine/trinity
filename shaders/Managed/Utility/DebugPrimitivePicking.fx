@@ -30,9 +30,13 @@ DebugVtx DebugVS( AppDebugVtx inVtx )
     return outVtx;
 }
 
-float4 DebugPS( DebugVtx inVtx ) : SV_Target
+uint PickingPointerLowBits;
+uint PickingPointerHighBits;
+uint PickingArea;
+
+uint4 DebugPS( DebugVtx inVtx ) : COLOR
 {
-    return float4( inVtx.output.xy, inVtx.output.z / inVtx.output.w, 0 );
+    return uint4( PickingPointerLowBits, PickingPointerHighBits, PickingArea, 0 );
 }
 
 technique Main
@@ -41,9 +45,7 @@ technique Main
     {
         ZEnable = True;
         ZWriteEnable = True;
-        ZFunc = GreaterEqual;
-        AlphaTestEnable = False;
-        AlphaBlendEnable = False;
+        ZFunc = LessEqual;
         VertexShader = compile vs_3_0 DebugVS();
         PixelShader = compile ps_3_0 DebugPS();
     }

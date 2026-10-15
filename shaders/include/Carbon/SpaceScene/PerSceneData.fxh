@@ -17,7 +17,7 @@ struct FroxelPerFrameData
 	float EnvironmentIntensity;
 
 	float EnvironmentG;
-	float _pad0;
+    float FogMultiplier;
 	float _pad1;
 	float _pad2;
 	

@@ -1,6 +1,7 @@
 // Copyright © 2026 CCP ehf.
 
 #include "../../include/Carbon/System.fxh"
+#include "../../include/Carbon/Picking.fxh"
 #include "PerFrameVSData.fxh"
 
 struct PerObjectVSData
@@ -34,12 +35,10 @@ SolidVertexPS SpriteVS( SolidVertex inVtx )
     return outVtx;
 }
 
-float objectId = 0;
-float areaId = 0;
-
 float4 SpritePS( SolidVertexPS inVtx ) : SV_Target
 {
-    return float4( areaId + 1, objectId + 1, 1, 0 );
+    // Primitive scene in Trinity uses a completely different picking scheme compared to EveSpaceScene.
+    return float4( areaId + 1, pickingObjectLowBits + 1, 1, 0 );
 }
 
 technique Main

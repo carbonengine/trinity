@@ -46,6 +46,7 @@ set(_SHADER_SOURCES
     include/Carbon/Math.fxh
     include/Carbon/PackedTangents.fxh
     include/Carbon/ParticleAnnotations.fxh
+    include/Carbon/Picking.fxh
     include/Carbon/RandomXOrShift.fxh
     include/Carbon/System.fxh
     include/Carbon/Tr2CurveLineSet.fxh

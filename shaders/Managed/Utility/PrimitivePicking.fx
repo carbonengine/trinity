@@ -1,10 +1,9 @@
 // Copyright © 2026 CCP ehf.
 
 #include "../../include/Carbon/System.fxh"
+#include "../../include/Carbon/Picking.fxh"
 #include "PerFrameVSData.fxh"
 
-float objectId = 0;
-float areaId = 0;
 
 struct PerObjectVSData
 {
@@ -26,7 +25,8 @@ struct StandardShaderVtx
 
 float4 PickingPS( StandardShaderVtx inVtx ) : SV_Target
 {
-    return float4( areaId + 1, objectId + 1, inVtx.eyeDirWorld.w, 0 );
+    // Primitive scene in Trinity uses a completely different picking scheme compared to EveSpaceScene.
+    return float4( areaId + 1, pickingObjectLowBits + 1, inVtx.eyeDirWorld.w, 0 );
 }
 
 StandardShaderVtx PickingVS( PickingAppVtx inVtx )
