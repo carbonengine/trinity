@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "TriTextureParameter.h"
+#include "Tr2ScreenSizeRequests.h"
 #include "ITr2TextureProvider.h"
 #include "Shader/Tr2Shader.h"
 #include "Shader/Tr2Material.h"
@@ -50,56 +51,105 @@ bool TriTextureParameter::SupportsDirtyNotification() const
 	return true;
 }
 
+namespace
+{
+// Screen sizes for which this parameter keeps requesting the same LOD: the LOD only changes when
+// screenSize / minDensity crosses a power of two of the texture resolution.
+void ConstrainScreenSize( Tr2ScreenSizeRequests& requests, float resolution, float minDensity, uint32_t requestedLod, float originalResolution )
+{
+	if( minDensity <= 0.0f || originalResolution <= 0.0f )
+	{
+		return;
+	}
+	if( resolution <= 0.0f )
+	{
+		requests.Invalidate();
+		return;
+	}
+	const float eps = 1e-4f;
+	if( resolution <= 1.0f )
+	{
+		requests.Constrain( 0.0f, minDensity * ( 1.0f - eps ) );
+		return;
+	}
+	if( resolution > originalResolution )
+	{
+		requests.Constrain( minDensity * originalResolution * ( 1.0f + eps ), std::numeric_limits<float>::max() );
+		return;
+	}
+	const float upper = originalResolution / float( 1u << requestedLod );
+	requests.Constrain( std::max( minDensity, minDensity * upper * 0.5f ) * ( 1.0f + eps ), minDensity * upper * ( 1.0f - eps ) );
+}
+}
+
 void TriTextureParameter::UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities )
 {
-	if( m_textureRes )
+	RequestLod( screenSize, worldRadius, uvDensities, nullptr );
+}
+
+void TriTextureParameter::UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests )
+{
+	RequestLod( screenSize, worldRadius, uvDensities, &requests );
+}
+
+void TriTextureParameter::RequestLod( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests* requests )
+{
+	if( !m_textureRes )
 	{
-		uint32_t requestedLod = 0;
-		if( m_textureLodEnabled && !uvDensities.empty() )
+		return;
+	}
+	uint32_t requestedLod = 0;
+	if( m_textureLodEnabled && !uvDensities.empty() )
+	{
+		size_t i = 0;
+		float resolution = 0;
+		float minDensity = 0;
+
 		{
-			size_t i = 0;
-			float resolution = 0;
-
+			auto density = worldRadius * m_uvDensityScale[0];
+			if( density > 0 )
 			{
-				auto density = worldRadius * m_uvDensityScale[0];
-				if( density > 0 )
-				{
-					resolution = std::max( resolution, screenSize / density );
-				}
+				resolution = std::max( resolution, screenSize / density );
+				minDensity = density;
 			}
-
-			for( auto uv : uvDensities )
-			{
-				auto scale = m_uvDensityScale[1 + i++];
-				auto density = uv * scale;
-				if( density > 0 )
-				{
-					resolution = std::max( resolution, screenSize / density );
-				}
-			}
-			if( resolution != 0 )
-			{
-				auto requestedResolution = std::max( 1.f, resolution );
-				auto resolutionChange = (uint32_t)( m_textureRes->GetOriginalResolutionAsFloat() / requestedResolution );
-				if( resolutionChange > 0 )
-				{
-					// quickly calculate log2 of resolutionChange, which gives us the required LOD
-#if __APPLE__
-					requestedLod = 31 - (uint32_t)__builtin_clz( resolutionChange );
-#else
-					unsigned long reverse;
-					_BitScanReverse( &reverse, resolutionChange );
-					requestedLod = reverse;
-#endif
-				}
-			}
-			m_textureRes->RequestResolution( requestedLod );
 		}
-		else
+
+		for( auto uv : uvDensities )
 		{
-			m_textureRes->RequestResolution( requestedLod );
+			auto scale = m_uvDensityScale[1 + i++];
+			auto density = uv * scale;
+			if( density > 0 )
+			{
+				resolution = std::max( resolution, screenSize / density );
+				minDensity = minDensity > 0 ? std::min( minDensity, density ) : density;
+			}
+		}
+		if( resolution != 0 )
+		{
+			auto requestedResolution = std::max( 1.f, resolution );
+			auto resolutionChange = (uint32_t)( m_textureRes->GetOriginalResolutionAsFloat() / requestedResolution );
+			if( resolutionChange > 0 )
+			{
+				// quickly calculate log2 of resolutionChange, which gives us the required LOD
+#if __APPLE__
+				requestedLod = 31 - (uint32_t)__builtin_clz( resolutionChange );
+#else
+				unsigned long reverse;
+				_BitScanReverse( &reverse, resolutionChange );
+				requestedLod = reverse;
+#endif
+			}
+		}
+		if( requests )
+		{
+			ConstrainScreenSize( *requests, resolution, minDensity, requestedLod, m_textureRes->GetOriginalResolutionAsFloat() );
 		}
 	}
+	if( requests )
+	{
+		requests->Add( m_textureRes, requestedLod );
+	}
+	m_textureRes->RequestResolution( requestedLod );
 }
 
 // -------------------------------------------------------------
@@ -129,12 +179,14 @@ void TriTextureParameter::SetResourcePath( const char* resourcePath )
 void TriTextureParameter::EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale )
 {
 	m_textureLodEnabled = true;
+	Tr2ScreenSizeRequests::BumpGeneration();
 	std::copy( begin( uvDensityScale ), end( uvDensityScale ), begin( m_uvDensityScale ) );
 }
 
 void TriTextureParameter::DisableTextureLoding()
 {
 	m_textureLodEnabled = false;
+	Tr2ScreenSizeRequests::BumpGeneration();
 }
 
 bool TriTextureParameter::OnModified( Be::Var* val )
@@ -150,6 +202,7 @@ bool TriTextureParameter::OnModified( Be::Var* val )
 		m_lowResResource = nullptr;
 	}
 	m_textureRes = nullptr;
+	Tr2ScreenSizeRequests::BumpGeneration();
 
 	Initialize();
 
@@ -208,6 +261,7 @@ bool TriTextureParameter::Initialize()
 		m_lowResResource = nullptr;
 	}
 	m_textureRes = nullptr;
+	Tr2ScreenSizeRequests::BumpGeneration();
 
 	if( !m_resourcePath.empty() )
 	{
@@ -235,6 +289,7 @@ bool TriTextureParameter::Initialize()
 			m_resource->OnTextureChange().RegisterListener<TriTextureParameter, &TriTextureParameter::OnTextureChanged>( this );
 		}
 		m_textureRes = BlueCastPtr( m_resource );
+		Tr2ScreenSizeRequests::BumpGeneration();
 	}
 	OnTextureChanged();
 	return true;
@@ -264,6 +319,7 @@ void TriTextureParameter::SetResource( ITr2TextureProvider* newRes )
 		m_lowResResource = nullptr;
 	}
 	m_textureRes = BlueCastPtr( m_resource );
+	Tr2ScreenSizeRequests::BumpGeneration();
 	RebuildEffectHandles( m_cachedEffect );
 	OnTextureChanged();
 }

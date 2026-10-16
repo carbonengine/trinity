@@ -1,6 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
+#include "Tr2ScreenSizeRequests.h"
 
 #include "ccpparser.h"
 
@@ -675,6 +676,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 	auto bk = m_shader;
 	m_shader = nullptr;
 	m_lodTextureParameters.clear();
+	Tr2ScreenSizeRequests::BumpGeneration();
 	m_compatibleWithGdr = true;
 
 	if( m_effectResource )
@@ -861,6 +863,7 @@ void Tr2Effect::ReleaseCachedData( BlueAsyncRes* p )
 			m_resources[i]->RebuildEffectHandles( nullptr );
 		}
 		m_lodTextureParameters.clear();
+	Tr2ScreenSizeRequests::BumpGeneration();
 	}
 }
 
@@ -2073,6 +2076,7 @@ void Tr2Effect::AddLoddable( ITriEffectParameter* param, const char* name )
 				loddable->DisableTextureLoding();
 			}
 			m_lodTextureParameters.push_back( loddable );
+			Tr2ScreenSizeRequests::BumpGeneration();
 		}
 	}
 }
