@@ -7,7 +7,6 @@
 #define SORT_SIZE 512
 
 #define NUM_THREADS		256 // (SORT_SIZE/2)
-#define INVERSION		(16*2 + 8*3)
 
 RWStructuredBuffer<GpuParticleVisibleData> VisibleBuffer;
 Buffer<uint> SortParameters;

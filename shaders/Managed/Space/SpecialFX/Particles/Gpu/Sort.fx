@@ -9,7 +9,6 @@
 #define HALF_SIZE		256 // (SORT_SIZE/2)
 #define ITERATIONS		1 // (HALF_SIZE > 1024 ? HALF_SIZE/1024 : 1)
 #define NUM_THREADS		256 // (HALF_SIZE/ITERATIONS)
-#define INVERSION		(16*2 + 8*3)
 
 
 RWStructuredBuffer<GpuParticleVisibleData> VisibleBuffer;
