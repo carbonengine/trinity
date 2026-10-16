@@ -31,8 +31,21 @@ public:
 	uint64_t GetHitGroupTableSize() const;
 
 private:
+	struct TableBuffer
+	{
+		CComPtr<ID3D12Resource> resource;
+		uint8_t* mapped = nullptr;
+		size_t capacity = 0;
+	};
+	void ReleaseBuffers();
+
 	Tr2RtShaderTableDescriptionAL m_desc;
 	CComPtr<ID3D12Resource> m_table;
+	std::vector<TableBuffer> m_buffers;
+	std::vector<uint8_t> m_staging;
+	std::vector<const wchar_t*> m_rayGenNames;
+	size_t m_missCount = 0;
+	size_t m_hitGroupCount = 0;
 	Tr2PrimaryRenderContextAL* m_owner;
 	uint64_t m_entrySize;
 };

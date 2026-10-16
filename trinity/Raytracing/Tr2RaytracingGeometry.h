@@ -161,11 +161,13 @@ private:
 	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void TransformMeshes( Tr2RenderContext & renderContext );
 	void BuildAccelerationStructures( Tr2RenderContext & renderContext );
+	void NoteDeformedGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area );
 
 	VtxOffsets FindOffsets( unsigned declHandle );
 
 	std::vector<GeometryData> m_geometryData;
 	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
+	std::atomic<bool> m_hasDeformedGeometry{ false };
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;

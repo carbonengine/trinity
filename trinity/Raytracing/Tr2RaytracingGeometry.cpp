@@ -13,14 +13,44 @@
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"
+#include "TriSettingsRegistrar.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include <../trinityal/dx12/Tr2BufferALDx12.h>
 #endif
 
+bool g_rtShaderTableMaterialCache = true;
+TRI_REGISTER_SETTING( "rtShaderTableMaterialCache", g_rtShaderTableMaterialCache );
+bool& g_rtShaderTableReuse = Tr2RtShaderTableAL::s_reuseBuffers;
+TRI_REGISTER_SETTING( "rtShaderTableReuse", g_rtShaderTableReuse );
+bool g_rtTransformMeshesEarlyOut = true;
+TRI_REGISTER_SETTING( "rtTransformMeshesEarlyOut", g_rtTransformMeshesEarlyOut );
+bool g_rtSkipUnusedMaterialApply = true;
+TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
+
+CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
+CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
+CCP_STATS_DECLARE( rtTransformMeshesSkipped, "Trinity/RT/transformMeshesSkipped", true, CST_COUNTER_HIGH, "TransformMeshes returned early because no skinned or morphed geometry was added this frame." );
+CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterialApplies", true, CST_COUNTER_HIGH, "Shader table entries whose RT material data was built and applied this frame." );
+
 namespace
 {
 std::mutex s_geometryConstantsMutex;
+
+struct RtLibraryState
+{
+	const Tr2EffectLibrary* lib = nullptr;
+	std::vector<BlueSharedStringW> hitGroupNames;
+	uint32_t materialIndex = 0;
+	bool seen = false;
+	bool addsRecords = false;
+};
+
+struct RtShaderState
+{
+	uint32_t techniqueIndex = 0;
+	RtLibraryState* lib = nullptr;
+};
 }
 
 //***********************************************************
@@ -613,6 +643,7 @@ void Tr2RaytracingGeometry::BeginSceneUpdate()
 {
 	m_geometryData.clear();
 	m_usedResources.Clear();
+	m_hasDeformedGeometry.store( false, std::memory_order_relaxed );
 }
 
 
@@ -642,80 +673,184 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	for( int32_t i = 0; i < numRaycasters; i++ )
 	{
-		*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
+		if( g_rtShaderTableReuse )
+		{
+			shaderTableDescs[i]->Clear();
+		}
+		else
+		{
+			*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
+		}
 		shaderTableDescs[i]->Reserve( m_geometryData.size() );
 	}
 
-	std::vector<std::map<uint32_t, std::pair<BlueSharedStringW, uint32_t>>> seenLibraries;
-	seenLibraries.resize( numRaycasters );
+	if( !g_rtShaderTableMaterialCache )
+	{
+		std::vector<std::map<uint32_t, std::pair<BlueSharedStringW, uint32_t>>> seenLibraries;
+		seenLibraries.resize( numRaycasters );
+
+		uint32_t materialIndex = 0;
+		for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
+		{
+			Tr2RtLocalMaterialDescriptionAL material;
+			if( !it->material )
+			{
+				continue;
+			}
+			auto shader = it->material->GetShaderStateInterface();
+			if( !shader )
+			{
+				continue;
+			}
+			uint32_t techniqueIndex;
+			if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+			{
+				continue;
+			}
+			auto& desc = shader->GetEffectDescription();
+			if( desc.techniques[techniqueIndex].libraries.empty() )
+			{
+				continue;
+			}
+			auto& lib = desc.techniques[techniqueIndex].libraries[0];
+			if( !lib.anyHitName.empty() )
+			{
+				it->isTransparent = true;
+			}
+
+			if( it->perObjectData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
+			}
+			if( it->vertexBufferData )
+			{
+				material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
+			}
+			it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+
+			bool consumedMaterialIndex = false;
+			for( int32_t i = 0; i < numRaycasters; i++ )
+			{
+				auto foundLib = seenLibraries[i].find( lib.libraryHandle );
+				if( foundLib == end( seenLibraries[i] ) )
+				{
+					auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
+					seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
+					shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
+					it->materialIndex = materialIndex;
+					consumedMaterialIndex = true;
+				}
+				else if( !lib.localInput.signature.registers.empty() )
+				{
+					shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
+					it->materialIndex = materialIndex;
+					consumedMaterialIndex = true;
+				}
+				else
+				{
+					it->materialIndex = foundLib->second.second;
+				}
+			}
+			if( consumedMaterialIndex )
+			{
+				materialIndex++;
+			}
+		}
+		return;
+	}
+
+	std::unordered_map<const Tr2Shader*, RtShaderState> shaders;
+	std::map<uint32_t, RtLibraryState> libraries;
 
 	uint32_t materialIndex = 0;
-	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
+	for( auto& geometry : m_geometryData )
 	{
-		Tr2RtLocalMaterialDescriptionAL material;
-		if( !it->material )
+		if( !geometry.material )
 		{
 			continue;
 		}
-		auto shader = it->material->GetShaderStateInterface();
+		auto shader = geometry.material->GetShaderStateInterface();
 		if( !shader )
 		{
 			continue;
 		}
-		uint32_t techniqueIndex;
-		if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+
+		auto shaderState = shaders.find( shader );
+		if( shaderState == end( shaders ) )
+		{
+			shaderState = shaders.emplace( shader, RtShaderState() ).first;
+			uint32_t techniqueIndex;
+			if( shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
+			{
+				auto& libs = shader->GetEffectDescription().techniques[techniqueIndex].libraries;
+				if( !libs.empty() )
+				{
+					auto& libState = libraries[libs[0].libraryHandle];
+					if( !libState.lib )
+					{
+						libState.lib = &libs[0];
+						libState.hitGroupNames.resize( numRaycasters );
+						libState.addsRecords = !libs[0].localInput.signature.registers.empty();
+					}
+					shaderState->second.techniqueIndex = techniqueIndex;
+					shaderState->second.lib = &libState;
+				}
+			}
+		}
+		auto libState = shaderState->second.lib;
+		if( !libState )
 		{
 			continue;
 		}
-		auto& desc = shader->GetEffectDescription();
-		if( desc.techniques[techniqueIndex].libraries.empty() )
-		{
-			continue;
-		}
-		auto& lib = desc.techniques[techniqueIndex].libraries[0];
+		auto& lib = *libState->lib;
 		if( !lib.anyHitName.empty() )
 		{
-			it->isTransparent = true;
+			geometry.isTransparent = true;
+		}
+		if( g_rtSkipUnusedMaterialApply && libState->seen && !libState->addsRecords )
+		{
+			geometry.materialIndex = libState->materialIndex;
+			continue;
 		}
 
-		if( it->perObjectData )
+		CCP_STATS_INC( rtShaderTableMaterialApplies );
+		Tr2RtLocalMaterialDescriptionAL material;
+		if( geometry.perObjectData )
 		{
-			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
+			material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *geometry.perObjectData );
 		}
-		if( it->vertexBufferData )
+		if( geometry.vertexBufferData )
 		{
-			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
+			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *geometry.vertexBufferData );
 		}
-		it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
+		geometry.material->ApplyMaterialDataForRtMaterial( shaderState->second.techniqueIndex, material, renderContext );
 
-		bool consumedMaterialIndex = false;
-		for( int32_t i = 0; i < numRaycasters; i++ )
+		if( !libState->seen )
 		{
-			auto foundLib = seenLibraries[i].find( lib.libraryHandle );
-			if( foundLib == end( seenLibraries[i] ) )
+			libState->seen = true;
+			libState->materialIndex = materialIndex;
+			for( int32_t i = 0; i < numRaycasters; i++ )
 			{
-				auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
-				seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
-				shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
-				it->materialIndex = materialIndex;
-				consumedMaterialIndex = true;
+				libState->hitGroupNames[i] = pipelineManagers[i]->AddHitGroup( lib );
+				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
 			}
-			else if( !lib.localInput.signature.registers.empty() )
-			{
-				shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
-				it->materialIndex = materialIndex;
-				consumedMaterialIndex = true;
-			}
-			else
-			{
-				it->materialIndex = foundLib->second.second;
-			}
+			geometry.materialIndex = materialIndex++;
 		}
-		if( consumedMaterialIndex )
+		else if( libState->addsRecords )
 		{
-			materialIndex++;
+			for( int32_t i = 0; i < numRaycasters; i++ )
+			{
+				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
+			}
+			geometry.materialIndex = materialIndex++;
+		}
+		else
+		{
+			geometry.materialIndex = libState->materialIndex;
 		}
 	}
+	CCP_STATS_ADD( rtShaderTableShaders, shaders.size() );
+	CCP_STATS_ADD( rtShaderTableLibraries, libraries.size() );
 }
 
 namespace
@@ -751,6 +886,21 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	ON_BLOCK_EXIT( [&] { renderContext.PopDisableUAVBarriersDx12(); } );
 #endif
 
+	{
+		TRINITY_STATS_ZONE( "Prepare BoneTransformBuffer" );
+		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
+	}
+	{
+		TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
+		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
+	}
+
+	if( g_rtTransformMeshesEarlyOut && !m_hasDeformedGeometry.load( std::memory_order_relaxed ) )
+	{
+		CCP_STATS_INC( rtTransformMeshesSkipped );
+		return;
+	}
+
 	for( auto& geom : m_geometryData )
 	{
 		if( geom.materialIndex == INVALID_MATERIAL )
@@ -765,15 +915,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	std::vector<GeometryData*> outdatedMeshes;
 	outdatedMeshes.reserve( m_geometryData.size() );
-
-	{
-		TRINITY_STATS_ZONE( "Prepare BoneTransformBuffer" );
-		Tr2RingBuffer::GetInstance<Float4x3>().PrepareBuffer( renderContext );
-	}
-	{
-		TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer" );
-		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
-	}
 
 	uint32_t skinnedVertexCount = 0;
 
@@ -1031,6 +1172,21 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
+	NoteDeformedGeometry( mesh, area );
+}
+
+void Tr2RaytracingGeometry::NoteDeformedGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area )
+{
+	auto lod = mesh.GetCurrentLodData();
+	if( !lod )
+	{
+		return;
+	}
+	auto& lodArea = lod->m_areas[area.GetAreaIndex()];
+	if( lodArea.m_isSkinned || lodArea.m_isMorphed )
+	{
+		m_hasDeformedGeometry.store( true, std::memory_order_relaxed );
+	}
 }
 
 void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Tr2ConstantBufferAL* vertexBufferData, const Float4x3* worldTransforms, size_t instanceCount, uint32_t bakedMorphOffset )
@@ -1052,6 +1208,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.isTransparent = false;
 	obj.bakedMorphOffset = bakedMorphOffset;
 	m_threadLocalGeometryData.local().push_back( obj );
+	NoteDeformedGeometry( mesh, area );
 }
 
 bool Tr2RaytracingGeometry::HasGeometry() const
