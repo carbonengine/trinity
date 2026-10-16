@@ -863,7 +863,7 @@ void Tr2Effect::ReleaseCachedData( BlueAsyncRes* p )
 			m_resources[i]->RebuildEffectHandles( nullptr );
 		}
 		m_lodTextureParameters.clear();
-	Tr2ScreenSizeRequests::BumpGeneration();
+		Tr2ScreenSizeRequests::BumpGeneration();
 	}
 }
 
