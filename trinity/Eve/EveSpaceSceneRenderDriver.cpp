@@ -409,10 +409,10 @@ void EveSpaceSceneRenderDriver::SetCameraToRenderer( Tr2RenderContext& renderCon
 	Tr2Renderer::SetViewTransform( view->GetTransform() );
 }
 
-void EveSpaceSceneRenderDriver::SetCameraToRenderer( TriViewPtr view, TriProjectionPtr projection, Tr2RenderContext& renderContext ) const
+void EveSpaceSceneRenderDriver::SetCameraToRenderer( const Matrix& view, TriProjectionPtr projection, Tr2RenderContext& renderContext ) const
 {
 	projection->SetProjection( renderContext );
-	Tr2Renderer::SetViewTransform( view->GetTransform() );
+	Tr2Renderer::SetViewTransform( view );
 }
 
 TextureSize2D EveSpaceSceneRenderDriver::GetRenderSize( const TextureSize2D& displaySize ) const
@@ -449,13 +449,86 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		return;
 	}
 
+	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionEnabled ? m_reflectionCorrectionMap : m_blackReflectionCorrectionMap );
+
+	m_scene->m_viewLast = m_viewLast;
+	m_scene->m_projectionLast = m_projectionLast;
+
+	if( m_camera )
+	{
+		m_camera->Update( simTime );
+	}
+
+	const TextureSize2D displaySize = destinations.data->GetDesc();
+	const TextureSize2D renderSize = GetRenderSize( displaySize );
+
+	PropagateSettings();
+
+	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
+
+	renderContext.m_esm.SetInvertedDepthTest( true );
+	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
+
+	renderContext.m_esm.PushRenderTarget( 0 );
+	renderContext.m_esm.PushRenderTarget( 1 );
+	renderContext.m_esm.PushDepthStencilBuffer();
+	ON_BLOCK_EXIT( [&] {
+		renderContext.m_esm.PopDepthStencilBuffer();
+		renderContext.m_esm.PopRenderTarget( 1 );
+		renderContext.m_esm.PopRenderTarget( 0 );
+	} );
+
+	PrepareLightManager();
+
+	// The new route renders the reflection faces through RenderView. The old route lets
+	// the scene render them from within the main view (see RenderView).
 	if( m_newRoute )
 	{
-		RenderNew( destinations, outputs, realTime, simTime, rootTimer, renderContext );
+		TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
+		RenderReflectionFaces( realTime, simTime, rootTimer, renderContext );
 	}
-	else
+
+	const RenderInfo mainView = {
+		m_camera ? m_camera->GetViewMatrix()->GetTransform() : m_view->GetTransform(),
+		m_camera ? m_camera->GetProjection() : m_projection,
+		GetJitterMatrix( renderSize.width, renderSize.height, renderContext ),
+		GetMipLodBias(),
+		m_upscalingContext ? m_upscalingContext->GetUpscalingAmount() : 1.0f,
+		renderSize,
+		FeatureSet{},
+		SceneRender::ViewInfo::MainView( m_settings.enableDistortion )
+	};
+	auto colorTarget = m_gpuResourcePool.GetTempTexture( "customBackBuffer", renderSize, m_internalPixelFormat, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+	ViewTargets targets = RenderView( mainView, std::move( colorTarget ), outputs, realTime, simTime, rootTimer, renderContext );
+
+	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
+	renderContext.m_esm.SetDepthStencilBuffer( {} );
+
 	{
-		RenderOld( destinations, outputs, realTime, simTime, rootTimer, renderContext );	
+		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
+		m_postProcess->Execute( *destinations.data, std::move( targets.color ), targets.depth, std::move( targets.velocity ), std::move( targets.opaqueColor ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
+	}
+	SetCameraToRenderer( renderContext );
+	{
+		TimeSection ui3dSection( m_timers.ui3d, "Render3dUI", rootTimer, renderContext );
+		m_scene->Render3DUI( renderContext );
+	}
+
+	for( auto& toolScene : m_toolsScenes )
+	{
+		if( ITr2UpdateablePtr updateable = BlueCastPtr( toolScene ) )
+		{
+			updateable->Update( realTime, simTime );
+		}
+		toolScene->Render( renderContext );
+	}
+
+	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
+	GlobalStore().RegisterVariable( "DepthMap", Tr2TextureAL{} );
+
+	if( m_settings.showFPS )
+	{
+		m_fpsRenderer->Execute( realTime, simTime, renderContext );
 	}
 }
 
@@ -463,7 +536,7 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 {
 	Matrix jitterMatrix;
 
-	if( m_upscalingContext )
+	if( m_upscalingInfo.temporal )
 	{
 		float jitterX = 0.0f;
 		float jitterY = 0.0f;
@@ -495,159 +568,55 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 			mipLodBias += postprocess->GetMipLodBias();
 		}
 	}
-
-	if( m_upscalingContext )
-	{
-		mipLodBias += m_upscalingInfo.mipLevelBias;
-	}
+	
+	// 0 if no upscaling is enabled
+	mipLodBias += m_upscalingInfo.mipLevelBias;
 	return mipLodBias;
 }
 
-void EveSpaceSceneRenderDriver::RenderNew( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
+// --------------------------------------------------------------------------------------
+// Description:
+//   Render the scene from one view (the main view or a reflection probe face) into
+//   colorTarget. Returns the targets the view rendered, for post processing or for
+//   submitting to the reflection probe.
+// --------------------------------------------------------------------------------------
+EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, Tr2GpuResourcePool::Texture colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
 {
-	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionEnabled ? m_reflectionCorrectionMap : m_blackReflectionCorrectionMap );
-	
-	const TextureSize2D displaySize = destinations.data->GetDesc();
-	const TextureSize2D renderSize = GetRenderSize( displaySize );
+	const FeatureSet& featureSet = renderInfo.featureSet;
+	const SceneRender::ViewInfo& sceneView = renderInfo.sceneView;
+	const TextureSize2D& renderSize = renderInfo.renderSize;
 
-	m_scene->m_viewLast = m_viewLast;
-	m_scene->m_projectionLast = m_projectionLast;
-	
-	if( m_camera )
-	{
-		m_camera->Update( simTime );
-	}
+	ViewTargets targets;
+	targets.color = std::move( colorTarget );
+	const Tr2TextureAL& backBuffer = targets.color;
 
-	auto projection = m_camera ? m_camera->GetProjection() : m_projection;
-	auto view = m_camera ? m_camera->GetViewMatrix() : m_view;
-
-	PropagateSettings();
-
-	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
-
-	renderContext.m_esm.SetInvertedDepthTest( true );
-	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-	// Here we would render the reflection pass
-
-	// render the main scene
-	static const FeatureSet mainFeatures = { true, true, true, true, true, true, true };
-
-	SetCameraToRenderer( renderContext );
-	float upscalingAmount = m_upscalingContext ? m_upscalingContext->GetUpscalingAmount() : 1.0f;
-	auto jitterMatrix = GetJitterMatrix( renderSize.width, renderSize.height, renderContext );
-	auto mipLodBias = GetMipLodBias();
-
-	RenderInfo renderInfo = { view, projection, jitterMatrix, mipLodBias, upscalingAmount, GetRenderSize( destinations.data->GetDesc() ), mainFeatures, Tr2RenderReason::TR2RENDERREASON_NORMAL };
-
-	std::vector<TempOutput> tempOutputs = {
-		{ BlueSharedString( "DepthMap" ), {} },
-		{ BlueSharedString( "BackBuffer" ), {} },
-		{ BlueSharedString( "VelocityMap" ), {} },
-		{ BlueSharedString( "OpaqueColorMap" ), {} }
-	};
-	const Span<TempOutput> tempOutputsSpan = { tempOutputs.data(), tempOutputs.size() };
-
-	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
-	renderContext.m_esm.SetDepthStencilBuffer( {} );
-
-	GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", Tr2TextureAL{} );
-
-	RenderView( renderInfo, destinations, tempOutputsSpan, realTime, simTime, rootTimer, renderContext );
-
-	{
-		auto depthBuffer = FindNamedOutput( tempOutputsSpan, "DepthMap" );
-		auto velocityMap = FindNamedOutput( tempOutputsSpan, "VelocityMap" );
-		auto customBackBuffer = FindNamedOutput( tempOutputsSpan, "BackBuffer" );
-		auto opaqueBackBuffer = FindNamedOutput( tempOutputsSpan, "OpaqueColorMap" );
-		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
-		m_postProcess->Execute( *destinations.data, std::move( customBackBuffer->texture ), depthBuffer->texture, std::move( velocityMap->texture ), std::move( opaqueBackBuffer->texture ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
-	}
-
-	m_viewLast = m_scene->m_viewLast;
-	m_projectionLast = m_scene->m_projectionLast;
-	m_scene->PopulateAndApplyPerFrameData( renderContext );
-
-	SetCameraToRenderer( renderContext );
-	{
-		TimeSection ui3dSection( m_timers.ui3d, "Render3dUI", rootTimer, renderContext );
-		m_scene->Render3DUI( renderContext );
-	}
-
-	for( auto& toolScene : m_toolsScenes )
-	{
-		if( ITr2UpdateablePtr updateable = BlueCastPtr( toolScene ) )
-		{
-			updateable->Update( realTime, simTime );
-		}
-		toolScene->Render( renderContext );
-	}
-
-	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
-	GlobalStore().RegisterVariable( "DepthMap", Tr2TextureAL{} );
-
-	if( m_settings.showFPS )
-	{
-		m_fpsRenderer->Execute( realTime, simTime, renderContext );
-	}
-}
-
-void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
-{
-	auto featureSet = renderInfo.featureSet;
-	auto renderSize = renderInfo.renderSize;
-	auto view = renderInfo.view;
-	auto projection = renderInfo.projection;
-
-	auto velocityMap = GetVelocityMapIfNeeded( renderSize, outputs, featureSet );
-	auto backBuffer = FindNamedOutput( outputs, "BackBuffer" );
-	if( !backBuffer || !backBuffer->texture.IsValid() )
-	{
-		SetNamedOutput(outputs, "BackBuffer", m_gpuResourcePool.GetTempTexture( "backBuffer", renderSize, m_internalPixelFormat, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE ));
-		backBuffer = FindNamedOutput( outputs, "BackBuffer" );
-	}
-
-	auto depthBuffer = m_gpuResourcePool.GetTempTexture( "depthBuffer", renderSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
-
-	SetNamedOutput( outputs, "DepthMap", depthBuffer );
-
-	renderContext.m_esm.PushRenderTarget( 0 );
-	if( featureSet.velocityMap )
-	{
-		renderContext.m_esm.PushRenderTarget( 1 );
-	}
-	renderContext.m_esm.PushDepthStencilBuffer();
-	ON_BLOCK_EXIT( [&] {
-		renderContext.m_esm.PopDepthStencilBuffer();
-		if( featureSet.velocityMap )
-		{
-			renderContext.m_esm.PopRenderTarget( 1 );
-		}
-		renderContext.m_esm.PopRenderTarget( 0 );
-	} ); 
-
-	if( m_background )
+	const bool renderBackgroundNode = m_background && featureSet.background;
+	if( renderBackgroundNode )
 	{
 		// render background effect to back buffer before rendering the scene
-		BeginRenderPass( renderContext, { backBuffer->texture }, {} );
+		BeginRenderPass( renderContext, { backBuffer }, {} );
 		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, m_settings.clearColor, 0 );
 
-		const Tr2TextureAL& backgroundTarget = backBuffer->texture;
-		m_background->Execute( { &backgroundTarget, 1 }, {}, realTime, simTime, rootTimer, renderContext );
+		m_background->Execute( { &backBuffer, 1 }, {}, realTime, simTime, rootTimer, renderContext );
 	}
-	// set the 
-	BeginRenderPass( renderContext, { backBuffer->texture }, depthBuffer );
-	renderContext.Clear( m_background ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
 
-	SetCameraToRenderer( view, projection, renderContext );
+	targets.depth = m_gpuResourcePool.GetTempTexture( "depthBuffer", renderSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
+	const Tr2TextureAL& depthBuffer = targets.depth;
+
+	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
+	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
+
+	SetCameraToRenderer( renderInfo.view, renderInfo.projection, renderContext );
 	PropagateRenderningInfo( renderInfo.jitterMatrix, renderInfo.mipLodBias, renderInfo.upscalingAmount );
 
-	
 	{
 		TimeSection updateSection( m_timers.update, "Update", rootTimer, renderContext );
 		m_scene->Update( realTime, simTime );
 	}
-	UpdateGpuParticleSystem( renderContext );
+	if( sceneView.gpuParticles )
+	{
+		UpdateGpuParticleSystem( renderContext );
+	}
 
 	auto prevVisualizeMethod = m_scene->m_visualizeMethod;
 	m_scene->m_visualizeMethod = m_settings.visualizeMethod;
@@ -655,37 +624,31 @@ void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const 
 
 	{
 		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
-
-		if( g_eveSpaceSceneDynamicLighting )
-		{
-			if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
-			{
-				lightManager->SetVariableStore();
-				lightManager->SetLightingQuality( m_settings.lightingQuality );
-			}
-		}
-		else
-		{
-			Tr2LightManager::DeleteInstance();
-		}
-
-		m_scene->BeginRender( m_settings.enableDistortion, renderContext );
+		m_scene->BeginFrame( renderContext );
+		m_scene->BeginView( sceneView, renderContext );
 	}
+	// Old route: the scene renders the reflection faces itself, from within the main view
+	if( featureSet.reflections && !m_newRoute )
+	{
+		TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
+		m_scene->RenderReflectionPass( m_gpuResourcePool, renderContext );
+	}
+	GlobalStore().RegisterVariable( "DepthMap", targets.depth );
 
-	GlobalStore().RegisterVariable( "DepthMap", depthBuffer );
+	SetNamedOutput( outputs, "DepthMap", targets.depth );
 
-	SetNamedOutput( outputs, "DepthMap", depthBuffer );
-
-	Tr2GpuResourcePool::Texture distortionMap = GetDistortionMapIfNeeded( renderSize, featureSet );
+	Tr2GpuResourcePool::Texture distortionMap = GetDistortionMapIfNeeded( renderSize, sceneView.distortion );
+	targets.velocity = GetVelocityMapIfNeeded( renderSize, outputs, featureSet );
+	const Tr2TextureAL& velocityMap = targets.velocity;
 
 	bool hasBackgroundDistortionBatches = false;
 	{
 		TimeSection backgroundSection( m_timers.background, "BackgroundPass", rootTimer, renderContext );
-		hasBackgroundDistortionBatches = m_scene->RenderBackgroundPass( depthBuffer, distortionMap, velocityMap, renderContext );
+		hasBackgroundDistortionBatches = m_scene->RenderBackgroundPass( depthBuffer, distortionMap, velocityMap, sceneView, renderContext );
 	}
-	if( m_settings.enableDistortion && hasBackgroundDistortionBatches )
+	if( sceneView.distortion && hasBackgroundDistortionBatches )
 	{
-		ApplyDistortion( backBuffer->texture, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
+		ApplyDistortion( backBuffer, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
 
 		renderContext.m_esm.SetDepthStencilBuffer( depthBuffer );
 	}
@@ -695,24 +658,23 @@ void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const 
 	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
 	{
 		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
-		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique );
+		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, sceneView, renderContext, m_depthPassTechnique );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
 	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
 	ON_BLOCK_EXIT( [&] { GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", Tr2TextureAL{} ); } );
 
-	Tr2GpuResourcePool::Texture opaqueBackBuffer;
 	EveSpaceScene::ShadowResources shadowResources;
 	if( m_scene->m_display && m_mainPassRenderingEnabled )
 	{
 		{
 			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );
-			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, renderContext );
+			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, sceneView, renderContext );
 		}
 		TimeSection ssaoSection( m_timers.ssao, "SSAO", rootTimer, renderContext );
-		auto ssao = RenderSSAO( depthBuffer, normalMap, renderContext );
+		auto ssao = featureSet.ssao ? RenderSSAO( depthBuffer, normalMap, renderContext ) : GetEmptySSAO( m_gpuResourcePool );
 		ssaoSection.Stop();
-
+		
 		GlobalStore().RegisterVariable( "SSAOMap", ssao );
 
 		if( auto lightManager = Tr2LightManager::GetInstance() )
@@ -724,20 +686,20 @@ void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const 
 			renderContext.SetReadOnlyDepth( false );
 		}
 
-		opaqueBackBuffer = GetOpaqueColorMapIfNeeded( renderSize, outputs, featureSet );
+		targets.opaqueColor = GetOpaqueColorMapIfNeeded( renderSize, outputs, featureSet );
 
 		RegisterWithVariableStore( shadowResources, m_gpuResourcePool );
 		bool hasDistortionBatches = false;
-		distortionMap = GetDistortionMapIfNeeded( renderSize, featureSet );
+		distortionMap = GetDistortionMapIfNeeded( renderSize, sceneView.distortion );
 		{
 			TimeSection mainPassSection( m_timers.mainPass, "MainPass", rootTimer, renderContext );
-			hasDistortionBatches = m_scene->RenderMainPass( backBuffer->texture, depthBuffer, distortionMap, velocityMap, opaqueBackBuffer, m_gpuResourcePool, renderContext );
+			hasDistortionBatches = m_scene->RenderMainPass( backBuffer, depthBuffer, distortionMap, velocityMap, targets.opaqueColor, m_gpuResourcePool, sceneView, renderContext );
 		}
 		RegisterWithVariableStore( {}, m_gpuResourcePool );
 
-		if( m_settings.enableDistortion && hasDistortionBatches )
+		if( sceneView.distortion && hasDistortionBatches )
 		{
-			ApplyDistortion( backBuffer->texture, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
+			ApplyDistortion( backBuffer, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
 			renderContext.m_esm.SetDepthStencilBuffer( depthBuffer );
 		}
 		distortionMap = {};
@@ -746,24 +708,26 @@ void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const 
 	else
 	{
 		// Even if we skip main pass rendering, we might need opaqueBackBuffer for upscaling or TAA
-		opaqueBackBuffer = GetOpaqueColorMapIfNeeded( renderSize, outputs, featureSet );
-		if( opaqueBackBuffer.IsValid() )
+		targets.opaqueColor = GetOpaqueColorMapIfNeeded( renderSize, outputs, featureSet );
+		if( targets.opaqueColor.IsValid() )
 		{
 			renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-			BeginRenderPass( renderContext, { opaqueBackBuffer.Get() }, {} );
+			BeginRenderPass( renderContext, { targets.opaqueColor.Get() }, {} );
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-			Tr2Renderer::DrawTexture( renderContext, backBuffer->texture );
+			Tr2Renderer::DrawTexture( renderContext, backBuffer );
 		}
 	}
-	if( m_sceneOverlay )
+	if( m_sceneOverlay && featureSet.overlay )
 	{
-		Tr2TextureAL targets[] = { backBuffer->texture, velocityMap.Get() };
-		m_sceneOverlay->Execute( { targets, 2 }, {}, realTime, simTime, rootTimer, renderContext );
+		Tr2TextureAL overlayTargets[] = { backBuffer, velocityMap };
+		m_sceneOverlay->Execute( { overlayTargets, 2 }, {}, realTime, simTime, rootTimer, renderContext );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", Tr2TextureAL{} );
 	normalMap = {};
 
-	BeginRenderPass( renderContext, { backBuffer->texture }, depthBuffer );
+	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
+	// occlusion query results are read by the next frame
+	if( sceneView.temporal )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_scene->RunLensflareOcclusionQueries( depthBuffer, renderContext );
@@ -771,236 +735,87 @@ void EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const 
 	}
 	{
 		TimeSection endRenderSection( m_timers.endRender, "EndRender", rootTimer, renderContext );
-		m_scene->EndRender( renderContext );
+		m_scene->EndRender( sceneView, renderContext );
 	}
+	// non-temporal views leave the scene's history untouched, so this is a no-op for them
 	m_viewLast = m_scene->m_viewLast;
 	m_projectionLast = m_scene->m_projectionLast;
 	m_scene->PopulateAndApplyPerFrameData( renderContext );
 
 	GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", Tr2TextureAL{} );
+
+	return targets;
 }
 
-void EveSpaceSceneRenderDriver::RenderOld( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
+void EveSpaceSceneRenderDriver::RenderReflectionFaces( Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
 {
-
-	GlobalStore().RegisterVariable( "EveSpaceSceneReflectionCorrectionLookupTable", m_reflectionCorrectionEnabled ? m_reflectionCorrectionMap : m_blackReflectionCorrectionMap );
-	static const FeatureSet mainFeatures = { true, true, true, true, true, true, true };
-
-	m_scene->m_viewLast = m_viewLast;
-	m_scene->m_projectionLast = m_projectionLast;
-
-	if( m_camera )
+	Tr2ReflectionProbe* probe = m_reflectionProbe;
+	if( !probe || !probe->IsValid() || !m_scene->m_display )
 	{
-		m_camera->Update( simTime );
+		return;
 	}
 
-	const TextureSize2D displaySize = destinations.data->GetDesc();
-	const TextureSize2D renderSize = GetRenderSize( displaySize );
+	GPU_REGION( renderContext, "Reflection" );
 
-	PropagateSettings();
-
-	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
-
-	renderContext.m_esm.SetInvertedDepthTest( true );
-	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( false ); } );
-
-
-	renderContext.m_esm.PushRenderTarget( 0 );
-	renderContext.m_esm.PushRenderTarget( 1 );
-	renderContext.m_esm.PushDepthStencilBuffer();
-	ON_BLOCK_EXIT( [&] {
-		renderContext.m_esm.PopDepthStencilBuffer();
-		renderContext.m_esm.PopRenderTarget( 1 );
-		renderContext.m_esm.PopRenderTarget( 0 );
-	} );
-
-	auto customBackBuffer = m_gpuResourcePool.GetTempTexture( "customBackBuffer", renderSize, m_internalPixelFormat, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
-
-	if( m_background )
-	{
-		BeginRenderPass( renderContext, { customBackBuffer }, {} );
-		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, m_settings.clearColor, 0 );
-
-		m_background->Execute( { &customBackBuffer.Get(), 1 }, {}, realTime, simTime, rootTimer, renderContext );
-	}
-
-	auto depthBuffer = m_gpuResourcePool.GetTempTexture( "depthBuffer", renderSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
-
-	BeginRenderPass( renderContext, { customBackBuffer }, depthBuffer );
-	renderContext.Clear( m_background ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
+	// faces are rendered without TAA/upscaling, SSAO, velocity or the render nodes
+	FeatureSet reflectionFeatures;
+	reflectionFeatures.upscaling = false;
+	reflectionFeatures.antiAliasing = false;
+	reflectionFeatures.reflections = false; // no reflections rendered in the reflection faces, this can be removed when m_newRoute is removed
+	reflectionFeatures.ssao = false;
+	reflectionFeatures.velocityMap = false;
+	reflectionFeatures.background = false;
+	reflectionFeatures.overlay = false;
+	const SceneRender::ViewInfo faceView = SceneRender::ViewInfo::ReflectionFace();
 
 	SetCameraToRenderer( renderContext );
-	float upscalingAmount = m_upscalingContext ? m_upscalingContext->GetUpscalingAmount() : 1.0f;
-	PropagateRenderningInfo( GetJitterMatrix( renderSize.width, renderSize.height, renderContext ), GetMipLodBias(), upscalingAmount );
+	probe->UpdatePosition( Tr2Renderer::GetViewPosition() );
+	const Vector3 viewDirection = Tr2Renderer::GetInverseViewTransform().GetZ();
+	const Matrix faceProjection = probe->GetFaceProjection( Tr2Renderer::GetProjectionTransform() );
 
+	TriProjectionPtr projection;
+	projection.CreateInstance();
+	projection->CustomProjection( faceProjection );
+
+	const unsigned faceSize = probe->GetFaceSize();
+	const TextureSize2D faceRenderSize = probe->GetFaceTarget( 0 ).GetDesc();
+
+	const bool prevCullInversion = renderContext.m_esm.IsCullModeInverted();
+	renderContext.m_esm.SetInvertedCullMode( true );
+	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedCullMode( prevCullInversion ); } );
+
+	for( unsigned face = probe->GetStartFace(); face < probe->GetEndFace(); ++face )
 	{
-		TimeSection updateSection( m_timers.update, "Update", rootTimer, renderContext );
-		m_scene->Update( realTime, simTime );
+		std::string regionName = "Reflection Face " + std::to_string( face );
+		GPU_REGION( renderContext, regionName.c_str() );
+
+		Matrix view = probe->GetFaceViewTransform( face, probe->GetPosition() );
+
+		RenderInfo renderInfo = { view, projection, IdentityMatrix(), 0.0f, 1.0f, faceRenderSize, reflectionFeatures, faceView };
+
+		auto faceTarget = m_gpuResourcePool.GetTempTexture( "reflectionFace", faceSize, faceSize, probe->GetFaceTarget( face ).GetFormat(), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+		ViewTargets targets = RenderView( renderInfo, std::move( faceTarget ), {}, realTime, simTime, rootTimer, renderContext );
+
+		probe->SubmitFace( face, targets.color, renderContext );
 	}
-	UpdateGpuParticleSystem( renderContext );
 
-	auto prevVisualizeMethod = m_scene->m_visualizeMethod;
-	m_scene->m_visualizeMethod = m_settings.visualizeMethod;
-	ON_BLOCK_EXIT( [&] { m_scene->m_visualizeMethod = prevVisualizeMethod; } );
+	probe->FinishFaces( viewDirection, renderContext );
+	SetCameraToRenderer( renderContext );
+}
 
+void EveSpaceSceneRenderDriver::PrepareLightManager()
+{
+	if( g_eveSpaceSceneDynamicLighting )
 	{
-		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
-
-		if( g_eveSpaceSceneDynamicLighting )
+		if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
 		{
-			if( auto lightManager = Tr2LightManager::GetOrCreateInstance( "res:/graphics/effect/managed/space/system/computelightlists.fx" ) )
-			{
-				lightManager->SetVariableStore();
-				lightManager->SetLightingQuality( m_settings.lightingQuality );
-			}
+			lightManager->SetVariableStore();
+			lightManager->SetLightingQuality( m_settings.lightingQuality );
 		}
-		else
-		{
-			Tr2LightManager::DeleteInstance();
-		}
-
-		m_scene->BeginRender( m_settings.enableDistortion, renderContext );
-	}
-	{
-		TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
-		m_scene->RenderReflectionPass( m_gpuResourcePool, renderContext );
-	}
-	GlobalStore().RegisterVariable( "DepthMap", depthBuffer );
-
-	SetNamedOutput( outputs, "DepthMap", depthBuffer );
-
-	Tr2GpuResourcePool::Texture distortionMap = GetDistortionMapIfNeeded( renderSize, mainFeatures );
-	Tr2GpuResourcePool::Texture velocityMap = GetVelocityMapIfNeeded( renderSize, outputs, mainFeatures );
-
-	bool hasBackgroundDistortionBatches = false;
-	{
-		TimeSection backgroundSection( m_timers.background, "BackgroundPass", rootTimer, renderContext );
-		hasBackgroundDistortionBatches = m_scene->RenderBackgroundPass( depthBuffer, distortionMap, velocityMap, renderContext );
-	}
-	if( m_settings.enableDistortion && hasBackgroundDistortionBatches )
-	{
-		ApplyDistortion( customBackBuffer, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
-
-		renderContext.m_esm.SetDepthStencilBuffer( depthBuffer );
-	}
-	distortionMap = {};
-
-	Tr2GpuResourcePool::Texture normalMap = GetNormalMapIfNeeded( renderSize, outputs, mainFeatures );
-	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
-	{
-		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
-		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique );
-	}
-	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
-	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
-	ON_BLOCK_EXIT( [&] { GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", Tr2TextureAL{} ); } );
-
-	Tr2GpuResourcePool::Texture opaqueBackBuffer;
-	EveSpaceScene::ShadowResources shadowResources;
-	if( m_scene->m_display && m_mainPassRenderingEnabled )
-	{
-		{
-			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );
-			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, renderContext );
-		}
-		TimeSection ssaoSection( m_timers.ssao, "SSAO", rootTimer, renderContext );
-		auto ssao = RenderSSAO( depthBuffer, normalMap, renderContext );
-		ssaoSection.Stop();
-
-		GlobalStore().RegisterVariable( "SSAOMap", ssao );
-
-		if( auto lightManager = Tr2LightManager::GetInstance() )
-		{
-			GPU_REGION( renderContext, "Lighting" );
-			TRINITY_STATS_SCOPED_TIME( updateDynamicLightLists );
-			renderContext.SetReadOnlyDepth( true );
-			lightManager->UpdateLists( depthBuffer, renderContext );
-			renderContext.SetReadOnlyDepth( false );
-		}
-
-		opaqueBackBuffer = GetOpaqueColorMapIfNeeded( renderSize, outputs, mainFeatures );
-
-		RegisterWithVariableStore( shadowResources, m_gpuResourcePool );
-		bool hasDistortionBatches = false;
-		distortionMap = GetDistortionMapIfNeeded( renderSize, mainFeatures );
-		{
-			TimeSection mainPassSection( m_timers.mainPass, "MainPass", rootTimer, renderContext );
-			hasDistortionBatches = m_scene->RenderMainPass( customBackBuffer, depthBuffer, distortionMap, velocityMap, opaqueBackBuffer, m_gpuResourcePool, renderContext );
-		}
-		RegisterWithVariableStore( {}, m_gpuResourcePool );
-
-		if( m_settings.enableDistortion && hasDistortionBatches )
-		{
-			ApplyDistortion( customBackBuffer, distortionMap, m_gpuResourcePool, m_distortionEffect, renderContext );
-			renderContext.m_esm.SetDepthStencilBuffer( depthBuffer );
-		}
-		distortionMap = {};
-		GlobalStore().RegisterVariable( "SSAOMap", Tr2TextureAL{} );
 	}
 	else
 	{
-		// Even if we skip main pass rendering, we might need opaqueBackBuffer for upscaling or TAA
-		opaqueBackBuffer = GetOpaqueColorMapIfNeeded( renderSize, outputs, mainFeatures );
-		if( opaqueBackBuffer.IsValid() )
-		{
-			renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-			BeginRenderPass( renderContext, { opaqueBackBuffer }, {} );
-			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-			Tr2Renderer::DrawTexture( renderContext, customBackBuffer );
-		}
-	}
-	if( m_sceneOverlay )
-	{
-		Tr2TextureAL targets[] = { customBackBuffer.Get(), velocityMap.Get() };
-		m_sceneOverlay->Execute( { targets, 2 }, {}, realTime, simTime, rootTimer, renderContext );
-	}
-	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", Tr2TextureAL{} );
-	normalMap = {};
-
-	BeginRenderPass( renderContext, { customBackBuffer }, depthBuffer );
-	{
-		renderContext.SetReadOnlyDepth( true );
-		m_scene->RunLensflareOcclusionQueries( depthBuffer, renderContext );
-		renderContext.SetReadOnlyDepth( false );
-	}
-	{
-		TimeSection endRenderSection( m_timers.endRender, "EndRender", rootTimer, renderContext );
-		m_scene->EndRender( renderContext );
-	}
-	m_viewLast = m_scene->m_viewLast;
-	m_projectionLast = m_scene->m_projectionLast;
-	m_scene->PopulateAndApplyPerFrameData( renderContext );
-
-	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
-	renderContext.m_esm.SetDepthStencilBuffer( {} );
-
-	GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", Tr2TextureAL{} );
-
-	{
-		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
-		m_postProcess->Execute( *destinations.data, std::move( customBackBuffer ), depthBuffer, std::move( velocityMap ), std::move( opaqueBackBuffer ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
-	}
-	SetCameraToRenderer( renderContext );
-	{
-		TimeSection ui3dSection( m_timers.ui3d, "Render3dUI", rootTimer, renderContext );
-		m_scene->Render3DUI( renderContext );
-	}
-
-	for( auto& toolScene : m_toolsScenes )
-	{
-		if( ITr2UpdateablePtr updateable = BlueCastPtr( toolScene ) )
-		{
-			updateable->Update( realTime, simTime );
-		}
-		toolScene->Render( renderContext );
-	}
-
-	GlobalStore().RegisterVariable( "SSAOMap", GetEmptySSAO( m_gpuResourcePool ) );
-	GlobalStore().RegisterVariable( "DepthMap", Tr2TextureAL{} );
-
-	if( m_settings.showFPS )
-	{
-		m_fpsRenderer->Execute( realTime, simTime, renderContext );
+		Tr2LightManager::DeleteInstance();
 	}
 }
 
@@ -1014,9 +829,9 @@ void EveSpaceSceneRenderDriver::UpdateGpuParticleSystem( Tr2RenderContext& rende
 	}
 }
 
-Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetDistortionMapIfNeeded( const TextureSize2D& size, const FeatureSet& featureSet )
+Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion )
 {
-	if( m_settings.enableDistortion && featureSet.distortion )
+	if( distortion )
 	{
 		return m_gpuResourcePool.GetTempTexture( "distortionMap", size, ImageIO::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 	}
@@ -1025,7 +840,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetDistortionMapIfNeeded(
 
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet )
 {
-	if( !featureSet.antiAliasing && !featureSet.upscaling && !m_upscalingInfo.temporal )
+	if( !featureSet.velocityMap || ( !featureSet.antiAliasing && !featureSet.upscaling && !m_upscalingInfo.temporal ) )
 	{
 		return {};
 	}

@@ -73,28 +73,33 @@ public:
 		EveSpaceScene::EveVisualizeMethod visualizeMethod = EveSpaceScene::VM_NONE;
 	};
 
+	// Driver side features of a view. What the scene renders is described by the
+	// EveSpaceScene::ViewInfo in RenderInfo.
 	struct FeatureSet
 	{
 		bool upscaling = true;
 		bool antiAliasing = true;
-		bool distortion = true;
 		bool reflections = true;
 		bool volumetrics = true;
 		bool ssao = true;
 		bool shadows = true;
 		bool velocityMap = true;
+		// special background rendering (f.ex texture background)
+		bool background = true;
+		// special overlay rendering (f.ex texture overlay)
+		bool overlay = true;
 	};
 
 	struct RenderInfo
 	{
-		TriViewPtr view;
+		const Matrix& view;
 		TriProjectionPtr projection;
 		Matrix jitterMatrix;
 		float mipLodBias;
 		float upscalingAmount;
 		TextureSize2D renderSize;
 		FeatureSet featureSet;
-		Tr2RenderReason reason;
+		SceneRender::ViewInfo sceneView;
 	};
 
 	EveSpaceSceneRenderDriver( IRoot* lockobj = nullptr );
@@ -122,26 +127,35 @@ public:
 
 private:
 
-	void RenderOld( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
-	void RenderNew( const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
-	void RenderView( const RenderInfo& renderInfo, const Span<const Tr2TextureAL>& destinations, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	// Targets rendered by RenderView
+	struct ViewTargets
+	{
+		Tr2GpuResourcePool::Texture color;
+		Tr2GpuResourcePool::Texture depth;
+		Tr2GpuResourcePool::Texture velocity;
+		Tr2GpuResourcePool::Texture opaqueColor;
+	};
+
+	ViewTargets RenderView( const RenderInfo& renderInfo, Tr2GpuResourcePool::Texture colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	void RenderReflectionFaces( Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
 	void PropagateRenderningInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
 	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
-	void SetCameraToRenderer( TriViewPtr view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
+	void SetCameraToRenderer( const Matrix& view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
 
 	Matrix GetJitterMatrix( uint32_t renderWidth, uint32_t renderHeight, Tr2RenderContext& renderContext ) const;
 	float GetMipLodBias( ) const;
 
-	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, const FeatureSet& featureSet );
+	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
 	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
 	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
 
 	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
+	void PrepareLightManager();
 
 	Tr2GpuResourcePool::Texture RenderSSAO( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2RenderContext& renderContext );
 

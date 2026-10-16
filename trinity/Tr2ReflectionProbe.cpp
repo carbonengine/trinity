@@ -111,15 +111,7 @@ void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext& renderContext )
 
 	renderContext.m_esm.SetViewport( m_intermediateSize, m_intermediateSize, 0, 0, 0, 1 );
 
-	// Square projection matrix, with near and far clip planes from the current projection
-	Matrix newProjection = IdentityMatrix();
-	const Matrix& currentProjection = Tr2Renderer::GetProjectionTransform();
-	newProjection.m[2][2] = currentProjection.m[2][2];
-	newProjection.m[2][3] = -1.0f;
-	newProjection.m[3][2] = currentProjection.m[3][2];
-	newProjection.m[3][3] = 0.0f;
-
-	Tr2Renderer::SetProjectionTransform( newProjection );
+	Tr2Renderer::SetProjectionTransform( GetFaceProjection( Tr2Renderer::GetProjectionTransform() ) );
 
 	// We need to invert cull-mode because of the left-handed coordinates of the cube rendertarget
 	m_prevCullInversion = renderContext.m_esm.IsCullModeInverted();
@@ -151,6 +143,27 @@ void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext& rende
 	renderContext.m_esm.SetRenderTarget( 0, *m_renderTargets[face] );
 	renderContext.m_esm.SetDepthStencilBuffer( m_stencilMaps[face] );
 
+	Tr2Renderer::SetViewTransform( GetFaceViewTransform( face, m_position ) );
+}
+
+unsigned Tr2ReflectionProbe::GetFaceSize() const
+{
+	return static_cast<unsigned>( m_intermediateSize );
+}
+
+Matrix Tr2ReflectionProbe::GetFaceProjection( const Matrix& currentProjection ) const
+{
+	// Square projection matrix, with near and far clip planes from the current projection
+	Matrix newProjection = IdentityMatrix();
+	newProjection.m[2][2] = currentProjection.m[2][2];
+	newProjection.m[2][3] = -1.0f;
+	newProjection.m[3][2] = currentProjection.m[3][2];
+	newProjection.m[3][3] = 0.0f;
+	return newProjection;
+}
+
+Matrix Tr2ReflectionProbe::GetFaceViewTransform( unsigned face, const Vector3& position ) const
+{
 	static const Vector3 faceDirections[] = {
 		Vector3( 0, 1, 0 ), Vector3( 1, 0, 0 ), //+X
 		Vector3( 0, 1, 0 ),
@@ -171,7 +184,48 @@ void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext& rende
 
 	const Vector3& up = faceDirections[face * 2];
 	const Vector3& at = faceDirections[face * 2 + 1];
-	Tr2Renderer::SetViewTransform( LookAtMatrix( m_position, m_position + at, up ) * xInverter );
+	return LookAtMatrix( position, position + at, up ) * xInverter;
+}
+
+void Tr2ReflectionProbe::SubmitFace( unsigned face, const Tr2TextureAL& source, Tr2RenderContext& renderContext )
+{
+	if( face >= 6 || !source.IsValid() || !IsValid() )
+	{
+		return;
+	}
+
+	GPU_REGION( renderContext, "Reflection External Face Copy" );
+	CR( m_renderTargetCube->GetRenderTarget().CopySubresourceRegion( Tr2TextureSubresource( face, 0 ), source, Tr2TextureSubresource( 0, 0 ), renderContext ) );
+}
+
+void Tr2ReflectionProbe::UpdatePosition( const Vector3& viewPosition )
+{
+	if( !m_lockPosition )
+	{
+		m_position = viewPosition;
+	}
+}
+
+const Vector3& Tr2ReflectionProbe::GetPosition() const
+{
+	return m_position;
+}
+
+const Tr2TextureAL& Tr2ReflectionProbe::GetFaceTarget( unsigned face ) const
+{
+	return m_renderTargets[face]->GetRenderTarget();
+}
+
+void Tr2ReflectionProbe::FinishFaces( const Vector3& viewDirection, Tr2RenderContext& renderContext )
+{
+	Filter( viewDirection, renderContext );
+	m_hasData = true;
+	m_onePassDone = true;
+
+	if( m_renderFrequency != ALL_SIDES_PER_FRAME )
+	{
+		m_currentFrame = ( m_currentFrame + 1 ) % 6;
+	}
 }
 
 void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext& renderContext )
@@ -193,14 +247,7 @@ void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext& renderContext )
 	Tr2Renderer::PopViewTransform();
 	renderContext.m_esm.PopViewport();
 
-	Filter( renderContext );
-	m_hasData = true;
-	m_onePassDone = true;
-
-	if( m_renderFrequency != ALL_SIDES_PER_FRAME )
-	{
-		m_currentFrame = ( m_currentFrame + 1 ) % 6;
-	}
+	FinishFaces( Tr2Renderer::GetInverseViewTransform().GetZ(), renderContext );
 }
 
 Tr2RenderTargetPtr Tr2ReflectionProbe::GetReflection()
@@ -344,7 +391,7 @@ void Tr2ReflectionProbe::DestroyRenderTargets()
 	m_currentFrame = 0;
 }
 
-void Tr2ReflectionProbe::Filter( Tr2RenderContext& renderContext )
+void Tr2ReflectionProbe::Filter( const Vector3& viewDirection, Tr2RenderContext& renderContext )
 {
 	if( !IsValid() )
 		return;
@@ -356,11 +403,11 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext& renderContext )
 		{
 			m_preFilterEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
 			m_preFilterEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
-			m_preFilterEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
+			m_preFilterEffect->SetParameter( s_viewDirectionName, viewDirection );
 
 			m_copyMipEffect->SetParameter( s_backLightColorName, Vector4( m_backlightColor ) );
 			m_copyMipEffect->SetParameter( s_backLightContrastName, m_backlightContrast );
-			m_copyMipEffect->SetParameter( s_viewDirectionName, Tr2Renderer::GetInverseViewTransform().GetZ() );
+			m_copyMipEffect->SetParameter( s_viewDirectionName, viewDirection );
 		}
 
 		Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE * 2 / 8, FILTER_SIZE * 2 / 8, 6, renderContext );
@@ -385,7 +432,7 @@ void Tr2ReflectionProbe::RunFilter()
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	DestroyRenderTargets();
 	DoPrepareResources( PIXEL_FORMAT_R16G16B16A16_FLOAT, renderContext );
-	Filter( renderContext );
+	Filter( Tr2Renderer::GetInverseViewTransform().GetZ(), renderContext );
 }
 
 bool Tr2ReflectionProbe::IsHollyWoodModeOn() const

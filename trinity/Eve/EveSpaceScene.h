@@ -96,6 +96,59 @@ BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
 class EveInstancedMeshManager;
 
+namespace SceneRender 
+{
+// Describes the view being rendered and what it renders. Built by the render driver with
+// MainView or ReflectionFace and passed to every per-view call; the scene reads these
+// flags rather than deciding per call site what a kind of view gets.S
+struct ViewInfo
+{
+	// Passed on to GetBatches, so renderables can filter themselves (e.g. ShouldReflect)
+	Tr2RenderReason reason = TR2RENDERREASON_NORMAL;
+	Tr2RenderContextEnum::CullMode cullMode = Tr2RenderContextEnum::CULLMODE_CW;
+	bool distortion = true;
+	// Gather the scene's objects, camera attachments, static particles and impostors.
+	// Otherwise only the reflectable renderables in the component registry are gathered.
+	bool sceneObjects = true;
+	// The view feeds the next frame: view history for reprojection, temporal volumetrics
+	// and lens flare occlusion queries
+	bool temporal = true;
+	// Render the scene as a reflection probe sees it: damped reflection intensity,
+	// reflection background and the reflection shadow map
+	bool reflection = false;
+	bool subsurfaceScattering = true;
+	bool gpuParticles = true;
+	bool lensflares = true;
+
+	static ViewInfo MainView( bool distortion );
+	static ViewInfo ReflectionFace();
+};
+
+ViewInfo ViewInfo::MainView( bool distortion )
+{
+	ViewInfo info;
+	info.distortion = distortion;
+	return info;
+}
+
+ViewInfo ViewInfo::ViewInfo::ReflectionFace()
+{
+	ViewInfo view;
+	view.reason = TR2RENDERREASON_REFLECTION;
+	// Faces are rendered into a left handed cubemap, so the caller inverts the cull mode
+	// and the scene must not override it
+	view.cullMode = Tr2RenderContextEnum::CULLMODE_NONE;
+	view.distortion = false;
+	view.sceneObjects = false;
+	// faces must not disturb the main view's history
+	view.temporal = false;
+	view.reflection = true;
+	view.subsurfaceScattering = false;
+	view.gpuParticles = false;
+	view.lensflares = g_lensflaresInReflections && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA;
+	return view;
+}
+}
 
 
 BLUE_CLASS( EveSpaceScene ) :
@@ -132,7 +185,7 @@ public:
 		Tr2GpuResourcePool::Texture pointLightShadowDepth;
 	};
 
-	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
 	bool RenderMainPass(
 		const Tr2TextureAL& colorMap,
 		const Tr2TextureAL& depthMap,
@@ -140,19 +193,21 @@ public:
 		const Tr2TextureAL& velocityMap,
 		const Tr2TextureAL& opaqueColorMap,
 		Tr2GpuResourcePool& gpuResourcePool,
+		const SceneRender::ViewInfo& view,
 		Tr2RenderContext& renderContext );
 	void RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
+	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
-	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext );
+	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
 	void RenderReflectionPass( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
-	void BeginRender( bool enableDistortion, Tr2RenderContext& renderContext );
-	void EndRender( Tr2RenderContext & renderContext );
+	void BeginFrame( Tr2RenderContext& renderContext );
+	void BeginView( const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
+	void EndRender( const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
-	void GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext );
+	void GatherBatches( const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
 	
 	void SetRenderingInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
@@ -418,7 +473,7 @@ protected:
 	EveUpdateContext m_updateContext;
 	PEveDistanceFieldVector m_distanceFields;
 
-	// Primary batches, gathered in BeginRender and
+	// Primary batches, gathered in BeginView and
 	// cleared in EndRender
 	BatchMap m_primaryBatches;
 	// Secondary batches used to render planets, stars, shadowed objects
@@ -494,6 +549,12 @@ protected:
 
 	Color m_currentSunColor;
 	float m_currentNebulaIntensity;
+
+	// Lighting resolved once per frame in ResolveLightingOverrides. The m_current* values
+	// are derived from these per view in ApplyViewLighting.
+	Color m_baseSunColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
+	float m_baseNebulaIntensity = 1.0f;
+	float m_baseReflectionIntensity = 1.0f;
 
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
@@ -600,6 +661,16 @@ protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
+	void EnsureVisualizerEffect();
+	void ResolveLightingOverrides();
+	void ApplyViewLighting( const SceneRender::ViewInfo& view );
+	void GatherDynamicLights( Tr2RenderContext& renderContext );
+	void PrepareLensflares();
+	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );
+	void GatherReflectionRenderables( std::vector<ITr2Renderable*>& renderables );
+	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	void RegisterReflectionFog( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+
 	void UpdateShLighting(
 		const std::vector<IEveSpaceObject2*>& objectsNotReceivingShadow );
 
@@ -694,6 +765,8 @@ public:
 
 	// Frame index when Update was last called
 	uint64_t m_lastUpdateFrame = std::numeric_limits<uint64_t>::max();
+	// Frame index when BeginFrame last did its work
+	uint64_t m_lastBeginFrame = std::numeric_limits<uint64_t>::max();
 
 public:
 	// raytracing
