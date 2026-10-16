@@ -4,12 +4,19 @@
 #ifndef TRIPOOLALLOCATOR_H
 #define TRIPOOLALLOCATOR_H
 
+#include <atomic>
+#include <mutex>
+#include <vector>
+
 // See http://core/wiki/TriPoolAllocator
+// Allocate is safe to call from several threads at once; Clear is not.
 
 class TriPoolAllocator
 {
 public:
 	TriPoolAllocator();
+	TriPoolAllocator( TriPoolAllocator&& other ) noexcept;
+	TriPoolAllocator& operator=( TriPoolAllocator&& other ) noexcept;
 	~TriPoolAllocator();
 
 	// Allocates 'size' bytes, aligned to 16 bytes
@@ -33,20 +40,26 @@ public:
 	void Clear();
 
 private:
-	void GetMoreSystemMemory( size_t size );
+	struct Chunk
+	{
+		uint8_t* memory;
+		uint8_t* end;
+		size_t size;
+		std::atomic<uint8_t*> current;
+	};
+
+	Chunk* AddChunk( size_t size );
+	static size_t UsedBytes( const Chunk& chunk );
+	static void FreeChunk( Chunk* chunk );
 
 private:
-	size_t m_totalBytesAllocated;
 	size_t m_totalSystemMemoryAllocated;
 
 	size_t m_chunkSize;
 
-	uint8_t* m_pool;
-	uint8_t* m_poolEnd;
-	uint8_t* m_poolCurrent;
-
-	typedef std::list<uint8_t*> ChunkList_t;
-	ChunkList_t m_previousPools;
+	std::atomic<Chunk*> m_chunk;
+	std::vector<Chunk*> m_chunks;
+	std::mutex m_mutex;
 };
 
 
