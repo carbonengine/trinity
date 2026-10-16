@@ -144,6 +144,10 @@ const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
 		MAP_ATTRIBUTE( "effectFar", m_effectFar, "Effect to use to render the boosters at a distance", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "glows", m_glows, "Sprite set to use to render the glows on the boosters", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "trails", m_trails, "Trails set used to render the trails of this booster", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "boosters", m_boosters, "Per-booster source data: functionality, atlas indices, trail flag, light scale", Be::PERSISTONLY )
+		// Cross-repo compatibility marker only (see platformtools' HasPersistentBoosterItems());
+		// deliberately not the "boosters" data itself, which stays Be::PERSISTONLY above.
+		MAP_PROPERTY_READONLY( "hasPersistentBoosterItems", HasPersistentBoosterItems, "Feature-detection marker: true when per-booster art data persists across .red load/save" )
 
 
 	EXPOSURE_END()
