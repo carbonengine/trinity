@@ -7,6 +7,8 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11
 
 #include <filesystem>
+#include <unordered_map>
+#include <utility>
 #include <sl_security.h>
 
 extern bool g_upscalingDebug;
@@ -19,10 +21,13 @@ static sl::Result STREAMLINE_INITIALIZATION_RESULT = sl::Result::eOk;
 
 
 static bool STREAMLINE_DEVICE_SET = false;
-static bool STREAMLINE_DLSS_SUPPORTED = false;
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-static bool STREAMLINE_FRAME_GENERATION_SUPPORTED = false;
-#endif
+static FeatureSupport STREAMLINE_DEVICE_SUPPORT;
+
+static const uint32_t NVIDIA_VENDOR_ID = 0x10DE;
+
+// Keyed by adapter LUID, lives for the process lifetime so we only pay for loading and initializing
+// Streamline once per adapter just to find out what it supports.
+static std::unordered_map<uint64_t, FeatureSupport> FEATURE_SUPPORT_CACHE;
 
 
 #define INITIALIZE_FUNCTION( func ) \
@@ -254,6 +259,13 @@ sl::Result ReportSlError( sl::Result res, const char* file, int line, const char
 
 #define CR_SL( res ) ReportSlError( res, __FILE__, __LINE__, #res )
 
+// Feature functions are only looked up once a device is set and the feature turned out to be supported
+template<typename Function, typename... Args>
+static sl::Result CallFeature( Function* function, Args&&... args )
+{
+	return function ? function( std::forward<Args>( args )... ) : sl::Result::eErrorFeatureMissing;
+}
+
 sl::Result InitializeStreamline( uint32_t appID )
 {
 	if( STREAMLINE_INITIALIZED )
@@ -400,10 +412,7 @@ void ReleaseStreamline()
 		STREAMLINE_INITIALIZED = false;
 		STREAMLINE_MODULE = nullptr;
 		STREAMLINE_DEVICE_SET = false;
-		STREAMLINE_DLSS_SUPPORTED = false;
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-		STREAMLINE_FRAME_GENERATION_SUPPORTED = false;
-#endif
+		STREAMLINE_DEVICE_SUPPORT = {};
 	}
 }
 
@@ -432,6 +441,79 @@ bool CheckFeature( sl::AdapterInfo adapterInfo, sl::Feature feature )
 	return result == sl::Result::eOk;
 }
 
+static uint64_t GetLuidKey( const Tr2AdapterInfo& adapterInfo )
+{
+	uint64_t luid;
+	static_assert( sizeof( adapterInfo.luid ) == sizeof( luid ), "Unexpected LUID size" );
+	memcpy( &luid, adapterInfo.luid, sizeof( luid ) );
+	return luid;
+}
+
+// Asks the running Streamline instance what the adapter supports and caches the answer
+static FeatureSupport ProbeFeatureSupport( Tr2AdapterInfo& adapterInfo )
+{
+	sl::AdapterInfo info;
+	info.deviceLUID = adapterInfo.luid;
+	info.deviceLUIDSizeInBytes = sizeof( LUID );
+
+	FeatureSupport support;
+	support.dlss = CheckFeature( info, sl::kFeatureDLSS );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	support.frameGeneration = support.dlss;
+	support.frameGeneration &= CheckFeature( info, sl::kFeatureDLSS_G );
+	support.frameGeneration &= CheckFeature( info, sl::kFeatureReflex );
+	support.frameGeneration &= CheckFeature( info, sl::kFeaturePCL );
+#endif
+
+	return FEATURE_SUPPORT_CACHE[GetLuidKey( adapterInfo )] = support;
+}
+
+FeatureSupport QueryFeatureSupport( uint32_t adapter, uint32_t appID )
+{
+	Tr2AdapterInfo adapterInfo;
+	if( FAILED( Tr2VideoAdapterInfo::GetAdapterInfo( adapter, adapterInfo ) ) )
+	{
+		return {};
+	}
+
+	// DLSS and frame generation need NVidia hardware, don't bother loading Streamline for anything else
+	if( adapterInfo.vendorID != NVIDIA_VENDOR_ID )
+	{
+		return {};
+	}
+
+	// Without an application id NGX fails to initialize once the device is set, taking DLSS and DLSS-G
+	// with it, even though querying by adapter reports them as supported
+	if( appID == 0 )
+	{
+		return {};
+	}
+
+	auto cached = FEATURE_SUPPORT_CACHE.find( GetLuidKey( adapterInfo ) );
+	if( cached != FEATURE_SUPPORT_CACHE.end() )
+	{
+		return cached->second;
+	}
+
+	// Never release an instance someone else initialized, it may be driving the active device
+	bool temporaryInstance = !STREAMLINE_INITIALIZED;
+	if( temporaryInstance && InitializeStreamline( appID ) != sl::Result::eOk )
+	{
+		// a failed initialization has already cleaned up after itself
+		return FEATURE_SUPPORT_CACHE[GetLuidKey( adapterInfo )] = {};
+	}
+
+	auto support = ProbeFeatureSupport( adapterInfo );
+
+	if( temporaryInstance )
+	{
+		ReleaseStreamline();
+	}
+
+	return support;
+}
+
 
 sl::Result SetDevice( void* d3dDevice, uint32_t adapter )
 {
@@ -451,29 +533,28 @@ sl::Result SetDevice( void* d3dDevice, uint32_t adapter )
 
 	STREAMLINE_DEVICE_SET = true;
 
+	FeatureSupport support;
 	Tr2AdapterInfo videoAdapterInfo;
-	Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo );
-	sl::AdapterInfo info;
-	info.deviceLUID = videoAdapterInfo.luid;
-	info.deviceLUIDSizeInBytes = sizeof( LUID );
+	if( SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterInfo( adapter, videoAdapterInfo ) ) )
+	{
+		// Now that a device is set this is the definitive answer for this adapter
+		support = ProbeFeatureSupport( videoAdapterInfo );
+	}
+	else
+	{
+		CCP_LOGERR( "Failed to get adapter info for Streamline, no features will be available" );
+	}
 
-	bool dlssSupported = true;
-	dlssSupported &= CheckFeature( info, sl::kFeatureDLSS );
-	if( dlssSupported )
+	if( support.dlss )
 	{
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS, slDLSSGetOptimalSettings );
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS, slDLSSSetOptions );
-		STREAMLINE_DLSS_SUPPORTED = true;
+		STREAMLINE_DEVICE_SUPPORT.dlss = true;
 	}
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
-	bool frameGenerationSupport = dlssSupported;
-	frameGenerationSupport &= CheckFeature( info, sl::kFeatureDLSS_G );
-	frameGenerationSupport &= CheckFeature( info, sl::kFeatureReflex );
-	frameGenerationSupport &= CheckFeature( info, sl::kFeaturePCL );
-
-	if( frameGenerationSupport )
+	if( support.frameGeneration )
 	{
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS_G, slDLSSGSetOptions );
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeatureDLSS_G, slDLSSGGetState );
@@ -481,7 +562,7 @@ sl::Result SetDevice( void* d3dDevice, uint32_t adapter )
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeatureReflex, slReflexSetOptions );
 
 		INITIALIZE_FEATURE_FUNCTION( sl::kFeaturePCL, slPCLSetMarker );
-		STREAMLINE_FRAME_GENERATION_SUPPORTED = true;
+		STREAMLINE_DEVICE_SUPPORT.frameGeneration = true;
 	}
 #endif
 
@@ -520,17 +601,17 @@ sl::Result EvaluateFeature( Tr2RenderContextAL& renderContext, sl::Feature featu
 
 sl::Result GetDLSSOptimalSettings( const sl::DLSSOptions& options, sl::DLSSOptimalSettings& settings )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGetOptimalSettings( options, settings ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slDLSSGetOptimalSettings, options, settings ) );
 }
 
 sl::Result SetDLSSOptions( const sl::ViewportHandle& viewport, const sl::DLSSOptions& options )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slDLSSSetOptions( viewport, options ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slDLSSSetOptions, viewport, options ) );
 }
 
 sl::Result SetNISOptions( const sl::ViewportHandle& viewport, const sl::NISOptions& options )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slNISSetOptions( viewport, options ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slNISSetOptions, viewport, options ) );
 }
 
 
@@ -538,25 +619,25 @@ sl::Result SetNISOptions( const sl::ViewportHandle& viewport, const sl::NISOptio
 
 sl::Result SetDLSSGOptions( const sl::ViewportHandle& viewport, const sl::DLSSGOptions& options )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGSetOptions( viewport, options ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slDLSSGSetOptions, viewport, options ) );
 }
 
 sl::Result GetDLSSGState( const sl::ViewportHandle& viewport, sl::DLSSGState& state, const sl::DLSSGOptions* options )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slDLSSGGetState( viewport, state, options ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slDLSSGGetState, viewport, state, options ) );
 }
 
 
 sl::Result SetReflexOptions( const sl::ReflexOptions& options )
 {
-	return CR_SL( FEATURE_FUNCTIONS.m_slReflexSetOptions( options ) );
+	return CR_SL( CallFeature( FEATURE_FUNCTIONS.m_slReflexSetOptions, options ) );
 }
 
 
 void SetPCLMarker( Tr2RenderContextEnum::FrameEvent& frameEvent, sl::FrameToken* m_frameToken )
 {
 
-	if( !m_frameToken )
+	if( !m_frameToken || !FEATURE_FUNCTIONS.m_slPCLSetMarker )
 	{
 		return;
 	}
@@ -593,25 +674,10 @@ void SetPCLMarker( Tr2RenderContextEnum::FrameEvent& frameEvent, sl::FrameToken*
 
 #endif
 
-bool IsDLSSAvailable()
+FeatureSupport GetDeviceFeatureSupport()
 {
-	if( !STREAMLINE_DEVICE_SET )
-	{
-		CCP_LOGERR( "Tr2StreamlineAL::IsDLSSAvailable() called before D3D device was set!" );
-	}
-	return STREAMLINE_DLSS_SUPPORTED;
+	return STREAMLINE_DEVICE_SUPPORT;
 }
-
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-bool IsFrameGenerationAvailable()
-{
-	if( !STREAMLINE_DEVICE_SET )
-	{
-		CCP_LOGERR( "Tr2StreamlineAL::IsFrameGenerationAvailable() called before D3D device was set!" );
-	}
-	return STREAMLINE_FRAME_GENERATION_SUPPORTED;
-}
-#endif
 
 void FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport )
 {
