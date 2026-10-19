@@ -371,7 +371,9 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 	// catch zero size, so we don't need to worry about empty arrays
 	if( m_lines.size() )
 	{
-		size_t byteSize = m_vertexBufferSize * 6 * sizeof( LineVertex );
+		int currentNumOfLines = GetNumOfLines();
+
+		size_t byteSize = size_t( std::max( currentNumOfLines, m_vertexBufferSize ) ) * 6 * sizeof( LineVertex );
 		auto buffer = Tr2Renderer::GetPoolAllocator()->Allocate( byteSize );
 		if ( !buffer )
 		{
@@ -380,7 +382,6 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 		}
 
 		// can the big vertexbuffer handle this?
-		int currentNumOfLines = GetNumOfLines();
 		if( !m_vertexBuffer.IsValid() || ( currentNumOfLines > m_vertexBufferSize ) )
 		{
 			// release old and create new
