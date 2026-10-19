@@ -4180,23 +4180,28 @@ void EveSOF::CreatePlacement(
 		fakeContainer.CreateInstance();
 		SetupEffects( parent, (IEveEffectChildrenOwnerPtr)fakeContainer, extensionDna, placementOffsets, containerPlacementOffsets, buildFlags );
 
-		uint32_t index = 0;
-		// We need to place the effects under the correct containers
+		// Snapshot the effects. Strong pointers keep them alive while they are detached from the fake container
+		std::vector<EveSpaceObjectChildPtr> effects;
+		effects.reserve( fakeContainer->m_objects.size() );
 		for( auto& effect : fakeContainer->m_objects )
 		{
+			effects.push_back( effect );
+		}
+
+		uint32_t index = 0;
+		// We need to place the effects under the correct containers
+		for( auto& effect : effects )
+		{
+			fakeContainer->RemoveFromEffectChildrenList( effect );
 			placementContainers[index++ % placementContainers.size()]->AddToEffectChildrenList( effect );
 		}
 	}
 
-	if( needsPlacementContainer )
+	for( auto& placementContainer : placementContainers )
 	{
-		for( auto& placementContainer : placementContainers )
+		if( !placementContainer->Empty() )
 		{
-			// we don't really know until now if we have an empty placement container
-			if( !placementContainer->Empty() )
-			{
-				layoutContainer->AddToEffectChildrenList( placementContainer );
-			}
+			layoutContainer->AddToEffectChildrenList( placementContainer );
 		}
 	}
 
