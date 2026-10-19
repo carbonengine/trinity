@@ -11,48 +11,11 @@
 #include "Eve/SpaceObject/Children/TransformModifiers/EveChildModifierHalo.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriRenderBatch.h"
-
+#include "Eve/SpaceObject/Utils/EveBoosterUtilities.h"
 
 
 namespace
 {
-ALResult GetBoxVB( Tr2SuballocatedBuffer::Allocation& vb, Tr2PrimaryRenderContext& renderContext )
-{
-	const uint32_t vertexCount = 4 * 6;
-	BehaviorGroupBooster::BoosterVertex vertices[vertexCount];
-	auto p = &vertices[0];
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, -1.0f, 0.0f );
-	( p++ )->position = Vector3( -1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, -1.0f );
-	( p++ )->position = Vector3( 1.0f, -1.0f, 0.0f );
-
-	( p++ )->position = Vector3( -1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, 0.0f );
-	( p++ )->position = Vector3( 1.0f, 1.0f, -1.0f );
-	( p++ )->position = Vector3( -1.0f, 1.0f, -1.0f );
-
-	return g_sharedBuffer.Allocate( sizeof( BehaviorGroupBooster::BoosterVertex ), vertexCount, &vertices[0], renderContext, vb );
-}
 
 Tr2VertexDefinition& GetQuadDefinition()
 {
@@ -84,7 +47,7 @@ BehaviorGroupBooster::BehaviorGroupBooster( IRoot* lockobj ) :
 	m_atlasIndex1( 0 ),
 	m_lightRadius( 3.5 ),
 	m_lightColor( 1.0, 1.0, 1.0, 1.0 ),
-	m_vertexBuffer( BlueSharedString( "BoosterBoxVB" ), GetBoxVB ),
+	m_vertexBuffer( MakeBoosterBoxBuffer() ),
 	m_vertexDeclarationHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_haloFlareHash( 0 ),
 	m_haloFlareOffset( 0, 0, 0 ),
@@ -352,7 +315,7 @@ void BehaviorGroupBooster::CreateBuffer()
 {
 	if( Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI )
 	{
-		m_vertexBuffer = Tr2ProceduralBuffer( BlueSharedString( "BoosterBoxVB" ), GetBoxVB );
+		m_vertexBuffer = MakeBoosterBoxBuffer();
 	}
 }
 

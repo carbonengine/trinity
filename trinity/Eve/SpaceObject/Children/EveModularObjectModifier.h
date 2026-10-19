@@ -60,6 +60,7 @@ private:
 	EveChildPartDataPtr m_data;
 	EveChildInstancedMeshesPtr m_instancedMeshes;
 	EveSOFPtr m_sof;
+	EveSOF::ArmorDamageEffectCache m_armorDamageEffectCache;
 };
 
 TYPEDEF_BLUECLASS( EveModularObjectModifier );

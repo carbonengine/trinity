@@ -126,7 +126,7 @@ DEFINE_CACHED_ALLOCATOR( Tr2FontRenderData, 512, 256 );
 //////////////////////////////////////////////////////////////////////////
 void Tr2FontMeasurer::Reset()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_cursorX = 0;
 	m_cursorY = 0;
@@ -167,7 +167,7 @@ void Tr2FontMeasurer::Reset()
 
 unsigned int Tr2FontMeasurer::AddText( const std::wstring& text )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	const char* font;
 
@@ -383,7 +383,7 @@ unsigned int Tr2FontMeasurer::AddText( const std::wstring& text )
 
 void Tr2FontMeasurer::CommitText( int shiftX, int shiftY )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Note that reference counts of sbits are not affected - we're just
 	// moving the RenderData objects from vector to another.
@@ -414,7 +414,7 @@ void Tr2FontMeasurer::CommitText( int shiftX, int shiftY )
 
 void Tr2FontMeasurer::CancelLastText()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_renderData.empty() )
 	{
@@ -488,7 +488,7 @@ int Tr2FontMeasurer::GetWidthAtIndex( int ix )
 
 void Tr2FontMeasurer::DrawToAtlasTexture( Tr2AtlasTexture* atlasTexture )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !atlasTexture )
 	{
@@ -514,7 +514,7 @@ void Tr2FontMeasurer::DrawToAtlasTexture( Tr2AtlasTexture* atlasTexture )
 
 void Tr2FontMeasurer::DrawToTexture( TriTextureRes* texture )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -542,7 +542,7 @@ void Tr2FontMeasurer::DrawToTexture( TriTextureRes* texture )
 
 void Tr2FontMeasurer::DrawToHostBitmap( Tr2HostBitmap* hostBitmap )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !hostBitmap || !hostBitmap->IsValid() || GetBytesPerPixel( hostBitmap->GetFormat() ) != 4 )
 	{
@@ -579,7 +579,7 @@ void Tr2FontMeasurer::DrawToBuffer( uint32_t destWidth,
 									void* pData,
 									uint32_t pitch )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( uint32_t i = 0; i < destHeight; ++i )
 	{
@@ -742,7 +742,7 @@ int Tr2FontMeasurer::GetFontSize() const
 
 void Tr2FontMeasurer::PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2& translation, const Color& color, Tr2SpriteObjectEffect sfx, Tr2SpriteObjectBlendMode blendMode, Tr2SpriteTarget target, float glowBrightness, bool dropShadow, const Vector2& shadowOffset, const Color& shadowColor, Tr2SpriteObjectEffect shadowSfx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_vertices )
 	{
@@ -782,8 +782,8 @@ void Tr2FontMeasurer::PrepareSprites( Tr2Sprite2dScene* renderer, const Vector2&
 	m_vertices = CCP_NEW( "Tr2FontMeasurer/m_vertices" ) Tr2Sprite2dD3DVertex[m_vertexCount];
 
 	m_indexCount = spriteCount * 6;
-	m_indices = CCP_NEW( "Tr2FontMeasurer/m_indices" ) unsigned short[m_indexCount];
-	unsigned short* curIndex = m_indices;
+	m_indices = CCP_NEW( "Tr2FontMeasurer/m_indices" ) unsigned int[m_indexCount];
+	unsigned int* curIndex = m_indices;
 
 	Tr2AtlasTexture* currentTexture = nullptr;
 
@@ -1072,7 +1072,7 @@ void Tr2FontMeasurer::SubmitSprites( Tr2Sprite2dScene* renderer )
 
 	Tr2Sprite2dD3DVertex* vertices;
 	unsigned int vertexCount;
-	unsigned short* indices;
+	unsigned int* indices;
 	unsigned int indexCount;
 	unsigned int vertexOffset = 0;
 
@@ -1083,11 +1083,11 @@ void Tr2FontMeasurer::SubmitSprites( Tr2Sprite2dScene* renderer )
 
 		unsigned int startSprite = entry.startSprite;
 		unsigned int spriteCount = entry.spriteCount;
-		unsigned short* adjustedIndices = nullptr;
+		unsigned int* adjustedIndices = nullptr;
 
 		if( spriteCount > maxSpriteCount )
 		{
-			adjustedIndices = CCP_NEW( "adjustedIndices" ) unsigned short[maxSpriteCount * 6];
+			adjustedIndices = CCP_NEW( "adjustedIndices" ) unsigned int[maxSpriteCount * 6];
 		}
 
 		// Ensure we don't submit too many vertices at once
@@ -1151,7 +1151,7 @@ void Tr2FontMeasurer::ClearSprites()
 
 unsigned int Tr2FontMeasurer::GetVertexCount() const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_vertices )
 	{
@@ -1339,9 +1339,9 @@ void Tr2FontMeasurer::SetFadeBottomEnd( float val )
 	NotifyListenersOfChange();
 }
 
-unsigned short* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite, unsigned short* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset )
+unsigned int* Tr2FontMeasurer::AdjustIndicesIfNeeded( unsigned int startSprite, unsigned int* adjustedIndices, unsigned int indexCount, unsigned int vertexOffset )
 {
-	unsigned short* indices;
+	unsigned int* indices;
 	if( startSprite > 0 && adjustedIndices )
 	{
 		indices = adjustedIndices;
@@ -1466,7 +1466,7 @@ void SBit_To_RGBABuffer(
 	int top,
 	int col )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	//set up the color in integers.
 	RGBA color;
@@ -1568,7 +1568,7 @@ void SBit_To_RGBABuffer(
 
 void Underline_To_RGBABuffer( void* destPtr, int dWidth, int dHeight, int dPitch, int left, int top, int width, int thickness, int col )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	//set up the color in integers.
 	RGBA p;

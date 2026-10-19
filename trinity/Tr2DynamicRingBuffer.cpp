@@ -73,7 +73,7 @@ ALResult Tr2DynamicRingBuffer::PutData(
 
 	if( !GetUnusedRegion( allocationSize, allocationOffset ) )
 	{
-		CCP_STATS_ZONE( "Tr2DynamicRingBuffer full buffer lock" );
+		TRINITY_STATS_ZONE( "Tr2DynamicRingBuffer full buffer lock" );
 		allocationOffset = 0;
 		RemoveRegions( m_regions.begin(), m_regions.end() );
 		if( m_bufferSize < allocationSize + m_sizeIncrement )

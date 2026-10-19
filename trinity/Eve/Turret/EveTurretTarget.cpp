@@ -21,6 +21,7 @@ EveTurretTarget::EveTurretTarget( IRoot* lockobj ) :
 	m_trackingPosition( 0.f, 0.f, 0.f ),
 	m_positionOld( 0.f, 0.f, 0.f ),
 	m_positionOldInfluence( -1.f ),
+	m_fadeOnLocatorChange( false ),
 	m_positionMiss( 0.f, 0.f, 0.f ),
 	m_missQueue( "EveTurretTarget::m_missQueue" ),
 	m_lastShotIsMiss( false ),
@@ -53,11 +54,17 @@ ITriTargetablePtr EveTurretTarget::GetTargetable() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Set the target object. Since this most liekly has changed, trigger
+//   Set the target object. Since this most likely has changed, trigger
 //   the targetposition smoothing (interpolating)
 // --------------------------------------------------------------------------------
 bool EveTurretTarget::SetTargetable( IRoot* object )
 {
+	if( !object )
+	{
+		m_object = nullptr;
+		m_objectPos = nullptr;
+		return true;
+	}
 	// set new target object
 	ITriTargetablePtr newTarget;
 	if( !object->QueryInterface( BlueInterfaceIID<ITriTargetable>(), (void**)&newTarget ) )
@@ -96,12 +103,27 @@ int EveTurretTarget::GetLocator() const
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Smooth the aim over locator changes instead of snapping
+// --------------------------------------------------------------------------------
+void EveTurretTarget::SetFadeOnLocatorChange( bool fade )
+{
+	m_fadeOnLocatorChange = fade;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Start the firing procedure at a given locator
 // --------------------------------------------------------------------------------
 void EveTurretTarget::StartFireAtLocator( int l, float delay, float length, const Vector3* source )
 {
 	// remember this locator
 	m_locator = l;
+
+	if( m_fadeOnLocatorChange )
+	{
+		m_positionOld = m_trackingPosition;
+		m_positionOldInfluence = 1.f;
+	}
 
 	// randomize miss positionm
 	m_randomMissDistanceOffset = TriFloatRandom01();
@@ -147,8 +169,15 @@ void EveTurretTarget::StopFireAtLocator()
 {
 	// clear out the locator
 	m_locator = -1;
-	// stopp anyy influence
-	m_positionOldInfluence = -1.f;
+	if( m_fadeOnLocatorChange )
+	{
+		m_positionOld = m_trackingPosition;
+		m_positionOldInfluence = 1.f;
+	}
+	else
+	{
+		m_positionOldInfluence = -1.f;
+	}
 	// reset the miss-system
 	m_lastShotIsMiss = false;
 	m_missQueue.clear();
@@ -332,6 +361,15 @@ void EveTurretTarget::SetBehaviour( bool laserMiss, bool projectileMiss, float i
 {
 	m_laserMissBehaviour = laserMiss;
 	m_projectileMissBehaviour = projectileMiss;
+	SetImpactBehaviour( impactSize, impactBehaviour );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Set the impact configuration, leaving miss behaviour disabled/untouched
+// --------------------------------------------------------------------------------
+void EveTurretTarget::SetImpactBehaviour( float impactSize, ImpactBehaviour::Type impactBehaviour )
+{
 	m_impactSize = impactSize;
 	m_impactBehaviour = impactBehaviour;
 }

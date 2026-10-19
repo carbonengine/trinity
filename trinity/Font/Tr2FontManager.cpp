@@ -182,7 +182,7 @@ FaceID Tr2FontManager::GetFaceID( const char* font )
 //////////////////////////////////////////////////////////////////////////
 FT_Face Tr2FontManager::LookupFace( const FaceID& faceID )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	FT_Face face = NULL;
 
@@ -207,7 +207,7 @@ FT_Face Tr2FontManager::LookupFace( const FaceID& faceID )
 //////////////////////////////////////////////////////////////////////////
 FT_Size_Metrics Tr2FontManager::LookupMetrics( const FaceID& faceID, unsigned int width, unsigned int height )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	FTC_ScalerRec scaler = { (FTC_FaceID)faceID, width, height, 1, 0, 0 }; // 1 indicates to use pixel sizes
 	FT_Size size;
@@ -241,7 +241,7 @@ std::pair<int, int> Tr2FontManager::LookupMetricsFromScript( const FaceID& faceI
 //////////////////////////////////////////////////////////////////////////
 FT_Pos Tr2FontManager::LookupKerningXP( const FaceID& faceID, int leftIndex, int rightIndex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	FT_Face face = NULL;
 	if( m_manager )
@@ -270,7 +270,7 @@ FT_Pos Tr2FontManager::LookupKerningXP( const FaceID& faceID, int leftIndex, int
 //////////////////////////////////////////////////////////////////////////
 int Tr2FontManager::LookupGlyphIndex( const FaceID& faceID, int charCode )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	FT_Face face = LookupFace( faceID );
 	FT_Error err = FT_Select_Charmap( face, FT_ENCODING_UNICODE );
@@ -300,7 +300,7 @@ int Tr2FontManager::LookupGlyphIndex( const FaceID& faceID, int charCode )
 //////////////////////////////////////////////////////////////////////////
 Be::Result<std::string> Tr2FontManager::LookupSBit( const FaceID& faceID, int width, int height, int glyphIndex, Tr2SBitWrapper** result )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Tr2SBitWrapper* img = new OTr2SBitWrapper;
 
@@ -334,7 +334,7 @@ inline FT_Fixed Fix( float f )
 //-----------------------------------------------------------------------------
 FT_Face Tr2FontManager::LoadFromDisk( FTC_FaceID id )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_ftLib )
 	{

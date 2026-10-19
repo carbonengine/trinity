@@ -6,6 +6,10 @@
 
 #include "Include/ITriTargetable.h"
 
+// maximum time offset for turret firing; godma reads it back through GetShotTimeVariance
+// as the window for grouping shots that belong to one damage message
+const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
+
 namespace ImpactBehaviour
 {
 
@@ -36,6 +40,7 @@ public:
 
 	// access locator
 	int GetLocator() const;
+	void SetFadeOnLocatorChange( bool fade );
 	void StartFireAtLocator( int l, float delay, float length, const Vector3* source );
 	void StopFireAtLocator();
 	const Vector3* GetTrackingPosition() const;
@@ -48,11 +53,16 @@ public:
 
 	// hit/miss
 	void SetBehaviour( bool laserMiss, bool projectileMiss, float impactSize, ImpactBehaviour::Type impactBehaviour );
+	void SetImpactBehaviour( float impactSize, ImpactBehaviour::Type impactBehaviour );
 	bool GetShotMissed() const;
 	void SetShotMissed( bool missed );
 	double GetLastShotTime() const;
 	bool PopShotMissed();
 	size_t MissQueueSize() const;
+	float GetShotTimeVariance() const
+	{
+		return EVE_TURRET_RANDOM_DELAY_MAX;
+	}
 
 	// target object queries
 	float GetRadius() const;
@@ -79,6 +89,7 @@ private:
 	Vector3 m_targetPosition;
 	Vector3 m_positionOld;
 	float m_positionOldInfluence;
+	bool m_fadeOnLocatorChange;
 
 	// hit/miss related data
 	Vector3 m_positionMiss;

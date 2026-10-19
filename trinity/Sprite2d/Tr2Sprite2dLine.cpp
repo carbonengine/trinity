@@ -30,7 +30,7 @@ Tr2Sprite2dLine::Tr2Sprite2dLine( IRoot* lockobj /*= NULL */ ) :
 
 void Tr2Sprite2dLine::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display || ( m_spriteEffect == TR2_SFX_NONE ) )
 	{

@@ -17,7 +17,7 @@ EveKDdroneManagementTree::~EveKDdroneManagementTree()
 
 void EveKDdroneManagementTree::CreateTree( std::vector<DroneAgent>& agents, size_t NumberOfBehaviors )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( agents.empty() )
 	{
@@ -379,7 +379,7 @@ const std::vector<std::vector<std::vector<DroneAgent*>>>* EveKDdroneManagementTr
 																									   std::vector<float>& ranges,
 																									   const float& BehaviorGroupBoundingSphereRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<SearchRange> searchRanges;
 	int behaviorNumber = 0;

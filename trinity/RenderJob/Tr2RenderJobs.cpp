@@ -22,7 +22,7 @@ Tr2RenderJobs::~Tr2RenderJobs()
 
 void Tr2RenderJobs::Run( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_SCOPED_TIME( deviceRenderJobs );
+	TRINITY_STATS_SCOPED_TIME( deviceRenderJobs );
 	CCP_STATS_SET( deviceChainedRenderJobsCount, m_scheduledChained.size() );
 	CCP_STATS_SET( deviceOnceRenderJobsCount, m_scheduledOnce.size() );
 

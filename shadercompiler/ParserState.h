@@ -3,6 +3,7 @@
 #pragma once
 
 #include "InlineString.h"
+#include "CachingIncludeHandler.h"
 
 class SymbolTable;
 class ASTNode;
@@ -234,7 +235,7 @@ public:
 	bool InDiscoverMode() const;
 	PreprocessorScanResult GetPreprocessorToken( PreprocessorToken& token );
 
-	void IncludeFile( const InlineString& fileName );
+	void IncludeFile( const InlineString& fileName, CachingIncludeHandler::IncludeType includeType );
 	void ParseDefine( const PreprocessorDefine& define, const FileLocation& location, const std::vector<InlineString>& arguments );
 	PreprocessorDefine* FindDefine( const InlineString& name );
 

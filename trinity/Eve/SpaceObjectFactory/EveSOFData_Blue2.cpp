@@ -17,6 +17,25 @@ const Be::ClassInfo* EveSOFDataParameter::ExposeToBlue(){
 					EXPOSURE_END()
 }
 
+#define SOF_PARAM_EXPOSE_TO_BLUE( _className, _valueDescription )                             \
+	BLUE_DEFINE( _className );                                                                \
+	const Be::ClassInfo* _className::ExposeToBlue()                                           \
+	{                                                                                         \
+		EXPOSURE_BEGIN( _className, "" )                                                      \
+			MAP_INTERFACE( _className )                                                       \
+			MAP_INTERFACE( EveSOFDataParameter )                                              \
+                                                                                              \
+			MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )                  \
+			MAP_ATTRIBUTE( "value", m_value, _valueDescription, Be::READWRITE | Be::PERSIST ) \
+		EXPOSURE_END()                                                                        \
+	}
+
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterBool, "\n:jessica-widget: checkbox\n" );
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterInt, "\n:jessica-widget: int\n" );
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterFloat, "\n:jessica-widget: float\n" );
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterVector2, "\n:jessica-widget: float2\n" );
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterVector3, "\n:jessica-widget: float3\n" );
+SOF_PARAM_EXPOSE_TO_BLUE( EveSOFDataParameterColor, "\n:jessica-widget: color\n" );
 
 
 BLUE_DEFINE( EveSOFDataFactionHullArea );

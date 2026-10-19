@@ -95,7 +95,7 @@ void Tr2StaticEmitter::SetThreadSafeFlag()
 // --------------------------------------------------------------------------------------
 void Tr2StaticEmitter::DoSpawn()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto createDeclarationMap = []( const Tr2VertexDefinition& elements, const Tr2ParticleElementDataMap& particleElements, const std::string& geometryResourcePath, std::vector<DeclarationMapping>& geometryDeclarationMap ) -> bool {
 		geometryDeclarationMap.clear();

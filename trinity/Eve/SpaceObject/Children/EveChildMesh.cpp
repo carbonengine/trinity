@@ -7,6 +7,7 @@
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Eve/EveTransform.h"
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/MatrixUtils.h"
 #include "Tr2InstancedMesh.h"
 #include "Tr2GrannyAnimation.h"
 #include "TriFrustumOrtho.h"
@@ -680,8 +681,7 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 	{
 		if( m_mesh )
 		{
-			const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), reverseWinding );
+			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ), m_reverseWinding );
 		}
 
 		if( m_activationStrength != 0.0 )
@@ -731,19 +731,19 @@ void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batc
 
 	if( damageShader )
 	{
-		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod );
+		EmitDamageOverlayBatches( batches, perObjectData, damageShader, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	// own effects are emitted before the inherited ones so the parent's overlays (e.g. cloak)
 	// draw on top of this child's own overlays (e.g. battle damage)
 	if( !m_overlayEffects.empty() )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, m_overlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 
 	if( hasParentOverlays )
 	{
-		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod );
+		EmitOverlayBatches( batches, perObjectData, batchType, *m_parentOverlayEffects, m_overlayMeshAreaBlocks, *lod, m_reverseWinding );
 	}
 }
 
@@ -753,8 +753,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	// Fix asap <Logi 27. aug 2015>
 	if( m_display && m_mesh && m_hasUpdated )
 	{
-		const bool reverseWinding = Determinant( m_worldTransform ) < 0.0f;
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, reverseWinding );
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize, m_reverseWinding );
 	}
 }
 
@@ -883,9 +882,8 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		auto meshIndex = m_mesh->GetMeshIndex();
-		if( auto mesh = m_mesh->GetGeometryResource()->GetMeshData( meshIndex ) )
+		if( auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize ) )
 		{
-			auto lod = m_mesh->GetGeometryResource()->GetMeshLod( meshIndex, m_currentScreenSize );
 			if( lod->m_morphTargetAllocation.IsValid() )
 			{
 				auto [morphTargets, morphTargetCount] = GetMorphTargets( MorphTargetAnimationFilter::RUNTIME_EVALUATED );
@@ -965,6 +963,10 @@ void EveChildMesh::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2Pi
 		}
 	}
 }
+Tr2MeshBase* EveChildMesh::GetMesh() const
+{
+	return m_mesh;
+}
 
 void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* data )
 {
@@ -994,6 +996,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	{
 		m_worldTransform = ( *it )->ApplyTransform( m_worldTransform, params.boneCount, params.bones );
 	}
+	m_reverseWinding = IsMirrored( m_worldTransform );
 
 	bool allowAudioGeometry = !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder();
 
@@ -1127,7 +1130,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 		info.estimatedPixelDiameter = max( m_currentScreenSize, 0.f );
 		info.isInFrustum = m_isVisible;
 		info.getDamageLocatorPositionOS = [this]( int index, Vector3& out ) {
-			return GetDamageLocatorPositionLocal( index, out );
+			return GetDamageLocatorBindPositionLocal( index, out );
 		};
 		m_damageOverlay->UpdateAsyncronous( updateContext, info, 0, false );
 	}
@@ -1737,7 +1740,7 @@ bool EveChildMesh::PrepareMorphBuffers( Tr2RenderContext& renderContext )
 	m_morphTargetOffsets.AdvanceFrame();
 	m_morphTargetOffsets.UploadTransforms<Tr2MorphTargetAnimationData>( Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>(), reinterpret_cast<const Tr2MorphTargetAnimationData*>( morphTargets ), uint32_t( morphTargetCount ) );
 
-	CCP_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
+	TRINITY_STATS_ZONE( "Prepare MorphTargetAnimationDataBuffer for merging morph targets" );
 	Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 
 	MergeMorphsConstantBuffer* data;
@@ -2053,12 +2056,13 @@ void EveChildMesh::CollectOwnedLocatorSets( const Matrix& parentTransform, std::
 		EveChildLocatorSetsSource source;
 		source.childToObject = localTransform * parentTransform;
 		source.owner = this;
+		source.partTag = GetPartTag();
 		source.sets = entry;
 		out.push_back( source );
 	}
 }
 
-void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const
+void EveChildMesh::CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const
 {
 	if( !m_mesh || !m_mesh->GetGeometryResource() )
 	{
@@ -2070,8 +2074,9 @@ void EveChildMesh::CollectOwnedGeometry( const Matrix& parentTransform, std::vec
 	EveChildGeometry source;
 	source.childToObject = localTransform * parentTransform;
 	source.geometry = m_mesh->GetGeometryResource();
-	source.owner = this;
-	source.mesh = m_mesh;
+	source.areaStart = uint32_t( areaPool.size() );
+	EveCollectAreas( type, m_mesh, areaPool );
+	source.areaCount = uint32_t( areaPool.size() ) - source.areaStart;
 	out.push_back( source );
 }
 
@@ -2089,52 +2094,61 @@ void EveChildMesh::InvalidateOwnerMergedLocators( LocatorInvalidationReason reas
 	}
 }
 
-EveDamageOverlayPtr EveChildMesh::GetDamageOverlay() const
+EveDamageOverlayPtr EveChildMesh::GetPartDamageOverlay( PartTag ) const
 {
 	return m_damageOverlay;
 }
 
-EveDamageOverlayPtr EveChildMesh::EnsureDamageOverlay()
+void EveChildMesh::CreatePartDamageOverlay( PartTag )
 {
 	if( !m_damageOverlay )
 	{
 		m_damageOverlay.CreateInstance();
 	}
-	return m_damageOverlay;
 }
 
-bool EveChildMesh::GetDamageLocatorPositionLocal( int index, Vector3& out ) const
+void EveChildMesh::SetArmorDamageShaderEffect( Tr2Effect* effect )
 {
-	if( index < 0 )
-	{
-		return false;
-	}
+	m_armorDamageShader = effect;
+}
 
+Tr2Effect* EveChildMesh::GetPartArmorDamageShaderEffect( PartTag ) const
+{
+	return m_armorDamageShader;
+}
+
+const LocatorStructureList* EveChildMesh::GetOwnedDamageLocators() const
+{
 	for( const auto& sets : m_ownedLocatorSets )
 	{
 		if( sets->HasName( DAMAGE_LOCATOR_SET_NAME ) )
 		{
-			const LocatorStructureList* locators = sets->GetLocators();
-			if( index >= int( locators->size() ) )
-			{
-				return false;
-			}
-
-			const Locator& locator = ( *locators )[index];
-			out = locator.position;
-
-			// for reference, see EveSpaceObject2::GetLocatorInObjectSpace
-			if( locator.boneIndex > 0 && m_animationUpdater && m_animationUpdater->IsInitialized() &&
-				locator.boneIndex < m_animationUpdater->GetMeshBoneCount() )
-			{
-				const Float4x3* bones = m_animationUpdater->GetMeshBoneMatrixList();
-				Matrix transform = IdentityMatrix();
-				TriMatrixCopyFrom3x4( &transform, &bones[locator.boneIndex] );
-				out = XMVector3TransformCoord( locator.position, transform );
-			}
-
-			return true;
+			return sets->GetLocators();
 		}
 	}
-	return false;
+	return nullptr;
+}
+
+bool EveChildMesh::GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const
+{
+	const LocatorStructureList* locators = GetOwnedDamageLocators();
+	if( !locators || index < 0 || index >= int( locators->size() ) )
+	{
+		return false;
+	}
+
+	out = ( *locators )[index].position;
+	return true;
+}
+
+bool EveChildMesh::GetPartDamageLocatorAnimatedLocal( PartTag, int index, Vector3& position, Vector3& direction ) const
+{
+	const LocatorStructureList* locators = GetOwnedDamageLocators();
+	if( !locators || index < 0 || index >= int( locators->size() ) )
+	{
+		return false;
+	}
+
+	EveGetLocatorPose( m_animationUpdater, ( *locators )[index], position, direction );
+	return true;
 }

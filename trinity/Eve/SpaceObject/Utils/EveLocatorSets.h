@@ -17,6 +17,8 @@ struct Locator
 };
 BLUE_DECLARE_STRUCTURE_LIST( Locator );
 
+void EveGetLocatorPose( const class Tr2GrannyAnimation* animationUpdater, const Locator& locator, Vector3& position, Vector3& direction );
+
 // --------------------------------------------------------------------------------
 // Description:
 //   A set of locatorlists, identified by names

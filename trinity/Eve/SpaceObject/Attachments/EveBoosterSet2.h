@@ -214,14 +214,9 @@ public:
 
 private:
 	bool OnPrepareResources();
+	struct EveBoosterFlareParams GetFlareParams() const;
 
 public:
-	// vertex data from stream0: booster geometry
-	struct BoosterVertex
-	{
-		Vector3 position;
-		Vector2 texCoord;
-	};
 	// vertex data for stream1: transform and random wave-phase
 	struct InstanceVertex
 	{
@@ -290,9 +285,6 @@ private:
 
 	// re-alloc and init the instance vertex buffers
 	void RebuildInstanceData( Tr2RenderContext & renderContext );
-
-	// function to create the flares from boosterdata
-	void CreateFlares( SingleBoosterData & boosterData );
 
 	// toggle display
 	bool m_display;

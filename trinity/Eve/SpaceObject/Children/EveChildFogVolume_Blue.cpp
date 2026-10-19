@@ -52,6 +52,8 @@ const Be::ClassInfo* EveChildFogVolume::ExposeToBlue()
 		VOLUME_ATTRIBUTE_DEFINE( fogNoiseIntensity, "The intensity of the 3D noise used to modify the fog color. Setting this to 0 gives you a uniform fog, while values above 0.0 will add more variation to the fog color, similar to puffy clouds." )
 		VOLUME_ATTRIBUTE_DEFINE( fogNoiseFrequency, "The frequency of the 3D noise used to modify the fog color. A higher value makes the cloud puffs larger and less detailed, while a smaller value makes the puffs smaller and more numerous. Around 15.0 is a good starting point." )
 
+		VOLUME_ATTRIBUTE_DEFINE( reflectionIntensity, "A color multiplier for the reflections of the fog. 1.0 is the default/realistic value, but it can be reduced to achieve less intense reflections." )
+
 		MAP_ATTRIBUTE( "boundingSphereCenter", m_boundingSphere.center, "", Be::READ )
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphere.radius, "", Be::READ )
 		MAP_ATTRIBUTE( "volumes", m_volumes, "", Be::READ | Be::PERSIST )

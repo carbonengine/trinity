@@ -4,6 +4,10 @@
 #include "Tr2Light.h"
 #include "Include/TriMath.h"
 #include "Resources/Tr2LightProfileRes.h"
+#include "../TriSettingsRegistrar.h"
+
+bool g_scaleLightBrightnessByRadiusDefault = true;
+TRI_REGISTER_SETTING( "scaleLightBrightnessByRadiusDefault", g_scaleLightBrightnessByRadiusDefault );
 
 
 LightData::LightData() :
@@ -18,11 +22,11 @@ LightData::LightData() :
 	rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
 	innerAngle( 0.0f ),
 	outerAngle( 0.0f ),
+	lightingQuality( EnumFilter<LightingQuality>::AllBits() ),
 	texturePath( L"" ),
 	boneIndex( -1 ),
 	flags( Tr2LightManager::FLAG_DEFAULT ),
 	startTime( BeOS->GetCurrentFrameTime() ),
-	castsShadows( PerLightShadowSetting::DISABLED ),
 	isVolumetric( false )
 {
 }
@@ -48,8 +52,7 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 	data.color = ( Vector4( color ) * composedBrightness ).GetXYZ();
 	data.radius = radius * features.parentScale;
 	data.innerRadius = Float_16( innerRadius * features.parentScale );
-	int16_t profile = features.profileIndex;
-	data.flags = flags | ( profile << 4 );
+	data.flags = Tr2LightManager::PackFlags( flags, features.profileIndex );
 	data.position = Vector3( XMVector3TransformCoord( position, transform ) );
 
 	Matrix lightRotation = RotationMatrix( rotation ) * transform;
@@ -59,7 +62,7 @@ Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transfor
 	data.innerAngle = Float_16( 0.0f );
 	data.projectionPlaneDistance = Float_16( 1.f / tan( TRI_2PI * 45.f / 360.0f ) );
 
-	if( castsShadows == PerLightShadowSetting::ALWAYS_ENABLED || ( castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_HIGH ) || ( castsShadows == PerLightShadowSetting::ENABLED_ONLY_ON_HIGH_QUALITY && shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) )
+	if( castsShadows.HasBit( shadowQuality ) )
 	{
 		data.flags |= Tr2LightManager::FLAG_CASTS_SHADOWS;
 	}
@@ -80,9 +83,9 @@ Tr2LightManager::PerLightData LightData::AsPerSpotLightData( CXMMATRIX transform
 }
 
 Tr2Light::Tr2Light( IRoot* lockobj ) :
-	m_isDynamic( false ),
 	m_type( UNDEFINED_LIGHT ),
-	m_name( "" ),
+	m_isDynamic( false ),
+	m_scaleBrightness( g_scaleLightBrightnessByRadiusDefault ),
 	m_brightnessMultiplier( 1.f ),
 	m_boneTransform( IdentityMatrix() )
 {
@@ -118,6 +121,11 @@ void Tr2Light::ChangeLightColor( Color c )
 
 void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, float scale, const Float4x3* bones, size_t boneCount )
 {
+	if( !m_lightData.lightingQuality.HasBit( lightManager.GetLightingQuality() ) )
+	{
+		return;
+	}
+
 	if( m_isDynamic )
 	{
 		this->Update();
@@ -139,12 +147,12 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 	if( m_type == Tr2Light::POINT_LIGHT )
 	{
 		auto data = m_lightData.AsPerPointLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
-		lightManager.AddLight( data );
+		lightManager.AddLight( data, m_scaleBrightness );
 	}
 	else if( m_type == Tr2Light::SPOT_LIGHT )
 	{
 		auto data = m_lightData.AsPerSpotLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
-		lightManager.AddLight( data );
+		lightManager.AddLight( data, m_scaleBrightness );
 	}
 }
 

@@ -207,6 +207,10 @@ public:
 	struct HullBoosterData
 	{
 		bool alwaysOn, hasTrails;
+		BlueSharedString driveName;
+		BlueSharedString effectPath;
+		std::map<BlueSharedString, TextureData> textures;
+		std::map<BlueSharedString, Vector4> parameters;
 		std::vector<HullBoosterItemData> items;
 	};
 
@@ -522,6 +526,7 @@ public:
 	{
 		BlueSharedString path;
 		uint32_t buildFilter;
+		uint32_t visibilityGroup;
 	};
 
 	struct HullData

@@ -304,7 +304,7 @@ void Tr2BindingPoint::Unlink()
 
 bool Tr2BindingPoint::IsValid() const
 {
-	return m_destination != nullptr;
+	return m_destination != nullptr && GetBoundObject() != nullptr;
 }
 
 void Tr2BindingPoint::SetValue( float value ) const

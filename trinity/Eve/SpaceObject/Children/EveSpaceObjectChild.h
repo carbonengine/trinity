@@ -3,8 +3,12 @@
 #pragma once
 
 #include "IEveSpaceObjectChild.h"
+#include "ITr2Renderable.h"
 
 BLUE_CLASS_IMPL( EveSpaceObjectChild );
+
+BLUE_DECLARE( EveDamageOverlay );
+BLUE_DECLARE( Tr2Effect );
 
 /**
  * @brief Struct bundling locator sets and owner information as well as transform, to be processed by the parent object.
@@ -14,20 +18,41 @@ struct EveChildLocatorSetsSource
 {
 	class EveLocatorSets* sets = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveChildMesh* owner = nullptr;
+	const class EveSpaceObjectChild* owner = nullptr;
+	uint32_t partTag = 0;
 };
 
 /**
- * @brief Struct bundling geometry and owner information as well as transform, to be processed by the parent object.
+ * @brief Struct containing information about mesh areas.
+ * @see EveSpaceObjectChild::CollectOwnedGeometry
+ * @see Tr2MeshArea
+ * @see EveChildInstancedMeshes::MeshArea
+ */
+struct EveChildGeometryArea
+{
+	uint32_t index = 0;
+	uint32_t count = 1;
+	bool alphaCutout = false;
+	bool reversed = false;
+};
+
+/**
+ * @brief Struct bundling geometry and transform, to be processed by the parent object.
+ * The geometry's areas live in the pool passed to CollectOwnedGeometry.
  * @see EveSpaceObjectChild::CollectOwnedGeometry
  */
 struct EveChildGeometry
 {
 	class TriGeometryRes* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
-	const class EveChildMesh* owner = nullptr;
-	class Tr2MeshBase* mesh = nullptr;
+	uint32_t areaStart = 0;
+	uint32_t areaCount = 0;
 };
+
+/**
+ * @brief Appends the areas of a mesh to the given area pool.
+ */
+void EveCollectAreas( TriBatchType type, class Tr2MeshBase* mesh, std::vector<EveChildGeometryArea>& areaPool );
 
 /**
  * @brief Base class for all space object children. This class provides common functionality and properties for all child objects in the space object hierarchy.
@@ -262,10 +287,42 @@ public:
 
 	/**
 	 * @brief Collects all geometries that are owned by this child, so they can be processed by the parent object.
+	 * @param type The type of geometry that will be collected.
 	 * @param parentTransform The parent's transform, which is to be applied on the locators.
 	 * @param out The collected geometries, bundled with owner information and transforms.
+	 * @param areaPool Pool receiving the areas of the collected geometries.
 	 */
-	virtual void CollectOwnedGeometry( const Matrix& parentTransform, std::vector<EveChildGeometry>& out ) const;
+	virtual void CollectOwnedGeometry( TriBatchType type, const Matrix& parentTransform, std::vector<EveChildGeometry>& out, std::vector<EveChildGeometryArea>& areaPool ) const;
+
+	/**
+	 * @brief Returns the damage overlay of the given part.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @return The part's damage overlay, or nullptr if the part has none yet.
+	 */
+	virtual EveDamageOverlayPtr GetPartDamageOverlay( PartTag partTag ) const;
+
+	/**
+	 * @brief Creates damage overlay of the given part.
+	 * @param partTag Part tag identifying the part on this child.
+	 */
+	virtual void CreatePartDamageOverlay( PartTag partTag );
+
+	/**
+	 * @brief Returns the armor damage shader effect of the given part's damage overlay.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @return The part's armor damage shader effect, or nullptr if the child has none.
+	 */
+	virtual Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const;
+
+	/**
+	 * @brief Retrieves the current (animated) pose of one of the given part's damage locators.
+	 * @param partTag Part tag identifying the part on this child.
+	 * @param index Index of the locator within the part's damage locator set.
+	 * @param position Receives the locator position in child-local space.
+	 * @param direction Receives the locator direction in child-local space.
+	 * @return True if the pose was written, false otherwise.
+	 */
+	virtual bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const;
 
 protected:
 	/**

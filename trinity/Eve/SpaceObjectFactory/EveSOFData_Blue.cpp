@@ -725,8 +725,12 @@ const Be::ClassInfo* EveSOFDataHullBooster::ExposeToBlue(){
 
 			MAP_ATTRIBUTE( "alwaysOn", m_alwaysOn, "", Be::READWRITE | Be::PERSIST )
 				MAP_ATTRIBUTE( "hasTrails", m_hasTrails, "", Be::READWRITE | Be::PERSIST )
-					MAP_ATTRIBUTE( "items", m_items, "", Be::READ | Be::PERSIST )
-						EXPOSURE_END()
+					MAP_ATTRIBUTE( "driveName", m_driveName, "", Be::READWRITE | Be::PERSIST )
+						MAP_ATTRIBUTE( "effectPath", m_effectPath, "", Be::READWRITE | Be::PERSIST )
+							MAP_ATTRIBUTE( "parameters", m_parameters, "", Be::READ | Be::PERSIST )
+								MAP_ATTRIBUTE( "textures", m_textures, "", Be::READ | Be::PERSIST )
+									MAP_ATTRIBUTE( "items", m_items, "", Be::READ | Be::PERSIST )
+										EXPOSURE_END()
 }
 
 
@@ -904,7 +908,8 @@ const Be::ClassInfo* EveSOFDataHullController::ExposeToBlue(){
 					":jessica-file-filter: redfile",
 					Be::READWRITE | Be::PERSIST )
 					MAP_ATTRIBUTE_WITH_CHOOSER( "buildFilter", m_buildFilter, "", Be::READWRITE | Be::PERSIST, EveSOFDataHullBuildFilterChooser )
-						EXPOSURE_END()
+						MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, ":jessica-widget: visibilitygroup", Be::READWRITE | Be::PERSIST )
+							EXPOSURE_END()
 }
 
 

@@ -114,5 +114,7 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 		POSTPROCESSATTRIBUTE_DEFINE( colorGain, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
 		POSTPROCESSATTRIBUTE_DEFINE( colorOffset, Color Correction, "\n:jessica-numeric-range: (0.0, 2.0)" )
 
+		MAP_ATTRIBUTE( "genericEffects", genericEffects, "List of generic post-processing effects", Be::READ | Be::PERSIST )
+
 	EXPOSURE_END()
 }

@@ -19,7 +19,7 @@ void ContinueOnMainThread( std::function<void()>&& action )
 
 void ExecuteMainThreadActions()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	static std::vector<std::function<void()>> actionsToProcess;
 
