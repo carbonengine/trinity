@@ -53,11 +53,11 @@ Tr2TimelineController::~Tr2TimelineController()
 
 void Tr2TimelineController::Link( IRoot& owner )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	{
 
 		CCP_STATS_INC( controllerLinkCount );
-		CCP_STATS_SCOPED_TIME( controllerLinkTime );
+		TRINITY_STATS_SCOPED_TIME( controllerLinkTime );
 
 		Unlink();
 
@@ -96,7 +96,7 @@ void Tr2TimelineController::Unlink( UnlinkReason reason )
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( reason != UnlinkReason::DELETING )
 	{
@@ -182,7 +182,7 @@ void Tr2TimelineController::Update( float normalizedUpdateFrequency )
 
 	{
 		CCP_STATS_INC( controllerUpdateCount );
-		CCP_STATS_SCOPED_TIME( controllerUpdateTime );
+		TRINITY_STATS_SCOPED_TIME( controllerUpdateTime );
 
 		auto simTime = BeOS->GetCurrentFrameTime();
 		auto dt = TimeAsFloat( simTime - m_lastUpdateTime ) * m_timeScale;
@@ -222,7 +222,7 @@ void Tr2TimelineController::Update( float normalizedUpdateFrequency )
 
 		if( !m_updateables.empty() )
 		{
-			CCP_STATS_SCOPED_TIME( controllerUpdateablesTime );
+			TRINITY_STATS_SCOPED_TIME( controllerUpdateablesTime );
 
 			auto realTime = BeOS->GetActualTime();
 

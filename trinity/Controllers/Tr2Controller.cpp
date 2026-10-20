@@ -110,11 +110,11 @@ void Tr2Controller::OnListModified( long event, ssize_t key, ssize_t key2, IRoot
 
 void Tr2Controller::Link( IRoot& owner )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	{
 
 		CCP_STATS_INC( controllerLinkCount );
-		CCP_STATS_SCOPED_TIME( controllerLinkTime );
+		TRINITY_STATS_SCOPED_TIME( controllerLinkTime );
 
 		Unlink();
 
@@ -162,7 +162,7 @@ void Tr2Controller::Unlink( UnlinkReason reason )
 		return;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	if( reason != UnlinkReason::DELETING )
 	{
 		Stop();
@@ -245,7 +245,7 @@ void Tr2Controller::Update( float normalizedUpdateFrequency )
 
 	{
 		CCP_STATS_INC( controllerUpdateCount );
-		CCP_STATS_SCOPED_TIME( controllerUpdateTime );
+		TRINITY_STATS_SCOPED_TIME( controllerUpdateTime );
 
 		auto dirtyVariables = m_dirtyVariables;
 		m_dirtyVariables = 0;
@@ -256,7 +256,7 @@ void Tr2Controller::Update( float normalizedUpdateFrequency )
 		}
 		if( !m_updateables.empty() )
 		{
-			CCP_STATS_SCOPED_TIME( controllerUpdateablesTime );
+			TRINITY_STATS_SCOPED_TIME( controllerUpdateablesTime );
 
 			auto simTime = BeOS->GetCurrentFrameTime();
 

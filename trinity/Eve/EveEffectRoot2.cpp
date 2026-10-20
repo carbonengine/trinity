@@ -5,6 +5,7 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 #include "TriFrustum.h"
 #include "Lights/Tr2PointLight.h"
 #include "Tr2LightManager.h"
@@ -195,13 +196,13 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 
 void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	UpdateWorldTransform( updateContext.GetTime() );
 
 	m_localTransform = TransformationMatrix( m_scaling, m_rotation, m_translation );
 	m_lastUpdateMatrix = m_localTransform * m_worldTransform;
-	m_secondaryLightingSphereRadiusWorld = m_secondaryLightingSphereRadiusLocal * ( m_scaling.x + m_scaling.y + m_scaling.z ) / 3.f;
+	m_secondaryLightingSphereRadiusWorld = m_secondaryLightingSphereRadiusLocal * ( std::abs( m_scaling.x ) + std::abs( m_scaling.y ) + std::abs( m_scaling.z ) ) / 3.f;
 
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
@@ -431,15 +432,17 @@ void EveEffectRoot2::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_lastUpdateMatrix;
 }
 
-bool EveEffectRoot2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveEffectRoot2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
 	if( m_boundingSphere.w <= 0.0f )
 	{
 		return false;
 	}
 
-	BoundingBoxInitialize( m_boundingSphere, min, max );
-	BoundingBoxTransform( min, max, m_lastUpdateMatrix );
+	CcpMath::Sphere worldSphere( m_boundingSphere );
+	worldSphere.Transform( m_lastUpdateMatrix );
+	BoundingBoxInitialize( Vector4( worldSphere.center, worldSphere.radius ), localMin, localMax );
+	localToWorld = IdentityMatrix();
 	return true;
 }
 
@@ -716,7 +719,7 @@ PEveSpaceObjectChildVector& EveEffectRoot2::GetChildren()
 // -----------------------------------------------------------------------------
 void EveEffectRoot2::SetTransform( const Matrix& transform )
 {
-	Decompose( m_scaling, m_rotation, m_translation, transform );
+	DecomposeMirrorAware( m_scaling, m_rotation, m_translation, transform );
 }
 
 // -----------------------------------------------------------------------------

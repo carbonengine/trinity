@@ -208,6 +208,7 @@ void PrintUsage()
 	printf( "  /E{e,w,d}[extension] - Specify support for all or certain GLES extensions\n" );
 	printf( "  /novalidate - Skip validating converted GLSL code\n" );
 	printf( "  /permutations - Print permutations of the shader\n" );
+	printf( "  /I <directory> - Specify additional include directory\n" );
 #if CCP_TELEMETRY_ENABLED
 	printf( "  /telemetry - Enable RAD Telemetry\n" );
 #endif
@@ -301,6 +302,18 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 		else if( strcmp( argv[i], "/no_permutations" ) == 0 )
 		{
 			args.ignorePermutations = true;
+		}
+		else if( strcmp( argv[i], "/I" ) == 0 )
+		{
+			++i;
+			if( i < argc )
+			{
+				g_includeHandler.AddSystemIncludePath( argv[i] );
+			}
+			else
+			{
+				return false;
+			}
 		}
 		else if( strcmp( argv[i], "/define" ) == 0 )
 		{
@@ -411,7 +424,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 
 bool PrintPermutations( const char* shaderPath )
 {
-	auto shader = g_includeHandler.Open( shaderPath );
+	auto shader = g_includeHandler.Open( shaderPath, CachingIncludeHandler::IncludeLocal );
 
 	if( !shader )
 	{
@@ -624,7 +637,7 @@ int main( int argc, char* argv[] )
 	}
 
 	// Preload shader file
-	auto shader = g_includeHandler.Open( args.shaderPath );
+	auto shader = g_includeHandler.Open( args.shaderPath, CachingIncludeHandler::IncludeLocal );
 	if( !shader )
 	{
 		printf( "%s: error X0000: Could not open input file \"%s\"\n", args.shaderPath, args.shaderPath );

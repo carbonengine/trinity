@@ -14,7 +14,7 @@ EveRootTransform::EveRootTransform( IRoot* lockobj ) :
 
 void EveRootTransform::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Quaternion rotation;
 	Vector3 translation;

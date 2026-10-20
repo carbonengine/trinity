@@ -207,6 +207,8 @@ bool EveHazeSet::OnPrepareResources()
 // --------------------------------------------------------------------------------------
 bool EveHazeSet::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, const Float4x3* bones, size_t boneCount )
 {
+	m_parentMirrored = IsMirrored( parentTransform );
+
 	auto aabb = GetItemSetAabb( m_aabb, m_boundingBoxes, bones, boneCount );
 	if( !aabb.IsInitialized() )
 	{
@@ -273,7 +275,7 @@ void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchTy
 		return;
 	}
 
-	auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+	auto& indexBuffer = m_parentMirrored ? Tr2Renderer::GetReversedQuadListIndexBuffer() : Tr2Renderer::GetQuadListIndexBuffer();
 	if( !indexBuffer.IsValid() )
 	{
 		return;

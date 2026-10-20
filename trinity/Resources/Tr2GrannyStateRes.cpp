@@ -49,7 +49,7 @@ size_t Tr2GrannyStateRes::GetMemoryUsage()
 
 BlueAsyncRes::LoadingResult Tr2GrannyStateRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_dataStream->LockData( &m_data, 0 ) )
 	{
@@ -65,7 +65,7 @@ BlueAsyncRes::LoadingResult Tr2GrannyStateRes::DoLoad()
 			m_characterFile = NULL;
 		}
 
-		CCP_STATS_ZONE( "Tr2GrannyStateRes::DoLoad reading Granny file" );
+		TRINITY_STATS_ZONE( "Tr2GrannyStateRes::DoLoad reading Granny file" );
 		m_characterFile = ProtectedGrannyReadEntireFileFromMemory( m_path.c_str(), (uint32_t)m_dataSize, m_data );
 	}
 	if( !m_characterFile )

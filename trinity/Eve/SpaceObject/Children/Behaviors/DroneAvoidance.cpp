@@ -26,7 +26,7 @@ int DroneAvoidance::GetProcessPriority()
 
 std::vector<Vector3> DroneAvoidance::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Vector3> returnForces;
 	if( !m_enabled )

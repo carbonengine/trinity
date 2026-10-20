@@ -577,7 +577,7 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 		if( radius > 0 )
 		{
 			data.lights[i].innerRadius = std::max( std::min( light->GetLightData().innerRadius / radius, 1.f ), 0.f );
-			data.lights[i].color = ( Vector4( color ) * light->GetBrightnessMultiplier() ).GetXYZ() * pow( data.lights[i].innerRadius * 2 + 1, 3 );
+			data.lights[i].color = ( Vector4( color ) * light->GetBrightnessMultiplier() ).GetXYZ() * pow( data.lights[i].innerRadius * 2 + 1, 3.f );
 		}
 		else
 		{
@@ -773,7 +773,7 @@ void EveChildCloud2::GetVolumetricShadowInfo( ShadowInfo& shadowInfo, Vector3 su
 
 bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_receiveShadows )
 	{

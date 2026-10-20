@@ -4,7 +4,7 @@
 
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ShaderAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 
 #if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
 

@@ -200,7 +200,7 @@ void Tr2TextureAnimation::AdvanceTime( float dt )
 		m_time += dt * m_fps;
 		if( m_time > 1 && m_asyncState->bitmapsReady )
 		{
-			CCP_STATS_ZONE( __FUNCTION__ );
+			TRINITY_STATS_ZONE( __FUNCTION__ );
 
 			++m_frame;
 			if( m_frame >= m_asyncState->reader.GetFrameCount() )
@@ -226,7 +226,7 @@ void Tr2TextureAnimation::UpdateGrids()
 
 	for( size_t i = 0; i < m_grids.size(); ++i )
 	{
-		CCP_STATS_ZONE( "UpdateSubresource" );
+		TRINITY_STATS_ZONE( "UpdateSubresource" );
 		auto& bitmap = m_asyncState->decoders[i].GetFrameBitmap();
 		m_grids[i].frame.UpdateSubresource( Tr2TextureSubresource( 0 ), bitmap.GetRawData(), bitmap.GetPitch(), bitmap.GetPitch() * bitmap.GetHeight(), renderContext );
 	}
@@ -296,7 +296,7 @@ Tr2TextureAnimation::AsyncRequest* Tr2TextureAnimation::MakeRequest()
 
 void Tr2TextureAnimation::ReadFile( void* ctx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto request = static_cast<AsyncRequest*>( ctx );
 	IBlueStreamPtr stream;
@@ -340,7 +340,7 @@ void Tr2TextureAnimation::ReadFile( void* ctx )
 
 void Tr2TextureAnimation::DecodeFirstFrame( void* ctx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto request = static_cast<AsyncRequest*>( ctx );
 	for( uint32_t i = 0; i < request->state->reader.GetGridCount(); ++i )
@@ -358,7 +358,7 @@ void Tr2TextureAnimation::DecodeFirstFrame( void* ctx )
 
 void Tr2TextureAnimation::DecodeNextFrame( void* ctx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto request = static_cast<AsyncRequest*>( ctx );
 	for( auto& decoder : request->state->decoders )
@@ -376,7 +376,7 @@ void Tr2TextureAnimation::DecodeNextFrame( void* ctx )
 
 void Tr2TextureAnimation::RestartAndDecodeFrame( void* ctx )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto request = static_cast<AsyncRequest*>( ctx );
 	for( auto& decoder : request->state->decoders )

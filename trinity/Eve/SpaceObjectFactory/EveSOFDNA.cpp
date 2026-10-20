@@ -215,7 +215,7 @@ bool EveSOFDNA::ValidateContent()
 // --------------------------------------------------------------------------------
 void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<std::string> commandArgs;
 
@@ -338,7 +338,7 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 // --------------------------------------------------------------------------------
 void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::DNADescriptorData& descriptor, EveSOFDNAPtr parent, const EveSOFDataMgrPtr dataMgr )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	// remember the pointer to the BIG lib as long as this DNA object lives
 	m_dataMgr = dataMgr;
 
@@ -1253,7 +1253,7 @@ const std::vector<EveSOFDataMgr::HullAreas>* EveSOFDNA::GetHullMeshAreas( TriBat
 // --------------------------------------------------------------------------------
 const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaType, const BlueSharedString& parameterName, const std::map<BlueSharedString, Vector4>* hullParameters, unsigned int blockededMaterials ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// do we have a dna mesh command for this?
 	std::vector<std::string> commandArgs;

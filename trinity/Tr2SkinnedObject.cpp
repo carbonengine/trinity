@@ -59,7 +59,7 @@ Tr2SkinnedObject::~Tr2SkinnedObject()
 
 void Tr2SkinnedObject::PrePhysicsUpdate( Be::Time time )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	const Be::Time deltaTime = time - m_lastUpdateTime;
 	if( TimeAsFloat( deltaTime ) < m_updatePeriod )
@@ -82,7 +82,7 @@ void Tr2SkinnedObject::PrePhysicsUpdate( Be::Time time )
 
 void Tr2SkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	const Be::Time deltaTime = time - m_lastUpdateTime;
 	if( TimeAsFloat( deltaTime ) < m_updatePeriod )
@@ -129,7 +129,7 @@ void Tr2SkinnedObject::PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene
 
 void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_hasDynamicBounds = false;
 
@@ -157,7 +157,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 	if( boneList == NULL && skel != NULL )
 	{
-		CCP_STATS_ZONE( "UpdateBones_BuildRenderRigBoneList" );
+		TRINITY_STATS_ZONE( "UpdateBones_BuildRenderRigBoneList" );
 
 		// Either the animationUpdater is NULL or it hasn't been set up fully yet,
 		// so create a new boneList based off the render rig. This allows rendering
@@ -204,7 +204,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 	if( rebuildMapping && skel != NULL )
 	{
-		CCP_STATS_ZONE( "UpdateBones_RebuildMapping" );
+		TRINITY_STATS_ZONE( "UpdateBones_RebuildMapping" );
 
 		++m_skeletonTag;
 
@@ -235,7 +235,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 	if( skel != NULL )
 	{
-		CCP_STATS_ZONE( "UpdateBones_MatrixUpdate" );
+		TRINITY_STATS_ZONE( "UpdateBones_MatrixUpdate" );
 
 		++m_skinningMatrixQueueIndex;
 		m_skinningMatrixQueueIndex %= m_skinningMatrixQueue.size();
@@ -244,7 +244,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 		if( m_animationUpdater != NULL )
 		{
-			CCP_STATS_ZONE( "UpdateBones_AnimationUpdate" );
+			TRINITY_STATS_ZONE( "UpdateBones_AnimationUpdate" );
 
 			accumulatedTransforms = m_animationUpdater->GetAnimationTransforms();
 
@@ -314,7 +314,7 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 		if( m_skinningMatrixQueueNeedsPriming )
 		{
-			CCP_STATS_ZONE( "UpdateBones_Priming" );
+			TRINITY_STATS_ZONE( "UpdateBones_Priming" );
 
 			// Starting at 0 as m_skinningMatrixQueueIndex has already been incremented
 			unsigned int n = (unsigned int)m_skinningMatrixQueue.size() - 1;

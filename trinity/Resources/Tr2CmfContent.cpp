@@ -67,7 +67,7 @@ const void* Tr2CmfContents::GetSection( uint32_t index )
 		return nullptr;
 	}
 
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto decompressed = std::make_unique<uint8_t[]>( section.section.uncompressedSize );
 	cmf::Decompress( decompressed.get(), section.section, section.data.get() );

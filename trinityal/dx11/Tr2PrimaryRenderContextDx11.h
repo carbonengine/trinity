@@ -64,6 +64,7 @@ public:
 	CComPtr<IDXGISwapChain> m_swapChain;
 	CComPtr<IDXGIFactory> m_dxgiFactory;
 	CComPtr<IDXGIOutput> m_dxgiOutput;
+	bool m_softwareAdapter;
 
 	Tr2TextureAL m_defaultBackBuffer;
 

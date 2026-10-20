@@ -56,6 +56,10 @@ public:
 
 	Matrix GetFiringBoneWorldTransform( unsigned int muzzle ) const;
 
+	// controllers: forwarded to the firing effect, the child owns none itself
+	void SetControllerVariable( const char* name, float value );
+	void StartControllers();
+
 	// turret set states
 	enum State
 	{
