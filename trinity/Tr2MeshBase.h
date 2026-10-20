@@ -11,6 +11,7 @@
 #include "Utilities/Tr2MaterialBoundsAdjustment.h"
 
 #include "Tr2RingBuffer.h"
+#include "Tr2ScreenSizeRequests.h"
 
 BLUE_DECLARE( TriGeometryRes );
 
@@ -125,6 +126,16 @@ protected:
 	PTr2MeshAreaVector m_distortionAreas;
 
 	PTr2MeshAreaVector* m_areaLookupArray[TRIBATCHTYPE_COUNT_OF_BATCH_TYPES];
+
+	struct ScreenSizeCache
+	{
+		const TriGeometryRes* geometry = nullptr;
+		const TriGeometryResLodData* lod = nullptr;
+		float worldRadius = 0.0f;
+		uint32_t generation = 0;
+		Tr2ScreenSizeRequests requests;
+	};
+	mutable ScreenSizeCache m_screenSizeCache;
 
 	// skeleton/bone data
 	std::vector<unsigned int> m_jointMappingAnimRig;
