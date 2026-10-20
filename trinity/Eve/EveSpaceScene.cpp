@@ -1968,7 +1968,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 				Tr2Renderer::SetViewTransform( orgViewMatrix );
 			}
 
-			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
+			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( renderContext );
 			m_updateContext.SetFrustum( currentFrustum );
 			// get the background reflection renderables from the component registry
 			RenderBackgroundPassObjects( {}, {}, renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );

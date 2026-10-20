@@ -38,7 +38,7 @@ public:
 	void EndRenderPass( Tr2RenderContext & renderContext );
 	Tr2TextureAL GetDepthBuffer( unsigned face );
 
-	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
+	TriFrustum GetFrustum( Tr2RenderContext& renderContext );
 
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );

@@ -70,7 +70,7 @@ bool Tr2ReflectionProbe::HasData() const
 	return m_hasData && m_postFilterTarget->IsValid();
 }
 
-TriFrustum Tr2ReflectionProbe::GetFrustum( unsigned face, Tr2RenderContext& renderContext )
+TriFrustum Tr2ReflectionProbe::GetFrustum( Tr2RenderContext& renderContext )
 {
 	TriFrustum frustum = TriFrustum();
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &m_position, &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
