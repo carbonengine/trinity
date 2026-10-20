@@ -77,6 +77,9 @@ public:
 		bool background = true;
 		// special overlay rendering (f.ex texture overlay)
 		bool overlay = true;
+
+		bool dynamicLights = true;
+		bool dynamicLightShadows = true;
 	};
 
 	struct RenderInfo

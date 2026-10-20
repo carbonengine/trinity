@@ -775,6 +775,9 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( Be::Time realTime, Be::Ti
 	reflectionFeatures.velocityMap = false;
 	reflectionFeatures.background = false;
 	reflectionFeatures.overlay = false;
+	reflectionFeatures.dynamicLights = false;
+	reflectionFeatures.dynamicLightShadows = false;
+
 	const SceneRender::ViewInfo faceView = SceneRender::ViewInfo::ReflectionFace();
 
 	SetCameraToRenderer( renderContext );

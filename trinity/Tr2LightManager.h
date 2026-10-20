@@ -38,6 +38,13 @@ enum class LightingQuality : int32_t
 	HIGH,
 };
 
+enum class ReflectionQuality : int32_t
+{
+	LOW,
+	MEDIUM,
+	HIGH,
+};
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Manages light sources for tiled/clustered lighting. An object of this class does not

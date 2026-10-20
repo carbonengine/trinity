@@ -49,6 +49,8 @@ struct LightData
 
 	EnumFilter<ShadowQuality> castsShadows;
 	bool isVolumetric;
+	EnumFilter<ReflectionQuality> reflectionMode;
+	bool reflectionShadowCaster;
 
 	Be::Time startTime;
 };
@@ -114,3 +116,4 @@ TYPEDEF_BLUECLASS( Tr2Light );
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
 extern const Be::VarChooser LightingQualityFilterChooser[];
+extern const Be::VarChooser ReflectionQualityFilterChooser[];
