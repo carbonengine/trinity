@@ -145,7 +145,33 @@ TriFrustum CreatePickingFrustum()
 	return pickFrustum;
 }
 }
+namespace SceneRender
+{
+ViewInfo ViewInfo::MainView( bool distortion )
+{
+	ViewInfo info;
+	info.distortion = distortion;
+	return info;
+}
 
+ViewInfo ViewInfo::ReflectionFace()
+{
+	ViewInfo view;
+	view.reason = TR2RENDERREASON_REFLECTION;
+	// Faces are rendered into a left handed cubemap, so the caller inverts the cull mode
+	// and the scene must not override it
+	view.cullMode = Tr2RenderContextEnum::CULLMODE_NONE;
+	view.distortion = false;
+	view.sceneObjects = false;
+	// faces must not disturb the main view's history
+	view.temporal = false;
+	view.reflection = true;
+	view.subsurfaceScattering = false;
+	view.gpuParticles = false;
+	view.lensflares = g_lensflaresInReflections && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA;
+	return view;
+}
+}
 
 struct ShadowReceiver
 {
@@ -452,34 +478,23 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		if( frame == m_lastUpdateFrame )
 		{
 			// already updated this frame
-
-			TriFrustum frustum;
-			frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
-
-			m_updateContext.SetFrustum( frustum );
-			m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
-			m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
-			m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
-
-			// update the combined postprocess attributes
-			UpdatePostProcessAttributes();
+			UpdateView();
 			return;
 		}
 		m_lastUpdateFrame = frame;
 	}
 
-	if( !m_update )
-	{
-		return;
-	}
+	UpdateFrame( realTime, simTime );
+}
 
-	m_updateContext.SetTime( simTime );
-	m_updateContext.UpdateOrigin( m_ballpark );
-	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
+// --------------------------------------------------------------------------------------
+// Description:
+//   Per-view part of the update: called for every view after the frame's Update, so
+//   culling and post process attributes follow the view's camera.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::UpdateView()
+{
 	TriFrustum frustum;
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
 
@@ -490,6 +505,29 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
 	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
 	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Per-frame part of the update: animates and updates all objects, using the current
+//   camera for LOD.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::UpdateFrame( Be::Time realTime, Be::Time simTime )
+{
+	if( !m_update )
+	{
+		return;
+	}
+
+	m_updateContext.SetTime( simTime );
+	m_updateContext.UpdateOrigin( m_ballpark );
+	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
+
+	// objects use the frustum and thresholds for LOD while they update
+	UpdateView();
+
+	// update the combined postprocess attributes
+	UpdatePostProcessAttributes();
 
 	{
 		TRINITY_STATS_ZONE( "UpdateBackgroundObjects" );
@@ -1257,9 +1295,8 @@ bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2Texture
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Work that does not depend on the view being rendered. Safe to call before every
-//   view; only the first call in a frame does anything, so the frame's first (full)
-//   Update has already run by then.
+//   Work that does not depend on the view being rendered. Called once per frame, after
+//   the frame's Update and before the first BeginView.
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 {
@@ -1267,13 +1304,6 @@ void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-
-	const uint64_t frame = renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber();
-	if( frame == m_lastBeginFrame )
-	{
-		return;
-	}
-	m_lastBeginFrame = frame;
 
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	renderContext.AddGpuMarker( __FUNCTION__ );
@@ -1856,8 +1886,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, T
 
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
-	// set the current reflection
-	GPU_REGION( renderContext, "Reflection" );
+	GPU_REGION( renderContext, "Reflection" )
 
 	m_volumetricsRenderer->SetIsReflectionProbe( true );
 	ON_BLOCK_EXIT( [&] {
@@ -2849,16 +2878,22 @@ bool EveSpaceScene::RenderMainPass(
 	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 
 	PopulateAndApplyPerFrameData( renderContext );
-	if( view.temporal )
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> froxelFogTextures;
+
+	if( view.reason == TR2RENDERREASON_NORMAL )
 	{
-		auto [froxelFog, volumetricSlices] = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
-		GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", volumetricSlices );
-		GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+		froxelFogTextures = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
 	}
-	else
+	else if( view.reason == TR2RENDERREASON_REFLECTION )
 	{
-		RegisterReflectionFog( depthMap, gpuResourcePool, renderContext );
+		froxelFogTextures = RenderReflectionVolumetrics( depthMap, gpuResourcePool, renderContext );
 	}
+	else 
+	{
+		froxelFogTextures = { Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ), Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
+	}
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFogTextures.first );
+	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", froxelFogTextures.second );
 
 	RenderTransparentBatches( m_primaryBatches, renderContext );
 	if( distortionMap.IsValid() )
@@ -2886,15 +2921,19 @@ bool EveSpaceScene::RenderMainPass(
 //   Non-temporal views use the reflection fog, so they don't disturb the main view's fog
 //   history.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RegisterReflectionFog( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	Tr2GpuResourcePool::Texture froxelFog;
 	if( m_volumetricsRenderer )
 	{
 		froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, depthMap.GetWidth(), depthMap.GetHeight(), m_sunData.DirWorld, m_currentSunColor, m_updateContext.GetOrigin(), Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
 	}
-	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ) );
-	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+	else
+	{
+		froxelFog = Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool );
+	}
+
+	return { froxelFog, Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
 }
 
 void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
@@ -3308,6 +3347,11 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.VolumetricSlices[3] = 1000000;
 
 	m_volumetricsRenderer->PopulatePerFrameData( data.FroxelFogData );
+}
+
+Tr2ReflectionProbe* EveSpaceScene::GetReflectionProbe() const
+{
+	return m_reflectionProbe;
 }
 
 bool EveSpaceScene::Initialize()
@@ -4405,12 +4449,18 @@ void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowReso
 	GlobalStore().RegisterVariable( "ShadowMapAtlas", shadowResources.pointLightShadowDepth );
 }
 
-void EveSpaceScene::SetRenderingInfo( Matrix jitterMatrix, float mipLodBias, float upscaling )
+// --------------------------------------------------------------------------------------
+// Description:
+//   Set the view's camera matrices and rendering parameters, and apply the jittered
+//   projection to the renderer. Only depends on its arguments, so it is safe to call
+//   more than once for a view.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::SetViewInfo( const Matrix& view, const Matrix& projection, const Matrix& jitterMatrix, float mipLodBias, float upscaling )
 {
-	m_projection = Tr2Renderer::GetProjectionTransform();
+	m_projection = projection;
 	m_jitterMatrix = jitterMatrix;
 	m_jitteredProjection = m_projection * m_jitterMatrix;
-	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
+	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( view ) * m_viewLast * m_projectionLast;
 	m_upscalingAmount = upscaling;
 	m_mipLodBias = mipLodBias;
 	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );

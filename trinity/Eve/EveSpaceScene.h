@@ -124,30 +124,6 @@ struct ViewInfo
 	static ViewInfo ReflectionFace();
 };
 
-ViewInfo ViewInfo::MainView( bool distortion )
-{
-	ViewInfo info;
-	info.distortion = distortion;
-	return info;
-}
-
-ViewInfo ViewInfo::ViewInfo::ReflectionFace()
-{
-	ViewInfo view;
-	view.reason = TR2RENDERREASON_REFLECTION;
-	// Faces are rendered into a left handed cubemap, so the caller inverts the cull mode
-	// and the scene must not override it
-	view.cullMode = Tr2RenderContextEnum::CULLMODE_NONE;
-	view.distortion = false;
-	view.sceneObjects = false;
-	// faces must not disturb the main view's history
-	view.temporal = false;
-	view.reflection = true;
-	view.subsurfaceScattering = false;
-	view.gpuParticles = false;
-	view.lensflares = g_lensflaresInReflections && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA;
-	return view;
-}
 }
 
 
@@ -210,7 +186,9 @@ public:
 	void GatherBatches( const SceneRender::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
 	
-	void SetRenderingInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
+	void SetViewInfo( const Matrix& view, const Matrix& projection, const Matrix& jitterMatrix, float mipLodBias, float upscaling );
+	void UpdateView();
+	Tr2ReflectionProbe* GetReflectionProbe() const;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -442,8 +420,6 @@ public:
 	void ReregisterEntities();
 	void ClearComponentRegistry();
 
-	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
@@ -661,6 +637,7 @@ protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
+	void UpdateFrame( Be::Time realTime, Be::Time simTime );
 	void EnsureVisualizerEffect();
 	void ResolveLightingOverrides();
 	void ApplyViewLighting( const SceneRender::ViewInfo& view );
@@ -669,7 +646,9 @@ protected:
 	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );
 	void GatherReflectionRenderables( std::vector<ITr2Renderable*>& renderables );
 	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-	void RegisterReflectionFog( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	void UpdateShLighting(
 		const std::vector<IEveSpaceObject2*>& objectsNotReceivingShadow );
@@ -765,8 +744,6 @@ public:
 
 	// Frame index when Update was last called
 	uint64_t m_lastUpdateFrame = std::numeric_limits<uint64_t>::max();
-	// Frame index when BeginFrame last did its work
-	uint64_t m_lastBeginFrame = std::numeric_limits<uint64_t>::max();
 
 public:
 	// raytracing

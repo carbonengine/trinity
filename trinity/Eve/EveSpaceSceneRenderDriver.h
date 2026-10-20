@@ -20,7 +20,6 @@ BLUE_DECLARE( TriStepRenderFps );
 BLUE_DECLARE_IVECTOR( ITr2Scene );
 BLUE_DECLARE( EveCamera );
 BLUE_DECLARE( Tr2Sprite2dScene );
-BLUE_DECLARE( Tr2ReflectionProbe );
 
 
 
@@ -44,14 +43,6 @@ public:
 		Medium,
 		High,
 	};
-	enum class ReflectionQuality
-	{
-		Disabled,
-		Low,
-		Medium,
-		High,
-		Ultra,
-	};
 	struct Settings
 	{
 		ShadowQuality shadowQuality = ShadowQuality::SHADOW_HIGH;
@@ -60,7 +51,6 @@ public:
 		PostProcess::Quality postProcessingQuality = PostProcess::Quality::HIGH;
 		Tr2VolumerticQuality volumetricQuality = Tr2VolumerticQuality::High;
 		LightingQuality lightingQuality = LightingQuality::HIGH;
-		ReflectionQuality reflectionQuality = ReflectionQuality::High;
 
 		Color clearColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -80,7 +70,6 @@ public:
 		bool upscaling = true;
 		bool antiAliasing = true;
 		bool reflections = true;
-		bool volumetrics = true;
 		bool ssao = true;
 		bool shadows = true;
 		bool velocityMap = true;
@@ -130,17 +119,17 @@ private:
 	// Targets rendered by RenderView
 	struct ViewTargets
 	{
-		Tr2GpuResourcePool::Texture color;
 		Tr2GpuResourcePool::Texture depth;
 		Tr2GpuResourcePool::Texture velocity;
 		Tr2GpuResourcePool::Texture opaqueColor;
 	};
 
-	ViewTargets RenderView( const RenderInfo& renderInfo, Tr2GpuResourcePool::Texture colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	ViewTargets RenderView( const RenderInfo& renderInfo, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
-	void PropagateRenderningInfo( Matrix jitterMatrix, float mipLodBias, float upscaling );
+	void ApplyView( const RenderInfo& renderInfo, Tr2RenderContext& renderContext ) const;
+	void UpdateSceneFrame( const RenderInfo& mainView, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
 	void SetCameraToRenderer( const Matrix& view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
@@ -180,7 +169,6 @@ private:
 
 	Settings m_settings;
 
-	Tr2ReflectionProbePtr m_reflectionProbe;
 	Tr2EffectPtr m_distortionEffect;
 
 	PITr2SceneVector m_toolsScenes;

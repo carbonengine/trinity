@@ -50,15 +50,6 @@ const Be::VarChooser TriRMChooser[] = {
 	{ 0 }
 };
 
-Be::VarChooser ReflectionQualityChooser[] = {
-	{ "Disabled", BeCast( EveSpaceSceneRenderDriver::ReflectionQuality::Disabled ), "" },
-	{ "Low", BeCast( EveSpaceSceneRenderDriver::ReflectionQuality::Low ), "" },
-	{ "Medium", BeCast( EveSpaceSceneRenderDriver::ReflectionQuality::Medium ), "" },
-	{ "High", BeCast( EveSpaceSceneRenderDriver::ReflectionQuality::High ), "" },
-	{ "Ultra", BeCast( EveSpaceSceneRenderDriver::ReflectionQuality::Ultra ), "" },
-	{ 0 }
-};
-
 }
 extern Be::VarChooser EveVisualizerChooser[];
 extern const Be::VarChooser Tr2VolumetricQuality_Chooser[];
@@ -68,7 +59,6 @@ BLUE_REGISTER_ENUM_EX( "EveSpaceSceneRenderDriverAntiAliasingQuality", EveSpaceS
 BLUE_REGISTER_ENUM_EX( "EveSpaceSceneRenderDriverAmbientOcclusionQuality", EveSpaceSceneRenderDriver::AmbientOcclusionQuality, AmbientOcclusionQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 BLUE_REGISTER_ENUM_EX( "ShadowQuality", ShadowQuality, ShadowQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 BLUE_REGISTER_ENUM_EX( "LightingQuality", LightingQuality, LightingQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-BLUE_REGISTER_ENUM_EX( "ReflectionQuality", EveSpaceSceneRenderDriver::ReflectionQuality, ReflectionQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
 
@@ -89,12 +79,6 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 		MAP_ATTRIBUTE(
 			"newRoute",
 			m_newRoute,
-			"",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"reflectionProbe",
-			m_reflectionProbe,
 			"",
 			Be::READWRITE )
 
@@ -180,13 +164,6 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			"Shadow quality setting. One of trinity.ShadowQuality enum",
 			Be::READWRITE | Be::ENUM,
 			ShadowQualityChooser )
-
-		MAP_ATTRIBUTE_WITH_CHOOSER(
-			"reflectionQuality",
-			m_settings.reflectionQuality,
-			"Reflection quality setting. One of trinity.EveSpaceSceneRenderDriverReflectionQuality enum",
-			Be::READWRITE | Be::ENUM,
-			ReflectionQualityChooser )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"lightingQuality",

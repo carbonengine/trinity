@@ -644,7 +644,7 @@ void Tr2PostProcessRenderer::SetPostProcessingQuality( PostProcess::Quality qual
 	m_quality = quality;
 }
 
-Matrix Tr2PostProcessRenderer::GetJitter(uint64_t frameIndex, uint32_t renderWidth, uint32_t renderHeight) const
+Matrix Tr2PostProcessRenderer::GetJitter( uint64_t frameIndex, uint32_t renderWidth, uint32_t renderHeight )
 {
 	const Vector2 samplingPatterns[] = { Vector2( .125f, -.375f ),
 										 Vector2( -.125f, .375f ),

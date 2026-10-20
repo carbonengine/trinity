@@ -300,23 +300,34 @@ void EveSpaceSceneRenderDriver::PropagateSettings()
 	{
 		m_scene->m_volumetricsRenderer->SetQuality( m_settings.volumetricQuality );
 	}
-
-	if( m_settings.reflectionQuality != ReflectionQuality::Disabled && m_reflectionProbe == nullptr )
-	{
-		m_reflectionProbe.CreateInstance();
-	}
-	else if( m_settings.reflectionQuality == ReflectionQuality::Disabled && m_reflectionProbe )
-	{
-		m_reflectionProbe = nullptr;
-	}
 }
 
-void EveSpaceSceneRenderDriver::PropagateRenderningInfo( Matrix jitterMatrix, float mipLodBias, float upscalingAmount )
+// --------------------------------------------------------------------------------------
+// Description:
+//   Set the view's camera to the renderer and its rendering parameters to the scene.
+// --------------------------------------------------------------------------------------
+void EveSpaceSceneRenderDriver::ApplyView( const RenderInfo& renderInfo, Tr2RenderContext& renderContext ) const
 {
-	if( m_scene )
+	SetCameraToRenderer( renderInfo.view, renderInfo.projection, renderContext );
+	// SetProjection adjusts the projection to the viewport, so read back the result
+	m_scene->SetViewInfo( renderInfo.view, Tr2Renderer::GetProjectionTransform(), renderInfo.jitterMatrix, renderInfo.mipLodBias, renderInfo.upscalingAmount );
+	m_scene->UpdateView();
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   The scene's per-frame update, done once and from the main camera before any view is
+//   rendered, so the frame's object updates and LOD follow the main view.
+// --------------------------------------------------------------------------------------
+void EveSpaceSceneRenderDriver::UpdateSceneFrame( const RenderInfo& mainView, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
+{
+	// the projection depends on the viewport, so set up the main view's target first
+	ApplyView( mainView, renderContext );
 	{
-		m_scene->SetRenderingInfo( jitterMatrix, mipLodBias, upscalingAmount );
+		TimeSection updateSection( m_timers.update, "Update", rootTimer, renderContext );
+		m_scene->Update( realTime, simTime );
 	}
+	UpdateGpuParticleSystem( renderContext );
 }
 
 bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>& destDimensions, const Span<const BlueSharedString>& outputs, Be::Time realTime, Be::Time simTime )
@@ -480,14 +491,6 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 
 	PrepareLightManager();
 
-	// The new route renders the reflection faces through RenderView. The old route lets
-	// the scene render them from within the main view (see RenderView).
-	if( m_newRoute )
-	{
-		TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
-		RenderReflectionFaces( realTime, simTime, rootTimer, renderContext );
-	}
-
 	const RenderInfo mainView = {
 		m_camera ? m_camera->GetViewMatrix()->GetTransform() : m_view->GetTransform(),
 		m_camera ? m_camera->GetProjection() : m_projection,
@@ -499,14 +502,38 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		SceneRender::ViewInfo::MainView( m_settings.enableDistortion )
 	};
 	auto colorTarget = m_gpuResourcePool.GetTempTexture( "customBackBuffer", renderSize, m_internalPixelFormat, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
-	ViewTargets targets = RenderView( mainView, std::move( colorTarget ), outputs, realTime, simTime, rootTimer, renderContext );
+
+	ViewTargets targets;
+	{
+		auto prevVisualizeMethod = m_scene->m_visualizeMethod;
+		m_scene->m_visualizeMethod = m_settings.visualizeMethod;
+		ON_BLOCK_EXIT( [&] { m_scene->m_visualizeMethod = prevVisualizeMethod; } );
+		BeginRenderPass( renderContext, { colorTarget }, {} );
+
+		UpdateSceneFrame( mainView, realTime, simTime, rootTimer, renderContext );
+		{
+			TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
+
+			m_scene->BeginFrame( renderContext );
+		}
+
+		// The new route renders the reflection faces through RenderView. The old route lets
+		// the scene render them from within the main view (see RenderView).
+		if( m_newRoute )
+		{
+			TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
+			RenderReflectionFaces( realTime, simTime, rootTimer, renderContext );
+		}
+
+		targets = RenderView( mainView, colorTarget, outputs, realTime, simTime, rootTimer, renderContext );
+	}
 
 	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
 	renderContext.m_esm.SetDepthStencilBuffer( {} );
 
 	{
 		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
-		m_postProcess->Execute( *destinations.data, std::move( targets.color ), targets.depth, std::move( targets.velocity ), std::move( targets.opaqueColor ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
+		m_postProcess->Execute( *destinations.data, std::move( colorTarget ), targets.depth, std::move( targets.velocity ), std::move( targets.opaqueColor ), m_scene, m_upscalingContext, m_gpuResourcePool, renderContext );
 	}
 	SetCameraToRenderer( renderContext );
 	{
@@ -543,10 +570,10 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 		m_upscalingContext->GetJitter( jitterX, jitterY );
 		jitterMatrix = TranslationMatrix( Vector3( jitterX, jitterY, 0 ) );
 	}
-	else if( m_postProcess && m_scene && m_scene->GetPostProcess() && m_scene->GetPostProcess()->GetTaaIfAvailable() != nullptr )
+	else if( m_scene && m_scene->GetPostProcess() && m_scene->GetPostProcess()->GetTaaIfAvailable() != nullptr )
 	{
 		auto frameIndex = renderContext.GetPrimaryRenderContext().GetRenderedFrameNumber();
-		jitterMatrix = m_postProcess->GetJitter( frameIndex, renderWidth, renderHeight );
+		jitterMatrix = Tr2PostProcessRenderer::GetJitter( frameIndex, renderWidth, renderHeight );
 	}
 	else
 	{
@@ -558,19 +585,19 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 
 float EveSpaceSceneRenderDriver::GetMipLodBias() const
 {
-	float mipLodBias = 0.0f;
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	
-	if( m_scene )
+	// 0 if no upscaling is enabled
+	float mipLodBias = m_upscalingInfo.mipLevelBias;
+
+	// The post process bias belongs to its TAA. A temporal upscaler replaces the TAA and
+	// its bias already accounts for it.
+	if( !m_upscalingInfo.temporal && m_scene )
 	{
-		if( auto postprocess = m_scene->GetPostProcess() )
+		auto postprocess = m_scene->GetPostProcess();
+		if( postprocess && postprocess->GetTaaIfAvailable() != nullptr )
 		{
 			mipLodBias += postprocess->GetMipLodBias();
 		}
 	}
-	
-	// 0 if no upscaling is enabled
-	mipLodBias += m_upscalingInfo.mipLevelBias;
 	return mipLodBias;
 }
 
@@ -580,16 +607,16 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 //   colorTarget. Returns the targets the view rendered, for post processing or for
 //   submitting to the reflection probe.
 // --------------------------------------------------------------------------------------
-EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, Tr2GpuResourcePool::Texture colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
+EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& renderInfo, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
 {
 	const FeatureSet& featureSet = renderInfo.featureSet;
 	const SceneRender::ViewInfo& sceneView = renderInfo.sceneView;
 	const TextureSize2D& renderSize = renderInfo.renderSize;
 
 	ViewTargets targets;
-	targets.color = std::move( colorTarget );
-	const Tr2TextureAL& backBuffer = targets.color;
-
+	const Tr2TextureAL& backBuffer = colorTarget;
+	ApplyView( renderInfo, renderContext );
+	
 	const bool renderBackgroundNode = m_background && featureSet.background;
 	if( renderBackgroundNode )
 	{
@@ -605,26 +632,9 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
 	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
-
-	SetCameraToRenderer( renderInfo.view, renderInfo.projection, renderContext );
-	PropagateRenderningInfo( renderInfo.jitterMatrix, renderInfo.mipLodBias, renderInfo.upscalingAmount );
-
-	{
-		TimeSection updateSection( m_timers.update, "Update", rootTimer, renderContext );
-		m_scene->Update( realTime, simTime );
-	}
-	if( sceneView.gpuParticles )
-	{
-		UpdateGpuParticleSystem( renderContext );
-	}
-
-	auto prevVisualizeMethod = m_scene->m_visualizeMethod;
-	m_scene->m_visualizeMethod = m_settings.visualizeMethod;
-	ON_BLOCK_EXIT( [&] { m_scene->m_visualizeMethod = prevVisualizeMethod; } );
-
+	
 	{
 		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
-		m_scene->BeginFrame( renderContext );
 		m_scene->BeginView( sceneView, renderContext );
 	}
 	// Old route: the scene renders the reflection faces itself, from within the main view
@@ -667,6 +677,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	EveSpaceScene::ShadowResources shadowResources;
 	if( m_scene->m_display && m_mainPassRenderingEnabled )
 	{
+		if( featureSet.shadows )
 		{
 			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );
 			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, sceneView, renderContext );
@@ -726,8 +737,6 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	normalMap = {};
 
 	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
-	// occlusion query results are read by the next frame
-	if( sceneView.temporal )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_scene->RunLensflareOcclusionQueries( depthBuffer, renderContext );
@@ -749,7 +758,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 void EveSpaceSceneRenderDriver::RenderReflectionFaces( Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
 {
-	Tr2ReflectionProbe* probe = m_reflectionProbe;
+	Tr2ReflectionProbe* probe = m_scene->GetReflectionProbe();
 	if( !probe || !probe->IsValid() || !m_scene->m_display )
 	{
 		return;
@@ -777,7 +786,6 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( Be::Time realTime, Be::Ti
 	projection.CreateInstance();
 	projection->CustomProjection( faceProjection );
 
-	const unsigned faceSize = probe->GetFaceSize();
 	const TextureSize2D faceRenderSize = probe->GetFaceTarget( 0 ).GetDesc();
 
 	const bool prevCullInversion = renderContext.m_esm.IsCullModeInverted();
@@ -793,10 +801,11 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( Be::Time realTime, Be::Ti
 
 		RenderInfo renderInfo = { view, projection, IdentityMatrix(), 0.0f, 1.0f, faceRenderSize, reflectionFeatures, faceView };
 
-		auto faceTarget = m_gpuResourcePool.GetTempTexture( "reflectionFace", faceSize, faceSize, probe->GetFaceTarget( face ).GetFormat(), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
-		ViewTargets targets = RenderView( renderInfo, std::move( faceTarget ), {}, realTime, simTime, rootTimer, renderContext );
+		// render straight into the probe's face target, then copy it into the cubemap
+		const Tr2TextureAL& faceTarget = probe->GetFaceTarget( face );
+		RenderView( renderInfo, faceTarget, {}, realTime, simTime, rootTimer, renderContext );
 
-		probe->SubmitFace( face, targets.color, renderContext );
+		probe->SubmitFace( face, faceTarget, renderContext );
 	}
 
 	probe->FinishFaces( viewDirection, renderContext );
@@ -840,13 +849,13 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetDistortionMapIfNeeded(
 
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet )
 {
-	if( !featureSet.velocityMap || ( !featureSet.antiAliasing && !featureSet.upscaling && !m_upscalingInfo.temporal ) )
+	if( !featureSet.velocityMap )
 	{
 		return {};
 	}
 
-	USE_MAIN_THREAD_RENDER_CONTEXT(); 
-	bool needsVelocityMap = m_settings.antiAliasingQuality != AntiAliasingQuality::Disabled || m_upscalingInfo.temporal;
+	// TAA and temporal upscaling reproject with the velocity map
+	const bool needsVelocityMap = ( featureSet.antiAliasing && m_settings.antiAliasingQuality != AntiAliasingQuality::Disabled ) || ( featureSet.upscaling && m_upscalingInfo.temporal );
 	auto namedOutput = FindNamedOutput( outputs, "VelocityMap" );
 	Tr2GpuResourcePool::Texture velocityMap;
 	if( needsVelocityMap || m_settings.forceVelocityMap || namedOutput )
@@ -863,12 +872,10 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( c
 
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet )
 {
-	if( !featureSet.ssao && !featureSet.shadows )
-	{
-		return {};
-	}
+	// SSAO and raytraced shadows read the normal map
+	const bool needsNormalMap = ( featureSet.ssao && m_settings.aoQuality != AmbientOcclusionQuality::Disabled ) || ( featureSet.shadows && m_settings.shadowQuality == ShadowQuality::SHADOW_RAYTRACED );
 	auto namedOutput = FindNamedOutput( outputs, "NormalMap" );
-	if( ( ( m_settings.aoQuality != AmbientOcclusionQuality::Disabled || m_settings.shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) && Tr2Renderer::GetShaderModel() != TR2SM_3_0_LO ) || m_settings.forceNormalMap || namedOutput )
+	if( ( needsNormalMap && Tr2Renderer::GetShaderModel() != TR2SM_3_0_LO ) || m_settings.forceNormalMap || namedOutput )
 	{
 		auto texture = m_gpuResourcePool.GetTempTexture( "normalMap", size, ImageIO::PIXEL_FORMAT_R10G10B10A2_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 		if( namedOutput )
@@ -897,6 +904,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetCustomStencilMapIfNeed
 
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet )
 {
+	// the opaque copy is only used by views that can be upscaled or anti-aliased
 	if( !featureSet.upscaling && !featureSet.antiAliasing )
 	{
 		return {};
