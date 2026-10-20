@@ -54,6 +54,12 @@ BLUE_INTERFACE( ITr2Renderable ) :
 	virtual float GetSortValue() = 0;
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
+
+	// True when GetPerObjectData and HasTransparentBatches only touch this object's own state and may run on worker threads.
+	virtual bool SupportsParallelPerObjectData() const
+	{
+		return false;
+	}
 };
 REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
