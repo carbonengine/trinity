@@ -155,6 +155,7 @@ private:
 private:
 	// A shared depth stencil texture for light shadow maps
 	Tr2DepthStencilPtr m_lightDepthStencil;
+	bool m_shadowMapsDirty;
 
 	// Holds the main render batch list for opaques, decals, and transparent batches
 	ITriRenderBatchAccumulator* m_primaryRenderBatches;
