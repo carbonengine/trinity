@@ -225,7 +225,7 @@ void EveChildMesh::InitializeAnimation()
 			if( auto geometry = m_mesh->GetGeometryResource() )
 			{
 				m_animationUpdater->SetUseMeshBinding( true );
-				m_animationUpdater->SetSharedGeometryRes( geometry );
+				m_animationUpdater->SetSharedGeometryRes( BlueCastPtr( geometry ) );
 				return;
 			}
 		}
@@ -711,7 +711,7 @@ void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batc
 		return;
 	}
 
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = m_mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
@@ -1185,9 +1185,10 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 
 		if( m_mesh && !m_animationUpdater->HasMeshBinding() )
 		{
-			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
+			auto geometryRes = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() );
+			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != geometryRes || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
 			{
-				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, geometryRes, m_mesh->GetMeshIndex() );
 			}
 		}
 		else
@@ -1428,10 +1429,14 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			m_mesh->RenderDebugInfo( m_worldTransform, renderer, nullptr );
 		}
 
-		if( bvhOptionEnabled && !m_bvhVisualizationGeometry && m_mesh->GetGeometryResource() && m_mesh->GetGeometryResource()->IsGood() )
+		if( bvhOptionEnabled && !m_bvhVisualizationGeometry )
 		{
-			m_bvhVisualizationGeometry = m_mesh->GetGeometryResource();
-			m_bvhVisualizationGeometry->PrepareRayCaster();
+			TriGeometryResPtr geometryRes = BlueCastPtr( m_mesh->GetGeometryResource() );
+			if( geometryRes && geometryRes->IsGood() )
+			{
+				m_bvhVisualizationGeometry = geometryRes;
+				m_bvhVisualizationGeometry->PrepareRayCaster();
+			}
 		}
 		if( m_bvhVisualizationGeometry && m_bvhVisualizationGeometry->IsRayCasterReady() )
 		{
@@ -1536,6 +1541,7 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 	return GetRestPoseBoneTransforms();
 }
 
+// TODO: intern, this function is fucked up. It needs a granny code path!
 std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() const
 {
 	if( !m_mesh || !m_mesh->GetGeometryResource() )
@@ -1548,11 +1554,14 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() con
 	// flagged isSkinned) has no bindings and no blend indices in the vertex stream, so every
 	// vertex reads bone 0 - a single identity matrix covers it.
 	size_t boneCount = 1;
-	auto cmfData = m_mesh->GetGeometryResource()->GetCMFData();
-	auto meshIndex = m_mesh->GetMeshIndex();
-	if( cmfData && meshIndex < cmfData->meshes.size() )
+	if( auto geometryRes = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() ) )
 	{
-		boneCount = std::max<size_t>( cmfData->meshes[meshIndex].boneBindings.size(), 1 );
+		auto cmfData = geometryRes->GetCMFData();
+		auto meshIndex = m_mesh->GetMeshIndex();
+		if( cmfData && meshIndex < cmfData->meshes.size() )
+		{
+			boneCount = std::max<size_t>( cmfData->meshes[meshIndex].boneBindings.size(), 1 );
+		}
 	}
 	if( m_restPoseBoneTransforms.size() != boneCount )
 	{

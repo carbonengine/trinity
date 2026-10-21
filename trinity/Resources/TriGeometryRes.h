@@ -114,7 +114,7 @@ public:
 
 	Be::Result<std::string> SaveMesh( const char* filename, uint32_t meshIndex ) const override;
 
-	bool IsUsingCMF() const;
+	bool IsUsingCMF() const override;
 	const cmf::Data* GetCMFData() const;
 
 	void VisualizeBVH( Tr2DebugObjectReference owner, const Matrix& transform, ITr2DebugRenderer2& renderer ) const;

@@ -165,7 +165,7 @@ void EveSwarmRenderable::InitDecals( const PEveSpaceObjectDecalVector& decals )
 
 void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, float screensize )
 {
-	TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProviderPtr geometryRes = m_mesh->GetGeometryResource();
 
 	if( geometryRes )
 	{
@@ -181,7 +181,7 @@ void EveSwarmRenderable::PushDecals( std::vector<ITr2Renderable*>& renderables, 
 
 void EveSwarmRenderable::UpdateDecalVisibility( const EveUpdateContext& updateContext, IEveSpaceObject2::ParentData& pd, Tr2GrannyAnimation* animationUpdater )
 {
-	TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProviderPtr geometryRes = m_mesh->GetGeometryResource();
 
 	if( geometryRes )
 	{
@@ -273,7 +273,7 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = m_mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;

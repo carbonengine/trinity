@@ -689,6 +689,11 @@ void Tr2GeometryProvider::ReleaseResourcesHelper()
 	m_memoryUse = 0;
 }
 
+bool Tr2GeometryProvider::IsUsingCMF() const
+{
+	return true;
+}
+
 unsigned int TriGeometryResSkeletonData::FindJoint( const char* name ) const
 {
 	unsigned int jointCount = (unsigned int)m_joints.size();

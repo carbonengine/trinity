@@ -66,7 +66,7 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 float screenSize,
 										 const Matrix* worldTransform )
 {
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -1181,7 +1181,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = m_mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
@@ -1251,7 +1251,7 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 	{
 		return;
 	}
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
@@ -1489,7 +1489,8 @@ Vector4 EveSpaceObject2::CalculateSkinnedBoundingSphere()
 #if WITH_GRANNY
 		else
 		{
-			return m_animationUpdater->CalculateSkinnedBoundingSphere( m_mesh->GetGeometryResource()->GetGrannyInfo() );
+			auto geometry = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() );
+			return m_animationUpdater->CalculateSkinnedBoundingSphere( geometry ? geometry->GetGrannyInfo() : nullptr );
 		}
 #endif
 	}
@@ -1524,7 +1525,8 @@ std::pair<Vector3, Vector3> EveSpaceObject2::CalculateSkinnedBoundingBoxFromTran
 #if WITH_GRANNY
 		else
 		{
-			m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, m_geometryResFromMesh->GetGrannyInfo() );
+			TriGeometryResPtr geometry = BlueCastPtr( m_geometryResFromMesh );
+			m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, geometry->GetGrannyInfo() );
 		}
 #endif
 	}
@@ -1577,7 +1579,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 	// are decals visible?
 	if( m_mesh && m_isMeshVisible )
 	{
-		TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
+		Tr2GeometryProviderPtr geometryRes = m_mesh->GetGeometryResource();
 		if( geometryRes )
 		{
 			DecalMeshCache meshCache;
@@ -2381,7 +2383,7 @@ bool EveSpaceObject2::RebuildBoundingSphereInformation()
 		return false;
 	}
 
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return false;
@@ -3199,7 +3201,7 @@ void EveSpaceObject2::PrepareForAnimation()
 		m_geometryResFromMesh = geometryRes;
 
 		m_animationUpdater->SetUseMeshBinding( true );
-		m_animationUpdater->SetSharedGeometryRes( m_geometryResFromMesh );
+		m_animationUpdater->SetSharedGeometryRes( BlueCastPtr( m_geometryResFromMesh ) );
 
 		m_geometryResFromMesh->AddNotifyTarget( this );
 	}
@@ -4220,7 +4222,7 @@ bool EveSpaceObject2::IsBoundingBoxReady() const
 		return false;
 	}
 
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return false;

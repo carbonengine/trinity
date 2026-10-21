@@ -55,6 +55,7 @@ BLUE_DECLARE_INTERFACE( IEveSpaceObject2 );
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE_VECTOR( EveSpaceObject2 );
 BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE( Tr2GeometryProvider );
 BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
@@ -182,7 +183,7 @@ struct LocatorSourceRange
 
 struct DamageFilterOccluder
 {
-	TriGeometryResPtr geometry;
+	Tr2GeometryProviderPtr geometry;
 	Matrix fromObject;
 	uint32_t areaStart = 0;
 	uint32_t areaCount = 0;
@@ -631,7 +632,7 @@ protected:
 	Tr2Lod m_lodLevel;
 	Tr2Lod m_lodLevelWithChildren;
 
-	TriGeometryResPtr m_geometryResFromMesh;
+	Tr2GeometryProviderPtr m_geometryResFromMesh;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// dissolve

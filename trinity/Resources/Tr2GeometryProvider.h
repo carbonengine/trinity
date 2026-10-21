@@ -293,7 +293,8 @@ public:
 
 	void ReleaseResourcesHelper();
 
-public:
+	virtual bool IsUsingCMF() const;
+
 #if TRINITYDEV
 	virtual void GetDescription( std::string & desc );
 #endif
