@@ -4,7 +4,7 @@
 
 #include "EveSpriteLineSet.h"
 
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Tr2QuadRenderer.h"
 #include "Utilities/MatrixUtils.h"
 #include "Shader/Tr2Effect.h"

@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "Tr2TranslationAdapter.h"
 #include "Utilities/Vector3d.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 
 // --------------------------------------------------------------------------------
