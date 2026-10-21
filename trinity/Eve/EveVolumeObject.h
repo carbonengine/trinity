@@ -12,7 +12,7 @@
 
 #ifdef BLUE_USE_LOCAL_ITr2DebugRenderer2
 
-#include "Include/ITr2DebugRenderer2.h"
+#include "include/ITr2DebugRenderer2.h"
 #else
 #include <ITr2DebugRenderer2.h>
 #endif
