@@ -210,7 +210,7 @@ int Tr2Mesh::GetAreasCount() const
 	return TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
 }
 
-TriGeometryRes* Tr2Mesh::GetGeometryResource() const
+Tr2GeometryProvider* Tr2Mesh::GetGeometryResource() const
 {
 	if( m_geometryResource && m_geometryResource->IsGood() )
 	{

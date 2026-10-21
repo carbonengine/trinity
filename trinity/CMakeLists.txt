@@ -1247,6 +1247,9 @@ set(_SOURCES
     Resources/Tr2EffectRes.cpp
     Resources/Tr2EffectRes.h
     Resources/Tr2EffectRes_Blue.cpp
+    Resources/Tr2GeometryProvider.cpp
+    Resources/Tr2GeometryProvider.h
+    Resources/Tr2GeometryProvider_Blue.cpp
     Resources/Tr2GrannyStateRes.cpp
     Resources/Tr2GrannyStateRes.h
     Resources/Tr2GrannyStateRes_Blue.cpp
@@ -1591,6 +1594,9 @@ set(_SOURCES
     Tr2MeshBase.cpp
     Tr2MeshBase.h
     Tr2MeshBase_Blue.cpp
+    Tr2MeshProcedural.cpp
+    Tr2MeshProcedural.h
+    Tr2MeshProcedural_Blue.cpp
     Tr2Model.cpp
     Tr2Model.h
     Tr2Model_Blue.cpp
