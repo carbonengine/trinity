@@ -199,6 +199,7 @@ private:
 	// vertex buffer
 	unsigned int m_vertexDeclHandle;
 	Tr2BufferAL m_vertexBuffer;
+	int m_vertexBufferSize;
 
 	// all the lines
 	std::vector<LineData> m_lines;

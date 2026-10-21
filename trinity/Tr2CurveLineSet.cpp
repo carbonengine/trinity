@@ -23,6 +23,7 @@ Tr2CurveLineSet::Tr2CurveLineSet( IRoot* lockobj ) :
 	m_lineWidthFactor( 1.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_currentSubmittedLineCount( 0 ),
+	m_vertexBufferSize( 0 ),
 	m_display( true ),
 	m_dynamic( false ),
 	m_boundsDirty( false ),
@@ -370,10 +371,9 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 	// catch zero size, so we don't need to worry about empty arrays
 	if( m_lines.size() )
 	{
-		auto currentNumOfLines = GetNumOfLines();
+		int currentNumOfLines = GetNumOfLines();
 
-		auto vertexBufferSize = m_vertexBuffer.GetDesc().count / 6;
-		size_t byteSize = std::max( uint32_t( currentNumOfLines ), vertexBufferSize ) * 6 * sizeof( LineVertex );
+		size_t byteSize = size_t( currentNumOfLines ) * 6 * sizeof( LineVertex );
 		auto buffer = Tr2Renderer::GetPoolAllocator()->Allocate( byteSize );
 		if( !buffer )
 		{
@@ -382,7 +382,7 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 		}
 
 		// can the big vertexbuffer handle this?
-		if( !m_vertexBuffer.IsValid() || ( currentNumOfLines > vertexBufferSize ) )
+		if( !m_vertexBuffer.IsValid() || ( currentNumOfLines > m_vertexBufferSize ) )
 		{
 			// release old and create new
 			USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -398,6 +398,7 @@ bool Tr2CurveLineSet::FillVertexBuffer()
 					nullptr,
 					renderContext ),
 				false );
+			m_vertexBufferSize = currentNumOfLines;
 		}
 
 		LineVertex* vertexBuffer = reinterpret_cast<LineVertex*>( buffer );
