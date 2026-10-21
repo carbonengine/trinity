@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "Tr2CurveQuaternion.h"
+#include "Tr2CurveSegmentSearch.h"
 
 extern Be::VarChooser Tr2CurveInterpolationChooser[];
 
@@ -35,34 +36,34 @@ Tr2CurveQuaternion::Tr2CurveQuaternion( IRoot* lockobj ) :
 // --------------------------------------------------------------------------------
 void Tr2CurveQuaternion::UpdateValue( double time )
 {
-	m_currentValue = GetValue( time );
+	m_currentValue = SampleValue( time, m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
 Quaternion* Tr2CurveQuaternion::Update( Quaternion* in, Be::Time time )
 {
-	*in = m_currentValue = GetValue( TimeAsDouble( time ) );
+	*in = m_currentValue = SampleValue( TimeAsDouble( time ), m_lastSegment );
 	return in;
 }
 
 // --------------------------------------------------------------------------------
 Quaternion* Tr2CurveQuaternion::Update( Quaternion* in, double time )
 {
-	*in = m_currentValue = GetValue( time );
+	*in = m_currentValue = SampleValue( time, m_lastSegment );
 	return in;
 }
 
 // --------------------------------------------------------------------------------
 Quaternion* Tr2CurveQuaternion::GetValueAt( Quaternion* in, Be::Time time )
 {
-	*in = GetValue( TimeAsDouble( time ) );
+	*in = SampleValue( TimeAsDouble( time ), m_lastSegment );
 	return in;
 }
 
 // --------------------------------------------------------------------------------
 Quaternion* Tr2CurveQuaternion::GetValueAt( Quaternion* in, double time )
 {
-	*in = GetValue( time );
+	*in = SampleValue( time, m_lastSegment );
 	return in;
 }
 
@@ -107,6 +108,12 @@ float Tr2CurveQuaternion::Length()
 // --------------------------------------------------------------------------------
 Quaternion Tr2CurveQuaternion::GetValue( double time ) const
 {
+	return SampleValue( time, m_lastSegment );
+}
+
+// --------------------------------------------------------------------------------
+Quaternion Tr2CurveQuaternion::SampleValue( double time, size_t& segmentCache ) const
+{
 	if( m_keys.empty() )
 	{
 		return Quaternion( 0, 0, 0, 1 );
@@ -130,59 +137,13 @@ Quaternion Tr2CurveQuaternion::GetValue( double time ) const
 	}
 
 	float t = GetLocalTime( time );
-
-	if( m_lastSegment + 1 < count )
+	// Most frames land in the cached segment: check it here, without a call
+	size_t i = segmentCache;
+	if( i + 1 >= count || t < m_keys[i].m_time || t >= m_keys[i + 1].m_time )
 	{
-		// try cached last segment first
-		auto& k0 = m_keys[m_lastSegment];
-		auto& k1 = m_keys[m_lastSegment + 1];
-
-		if( t >= k0.m_time && t < k1.m_time )
-		{
-			return GetSegmentValue( t, k0, k1 );
-		}
-
-		if( m_lastSegment + 2 < count )
-		{
-			// try a segment to the right of the cached one
-			auto& k0 = m_keys[m_lastSegment + 1];
-			auto& k1 = m_keys[m_lastSegment + 2];
-
-			if( t >= k0.m_time && t < k1.m_time )
-			{
-				++m_lastSegment;
-				return GetSegmentValue( t, k0, k1 );
-			}
-		}
-
-		if( m_lastSegment > 1 )
-		{
-			// try a segment to the left of the cached one
-			auto& k0 = m_keys[m_lastSegment - 1];
-			auto& k1 = m_keys[m_lastSegment];
-
-			if( t >= k0.m_time && t < k1.m_time )
-			{
-				--m_lastSegment;
-				return GetSegmentValue( t, k0, k1 );
-			}
-		}
+		i = FindCurveSegment( m_keys, t, segmentCache );
 	}
-
-	// cache miss: try all segments
-	for( size_t i = 0; i + 1 < count; ++i )
-	{
-		auto& k0 = m_keys[i];
-		auto& k1 = m_keys[i + 1];
-
-		if( t >= k0.m_time && t < k1.m_time )
-		{
-			m_lastSegment = int32_t( i );
-			return GetSegmentValue( t, k0, k1 );
-		}
-	}
-	m_lastSegment = count - 2;
-	return GetSegmentValue( t, m_keys[count - 2], m_keys[count - 1] );
+	return GetSegmentValue( t, m_keys[i], m_keys[i + 1] );
 }
 
 // --------------------------------------------------------------------------------
