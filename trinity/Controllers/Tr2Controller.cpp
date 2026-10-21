@@ -8,6 +8,7 @@
 #include "Include/ITr2Updateable.h"
 #include "../Tr2ExpressionTermInfo.h"
 #include "ContinueOnMainThread.h"
+#include "Eve/SpaceObject/EveSpaceObject2.h"
 
 CCP_STATS_DECLARE( controllerUpdateTime, "Trinity/Controllers/UpdateTime", true, CST_TIME, "Cumulative per-frame time for controller update" );
 CCP_STATS_DECLARE( controllerUpdateablesTime, "Trinity/Controllers/UpdateablesTime", true, CST_TIME, "Cumulative per-frame time for controller updates tick" );
@@ -17,6 +18,45 @@ CCP_STATS_DECLARE( controllerLinkCount, "Trinity/Controllers/LinkCount", false, 
 
 
 CcpMutex g_controllerMutex( "", "g_controllerMutex" );
+
+namespace
+{
+const char* const SPACE_OBJECT_PARENT = "SpaceObjectParent";
+
+bool TryGetSpaceObjectParent( IRoot* owner, IRoot*& spaceObjectParent )
+{
+	if( EveSpaceObjectChildPtr child = BlueCastPtr( owner ) )
+	{
+		auto spaceObject = child->GetOwner();
+		spaceObjectParent = spaceObject ? spaceObject->GetRootObject() : nullptr;
+		return true;
+	}
+	if( IEveSpaceObject2Ptr spaceObject = BlueCastPtr( owner ) )
+	{
+		spaceObjectParent = spaceObject->GetRootObject();
+		return true;
+	}
+	return false;
+}
+}
+
+void UpdateSpaceObjectParentRoot( std::vector<std::pair<std::string, IRoot*>>& roots, IRoot* owner )
+{
+	IRoot* spaceObjectParent = nullptr;
+	if( !TryGetSpaceObjectParent( owner, spaceObjectParent ) )
+	{
+		return;
+	}
+	for( auto& root : roots )
+	{
+		if( root.first == SPACE_OBJECT_PARENT )
+		{
+			root.second = spaceObjectParent;
+			return;
+		}
+	}
+	roots.push_back( { SPACE_OBJECT_PARENT, spaceObjectParent } );
+}
 
 Tr2Controller::Tr2Controller( IRoot* lockobj ) :
 	PARENTLOCK( m_stateMachines ),
@@ -323,6 +363,8 @@ std::optional<float> Tr2Controller::GetFloatVariableByName( const char* name ) c
 
 void Tr2Controller::GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr>& out ) const
 {
+	out.push_back( Tr2ExpressionTermInfo::Variable( "Bindings", "Owner", "the object this controller is attached to - follow it with a path to a float attribute, e.g. Owner.translation.x" ) );
+	out.push_back( Tr2ExpressionTermInfo::Variable( "Bindings", SPACE_OBJECT_PARENT, "the space object this controller's owner belongs to, or the owner itself if it is a space object" ) );
 	for( auto it = begin( m_variables ); it != end( m_variables ); ++it )
 	{
 		out.push_back( Tr2ExpressionTermInfo::Variable( "Variables", ( *it )->GetName().c_str(), "controller variable" ) );
@@ -362,15 +404,20 @@ const std::vector<std::pair<std::string, IRoot*>>& Tr2Controller::GetBindingPath
 {
 	if( m_bindingPathRoots.empty() )
 	{
-		m_bindingPathRoots.reserve( 1 + m_variables.size() );
+		m_bindingPathRoots.reserve( 2 + m_variables.size() );
 		if( m_owner )
 		{
 			m_bindingPathRoots.push_back( { "Owner", m_owner } );
 		}
+		UpdateSpaceObjectParentRoot( m_bindingPathRoots, m_owner );
 		for( auto& var : m_variables )
 		{
 			m_bindingPathRoots.push_back( { var->GetName(), var->GetRawRoot() } );
 		}
+	}
+	else
+	{
+		UpdateSpaceObjectParentRoot( m_bindingPathRoots, m_owner );
 	}
 	return m_bindingPathRoots;
 }
