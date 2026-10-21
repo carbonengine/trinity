@@ -47,7 +47,7 @@ const Be::ClassInfo* Tr2MeshProcedural::ExposeToBlue()
 
 		MAP_INTERFACE( Tr2MeshProcedural )
 
-		MAP_ATTRIBUTE( "geometry", m_geometryResource, "na", Be::READ )
+		MAP_ATTRIBUTE( "geometry", m_geometryResource, "Procedural geometry", Be::READWRITE )
 		
 		MAP_METHOD_AND_WRAP(
 			"SetGeometryRes",
