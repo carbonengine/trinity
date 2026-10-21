@@ -30,11 +30,6 @@ const Be::ClassInfo* Tr2RaycastGeometryRes::ExposeToBlue()
 		MAP_INTERFACE( Tr2RaycastGeometryRes )
 		MAP_INTERFACE( IBlueResource )
 
-		MAP_METHOD_AND_WRAP(
-			"Reload",
-			Reload,
-			"Forces a reload from disk" )
-
 	EXPOSURE_CHAINTO( BlueAsyncRes )
 }
 
@@ -48,6 +43,15 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 		MAP_INTERFACE( ITr2InstanceData )
 		MAP_ICACHEABLE_METHODS()
 
+		MAP_METHOD_AND_WRAP(
+			"Reload",
+			Reload,
+			"Forces a reload from disk" )
+
+		MAP_PROPERTY_READONLY(
+			"animationCount",
+			GetAnimationCount,
+			"Gets the count of animations in this geometry resource" )
 		
 	EXPOSURE_CHAINTO( Tr2GeometryProvider )
 }

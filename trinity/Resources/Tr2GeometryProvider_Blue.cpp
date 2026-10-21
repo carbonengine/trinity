@@ -21,10 +21,6 @@ const Be::ClassInfo* Tr2GeometryProvider::ExposeToBlue()
 			"meshCount",
 			GetMeshCount,
 			"Gets the count of meshes in this geometry resource" )
-		MAP_PROPERTY_READONLY(
-			"animationCount",
-			GetAnimationCount,
-			"Gets the count of animations in this geometry resource" )
 		MAP_ATTRIBUTE( "name", m_name, "Name for debugging/logging", Be::READWRITE )
 
 		MAP_ATTRIBUTE( "forceLod", m_forceLod, "Force geometry to use a specific LOD\n:jessica-group: Debug", Be::READWRITE )

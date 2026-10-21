@@ -85,12 +85,6 @@ Tr2GeometryProvider::Tr2GeometryProvider( IRoot* lockobj ) :
 {
 }
 
-unsigned int Tr2GeometryProvider::GetAnimationCount() const
-{
-	// TODO: intern, make abstract
-	return 0;
-}
-
 unsigned int Tr2GeometryProvider::GetMeshCount() const
 {
 	return unsigned( m_meshes.size() );
@@ -519,17 +513,22 @@ void Tr2GeometryProvider::ResetRayCaster()
 
 bool Tr2GeometryProvider::IsRayCasterReady() const
 {
-	return true;
+	return false;
 }
 
 bool Tr2GeometryProvider::HasRayCasterPreparationFailed() const
 {
-	return false;
+	return true;
 }
 
 bool Tr2GeometryProvider::GetIntersectionPoints( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx, float rayLength )
 {
-	return GetIntersectionPointsLegacy( pos, dir, result, areaIx, rayLength );
+	if( BeResMan->IsOnMainThread() )
+	{
+		return GetIntersectionPointsLegacy( pos, dir, result, areaIx, rayLength );
+	}
+	CCP_ASSERT_M( false, "Raycast fallback is not available in a multithreaded environment! You need to wait for IsRayCasterReady before raycasting!" );
+	return false;
 }
 
 // Careful: This function is slow and only works on main thread!

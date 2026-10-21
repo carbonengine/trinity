@@ -14,9 +14,6 @@ constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
 constexpr uint32_t SHARED_BUFFER_MAX_SIZE = 2048u * 1024u * 1024u;
 extern Tr2SuballocatedBuffer g_sharedBuffer;
 
-
-
-BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
 
@@ -245,8 +242,6 @@ public:
 	unsigned int GetAreaCount( unsigned int meshIx ) const;
 	Be::Result<std::string> GetAreaBoundingBoxFromScript( unsigned int meshIx, unsigned int areaIx, std::pair<Vector3, Vector3>& bounds );
 	TriGeometryResAreaData* GetAreaData( unsigned int meshIx, unsigned int areaIx ) const;
-
-	virtual unsigned int GetAnimationCount() const;
 
 	// Render multiple consecutive areas, starting at 'areaIx'
 	bool RenderAreas( unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );

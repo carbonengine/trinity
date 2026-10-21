@@ -68,7 +68,7 @@ public:
 	TriGeometryRes( IRoot* lockobj = NULL );
 	virtual ~TriGeometryRes();
 
-	unsigned int GetAnimationCount() const override;
+	unsigned int GetAnimationCount() const;
 
 #if WITH_GRANNY
 	// query vertex component

@@ -40,5 +40,10 @@ const Be::ClassInfo* Tr2MeshBase::ExposeToBlue()
 			"Assigns material bounds adjustment parameters. Normally set by the publisher\n"
 			":param adjustment: adjustment values extracted from shaders" )
 
+		MAP_PROPERTY_READONLY(
+			"isLoading",
+			IsLoading,
+			"If set, mesh resources might still be loading" )
+
 	EXPOSURE_END()
 }
