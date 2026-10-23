@@ -1265,6 +1265,12 @@ set(_SOURCES
     Resources/Tr2MaterialRes.cpp
     Resources/Tr2MaterialRes.h
     Resources/Tr2MaterialRes_Blue.cpp
+    Resources/Tr2ProceduralCube.cpp
+    Resources/Tr2ProceduralCube.h
+    Resources/Tr2ProceduralCube_Blue.cpp
+    Resources/Tr2ProceduralGeometryProvider.cpp
+    Resources/Tr2ProceduralGeometryProvider.h
+    Resources/Tr2ProceduralGeometryProvider_Blue.cpp
     Resources/Tr2TextureLodManager.cpp
     Resources/Tr2TextureLodManager.h
     Resources/Tr2TextureLodManager_Blue.cpp
@@ -1484,6 +1490,8 @@ set(_SOURCES
     Tr2AtlasTexture.cpp
     Tr2AtlasTexture.h
     Tr2AtlasTexture_Blue.cpp
+    Tr2BackgroundWorker.cpp
+    Tr2BackgroundWorker.h
     Tr2BindingVector3.h
     Tr2BindingVector3_Blue.cpp
     Tr2Blitter.cpp

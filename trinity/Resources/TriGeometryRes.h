@@ -3,15 +3,9 @@
 #ifndef _TriGeometryRes_H_
 #define _TriGeometryRes_H_
 
-#include "Tr2DeviceResource.h"
-
-#include "include/ITr2InstanceData.h"
-
 #include "Tr2CmfContent.h"
-#include "Tr2SuballocatedBuffer.h"
 #include "Tr2GeometryProvider.h"
 #include "../Utilities/BVH.h"
-
 
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
@@ -46,21 +40,8 @@ private:
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2RaycastGeometryRes );
 
 
-struct TriMorphTargetGeometryConstants
-{
-	uint32_t vertexBufferStride;
-
-	uint32_t positionOffset;
-	uint32_t positionType;
-
-	uint32_t tangentOffset;
-	uint32_t tangentType;
-
-	uint32_t vertexCount;
-};
-
-BLUE_CLASS( TriGeometryRes ) :
-	public Tr2GeometryProvider
+BLUE_CLASS_IMPL( TriGeometryRes )
+class TriGeometryRes : public Tr2GeometryProvider
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -83,7 +64,7 @@ public:
 	bool HasRayCasterPreparationFailed() const override;
 	void DestroyRayCaster() override;
 
-	void PrepareFromGrannyRes( TriGrannyRes * g );
+	void PrepareFromGrannyRes( TriGrannyRes* g );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBlueResource
@@ -101,7 +82,7 @@ public:
 	void ReleaseResources( TriStorage s ) override;
 
 #if TRINITYDEV
-	void GetDescription( std::string & desc ) override;
+	void GetDescription( std::string& desc ) override;
 #endif
 
 #if WITH_GRANNY
@@ -144,27 +125,22 @@ private:
 	bool ReadGrannyFile();
 	void ClearGrannyData();
 
-	bool SetupMeshes( granny_file_info * gi );
-	void SetupSkeletons( granny_file_info * gi );
-	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData & area, granny_mesh * grannyMesh, int bytesPerVertex );
-	bool IsAreaSkinned( TriGeometryResAreaData & area, granny_mesh * grannyMesh, granny_file_info * gi, int bytesPerVertex );
-	bool IsAreaMorphed( TriGeometryResAreaData & area, granny_mesh * myMesh, granny_file_info * gi );
+	bool SetupMeshes( granny_file_info* gi );
+	void SetupSkeletons( granny_file_info* gi );
+	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex );
+	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );
 
 	// Create D3D mesh from data in m_pGrannyFile
-	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
-	bool CreateLodFromGrannyMesh( granny_mesh * myMesh, TriGeometryResLodData * pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext, void* pVBOverride = NULL );
+	bool CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateLodFromGrannyMesh( granny_mesh* myMesh, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
 
 	// Extract audio geometry from lowest LOD for Wwise spatial audio
-	void ExtractAudioGeometry( TriGeometryResMeshData * mesh, granny_mesh * grannyMesh );
+	void ExtractAudioGeometry( TriGeometryResMeshData* mesh, granny_mesh* grannyMesh );
 #endif
 
 	bool ReadCMFFile();
 	void ClearCMFData();
-
-	bool SetupMeshes( const cmf::Data& cmfData );
-	void SetupSkeletons( const cmf::Data& cmfData );
-	bool CreateMeshesFromCMFFile( Tr2CmfContents & cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
-	bool CreateLodFromCMFMesh( Tr2CmfContents & cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( TriGeometryRes );

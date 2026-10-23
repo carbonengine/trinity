@@ -47,14 +47,8 @@ const Be::ClassInfo* Tr2MeshProcedural::ExposeToBlue()
 
 		MAP_INTERFACE( Tr2MeshProcedural )
 
-		MAP_ATTRIBUTE( "geometry", m_geometryResource, "Procedural geometry", Be::READWRITE )
-		
-		MAP_METHOD_AND_WRAP(
-			"SetGeometryRes",
-			PySetGeometryRes,
-			"Set the geometry resource used by this mesh - bypassing the regular method of setting a resource name.\n"
-			"This is used for geometry resources that require special handling, such as pre-baked blendshapes.\n"
-			":param geometry: new geometry resource" )
+		MAP_ATTRIBUTE( "geometry", m_geometryResource, "", Be::HIDDEN ) // Needed to make Graphite able to detect bindings inside of the geometry
+		MAP_PROPERTY( "geometry", GetGeometry, SetGeometryResource, "Procedural geometry" )
 
 		MAP_METHOD(
 			"GetAreas",

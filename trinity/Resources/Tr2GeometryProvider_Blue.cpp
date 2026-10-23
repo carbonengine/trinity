@@ -2,7 +2,6 @@
 
 #include "StdAfx.h"
 #include "Tr2GeometryProvider.h"
-#include "Tr2Mesh.h"
 #include "Utilities/BoundingSphere.h"
 
 BLUE_DEFINE_ABSTRACT( Tr2GeometryProvider );

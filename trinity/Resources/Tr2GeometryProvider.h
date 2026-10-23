@@ -4,9 +4,7 @@
 #define _Tr2GeometryProvider_H_
 
 #include "Tr2DeviceResource.h"
-
 #include "include/ITr2InstanceData.h"
-
 #include "Tr2CmfContent.h"
 #include "Tr2SuballocatedBuffer.h"
 
@@ -210,11 +208,27 @@ struct RayCastResult
 	Color interpolatedVertexColor;
 };
 
-BLUE_CLASS( Tr2GeometryProvider ) :
-	public BlueAsyncRes,
-	public ICacheable,
-	public Tr2DeviceResource,
-	public ITr2InstanceData
+struct TriMorphTargetGeometryConstants
+{
+	uint32_t vertexBufferStride;
+
+	uint32_t positionOffset;
+	uint32_t positionType;
+
+	uint32_t tangentOffset;
+	uint32_t tangentType;
+
+	uint32_t vertexCount;
+};
+
+TriMorphTargetGeometryConstants CreateMorphGeometryConstants( const Tr2VertexDefinition& vertexDefinition, uint32_t stride, uint32_t vertexCount, Tr2RenderContext& renderContext );
+
+
+BLUE_CLASS_IMPL( Tr2GeometryProvider )
+class Tr2GeometryProvider : public BlueAsyncRes,
+							public ICacheable,
+							public Tr2DeviceResource,
+							public ITr2InstanceData
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -291,13 +305,13 @@ public:
 	virtual bool IsUsingCMF() const;
 
 #if TRINITYDEV
-	virtual void GetDescription( std::string & desc );
+	virtual void GetDescription( std::string& desc );
 #endif
 
 #if WITH_GRANNY
-	static bool SaveMeshToGrannyFile( TriGeometryResMeshData & mesh, const char* filename );
+	static bool SaveMeshToGrannyFile( TriGeometryResMeshData& mesh, const char* filename );
 #endif
-	static bool SaveMeshToCMFFile( TriGeometryResMeshData & mesh, const char* filename );
+	static bool SaveMeshToCMFFile( TriGeometryResMeshData& mesh, const char* filename );
 
 	//	Iterator functions for processing mesh data
 	typedef void ( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
@@ -310,13 +324,17 @@ public:
 
 
 protected:
+	bool SetupMeshes( const cmf::Data& cmfData );
+	void SetupSkeletons( const cmf::Data& cmfData );
+	bool CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+
 	unsigned int m_memoryUse;
 	TrackableStdVector<std::unique_ptr<TriGeometryResMeshData>> m_meshes;
 	TrackableStdVector<std::unique_ptr<TriGeometryResSkeletonData>> m_skeletons;
 
 	int32_t m_forcedLodIndex = -1;
 	bool m_forceLod = false;
-
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2GeometryProvider );

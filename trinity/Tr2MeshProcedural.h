@@ -5,9 +5,11 @@
 #define Tr2MeshProcedural_H
 
 #include "Tr2MeshBase.h"
+#include "Resources/Tr2ProceduralGeometryProvider.h"
 
-BLUE_CLASS( Tr2MeshProcedural ) :
-	public Tr2MeshBase
+BLUE_CLASS_IMPL( Tr2MeshProcedural )
+class Tr2MeshProcedural : public Tr2MeshBase,
+						  public IBlueAsyncResNotifyTarget
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -16,16 +18,21 @@ public:
 	~Tr2MeshProcedural();
 
 	Tr2GeometryProvider* GetGeometryResource() const override;
-	void SetGeometryRes( Tr2GeometryProvider * res );
+	Tr2ProceduralGeometryProvider* GetGeometry();
+	void SetGeometryResource( Tr2ProceduralGeometryProvider* res );
 
 	bool IsLoading() const override;
 
-private:
-	int GetAreasCount() const;
-	void PySetGeometryRes( Tr2GeometryProvider * geometryRes );
+	/////////////////////////////////////////////////////////////////////////////////////
+	// IBlueAsyncResNotifyTarget
+	void ReleaseCachedData( BlueAsyncRes* p ) override;
+	void RebuildCachedData( BlueAsyncRes* p ) override;
 
 private:
-	Tr2GeometryProviderPtr m_geometryResource;
+	int GetAreasCount() const;
+
+private:
+	Tr2ProceduralGeometryProviderPtr m_geometryResource;
 };
 
 TYPEDEF_BLUECLASS( Tr2MeshProcedural );

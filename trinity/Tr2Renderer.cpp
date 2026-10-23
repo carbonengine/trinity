@@ -10,6 +10,7 @@
 #include "TriSettingsRegistrar.h"
 #include "TriPoolAllocator.h"
 #include "Resources/TriGeometryRes.h"
+#include "Tr2BackgroundWorker.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -370,6 +371,8 @@ void Tr2Renderer::Shutdown()
 		s_debugLineSet->Unlock();
 		s_debugLineSet = NULL;
 	}
+
+	Tr2BackgroundWorker::Shutdown();
 }
 
 void Tr2Renderer::GetBackBufferDimensions( unsigned int& w, unsigned int& h )

@@ -11,16 +11,35 @@ Tr2MeshProcedural::Tr2MeshProcedural( IRoot* lockobj )
 
 Tr2MeshProcedural::~Tr2MeshProcedural()
 {
+	if( m_geometryResource )
+	{
+		m_geometryResource->RemoveNotifyTarget( this );
+	}
 }
 
-void Tr2MeshProcedural::SetGeometryRes( Tr2GeometryProvider* res )
+Tr2ProceduralGeometryProvider* Tr2MeshProcedural::GetGeometry()
 {
+	return m_geometryResource;
+}
+
+void Tr2MeshProcedural::SetGeometryResource( Tr2ProceduralGeometryProvider* res )
+{
+	if( m_geometryResource )
+	{
+		m_geometryResource->RemoveNotifyTarget( this );
+	}
+
 	m_geometryResource = res;
-}
 
-void Tr2MeshProcedural::PySetGeometryRes( Tr2GeometryProvider* geometryRes )
-{
-	SetGeometryRes( geometryRes );
+	if( m_geometryResource )
+	{
+		m_geometryResource->AddNotifyTarget( this );
+	}
+
+	if( m_geometryResource && !m_geometryResource->IsLoading() && !m_geometryResource->IsPrepared() )
+	{
+		m_geometryResource->Rebuild();
+	}
 }
 
 int Tr2MeshProcedural::GetAreasCount() const
@@ -40,4 +59,20 @@ Tr2GeometryProvider* Tr2MeshProcedural::GetGeometryResource() const
 bool Tr2MeshProcedural::IsLoading() const
 {
 	return m_geometryResource && m_geometryResource->IsLoading();
+}
+
+void Tr2MeshProcedural::ReleaseCachedData( BlueAsyncRes* p )
+{
+	if( p == m_geometryResource )
+	{
+		CacheBounds();
+	}
+}
+
+void Tr2MeshProcedural::RebuildCachedData( BlueAsyncRes* p )
+{
+	if( p == m_geometryResource )
+	{
+		CacheBounds();
+	}
 }

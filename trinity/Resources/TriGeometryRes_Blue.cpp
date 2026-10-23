@@ -52,6 +52,6 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 			"animationCount",
 			GetAnimationCount,
 			"Gets the count of animations in this geometry resource" )
-		
+
 	EXPOSURE_CHAINTO( Tr2GeometryProvider )
 }
