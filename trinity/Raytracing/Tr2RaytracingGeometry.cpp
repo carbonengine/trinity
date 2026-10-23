@@ -26,21 +26,6 @@ CCP_STATS_DECLARE( rtShaderTableMaterialApplies, "Trinity/RT/shaderTableMaterial
 namespace
 {
 std::mutex s_geometryConstantsMutex;
-
-struct RtLibraryState
-{
-	const Tr2EffectLibrary* lib = nullptr;
-	std::vector<BlueSharedStringW> hitGroupNames;
-	uint32_t materialIndex = 0;
-	bool seen = false;
-	bool addsRecords = false;
-};
-
-struct RtShaderState
-{
-	uint32_t techniqueIndex = 0;
-	RtLibraryState* lib = nullptr;
-};
 }
 
 //***********************************************************
@@ -667,8 +652,10 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		shaderTableDescs[i]->Reserve( m_geometryData.size() );
 	}
 
-	std::unordered_map<const Tr2Shader*, RtShaderState> shaders;
-	std::map<uint32_t, RtLibraryState> libraries;
+	// A handful of shaders and libraries per frame, so linear search over reused vectors beats maps
+	m_rtShaderStates.clear();
+	m_rtLibraryStates.clear();
+	m_rtLibraryHitGroupNames.clear();
 
 	uint32_t materialIndex = 0;
 	for( auto& geometry : m_geometryData )
@@ -683,41 +670,45 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			continue;
 		}
 
-		auto shaderState = shaders.find( shader );
-		if( shaderState == end( shaders ) )
+		auto shaderState = std::find_if( begin( m_rtShaderStates ), end( m_rtShaderStates ), [&]( const RtShaderState& state ) { return state.shader == shader; } );
+		if( shaderState == end( m_rtShaderStates ) )
 		{
-			shaderState = shaders.emplace( shader, RtShaderState() ).first;
+			m_rtShaderStates.push_back( { shader } );
+			shaderState = std::prev( end( m_rtShaderStates ) );
 			uint32_t techniqueIndex;
 			if( shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
 			{
 				auto& libs = shader->GetEffectDescription().techniques[techniqueIndex].libraries;
 				if( !libs.empty() )
 				{
-					auto& libState = libraries[libs[0].libraryHandle];
-					if( !libState.lib )
+					const uint32_t handle = libs[0].libraryHandle;
+					auto libState = std::find_if( begin( m_rtLibraryStates ), end( m_rtLibraryStates ), [&]( const RtLibraryState& state ) { return state.handle == handle; } );
+					if( libState == end( m_rtLibraryStates ) )
 					{
-						libState.lib = &libs[0];
-						libState.hitGroupNames.resize( numRaycasters );
-						libState.addsRecords = !libs[0].localInput.signature.registers.empty();
+						m_rtLibraryStates.push_back( { handle, &libs[0], uint32_t( m_rtLibraryHitGroupNames.size() ) } );
+						libState = std::prev( end( m_rtLibraryStates ) );
+						libState->addsRecords = !libs[0].localInput.signature.registers.empty();
+						m_rtLibraryHitGroupNames.resize( m_rtLibraryHitGroupNames.size() + numRaycasters );
 					}
-					shaderState->second.techniqueIndex = techniqueIndex;
-					shaderState->second.lib = &libState;
+					shaderState->techniqueIndex = techniqueIndex;
+					shaderState->libIndex = uint32_t( libState - begin( m_rtLibraryStates ) );
 				}
 			}
 		}
-		auto libState = shaderState->second.lib;
-		if( !libState )
+		if( shaderState->libIndex == INVALID_MATERIAL )
 		{
 			continue;
 		}
-		auto& lib = *libState->lib;
+		auto& libState = m_rtLibraryStates[shaderState->libIndex];
+		auto& lib = *libState.lib;
+		auto hitGroupNames = &m_rtLibraryHitGroupNames[libState.hitGroupNamesOffset];
 		if( !lib.anyHitName.empty() )
 		{
 			geometry.isTransparent = true;
 		}
-		if( libState->seen && !libState->addsRecords )
+		if( libState.seen && !libState.addsRecords )
 		{
-			geometry.materialIndex = libState->materialIndex;
+			geometry.materialIndex = libState.materialIndex;
 			continue;
 		}
 
@@ -731,34 +722,34 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *geometry.vertexBufferData );
 		}
-		geometry.material->ApplyMaterialDataForRtMaterial( shaderState->second.techniqueIndex, material, renderContext );
+		geometry.material->ApplyMaterialDataForRtMaterial( shaderState->techniqueIndex, material, renderContext );
 
-		if( !libState->seen )
+		if( !libState.seen )
 		{
-			libState->seen = true;
-			libState->materialIndex = materialIndex;
+			libState.seen = true;
+			libState.materialIndex = materialIndex;
 			for( int32_t i = 0; i < numRaycasters; i++ )
 			{
-				libState->hitGroupNames[i] = pipelineManagers[i]->AddHitGroup( lib );
-				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
+				hitGroupNames[i] = pipelineManagers[i]->AddHitGroup( lib );
+				shaderTableDescs[i]->AddHitGroup( hitGroupNames[i].c_str(), material );
 			}
 			geometry.materialIndex = materialIndex++;
 		}
-		else if( libState->addsRecords )
+		else if( libState.addsRecords )
 		{
 			for( int32_t i = 0; i < numRaycasters; i++ )
 			{
-				shaderTableDescs[i]->AddHitGroup( libState->hitGroupNames[i].c_str(), material );
+				shaderTableDescs[i]->AddHitGroup( hitGroupNames[i].c_str(), material );
 			}
 			geometry.materialIndex = materialIndex++;
 		}
 		else
 		{
-			geometry.materialIndex = libState->materialIndex;
+			geometry.materialIndex = libState.materialIndex;
 		}
 	}
-	CCP_STATS_ADD( rtShaderTableShaders, shaders.size() );
-	CCP_STATS_ADD( rtShaderTableLibraries, libraries.size() );
+	CCP_STATS_ADD( rtShaderTableShaders, m_rtShaderStates.size() );
+	CCP_STATS_ADD( rtShaderTableLibraries, m_rtLibraryStates.size() );
 }
 
 namespace
