@@ -928,7 +928,7 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 
 		m_Raytracing.m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
 		m_Raytracing.m_shaderTableDesc.AddMissShader( missName.c_str(), material );
-		m_Raytracing.m_shaderTable.Create( m_Raytracing.m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+		m_Raytracing.m_shaderTable.Update( m_Raytracing.m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 	}
 
 	const uint32_t clearValue[] = { 0, 0, 0, 0 };

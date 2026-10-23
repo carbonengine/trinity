@@ -131,7 +131,7 @@ Tr2GpuResourcePool::Texture Tr2RaytracingManager::RenderShadows(
 		TRINITY_STATS_ZONE( "Create shader table" );
 		m_shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
 		m_shaderTableDesc.AddMissShader( missName.c_str() );
-		m_shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+		m_shadowShaderTable.Update( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
 	}
 
 	if( !m_shadowPerFrameData.IsValid() )

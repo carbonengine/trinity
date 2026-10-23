@@ -35,6 +35,20 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 	return hr;
 }
 
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( m_shaderTable == NullRtShaderTable() )
+	{
+		m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+	}
+	auto hr = m_shaderTable->Update( desc, pipeline, renderContext );
+	if( FAILED( hr ) )
+	{
+		m_shaderTable = NullRtShaderTable();
+	}
+	return hr;
+}
+
 bool Tr2RtShaderTableAL::IsValid() const
 {
 	return m_shaderTable->IsValid();
@@ -52,6 +66,11 @@ Tr2RtShaderTableAL::Tr2RtShaderTableAL()
 }
 
 ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return E_FAIL;
 }
@@ -113,4 +132,11 @@ void Tr2RtShaderTableDescriptionAL::AddHitGroup( const wchar_t* name, const Tr2R
 void Tr2RtShaderTableDescriptionAL::Reserve( size_t hitGroupCount )
 {
 	m_hitGroupNames.reserve( hitGroupCount );
+}
+
+void Tr2RtShaderTableDescriptionAL::Clear()
+{
+	m_rayGenNames.clear();
+	m_missNames.clear();
+	m_hitGroupNames.clear();
 }
