@@ -4,12 +4,6 @@
 #include "../include/Tr2RtShaderTableAL.h"
 #include "include/Tr2CapsAL.h"
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-bool Tr2RtShaderTableAL::s_reuseBuffers = true;
-#else
-bool Tr2RtShaderTableAL::s_reuseBuffers = false;
-#endif
-
 #if TRINITY_PLATFORM_SUPPORTS_RAY_TRACING
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2RtShaderTableAL )
@@ -32,11 +26,22 @@ Tr2RtShaderTableAL::Tr2RtShaderTableAL() :
 
 ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
 {
-	if( !s_reuseBuffers || m_shaderTable == NullRtShaderTable() )
+	m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+	auto hr = m_shaderTable->Create( desc, pipeline, renderContext );
+	if( FAILED( hr ) )
+	{
+		m_shaderTable = NullRtShaderTable();
+	}
+	return hr;
+}
+
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( m_shaderTable == NullRtShaderTable() )
 	{
 		m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
 	}
-	auto hr = m_shaderTable->Create( desc, pipeline, renderContext );
+	auto hr = m_shaderTable->Update( desc, pipeline, renderContext );
 	if( FAILED( hr ) )
 	{
 		m_shaderTable = NullRtShaderTable();
@@ -61,6 +66,11 @@ Tr2RtShaderTableAL::Tr2RtShaderTableAL()
 }
 
 ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return E_FAIL;
 }

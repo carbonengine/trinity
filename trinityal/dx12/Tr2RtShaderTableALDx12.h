@@ -17,6 +17,7 @@ public:
 	~Tr2RtShaderTableAL();
 
 	ALResult Create( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Update( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	void Destroy();
 	bool IsValid() const;
 
@@ -37,6 +38,7 @@ private:
 		uint8_t* mapped = nullptr;
 		size_t capacity = 0;
 	};
+	ALResult Build( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext, bool reuseBuffers );
 	void ReleaseBuffers();
 
 	Tr2RtShaderTableDescriptionAL m_desc;

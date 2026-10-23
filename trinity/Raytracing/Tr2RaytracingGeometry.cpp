@@ -13,20 +13,10 @@
 
 #include "Tr2MeshArea.h"
 #include "ITr2TextureProvider.h"
-#include "TriSettingsRegistrar.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 #include <../trinityal/dx12/Tr2BufferALDx12.h>
 #endif
-
-bool g_rtShaderTableMaterialCache = true;
-TRI_REGISTER_SETTING( "rtShaderTableMaterialCache", g_rtShaderTableMaterialCache );
-bool& g_rtShaderTableReuse = Tr2RtShaderTableAL::s_reuseBuffers;
-TRI_REGISTER_SETTING( "rtShaderTableReuse", g_rtShaderTableReuse );
-bool g_rtTransformMeshesEarlyOut = true;
-TRI_REGISTER_SETTING( "rtTransformMeshesEarlyOut", g_rtTransformMeshesEarlyOut );
-bool g_rtSkipUnusedMaterialApply = true;
-TRI_REGISTER_SETTING( "rtSkipUnusedMaterialApply", g_rtSkipUnusedMaterialApply );
 
 CCP_STATS_DECLARE( rtShaderTableShaders, "Trinity/RT/shaderTableShaders", true, CST_COUNTER_HIGH, "Distinct shaders resolved for the shader table this frame." );
 CCP_STATS_DECLARE( rtShaderTableLibraries, "Trinity/RT/shaderTableLibraries", true, CST_COUNTER_HIGH, "Distinct raytracing libraries seen by the shader table this frame." );
@@ -673,90 +663,8 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	for( int32_t i = 0; i < numRaycasters; i++ )
 	{
-		if( g_rtShaderTableReuse )
-		{
-			shaderTableDescs[i]->Clear();
-		}
-		else
-		{
-			*shaderTableDescs[i] = Tr2RtShaderTableDescriptionAL();
-		}
+		shaderTableDescs[i]->Clear();
 		shaderTableDescs[i]->Reserve( m_geometryData.size() );
-	}
-
-	if( !g_rtShaderTableMaterialCache )
-	{
-		std::vector<std::map<uint32_t, std::pair<BlueSharedStringW, uint32_t>>> seenLibraries;
-		seenLibraries.resize( numRaycasters );
-
-		uint32_t materialIndex = 0;
-		for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
-		{
-			Tr2RtLocalMaterialDescriptionAL material;
-			if( !it->material )
-			{
-				continue;
-			}
-			auto shader = it->material->GetShaderStateInterface();
-			if( !shader )
-			{
-				continue;
-			}
-			uint32_t techniqueIndex;
-			if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
-			{
-				continue;
-			}
-			auto& desc = shader->GetEffectDescription();
-			if( desc.techniques[techniqueIndex].libraries.empty() )
-			{
-				continue;
-			}
-			auto& lib = desc.techniques[techniqueIndex].libraries[0];
-			if( !lib.anyHitName.empty() )
-			{
-				it->isTransparent = true;
-			}
-
-			if( it->perObjectData )
-			{
-				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
-			}
-			if( it->vertexBufferData )
-			{
-				material.SetConstants( Tr2Renderer::GetPerObjectRTVertexBufferDataRegister(), *it->vertexBufferData );
-			}
-			it->material->ApplyMaterialDataForRtMaterial( techniqueIndex, material, renderContext );
-
-			bool consumedMaterialIndex = false;
-			for( int32_t i = 0; i < numRaycasters; i++ )
-			{
-				auto foundLib = seenLibraries[i].find( lib.libraryHandle );
-				if( foundLib == end( seenLibraries[i] ) )
-				{
-					auto hitGroupName = pipelineManagers[i]->AddHitGroup( lib );
-					seenLibraries[i][lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
-					shaderTableDescs[i]->AddHitGroup( hitGroupName.c_str(), material );
-					it->materialIndex = materialIndex;
-					consumedMaterialIndex = true;
-				}
-				else if( !lib.localInput.signature.registers.empty() )
-				{
-					shaderTableDescs[i]->AddHitGroup( foundLib->second.first.c_str(), material );
-					it->materialIndex = materialIndex;
-					consumedMaterialIndex = true;
-				}
-				else
-				{
-					it->materialIndex = foundLib->second.second;
-				}
-			}
-			if( consumedMaterialIndex )
-			{
-				materialIndex++;
-			}
-		}
-		return;
 	}
 
 	std::unordered_map<const Tr2Shader*, RtShaderState> shaders;
@@ -807,7 +715,7 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		{
 			geometry.isTransparent = true;
 		}
-		if( g_rtSkipUnusedMaterialApply && libState->seen && !libState->addsRecords )
+		if( libState->seen && !libState->addsRecords )
 		{
 			geometry.materialIndex = libState->materialIndex;
 			continue;
@@ -895,7 +803,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		Tr2RingBuffer::GetInstance<Tr2MorphTargetAnimationData>().PrepareBuffer( renderContext );
 	}
 
-	if( g_rtTransformMeshesEarlyOut && !m_hasDeformedGeometry.load( std::memory_order_relaxed ) )
+	if( !m_hasDeformedGeometry.load( std::memory_order_relaxed ) )
 	{
 		CCP_STATS_INC( rtTransformMeshesSkipped );
 		return;

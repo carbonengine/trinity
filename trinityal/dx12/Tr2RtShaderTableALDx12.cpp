@@ -58,8 +58,19 @@ Tr2RtShaderTableAL::~Tr2RtShaderTableAL()
 	Destroy();
 }
 
-// Shader tables contain shader records. Shader records contain a shader identifier and root arguments used to look up resources
 ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return Build( desc, pipeline, renderContext, false );
+}
+
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return Build( desc, pipeline, renderContext, true );
+}
+
+// Shader tables contain shader records. Shader records contain a shader identifier and root arguments used to look up resources
+// With reuseBuffers the records go into a persistent per-back-buffer upload buffer instead of a fresh resource
+ALResult Tr2RtShaderTableAL::Build( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext, bool reuseBuffers )
 {
 	if( !renderContext.IsValid() )
 	{
@@ -87,7 +98,6 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 	size_t entrySize = Align( D3D12_SHADER_IDENTIFIER_SIZE_IN_BYTES + signatureSize, D3D12_RAYTRACING_SHADER_TABLE_BYTE_ALIGNMENT );
 	auto size = ( desc.m_rayGenNames.size() + desc.m_missNames.size() + desc.m_hitGroupNames.size() ) * entrySize;
 
-	const bool reuseBuffers = ::Tr2RtShaderTableAL::s_reuseBuffers;
 	if( m_owner && ( m_owner != &renderContext || !reuseBuffers ) )
 	{
 		Destroy();
@@ -174,7 +184,7 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 	};
 
 	auto FillRecord = [&]( uint8_t* tableData, const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material ) -> ALResult {
-		auto shaderInfo = reuseBuffers ? FindShaderInfo( name ) : pipeline.TrinityALImpl_GetObject()->GetShaderInfo( name );
+		auto shaderInfo = FindShaderInfo( name );
 		if( !shaderInfo || !shaderInfo->shaderIdentifier )
 		{
 			return E_INVALIDARG;

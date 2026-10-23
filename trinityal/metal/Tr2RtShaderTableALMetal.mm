@@ -184,6 +184,13 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc,
 	}
 }
 
+ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc,
+									 const ::Tr2RtPipelineStateAL& pipeline,
+									 Tr2PrimaryRenderContextAL& renderContext )
+{
+	return Create( desc, pipeline, renderContext );
+}
+
 void Tr2RtShaderTableAL::Destroy()
 {
 	if( @available( macOS 11.0, * ) )
