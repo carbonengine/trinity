@@ -3,4 +3,4 @@
 	url = https://github.com/microsoft/vcpkg
 [submodule "vendor/github.com/carbonengine/vcpkg-registry"]
 	path = vendor/github.com/carbonengine/vcpkg-registry
-	url = https://github.com/carbonengine/vcpkg-registry
+	url = git@github.com:ccptoebeans/vcpkg-registry.git
