@@ -1,8 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
 #pragma once
-#ifndef Tr2MeshProcedural_H
-#define Tr2MeshProcedural_H
+#ifndef Tr2MeshProcedural_h
+#define Tr2MeshProcedural_h
 
 #include "Tr2MeshBase.h"
 #include "Resources/Tr2ProceduralGeometryProvider.h"

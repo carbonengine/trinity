@@ -1,8 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
 #pragma once
-#ifndef _Tr2ProceduralGeometryProvider_H_
-#define _Tr2ProceduralGeometryProvider_H_
+#ifndef Tr2ProceduralGeometryProvider_h
+#define Tr2ProceduralGeometryProvider_h
 
 #include "Tr2GeometryProvider.h"
 

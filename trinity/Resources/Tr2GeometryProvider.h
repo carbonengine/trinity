@@ -1,7 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
-#ifndef _Tr2GeometryProvider_H_
-#define _Tr2GeometryProvider_H_
+#pragma once
+#ifndef Tr2GeometryProvider_h
+#define Tr2GeometryProvider_h
 
 #include "Tr2DeviceResource.h"
 #include "include/ITr2InstanceData.h"
