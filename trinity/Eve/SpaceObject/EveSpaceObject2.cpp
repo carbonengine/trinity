@@ -1526,7 +1526,7 @@ std::pair<Vector3, Vector3> EveSpaceObject2::CalculateSkinnedBoundingBoxFromTran
 		else
 		{
 			TriGeometryResPtr geometry = BlueCastPtr( m_geometryResFromMesh );
-			m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, geometry->GetGrannyInfo() );
+			m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, geometry ? geometry->GetGrannyInfo() : nullptr );
 		}
 #endif
 	}

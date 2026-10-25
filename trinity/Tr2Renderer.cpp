@@ -371,8 +371,6 @@ void Tr2Renderer::Shutdown()
 		s_debugLineSet->Unlock();
 		s_debugLineSet = NULL;
 	}
-
-	Tr2BackgroundWorker::Shutdown();
 }
 
 void Tr2Renderer::GetBackBufferDimensions( unsigned int& w, unsigned int& h )

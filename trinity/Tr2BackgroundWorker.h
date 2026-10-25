@@ -16,7 +16,6 @@ class Tr2BackgroundWorker
 {
 public:
 	static IBlueCallbackMan& Instance();
-	static void Shutdown();
 };
 
 #endif // Tr2BackgroundWorker_h

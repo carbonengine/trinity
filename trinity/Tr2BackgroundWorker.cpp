@@ -28,12 +28,3 @@ IBlueCallbackMan& Tr2BackgroundWorker::Instance()
 	}
 	return *s_instance;
 }
-
-void Tr2BackgroundWorker::Shutdown()
-{
-	if( s_instance )
-	{
-		s_instance->Stop();
-		s_instance = nullptr;
-	}
-}
