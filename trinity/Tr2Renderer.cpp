@@ -10,7 +10,6 @@
 #include "TriSettingsRegistrar.h"
 #include "TriPoolAllocator.h"
 #include "Resources/TriGeometryRes.h"
-#include "Tr2BackgroundWorker.h"
 
 using namespace Tr2RenderContextEnum;
 

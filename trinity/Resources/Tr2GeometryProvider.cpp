@@ -716,7 +716,7 @@ size_t Tr2GeometryProvider::GetMemoryUsage()
 void Tr2GeometryProvider::ReleaseResourcesHelper()
 {
 	m_meshes.clear();
-	// Apparently we shoudn't clear m_skeletons here...
+	// We don't clear m_skeletons here, because TriGeometryRes::ReleaseResources does not notify Tr2SkinnedModel. SetupSkeletons takes care of m_skeletons anyway.
 
 	CCP_STATS_ADD( geometryResBytes, -(int)m_memoryUse );
 	m_memoryUse = 0;
