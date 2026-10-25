@@ -716,7 +716,7 @@ size_t Tr2GeometryProvider::GetMemoryUsage()
 void Tr2GeometryProvider::ReleaseResourcesHelper()
 {
 	m_meshes.clear();
-	m_skeletons.clear();
+	// Apparently we shoudn't clear m_skeletons here...
 
 	CCP_STATS_ADD( geometryResBytes, -(int)m_memoryUse );
 	m_memoryUse = 0;

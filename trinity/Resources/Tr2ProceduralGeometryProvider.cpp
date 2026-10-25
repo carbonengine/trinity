@@ -180,6 +180,7 @@ void Tr2ProceduralGeometryProvider::Prepare( Build& build )
 		return;
 	}
 
+	NotifyReleaseCachedData();
 	ReleaseResourcesHelper();
 
 	if( !SetupMeshes( *contents.GetData() ) )
