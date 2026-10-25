@@ -125,8 +125,8 @@ private:
 	bool ReadGrannyFile();
 	void ClearGrannyData();
 
-	bool SetupMeshes( granny_file_info* gi );
-	void SetupSkeletons( granny_file_info* gi );
+	bool SetupMeshesFromGranny( granny_file_info* gi );
+	void SetupSkeletonsFromGranny( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex );
 	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex );
 	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );

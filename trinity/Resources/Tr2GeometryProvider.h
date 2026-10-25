@@ -233,8 +233,6 @@ class Tr2GeometryProvider : public BlueAsyncRes,
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2GeometryProvider( IRoot* lockobj = NULL );
-
 	void RecalculateBoundingSphere();
 	Be::Result<std::string> CalculateBoundingBoxFromTransform( unsigned int meshIx, const Matrix& transform, std::pair<Vector3, Vector3>& bounds );
 
@@ -246,7 +244,6 @@ public:
 	TriGeometryResLodData* GetMeshLod( unsigned int meshIx, float screenSize ) const;
 	TriGeometryResLodData* GetMeshLod( unsigned int meshIx, int lodIndex ) const;
 	int GetLodIndexForScreenSize( unsigned int meshIx, float screenSize ) const;
-
 
 	const AudioGeometryResData* GetAudioGeometry( unsigned int meshIx ) const;
 
@@ -262,7 +259,6 @@ public:
 	bool RenderAreas( float screenSize, unsigned int meshIx, unsigned int areaIx, unsigned int areaCount, Tr2RenderContext& renderContext, bool reversed = false );
 
 	virtual bool GetIntersectionPoints( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx = -1, float rayLength = std::numeric_limits<float>::infinity() );
-
 	bool GetIntersectionPointsLegacy( const Vector3& pos, const Vector3& dir, RayCastResult& result, uint32_t areaIx = -1, float rayLength = std::numeric_limits<float>::infinity() );
 
 	virtual void PrepareRayCaster();
@@ -324,8 +320,10 @@ public:
 
 
 protected:
-	bool SetupMeshes( const cmf::Data& cmfData );
-	void SetupSkeletons( const cmf::Data& cmfData );
+	Tr2GeometryProvider( IRoot* lockobj = NULL );
+
+	bool SetupMeshesFromCMF( const cmf::Data& cmfData );
+	void SetupSkeletonsFromCMF( const cmf::Data& cmfData );
 	bool CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 	bool CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 

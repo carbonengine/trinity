@@ -183,13 +183,13 @@ void Tr2ProceduralGeometryProvider::Prepare( Build& build )
 	NotifyReleaseCachedData();
 	ReleaseResourcesHelper();
 
-	if( !SetupMeshes( *contents.GetData() ) )
+	if( !SetupMeshesFromCMF( *contents.GetData() ) )
 	{
 		FailBuild();
 		return;
 	}
 
-	SetupSkeletons( *contents.GetData() );
+	SetupSkeletonsFromCMF( *contents.GetData() );
 
 	m_isGood = CreateMeshesFromCMFFile( contents, Tr2CpuUsage::READ, renderContext );
 

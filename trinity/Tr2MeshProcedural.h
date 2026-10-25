@@ -38,18 +38,4 @@ private:
 TYPEDEF_BLUECLASS( Tr2MeshProcedural );
 BLUE_DECLARE_VECTOR( Tr2MeshProcedural );
 
-//
-// Helpers for mesh sorting
-//
-struct Tr2MeshProceduralItem
-{
-	Tr2MeshProcedural* m_mesh;
-	float m_distance;
-	bool operator<( const Tr2MeshProceduralItem& other ) const
-	{
-		return m_distance > other.m_distance;
-	}
-};
-typedef TrackableStdVector<Tr2MeshProceduralItem> Tr2MeshProceduralItemList;
-
 #endif

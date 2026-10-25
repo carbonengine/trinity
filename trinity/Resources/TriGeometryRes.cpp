@@ -299,7 +299,7 @@ BlueAsyncRes::LoadingResult TriGeometryRes::DoLoad()
 
 	if( m_cmfContents )
 	{
-		if( !m_cmfContents.GetData() || !SetupMeshes( *m_cmfContents.GetData() ) )
+		if( !m_cmfContents.GetData() || !SetupMeshesFromCMF( *m_cmfContents.GetData() ) )
 		{
 			return LR_FAILED;
 		};
@@ -310,7 +310,7 @@ BlueAsyncRes::LoadingResult TriGeometryRes::DoLoad()
 	{
 		// The granny file already exists so we only have to recreate
 		// the meshes.
-		SetupMeshes( GrannyGetFileInfo( m_pGrannyFile ) );
+		SetupMeshesFromGranny( GrannyGetFileInfo( m_pGrannyFile ) );
 		return LR_SUCCESS;
 	}
 #endif
@@ -609,11 +609,11 @@ bool TriGeometryRes::IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* m
 #endif
 
 #if WITH_GRANNY
-bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
+bool TriGeometryRes::SetupMeshesFromGranny( granny_file_info* gi )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
-	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupMeshes: intern messed up cmf loading" );
+	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupMeshesFromGranny: intern messed up cmf loading" );
 
 	//Used by LOD meshes to find the model they belong to.
 	std::vector<TriGeometryResMeshData*> grannyMeshIndexToMeshMap;
@@ -844,11 +844,11 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 #endif
 
 #if WITH_GRANNY
-void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
+void TriGeometryRes::SetupSkeletonsFromGranny( granny_file_info* gi )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
-	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupSkeletons: intern messed up cmf loading" );
+	CCP_ASSERT_M( !m_useCMF, "TriGeometryRes::SetupSkeletonsFromGranny: intern messed up cmf loading" );
 
 	m_skeletons.resize( gi->SkeletonCount );
 	for( int skelIx = 0; skelIx < gi->SkeletonCount; ++skelIx )
@@ -857,7 +857,7 @@ void TriGeometryRes::SetupSkeletons( granny_file_info* gi )
 		std::unique_ptr<TriGeometryResSkeletonData> pSkelData( new TriGeometryResSkeletonData() );
 		if( pSkelData == nullptr )
 		{
-			CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupSkeletons" );
+			CCP_LOGWARN( "Out of memory in TriGeometryRes::SetupSkeletonsFromGranny" );
 			return;
 		}
 		CopyGrannyName( pSkelData->m_name, skel->Name );
@@ -886,12 +886,12 @@ bool TriGeometryRes::ReadCMFFile()
 	{
 		return false;
 	}
-	if( !SetupMeshes( *m_cmfContents.GetData() ) )
+	if( !SetupMeshesFromCMF( *m_cmfContents.GetData() ) )
 	{
 		return false;
 	}
 
-	SetupSkeletons( *m_cmfContents.GetData() );
+	SetupSkeletonsFromCMF( *m_cmfContents.GetData() );
 
 	return true;
 }
@@ -923,12 +923,12 @@ bool TriGeometryRes::ReadGrannyFile()
 	// m_pGrannyFile is freed in CreateD3DMeshFromGranny once the D3D
 	// resources have been created on the main thread.
 
-	if( !SetupMeshes( gi ) )
+	if( !SetupMeshesFromGranny( gi ) )
 	{
 		return false;
 	}
 
-	SetupSkeletons( gi );
+	SetupSkeletonsFromGranny( gi );
 
 	return true;
 }
@@ -950,8 +950,8 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 
 		m_useCMF = true;
 
-		SetupMeshes( *cmfData );
-		SetupSkeletons( *cmfData );
+		SetupMeshesFromCMF( *cmfData );
+		SetupSkeletonsFromCMF( *cmfData );
 		CreateMeshesFromCMFFile( g->GetCMFContents(), Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
 	}
 #if WITH_GRANNY
@@ -966,8 +966,8 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 
 		m_useCMF = false;
 
-		SetupMeshes( gi );
-		SetupSkeletons( gi );
+		SetupMeshesFromGranny( gi );
+		SetupSkeletonsFromGranny( gi );
 		CreateMeshesFromGrannyFile( gi, Tr2CpuUsage::READ | Tr2CpuUsage::WRITE, renderContext );
 	}
 #endif

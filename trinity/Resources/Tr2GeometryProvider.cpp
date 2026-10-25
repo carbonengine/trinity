@@ -1334,7 +1334,7 @@ BlueStdResult Tr2GeometryProvider::GetMeshVertexElements( size_t meshIndex, std:
 	return BLUE_STD_RESULT_OK;
 }
 
-bool Tr2GeometryProvider::SetupMeshes( const cmf::Data& cmfData )
+bool Tr2GeometryProvider::SetupMeshesFromCMF( const cmf::Data& cmfData )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -1431,7 +1431,7 @@ bool Tr2GeometryProvider::SetupMeshes( const cmf::Data& cmfData )
 	return true;
 }
 
-void Tr2GeometryProvider::SetupSkeletons( const cmf::Data& cmfData )
+void Tr2GeometryProvider::SetupSkeletonsFromCMF( const cmf::Data& cmfData )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
