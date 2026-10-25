@@ -825,6 +825,10 @@ bool Tr2GeometryProvider::RenderAreas( float screenSize, unsigned int meshIx, un
 
 Be::Result<std::string> Tr2GeometryProvider::SaveMesh( const char* filename, uint32_t meshIndex ) const
 {
+	if( !IsGood() )
+	{
+		return Be::Result<std::string>( "Geometry is not prepared" );
+	}
 	auto meshData = GetMeshData( meshIndex );
 	if( !meshData )
 	{

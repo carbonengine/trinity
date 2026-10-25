@@ -643,3 +643,8 @@ Tr2RaytracingMesh* Tr2MeshBase::GetRtMesh() const
 {
 	return m_rtMesh.get();
 }
+
+int Tr2MeshBase::GetAreasCount() const
+{
+	return TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
+}

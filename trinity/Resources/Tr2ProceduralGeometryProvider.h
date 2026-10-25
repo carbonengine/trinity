@@ -10,7 +10,7 @@ struct Tr2ProceduralGeometryBuilder
 {
 	virtual ~Tr2ProceduralGeometryBuilder() = default;
 	virtual bool BuildCmf( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, cmf::Data& data ) = 0;
-	std::string name;
+	std::string m_name;
 };
 
 BLUE_CLASS_IMPL( Tr2ProceduralGeometryProvider )

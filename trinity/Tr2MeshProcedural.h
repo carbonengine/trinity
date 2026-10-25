@@ -29,9 +29,6 @@ public:
 	void RebuildCachedData( BlueAsyncRes* p ) override;
 
 private:
-	int GetAreasCount() const;
-
-private:
 	Tr2ProceduralGeometryProviderPtr m_geometryResource;
 };
 

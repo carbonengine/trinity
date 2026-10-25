@@ -1167,6 +1167,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		UnregisterAudioGeometry();
 	}
 	m_allowAudioGeometry = allowAudioGeometry;
+
 	if( m_animationUpdater )
 	{
 		if( m_mesh && m_animationUpdater->GetResPath().empty() )
@@ -1186,7 +1187,13 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		if( m_mesh && !m_animationUpdater->HasMeshBinding() )
 		{
 			auto geometryRes = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() );
-			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != geometryRes || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
+
+			if( m_meshBinding && ( m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != geometryRes || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() ) )
+			{
+				m_meshBinding = {};
+			}
+
+			if( !m_meshBinding && geometryRes )
 			{
 				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, geometryRes, m_mesh->GetMeshIndex() );
 			}

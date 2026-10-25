@@ -42,11 +42,6 @@ void Tr2MeshProcedural::SetGeometryResource( Tr2ProceduralGeometryProvider* res 
 	}
 }
 
-int Tr2MeshProcedural::GetAreasCount() const
-{
-	return TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
-}
-
 Tr2GeometryProvider* Tr2MeshProcedural::GetGeometryResource() const
 {
 	if( m_geometryResource && m_geometryResource->IsGood() )

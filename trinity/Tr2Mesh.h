@@ -86,7 +86,6 @@ private:
 	void InitializeMorphTargets();
 
 	void PySetGeometryRes( TriGeometryRes * geometryRes );
-	int GetAreasCount() const;
 	void SetLowResGeometryRes( TriGeometryRes * res );
 
 private:

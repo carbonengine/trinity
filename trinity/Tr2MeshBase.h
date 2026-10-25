@@ -100,6 +100,8 @@ public:
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
 
+	int GetAreasCount() const;
+
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;
 	void CacheBounds();

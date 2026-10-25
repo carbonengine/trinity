@@ -25,7 +25,5 @@ const Be::ClassInfo* Tr2ProceduralGeometryProvider::ExposeToBlue()
 			Rebuild,
 			"Rebuild geometry from current parameters" )
 
-		//MAP_ATTRIBUTE( "name", m_name, "Name for debugging/logging", Be::READWRITE )
-
 	EXPOSURE_CHAINTO( Tr2GeometryProvider )
 }

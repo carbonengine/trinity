@@ -5,8 +5,6 @@
 #include "Tr2Renderer.h"
 #include "Tr2BackgroundWorker.h"
 
-using namespace Tr2RenderContextEnum;
-
 void Tr2ProceduralGeometryProvider::Rebuild()
 {
 	CancelBuild();
@@ -142,7 +140,7 @@ bool Tr2ProceduralGeometryProvider::StaticRunBuild( Build& build )
 
 	if( !build.builder->BuildCmf( allocator, buffers, build.cancel, data ) )
 	{
-		CCP_LOGERR( "Tr2ProceduralGeometryProvider %s: BuildCmf failed", build.builder->name.c_str() );
+		CCP_LOGERR( "Tr2ProceduralGeometryProvider %s: BuildCmf failed", build.builder->m_name.c_str() );
 		return false;
 	}
 
@@ -191,6 +189,7 @@ void Tr2ProceduralGeometryProvider::FailBuild()
 	SetPrepared( true );
 	m_isLoading = false;
 	SetGood( false );
+	NotifyReleaseCachedData();
 	NotifyRebuildCachedData();
 }
 
