@@ -85,8 +85,8 @@ void Tr2ProceduralGeometryProvider::ReleaseResources( TriStorage s )
 	{
 		CancelBuild();
 		ReleaseResourcesHelper();
-		m_isPrepared = false;
-		m_isGood = false;
+		SetPrepared( false );
+		SetGood( false );
 		NotifyReleaseCachedData();
 	}
 }
@@ -169,7 +169,7 @@ void Tr2ProceduralGeometryProvider::Prepare( Build& build )
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
 		m_isLoading = false;
-		m_isPrepared = false;
+		SetPrepared( false );
 		return;
 	}
 
@@ -191,18 +191,18 @@ void Tr2ProceduralGeometryProvider::Prepare( Build& build )
 
 	SetupSkeletonsFromCMF( *contents.GetData() );
 
-	m_isGood = CreateMeshesFromCMFFile( contents, Tr2CpuUsage::READ, renderContext );
+	SetGood( CreateMeshesFromCMFFile( contents, Tr2CpuUsage::READ, renderContext ) );
 
-	m_isPrepared = true;
+	SetPrepared( true );
 	m_isLoading = false;
 	NotifyRebuildCachedData();
 }
 
 void Tr2ProceduralGeometryProvider::FailBuild()
 {
-	m_isPrepared = true;
+	SetPrepared( true );
 	m_isLoading = false;
-	m_isGood = false;
+	SetGood( false );
 	NotifyRebuildCachedData();
 }
 
