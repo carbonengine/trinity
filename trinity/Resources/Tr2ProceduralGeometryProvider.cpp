@@ -1,20 +1,8 @@
 // Copyright © 2026 CCP ehf.
 
 #include "StdAfx.h"
-#include "Include/TriMath.h"
 #include "Tr2ProceduralGeometryProvider.h"
-#include "Tr2PerObjectData.h"
-#include "Tr2VertexDefinitionUtilities.h"
-#include "TriDevice.h"
-
-#include "TriSettingsRegistrar.h"
-
-#include "Utilities/GeometryUtils.h"
-#include "Utilities/BoundingSphere.h"
-#include "Utilities/BoundingBox.h"
-
-#include <cctype>
-#include "TbbStub.h"
+#include "Tr2Renderer.h"
 #include "Tr2BackgroundWorker.h"
 
 using namespace Tr2RenderContextEnum;
