@@ -1541,7 +1541,6 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetBoneTransforms() const
 	return GetRestPoseBoneTransforms();
 }
 
-// TODO: intern, this function is fucked up. It needs a granny code path!
 std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() const
 {
 	if( !m_mesh || !m_mesh->GetGeometryResource() )
@@ -1549,19 +1548,12 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() con
 		return std::make_pair( nullptr, 0 );
 	}
 
-	// Skinned shaders without an animation get rest-pose (identity) skin matrices, sized to the
-	// geometry's bone bindings. Unskinned geometry drawn with a skinned shader (e.g. a SOF hull
-	// flagged isSkinned) has no bindings and no blend indices in the vertex stream, so every
-	// vertex reads bone 0 - a single identity matrix covers it.
+	// Fixes skinned shader used with uninitialized animationUpdater (no skeleton), or used with no boneBindings. Otherwise shader would read garbage.
 	size_t boneCount = 1;
-	if( auto geometryRes = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() ) )
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
+	if( meshData )
 	{
-		auto cmfData = geometryRes->GetCMFData();
-		auto meshIndex = m_mesh->GetMeshIndex();
-		if( cmfData && meshIndex < cmfData->meshes.size() )
-		{
-			boneCount = std::max<size_t>( cmfData->meshes[meshIndex].boneBindings.size(), 1 );
-		}
+		boneCount = std::max<size_t>( meshData->m_jointBindings.size(), 1 );
 	}
 	if( m_restPoseBoneTransforms.size() != boneCount )
 	{
