@@ -147,12 +147,12 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 	if( m_type == Tr2Light::POINT_LIGHT )
 	{
 		auto data = m_lightData.AsPerPointLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
-		lightManager.AddLight( data, m_scaleBrightness );
+		lightManager.AddLight( data, m_scaleBrightness, m_lightData.tags );
 	}
 	else if( m_type == Tr2Light::SPOT_LIGHT )
 	{
 		auto data = m_lightData.AsPerSpotLightData( lightTransform, features, lightManager.GetCurrentSpaceSceneShadowQuality() );
-		lightManager.AddLight( data, m_scaleBrightness );
+		lightManager.AddLight( data, m_scaleBrightness, m_lightData.tags );
 	}
 }
 

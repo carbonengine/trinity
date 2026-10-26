@@ -51,6 +51,7 @@ public:
 		PostProcess::Quality postProcessingQuality = PostProcess::Quality::HIGH;
 		Tr2VolumerticQuality volumetricQuality = Tr2VolumerticQuality::High;
 		LightingQuality lightingQuality = LightingQuality::HIGH;
+		ReflectionQuality reflectionQuality = ReflectionQuality::OFF;
 
 		Color clearColor = Color( 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -61,37 +62,6 @@ public:
 		bool enableDistortion = true; // should be tied to shader quality
 		bool showFPS = false;
 		EveSpaceScene::EveVisualizeMethod visualizeMethod = EveSpaceScene::VM_NONE;
-	};
-
-	// Driver side features of a view. What the scene renders is described by the
-	// EveSpaceScene::ViewInfo in RenderInfo.
-	struct FeatureSet
-	{
-		bool upscaling = true;
-		bool antiAliasing = true;
-		bool reflections = true;
-		bool ssao = true;
-		bool shadows = true;
-		bool velocityMap = true;
-		// special background rendering (f.ex texture background)
-		bool background = true;
-		// special overlay rendering (f.ex texture overlay)
-		bool overlay = true;
-
-		bool dynamicLights = true;
-		bool dynamicLightShadows = true;
-	};
-
-	struct RenderInfo
-	{
-		const Matrix& view;
-		TriProjectionPtr projection;
-		Matrix jitterMatrix;
-		float mipLodBias;
-		float upscalingAmount;
-		TextureSize2D renderSize;
-		FeatureSet featureSet;
-		SceneRender::ViewInfo sceneView;
 	};
 
 	EveSpaceSceneRenderDriver( IRoot* lockobj = nullptr );
@@ -127,12 +97,25 @@ private:
 		Tr2GpuResourcePool::Texture opaqueColor;
 	};
 
-	ViewTargets RenderView( const RenderInfo& renderInfo, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
-	void RenderReflectionFaces( Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	// The faces the reflection probe renders in a frame, built before the lights are gathered
+	struct ReflectionFaces
+	{
+		Tr2ReflectionProbe* probe = nullptr;
+		// the probe's first pass only draws the background into the faces
+		bool firstPass = false;
+		unsigned startFace = 0;
+		Vector3 viewDirection = Vector3( 0.0f, 0.0f, 0.0f );
+		std::vector<SceneRender::View> views;
+	};
+
+	ViewTargets RenderView( const SceneRender::View& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
+	void UpdateLightManagerFaceViews( const ReflectionFaces& faces );
+	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
-	void ApplyView( const RenderInfo& renderInfo, Tr2RenderContext& renderContext ) const;
-	void UpdateSceneFrame( const RenderInfo& mainView, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	void ApplyView( const SceneRender::View& view, Tr2RenderContext& renderContext ) const;
+	void UpdateSceneFrame( const SceneRender::View& mainView, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
 	void SetCameraToRenderer( const Matrix& view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
@@ -141,10 +124,10 @@ private:
 	float GetMipLodBias( ) const;
 
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
-	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
-	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
+	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
+	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
-	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const FeatureSet& featureSet );
+	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
 
 	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
 	void PrepareLightManager();

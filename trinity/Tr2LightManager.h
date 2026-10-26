@@ -12,6 +12,7 @@
 
 #include "Raytracing/Tr2RaytracingGeometry.h"
 #include "Tr2Denoiser.h"
+#include "EnumFilter.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
@@ -40,9 +41,16 @@ enum class LightingQuality : int32_t
 
 enum class ReflectionQuality : int32_t
 {
+	OFF,
 	LOW,
 	MEDIUM,
 	HIGH,
+	ULTRA,
+};
+
+struct Tr2LightTags
+{
+	EnumFilter<ReflectionQuality> reflects;
 };
 
 // --------------------------------------------------------------------------------------
@@ -98,6 +106,7 @@ public:
 			} Raytracing;
 		};
 	};
+	typedef Tr2EnumerableThreadSpecific<std::vector<PerLightData>> ThreadLocalLightData;
 
 	struct ShadowMapAtlasSettings
 	{
@@ -124,15 +133,21 @@ public:
 	static uint16_t PackFlags( uint16_t flags, uint16_t profileIndex );
 
 	void Clear( Tr2RenderContext& renderContext );
-	void SetFrustum( const TriFrustum& frustum );
+
+	void ClearReflectionViews();
+	uint8_t AddReflectionView();
+	uint32_t GetReflectionViewCount() const;
+	void SetViewFrustum( uint8_t viewIndex, const TriFrustum& frustum );
+	void SetActiveView( uint8_t viewIndex, const TriFrustum& frustum );
+
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
-	void AddLight( PerLightData& data, bool scaleBrightness = true );
-	void ResolveLightData();
+	void AddLight( PerLightData& data, bool scaleBrightness = true, const Tr2LightTags& tags = Tr2LightTags() );
+	void ResolveLightData(); 
 	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	void SetVariableStore();
 	void AdjustLightCutoff( float lodFactor );
 
 	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
+	void SetReflectionQuality( ReflectionQuality reflectionQuality );
 	void SetLightingQuality( LightingQuality lightingQuality );
 	LightingQuality GetLightingQuality() const;
 
@@ -189,36 +204,55 @@ private:
 		float sizeAcross;
 	};
 
+	struct View
+	{
+		bool reflection = false; // face view: needs the reflection tag
+		TriFrustum frustum;
+		uint32_t maxVolumetricLights;
+		uint32_t maxShadowCastingLights;
+		uint32_t indexBufferSize;
+
+		ThreadLocalLightData tlsLightData;
+		std::vector<PerLightData> lightData;
+		std::vector<uint32_t> shadowCastingLights;
+		std::vector<uint32_t> volumetricLights;
+		Tr2GpuStructuredBufferPtr lightBuffer;
+		Tr2GpuStructuredBufferPtr indexBuffer;
+		Tr2GpuBufferPtr indexBufferCounter;
+
+		View( uint32_t maxVolumetricLights, uint32_t maxShadowCastingLights, uint32_t indexBufferSize, bool reflection );
+	};
+
 	virtual bool OnPrepareResources();
 
+	View& GetActiveView();
+	const View& GetActiveView() const;
+	void CreateViewBuffers( View& view, Tr2RenderContext& renderContext );
+	void ResolveView( View& view );
+
 	ALResult DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
+	ALResult ClearLightIndices( Tr2LightManager::View& view, Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
 	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
 	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
-	void CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
+	void CreateShadowMapAtlas( std::vector<PerLightData>& lightData, uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
 
-	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
-	std::vector<PerLightData> m_lightData;
-	std::vector<uint32_t> m_shadowCastingLights;
-	std::vector<uint32_t> m_volumetricLights;
-	Tr2GpuStructuredBufferPtr m_lightBuffer;
-	Tr2GpuStructuredBufferPtr m_indexBuffer;
+	static const uint32_t MAIN_VIEW = 0; // faces are 1..6
+	std::vector<View> m_views;
+	uint32_t m_activeView = MAIN_VIEW;
 
-	Tr2GpuBufferPtr m_indexBufferCounter;
 	Tr2ConstantBufferAL m_perFrameData;
 	Tr2EffectPtr m_effect;
 	Tr2Variable m_lightBufferVariable;
 	Tr2Variable m_indexBufferVariable;
-	TriFrustum m_frustum;
-
 	float m_adjustedCutoff;
 
 	uint32_t nextFrameShadowQuality; // bitmask, collecting ShadowQualities during the current frame
 	ShadowQuality m_currentSpaceSceneShadowQuality;
 	LightingQuality m_lightingQuality = LightingQuality::HIGH;
+	ReflectionQuality m_reflectionQuality = ReflectionQuality::OFF;
 	uint64_t m_currentFrameCounter;
 
 	struct

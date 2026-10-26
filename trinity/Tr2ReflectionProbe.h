@@ -54,6 +54,9 @@ public:
 
 	uint8_t GetStartFace() const;
 	uint8_t GetEndFace() const;
+	ReflectionProbeRenderFrequency GetRenderFrequency() const;
+	// True until the first FinishFaces: until then every face is rendered, whatever the render frequency.
+	bool IsFirstPass() const;
 
 	const Tr2TextureAL& GetDepthBuffer( unsigned face ) const
 	{

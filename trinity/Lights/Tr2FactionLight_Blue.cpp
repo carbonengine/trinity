@@ -39,8 +39,7 @@ const Be::ClassInfo* Tr2FactionLight::ExposeToBlue()
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "lightingQuality", m_lightData.lightingQuality.m_filter, "Filter for lighting quality settings. Controls whether light is active with a certain lighting quality setting.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, LightingQualityFilterChooser );
 		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows.m_filter, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, PerLightShadowSettingChooser );
-		MAP_ATTRIBUTE_WITH_CHOOSER( "castsShadows", m_lightData.castsShadows.m_filter, "Casts shadows. If the light is also volumetric, it will create godrays around the affected objects.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, PerLightShadowSettingChooser );
-		MAP_ATTRIBUTE( "reflectionShadowCaster", m_lightData.reflectionShadowCaster, "Casts shadows in the reflection, only if it casts shadows regularly.", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_lightData.tags.reflects.m_filter, "Reflection quality settings. Controls whether light is active with a certain reflection quality setting.", Be::READWRITE | Be::PERSIST | Be::NOTIFY, ReflectionQualityFilterChooser );
 		MAP_ATTRIBUTE( "isVolumetric", m_lightData.isVolumetric, "Volumetric lights affect participating media such as fog.", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "scaleBrightness", m_scaleBrightness, "Scale light brightness by its radius", Be::READWRITE | Be::PERSIST )

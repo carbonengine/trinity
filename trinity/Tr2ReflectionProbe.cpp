@@ -95,6 +95,16 @@ uint8_t Tr2ReflectionProbe::GetEndFace() const
 	return m_currentFrame + 1;
 }
 
+Tr2ReflectionProbe::ReflectionProbeRenderFrequency Tr2ReflectionProbe::GetRenderFrequency() const
+{
+	return m_renderFrequency;
+}
+
+bool Tr2ReflectionProbe::IsFirstPass() const
+{
+	return !m_onePassDone;
+}
+
 
 void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext& renderContext )
 {

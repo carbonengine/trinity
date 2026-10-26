@@ -49,8 +49,8 @@ struct LightData
 
 	EnumFilter<ShadowQuality> castsShadows;
 	bool isVolumetric;
-	EnumFilter<ReflectionQuality> reflectionMode;
-	bool reflectionShadowCaster;
+
+	Tr2LightTags tags;
 
 	Be::Time startTime;
 };
