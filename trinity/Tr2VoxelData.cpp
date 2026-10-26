@@ -20,13 +20,20 @@ struct PythonStorageType<Float_16>
 	using type = float;
 };
 
+/**
+ * @brief Extracts a single payload element from a Python object. The payload is either a scalar (if elementCount is 1) or a tuple of scalars.
+ * @tparam T Destination type of the payload element.
+ * @param pp The Python object containing a payload element representation.
+ * @param elementCount The number of elements in the payload.
+ * @param payload The array to store the extracted payload elements.
+ * @return True if the extraction was successful, false otherwise.
+ */
 template <typename T>
-bool ExtractPayloadElement( PyObject* element, size_t index, uint8_t elementCount, std::array<T, 4>& payload )
+bool ExtractPayloadElement( PyObject* pp, uint8_t elementCount, std::array<T, 4>& payload )
 {
-	auto pp = PyTuple_GetItem( element, Py_ssize_t( 1 + index ) );
 	if( elementCount > 1 && ( !PyTuple_Check( pp ) || PyTuple_Size( pp ) != elementCount ) )
 	{
-		PyErr_Format( PyExc_TypeError, "Payload must be a tuple of %u unsigned ints", elementCount );
+		PyErr_Format( PyExc_TypeError, "Payload must be a %u-tuple", elementCount );
 		return false;
 	}
 	for( size_t j = 0; j < elementCount; ++j )
@@ -55,6 +62,41 @@ bool ExtractPayloadElement( PyObject* element, size_t index, uint8_t elementCoun
 }
 
 template <typename T>
+float NormalizedValue( T value )
+{
+	if constexpr( std::is_signed_v<T> )
+	{
+		return float( std::max( float( value ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
+	}
+	else
+	{
+		return float( value ) / float( std::numeric_limits<T>::max() );
+	}
+}
+
+template <typename T>
+T DenormalizedValue( float value )
+{
+	if constexpr( std::is_signed_v<T> )
+	{
+		return T( std::round( std::clamp( float( value ), -1.0f, 1.0f ) * float( std::numeric_limits<T>::max() ) ) );
+	}
+	else
+	{
+		return T( std::round( std::clamp( float( value ), 0.0f, 1.0f ) * float( std::numeric_limits<T>::max() ) ) );
+	}
+}
+
+/**
+ * @brief Converts a payload element from the internal storage format to a Python object. The payload is either a scalar (if elementCount is 1) or a tuple of scalars.
+ * @tparam T Underlying storage type of the payload element.
+ * @param dimensions The dimensions of the voxel data.
+ * @param payloadType The type of the payload.
+ * @param payloadData The raw payload data.
+ * @param coord The coordinates of the voxel.
+ * @return A Python object representing the payload element.
+ */
+template <typename T>
 BluePy WrapPayloadElement( const Tr2VoxelData::Dimensions& dimensions, const Tr2VoxelData::PayloadType& payloadType, const uint8_t* payloadData, const Tr2VoxelData::Coord& coord )
 {
 	std::array<typename PythonStorageType<T>::type, 4> p = {};
@@ -77,35 +119,19 @@ BluePy WrapPayloadElement( const Tr2VoxelData::Dimensions& dimensions, const Tr2
 	{
 		if( payloadType.elementCount == 1 )
 		{
-			float x;
-			if constexpr( std::is_signed_v<T> )
-			{
-				x = float( std::max( float( p[0] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
-			}
-			else
-			{
-				x = float( p[0] ) / float( std::numeric_limits<T>::max() );
-			}
-			return BluePy( BlueWrapReturnValue( {}, x ) );
+			// 1-element payloads are returned as scalars, not tuples
+			return BluePy( BlueWrapReturnValue( {}, NormalizedValue( p[0] ) ) );
 		}
 		PyObject* tuple = PyTuple_New( payloadType.elementCount );
 		for( size_t j = 0; j < payloadType.elementCount; ++j )
 		{
-			float x;
-			if constexpr( std::is_signed_v<T> )
-			{
-				x = float( std::max( float( p[j] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
-			}
-			else
-			{
-				x = float( p[j] ) / float( std::numeric_limits<T>::max() );
-			}
-			PyTuple_SetItem( tuple, Py_ssize_t( j ), BlueWrapReturnValue( {}, x ) );
+			PyTuple_SetItem( tuple, Py_ssize_t( j ), BlueWrapReturnValue( {}, NormalizedValue( p[j] ) ) );
 		}
 		return BluePy( tuple );
 	}
 	if( payloadType.elementCount == 1 )
 	{
+		// 1-element payloads are returned as scalars, not tuples
 		return BluePy( BlueWrapReturnValue( {}, p[0] ) );
 	}
 	PyObject* tuple = PyTuple_New( payloadType.elementCount );
@@ -221,6 +247,18 @@ Tr2VoxelData::PayloadSnapshot& Tr2VoxelData::PayloadSnapshot::operator=( Payload
 }
 
 
+bool Tr2VoxelData::ModifiedChannels::IsChannelModified( size_t channelIndex ) const
+{
+	return ( m_modifiedChannelsBitmask & ( 1ull << channelIndex ) ) != 0;
+}
+
+void Tr2VoxelData::ModifiedChannels::MarkChannelModified( size_t channelIndex )
+{
+	m_modifiedChannelsBitmask |= ( 1ull << channelIndex );
+}
+
+
+
 Tr2VoxelData::Tr2VoxelData( IRoot* )
 {
 }
@@ -319,6 +357,8 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 		}
 	}
 
+	ModifiedChannels modifiedChannels;
+
 	while( BluePy element = BluePy( PyIter_Next( setIter ) ) )
 	{
 		if( !element || !PyTuple_Check( element ) || PyTuple_Size( element ) != 1 + m_payload.size() )
@@ -337,11 +377,14 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 			PyErr_SetString( PyExc_ValueError, "SetVoxels coordinates out of bounds" );
 			return {};
 		}
-		if( !ExtractPayload( element, coord ) )
+		if( !ExtractPayload( element, coord, modifiedChannels ) )
 		{
 			return {};
 		}
 	}
+
+	m_onDataChanged.Broadcast( modifiedChannels );
+
 	return BluePy( Py_None, true );
 }
 
@@ -386,14 +429,15 @@ BluePy Tr2VoxelData::PyGetPayloadData( size_t index, const Coord& coord )
 }
 
 template <typename Dst>
-bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord )
+bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels )
 {
 	if( payloadType.normalized )
 	{
-		return ExtractNormalizedPayloadElement<Dst>( element, index, payloadType.elementCount, coord );
+		return ExtractNormalizedPayloadElement<Dst>( element, index, payloadType.elementCount, coord, modifiedChannels );
 	}
 	std::array<typename PythonStorageType<Dst>::type, 4> p;
-	if( !::ExtractPayloadElement( element, index, payloadType.elementCount, p ) )
+	// The 1+ here is because the first element of the tuple is the coordinate, and the payloads start at index 1
+	if( !::ExtractPayloadElement( PyTuple_GetItem( element, Py_ssize_t( 1 + index ) ), payloadType.elementCount, p ) )
 	{
 		return false;
 	}
@@ -404,29 +448,40 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 	{
 		if constexpr( std::is_same_v<Dst, bool> )
 		{
-			auto byte = reinterpret_cast<uint8_t*>( dest.current.data.data() + ( coordIndex * payloadType.elementCount + j ) / 8 );
+			auto& byte = *reinterpret_cast<uint8_t*>( dest.current.data.data() + ( coordIndex * payloadType.elementCount + j ) / 8 );
+			auto oldByte = byte;
 			if( p[j] )
 			{
-				*byte |= 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 );
+				byte |= 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 );
 			}
 			else
 			{
-				*byte &= ~( 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 ) );
+				byte &= ~( 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 ) );
+			}
+			if( oldByte != byte )
+			{
+				modifiedChannels.MarkChannelModified( index );
 			}
 		}
 		else
 		{
-			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = static_cast<Dst>( p[j] );
+			auto& destElement = reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j];
+			if( destElement != static_cast<Dst>( p[j] ) )
+			{
+				modifiedChannels.MarkChannelModified( index );
+			}
+			destElement = static_cast<Dst>( p[j] );
 		}
 	}
 	return true;
 }
 
 template <typename Dst>
-bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord )
+bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels )
 {
 	std::array<float, 4> p;
-	if( !::ExtractPayloadElement( element, index, elementCount, p ) )
+	// The 1+ here is because the first element of the tuple is the coordinate, and the payloads start at index 1
+	if( !::ExtractPayloadElement( PyTuple_GetItem( element, Py_ssize_t( 1 + index ) ), elementCount, p ) )
 	{
 		return false;
 	}
@@ -435,75 +490,73 @@ bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t in
 	auto bytesPerPixel = dest.type.GetBytesPerValue();
 	for( size_t j = 0; j < elementCount; ++j )
 	{
-		auto value = p[j];
-		if constexpr( std::is_signed_v<Dst> )
+		auto newValue = DenormalizedValue<Dst>( p[j] );
+		auto& dstElement = reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j];
+		if( dstElement != newValue )
 		{
-			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), -1.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
+			modifiedChannels.MarkChannelModified( index );
 		}
-		else
-		{
-			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), 0.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
-		}
+		dstElement = newValue;
 	}
 	return true;
 }
 
-bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord )
+bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord, ModifiedChannels& modifiedChannels )
 {
 	for( size_t i = 0; i < m_payload.size(); ++i )
 	{
 		switch( m_payload[i].type.type )
 		{
 		case Tr2VoxelDataType::Boolean:
-			if( !ExtractPayloadElement<bool>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<bool>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Float:
-			if( !ExtractPayloadElement<float>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<float>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Float16:
-			if( !ExtractPayloadElement<Float_16>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<Float_16>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt8:
-			if( !ExtractPayloadElement<uint8_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<uint8_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt16:
-			if( !ExtractPayloadElement<uint16_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<uint16_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt32:
-			if( !ExtractPayloadElement<uint32_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<uint32_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int8:
-			if( !ExtractPayloadElement<int8_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<int8_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int16:
-			if( !ExtractPayloadElement<int16_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<int16_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int32:
-			if( !ExtractPayloadElement<int32_t>( element, i, m_payload[i].type, coord ) )
+			if( !ExtractPayloadElement<int32_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
@@ -515,7 +568,7 @@ bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord )
 	return true;
 }
 
-void Tr2VoxelData::GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize )
+void Tr2VoxelData::GetWriteBufferAndSize( const char*, unsigned char** buffer, size_t* bufferSize )
 {
 	*bufferSize = std::accumulate( m_payload.begin(), m_payload.end(), sizeof( PayloadType ) * m_payload.size(), []( size_t sum, const Payload& p ) { return sum + p.current.data.size(); } );
 	uint8_t* buf = new uint8_t[*bufferSize];
@@ -539,12 +592,12 @@ void Tr2VoxelData::ReleaseWriteBuffer( unsigned char* buffer )
 	delete[] buffer;
 }
 
-unsigned char* Tr2VoxelData::AllocateReadBuffer( const char* memberName, size_t bufferSize )
+unsigned char* Tr2VoxelData::AllocateReadBuffer( const char*, size_t bufferSize )
 {
 	return new uint8_t[bufferSize];
 }
 
-void Tr2VoxelData::SetBufferAndSize( const char* memberName, unsigned char* buffer, size_t bufferSize )
+void Tr2VoxelData::SetBufferAndSize( const char*, unsigned char* buffer, size_t bufferSize )
 {
 	auto initialBuffer = buffer;
 

@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Tr2Event.h"
 
 /**
  * @brief Types allowed for payload channels in Tr2VoxelData. These types are used to define the type of data stored in each channel of the voxel data.
@@ -89,6 +90,19 @@ public:
 		const uint8_t* m_data = nullptr;
 	};
 
+	/**
+	 * @brief Helper class to track which channels have been modified. This is used in conjunction with the OnDataChanged event to notify listeners of changes to specific channels.
+	 */
+	class ModifiedChannels
+	{
+	public:
+		bool IsChannelModified( size_t channelIndex ) const;
+		void MarkChannelModified( size_t channelIndex );
+
+	private:
+		uint64_t m_modifiedChannelsBitmask = 0;
+	};
+
 	Tr2VoxelData( IRoot* lockobj = nullptr );
 
 	/**
@@ -138,6 +152,13 @@ public:
 	unsigned char* AllocateReadBuffer( const char* memberName, size_t bufferSize ) override;
 	void SetBufferAndSize( const char* memberName, unsigned char* buffer, size_t bufferSize ) override;
 
+	using OnDataChanged = Tr2Event<ModifiedChannels>;
+
+	/**
+	 * @brief Event that is broadcast when the voxel data is modified. This allows listeners to be notified of changes to the voxel data, enabling them to react accordingly.
+	 */
+	OnDataChanged m_onDataChanged;
+
 private:
 	struct Snapshot
 	{
@@ -155,12 +176,12 @@ private:
 	BluePy SetVoxels( PyObject* set );
 	BluePy PyGetPayloadData( size_t index, const Coord& coord );
 
-	bool ExtractPayload( PyObject* element, const Coord& coord );
+	bool ExtractPayload( PyObject* element, const Coord& coord, ModifiedChannels& modifiedChannels );
 
 	template <typename Dst>
-	bool ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord );
+	bool ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels );
 	template <typename Dst>
-	bool ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord );
+	bool ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels );
 
 	Dimensions m_dimensions;
 	std::vector<Payload> m_payload;
