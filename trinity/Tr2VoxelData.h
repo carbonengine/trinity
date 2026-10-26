@@ -3,6 +3,10 @@
 #pragma once
 
 
+/**
+ * @brief Types allowed for payload channels in Tr2VoxelData. These types are used to define the type of data stored in each channel of the voxel data.
+ * Note that these types mostly correspond to CMF or texture formats, with the exception of Boolean.
+ */
 enum class Tr2VoxelDataType : uint8_t
 {
 	Boolean,
@@ -19,11 +23,17 @@ enum class Tr2VoxelDataType : uint8_t
 
 BLUE_CLASS_IMPL( Tr2VoxelData );
 
+/**
+ * @brief A container for 3D voxel data. Allows storing multiple data points per voxel. Each voxel can have multiple channels of data, each with its own type and number of elements.
+ */
 class Tr2VoxelData : public ICustomPersist
 {
 public:
 	EXPOSE_TO_BLUE();
 
+	/**
+	 * @brief Dimensions of the voxel data.
+	 */
 	struct Dimensions
 	{
 		uint32_t width = 0;
@@ -33,6 +43,9 @@ public:
 
 	using CoordType = int32_t;
 
+	/**
+	 * @brief Coordinates of a voxel in the 3D space. Used to access or modify the data of a specific voxel.
+	 */
 	struct Coord
 	{
 		CoordType x = 0;
@@ -40,7 +53,11 @@ public:
 		CoordType z = 0;
 	};
 
-
+	/**
+	 * @brief Definition of a payload channel. Each channel has a type, number of elements, and whether it is normalized.
+	 * Normalized channels are expected to have values in the range [0, 1] for unsigned types and [-1, 1] for signed types.
+	 * When accessing normalized data, in Python, the values will be returned as floats in the range [0, 1] or [-1, 1], regardless of the underlying storage type.
+	 */
 	struct PayloadType
 	{
 		Tr2VoxelDataType type = Tr2VoxelDataType::Float;
@@ -52,6 +69,12 @@ public:
 		size_t GetStoreSize( const Dimensions& dimensions ) const;
 	};
 
+	/**
+	 * @brief Snapshot of a payload channel. This is used to access the data of a specific channel in a read-only manner, 
+	 * specifically in asynchronous contexts where the underlying voxel data may be modified concurrently. The snapshot holds a 
+	 * reference to the voxel data, the type of the channel, the index of the channel, and a pointer to the data.
+	 * If the data changes while a snapshot is held, the snapshot will still point to the old data until it is released. This allows for safe concurrent access to voxel data.
+	 */
 	class PayloadSnapshot
 	{
 	public:
@@ -68,15 +91,48 @@ public:
 
 	Tr2VoxelData( IRoot* lockobj = nullptr );
 
+	/**
+	 * @brief Second part of the two-phase construction for Tr2VoxelData. Initializes the voxel data with the given dimensions and payload definition.
+	 * @param dimensions The dimensions of the voxel data (width, height, depth).
+	 * @param payload A vector of payload channel definitions.
+	 * @return A BlueStdResult indicating success or failure.
+	 */
 	BlueStdResult Create( const Dimensions& dimensions, std::vector<PayloadType> payload );
 
+	/**
+	 * @brief Checks if the given coordinates are within the bounds of the voxel data dimensions.
+	 * @param coord The coordinates of the voxel to check.
+	 * @return True if the coordinates are within bounds, false otherwise.
+	 */
 	bool IsWithinBounds( const Coord& coord ) const;
 
+	/**
+	 * @brief Gets the dimensions of the voxel data.
+	 * @return The dimensions of the voxel data.
+	 */
 	Dimensions GetDimensions() const;
+
+	/**
+	 * @brief Gets the number of payload channels in the voxel data.
+	 * @return The number of payload channels.
+	 */
 	size_t GetPayloadChannelCount() const;
+
+	/**
+	 * @brief Gets the payload type of the specified channel.
+	 * @param index The index of the payload channel.
+	 * @return The payload type of the specified channel.
+	 */
 	const PayloadType& GetPayloadType( size_t index ) const;
+
+	/**
+	 * @brief Gets a snapshot of the specified payload channel.
+	 * @param index The index of the payload channel.
+	 * @return A snapshot of the specified payload channel.
+	 */
 	PayloadSnapshot GetPayloadSnapshot( size_t index );
 
+	// ICustomPersist interface for persisting m_payload as a custom binary block
 	void GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize ) override;
 	void ReleaseWriteBuffer( unsigned char* buffer ) override;
 	unsigned char* AllocateReadBuffer( const char* memberName, size_t bufferSize ) override;
@@ -121,6 +177,9 @@ bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::PayloadType& r
 
 BLUE_CLASS_IMPL( Tr2VoxelDataTestAccessor );
 
+/**
+ * @brief Testing helper class for Tr2VoxelData. Provides access to the payload data of a specific channel for testing and debugging purposes.
+ */
 class Tr2VoxelDataTestAccessor : public IRoot
 {
 public:
