@@ -7,6 +7,19 @@
 
 namespace
 {
+
+template <typename T>
+struct PythonStorageType
+{
+	using type = T;
+};
+
+template <>
+struct PythonStorageType<Float_16>
+{
+	using type = float;
+};
+
 template <typename T>
 bool ExtractPayloadElement( PyObject* element, size_t index, uint8_t elementCount, std::array<T, 4>& payload )
 {
@@ -42,16 +55,67 @@ bool ExtractPayloadElement( PyObject* element, size_t index, uint8_t elementCoun
 }
 
 template <typename T>
-struct PythonStorageType
+BluePy WrapPayloadElement( const Tr2VoxelData::Dimensions& dimensions, const Tr2VoxelData::PayloadType& payloadType, const uint8_t* payloadData, const Tr2VoxelData::Coord& coord )
 {
-	using type = T;
-};
+	std::array<typename PythonStorageType<T>::type, 4> p = {};
+	size_t index = coord.x + dimensions.width * ( coord.y + dimensions.height * coord.z );
+	auto bytesPerPixel = payloadType.GetBytesPerValue();
+	for( size_t j = 0; j < payloadType.elementCount; ++j )
+	{
+		if constexpr( std::is_same_v<T, bool> )
+		{
+			auto byte = reinterpret_cast<const uint8_t*>( payloadData + ( index * payloadType.elementCount + j ) / 8 );
+			p[j] = ( *byte & ( 1 << ( ( index * payloadType.elementCount + j ) % 8 ) ) ) != 0;
+		}
+		else
+		{
+			p[j] = reinterpret_cast<const T*>( payloadData + index * bytesPerPixel )[j];
+		}
+	}
 
-template <>
-struct PythonStorageType<Float_16>
-{
-	using type = float;
-};
+	if( payloadType.normalized )
+	{
+		if( payloadType.elementCount == 1 )
+		{
+			float x;
+			if constexpr( std::is_signed_v<T> )
+			{
+				x = float( std::max( float( p[0] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
+			}
+			else
+			{
+				x = float( p[0] ) / float( std::numeric_limits<T>::max() );
+			}
+			return BluePy( BlueWrapReturnValue( {}, x ) );
+		}
+		PyObject* tuple = PyTuple_New( payloadType.elementCount );
+		for( size_t j = 0; j < payloadType.elementCount; ++j )
+		{
+			float x;
+			if constexpr( std::is_signed_v<T> )
+			{
+				x = float( std::max( float( p[j] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
+			}
+			else
+			{
+				x = float( p[j] ) / float( std::numeric_limits<T>::max() );
+			}
+			PyTuple_SetItem( tuple, Py_ssize_t( j ), BlueWrapReturnValue( {}, x ) );
+		}
+		return BluePy( tuple );
+	}
+	if( payloadType.elementCount == 1 )
+	{
+		return BluePy( BlueWrapReturnValue( {}, p[0] ) );
+	}
+	PyObject* tuple = PyTuple_New( payloadType.elementCount );
+	for( size_t j = 0; j < payloadType.elementCount; ++j )
+	{
+		PyTuple_SetItem( tuple, j, BlueWrapReturnValue( {}, p[j] ) );
+	}
+	return BluePy( tuple );
+}
+
 }
 
 
@@ -98,15 +162,74 @@ size_t Tr2VoxelData::PayloadType::GetStoreSize( const Dimensions& dimensions ) c
 	return dimensions.width * dimensions.height * dimensions.depth * GetBytesPerValue();
 }
 
+
+Tr2VoxelData::PayloadSnapshot::PayloadSnapshot( PayloadSnapshot&& other ) noexcept :
+	m_voxelData( other.m_voxelData ),
+	m_type( other.m_type ),
+	m_channel( other.m_channel ),
+	m_data( other.m_data )
+{
+	other.m_voxelData = nullptr;
+	other.m_type = {};
+	other.m_channel = 0;
+	other.m_data = nullptr;
+}
+
+Tr2VoxelData::PayloadSnapshot::~PayloadSnapshot()
+{
+	if( m_voxelData )
+	{
+		std::lock_guard guard( m_voxelData->m_payloadMutex );
+
+		auto& payload = m_voxelData->m_payload[m_channel];
+		if( payload.current.data.data() == m_data )
+		{
+			CCP_ASSERT( payload.current.readerCount > 0 );
+			--payload.current.readerCount;
+			return;
+		}
+		auto found = std::find_if( payload.old.begin(), payload.old.end(), [this]( const Snapshot& s ) { return s.data.data() == m_data; } );
+		if( found != payload.old.end() )
+		{
+			CCP_ASSERT( found->readerCount > 0 );
+			--found->readerCount;
+			if( found->readerCount == 0 )
+			{
+				payload.old.erase( found );
+			}
+			return;
+		}
+		CCP_ASSERT_M( false, "PayloadSnapshot destructor called with invalid data pointer" );
+	}
+}
+
+Tr2VoxelData::PayloadSnapshot& Tr2VoxelData::PayloadSnapshot::operator=( PayloadSnapshot&& other ) noexcept
+{
+	if( this != &other )
+	{
+		m_voxelData = other.m_voxelData;
+		m_type = other.m_type;
+		m_channel = other.m_channel;
+		m_data = other.m_data;
+
+		other.m_voxelData = nullptr;
+		other.m_type = {};
+		other.m_channel = 0;
+		other.m_data = nullptr;
+	}
+	return *this;
+}
+
+
 Tr2VoxelData::Tr2VoxelData( IRoot* )
 {
 }
 
-BlueStdResult Tr2VoxelData::Construct( const Dimensions& dimensions, std::vector<PayloadType> payload )
+BlueStdResult Tr2VoxelData::Create( const Dimensions& dimensions, std::vector<PayloadType> payload )
 {
 	if( m_dimensions.width != 0 || m_dimensions.height != 0 || m_dimensions.depth != 0 )
 	{
-		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Voxel data has already been constructed" );
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Voxel data has already been created" );
 	}
 	if( dimensions.width == 0 || dimensions.height == 0 || dimensions.depth == 0 )
 	{
@@ -128,14 +251,14 @@ BlueStdResult Tr2VoxelData::Construct( const Dimensions& dimensions, std::vector
 	m_payload.clear();
 	for( auto& format : payload )
 	{
-		m_payload.emplace_back( Payload{ format, std::vector<uint8_t>( format.GetStoreSize( dimensions ) ) } );
+		m_payload.emplace_back( Payload{ format, { std::vector<uint8_t>( format.GetStoreSize( dimensions ) ) } } );
 	}
 	return {};
 }
 
 bool Tr2VoxelData::IsWithinBounds( const Coord& coord ) const
 {
-	return coord.x >= 0 && coord.x < CoordType(m_dimensions.width) && coord.y >= 0 && coord.y < CoordType(m_dimensions.height) && coord.z >= 0 && coord.z < CoordType(m_dimensions.depth);
+	return coord.x >= 0 && coord.x < CoordType( m_dimensions.width ) && coord.y >= 0 && coord.y < CoordType( m_dimensions.height ) && coord.z >= 0 && coord.z < CoordType( m_dimensions.depth );
 }
 
 
@@ -154,9 +277,20 @@ const Tr2VoxelData::PayloadType& Tr2VoxelData::GetPayloadType( size_t index ) co
 	return m_payload[index].type;
 }
 
-const void* Tr2VoxelData::GetPayloadData( size_t index ) const
+
+Tr2VoxelData::PayloadSnapshot Tr2VoxelData::GetPayloadSnapshot( size_t index )
 {
-	return m_payload[index].data.data();
+	std::lock_guard guard( m_payloadMutex );
+	PayloadSnapshot snapshot;
+	if( index < m_payload.size() )
+	{
+		snapshot.m_voxelData = this;
+		snapshot.m_type = m_payload[index].type;
+		snapshot.m_channel = index;
+		snapshot.m_data = m_payload[index].current.data.data();
+		++m_payload[index].current.readerCount;
+	}
+	return snapshot;
 }
 
 
@@ -168,6 +302,23 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 		PyErr_SetString( PyExc_TypeError, "SetVoxels the first argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
 		return {};
 	}
+
+	{
+		std::lock_guard guard( m_payloadMutex );
+
+		for( auto& payload : m_payload )
+		{
+			if( payload.current.readerCount )
+			{
+				auto& snapshot = payload.old.emplace_back();
+				snapshot.readerCount = payload.current.readerCount;
+				std::swap( snapshot.data, payload.current.data );
+				payload.current.data.insert( payload.current.data.begin(), snapshot.data.begin(), snapshot.data.end() );
+				payload.current.readerCount = 0;
+			}
+		}
+	}
+
 	while( BluePy element = BluePy( PyIter_Next( setIter ) ) )
 	{
 		if( !element || !PyTuple_Check( element ) || PyTuple_Size( element ) != 1 + m_payload.size() )
@@ -194,68 +345,6 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 	return BluePy( Py_None, true );
 }
 
-template <typename T>
-BluePy Tr2VoxelData::WrapPayloadElement( const Payload& payload, const Coord& coord ) const
-{
-	std::array<typename PythonStorageType<T>::type, 4> p = {};
-	size_t index = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
-	auto bytesPerPixel = payload.type.GetBytesPerValue();
-	for( size_t j = 0; j < payload.type.elementCount; ++j )
-	{
-		if constexpr( std::is_same_v<T, bool> )
-		{
-			auto byte = reinterpret_cast<const uint8_t*>( payload.data.data() + ( index * payload.type.elementCount + j ) / 8 );
-			p[j] = ( *byte & ( 1 << ( ( index * payload.type.elementCount + j ) % 8 ) ) ) != 0;
-		}
-		else
-		{
-			p[j] = reinterpret_cast<const T*>( payload.data.data() + index * bytesPerPixel )[j];
-		}
-	}
-
-	if( payload.type.normalized )
-	{
-		if( payload.type.elementCount == 1 )
-		{
-			float x;
-			if constexpr( std::is_signed_v<T> )
-			{
-				x = float( std::max( float( p[0] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
-			}
-			else
-			{
-				x = float( p[0] ) / float( std::numeric_limits<T>::max() );
-			}
-			return BluePy( BlueWrapReturnValue( {}, x ) );
-		}
-		PyObject* tuple = PyTuple_New( payload.type.elementCount );
-		for( size_t j = 0; j < payload.type.elementCount; ++j )
-		{
-			float x;
-			if constexpr( std::is_signed_v<T> )
-			{
-				x = float( std::max( float( p[j] ) / float( std::numeric_limits<T>::max() ), -1.0f ) );
-			}
-			else
-			{
-				x = float( p[j] ) / float( std::numeric_limits<T>::max() );
-			}
-			PyTuple_SetItem( tuple, Py_ssize_t( j ), BlueWrapReturnValue( {}, x ) );
-		}
-		return BluePy( tuple );
-	}
-	if( payload.type.elementCount == 1 )
-	{
-		return BluePy( BlueWrapReturnValue( {}, p[0] ) );
-	}
-	PyObject* tuple = PyTuple_New( payload.type.elementCount );
-	for( size_t j = 0; j < payload.type.elementCount; ++j )
-	{
-		PyTuple_SetItem( tuple, j, BlueWrapReturnValue( {}, p[j] ) );
-	}
-	return BluePy( tuple );
-}
-
 
 BluePy Tr2VoxelData::PyGetPayloadData( size_t index, const Coord& coord )
 {
@@ -269,28 +358,28 @@ BluePy Tr2VoxelData::PyGetPayloadData( size_t index, const Coord& coord )
 		PyErr_SetString( PyExc_ValueError, "Coordinates out of bounds" );
 		return {};
 	}
-	
+
 	const auto& payload = m_payload[index];
 	switch( payload.type.type )
 	{
 	case Tr2VoxelDataType::Boolean:
-		return WrapPayloadElement<bool>( payload, coord );
+		return WrapPayloadElement<bool>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::Float:
-		return WrapPayloadElement<float>( payload, coord );
+		return WrapPayloadElement<float>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::Float16:
-		return WrapPayloadElement<Float_16>( payload, coord );
+		return WrapPayloadElement<Float_16>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::UInt8:
-		return WrapPayloadElement<uint8_t>( payload, coord );
+		return WrapPayloadElement<uint8_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::UInt16:
-		return WrapPayloadElement<uint16_t>( payload, coord );
+		return WrapPayloadElement<uint16_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::UInt32:
-		return WrapPayloadElement<uint32_t>( payload, coord );
+		return WrapPayloadElement<uint32_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::Int8:
-		return WrapPayloadElement<int8_t>( payload, coord );
+		return WrapPayloadElement<int8_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::Int16:
-		return WrapPayloadElement<int16_t>( payload, coord );
+		return WrapPayloadElement<int16_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	case Tr2VoxelDataType::Int32:
-		return WrapPayloadElement<int32_t>( payload, coord );
+		return WrapPayloadElement<int32_t>( m_dimensions, payload.type, payload.current.data.data(), coord );
 	default:
 		return {};
 	}
@@ -315,7 +404,7 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 	{
 		if constexpr( std::is_same_v<Dst, bool> )
 		{
-			auto byte = reinterpret_cast<uint8_t*>( dest.data.data() + ( coordIndex * payloadType.elementCount + j ) / 8 );
+			auto byte = reinterpret_cast<uint8_t*>( dest.current.data.data() + ( coordIndex * payloadType.elementCount + j ) / 8 );
 			if( p[j] )
 			{
 				*byte |= 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 );
@@ -327,7 +416,7 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 		}
 		else
 		{
-			reinterpret_cast<Dst*>( dest.data.data() + coordIndex * bytesPerPixel )[j] = static_cast<Dst>( p[j] );
+			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = static_cast<Dst>( p[j] );
 		}
 	}
 	return true;
@@ -349,11 +438,11 @@ bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t in
 		auto value = p[j];
 		if constexpr( std::is_signed_v<Dst> )
 		{
-			reinterpret_cast<Dst*>( dest.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), -1.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
+			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), -1.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
 		}
 		else
 		{
-			reinterpret_cast<Dst*>( dest.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), 0.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
+			reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j] = Dst( std::round( std::clamp( float( value ), 0.0f, 1.0f ) * float( std::numeric_limits<Dst>::max() ) ) );
 		}
 	}
 	return true;
@@ -395,7 +484,7 @@ bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord )
 				return false;
 			}
 			break;
-		case Tr2VoxelDataType::UInt32: 
+		case Tr2VoxelDataType::UInt32:
 			if( !ExtractPayloadElement<uint32_t>( element, i, m_payload[i].type, coord ) )
 			{
 				return false;
@@ -428,7 +517,7 @@ bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord )
 
 void Tr2VoxelData::GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize )
 {
-	*bufferSize = std::accumulate( m_payload.begin(), m_payload.end(), sizeof( PayloadType ) * m_payload.size(), []( size_t sum, const Payload& p ) { return sum + p.data.size(); } );
+	*bufferSize = std::accumulate( m_payload.begin(), m_payload.end(), sizeof( PayloadType ) * m_payload.size(), []( size_t sum, const Payload& p ) { return sum + p.current.data.size(); } );
 	uint8_t* buf = new uint8_t[*bufferSize];
 	if( !buf )
 	{
@@ -436,12 +525,12 @@ void Tr2VoxelData::GetWriteBufferAndSize( const char* memberName, unsigned char*
 		return;
 	}
 	*buffer = buf;
-	for ( const auto& p : m_payload )
+	for( const auto& p : m_payload )
 	{
 		new( buf ) PayloadType( p.type );
 		buf += sizeof( PayloadType );
-		memcpy( buf, p.data.data(), p.data.size() );
-		buf += p.data.size();
+		memcpy( buf, p.current.data.data(), p.current.data.size() );
+		buf += p.current.data.size();
 	}
 }
 
@@ -459,7 +548,7 @@ void Tr2VoxelData::SetBufferAndSize( const char* memberName, unsigned char* buff
 {
 	auto initialBuffer = buffer;
 
-	while ( true )
+	while( true )
 	{
 		if( bufferSize < sizeof( PayloadType ) )
 		{
@@ -473,7 +562,7 @@ void Tr2VoxelData::SetBufferAndSize( const char* memberName, unsigned char* buff
 		{
 			break;
 		}
-		m_payload.emplace_back( Payload{ payloadType, std::vector<uint8_t>( buffer, buffer + payloadSize ) } );
+		m_payload.emplace_back( Payload{ payloadType, { std::vector<uint8_t>( buffer, buffer + payloadSize ) } } );
 		buffer += payloadSize;
 		bufferSize -= payloadSize;
 	}
@@ -564,4 +653,47 @@ bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::PayloadType& r
 	}
 	resultRef = pt;
 	return true;
+}
+
+BlueStdResult Tr2VoxelDataTestAccessor::Create( Tr2VoxelData* voxelData, size_t channelIndex )
+{
+	m_snapshot = voxelData->GetPayloadSnapshot( channelIndex );
+	if( m_snapshot.m_data == nullptr )
+	{
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Invalid channel index" );
+	}
+	return {};
+}
+
+BluePy Tr2VoxelDataTestAccessor::PyGetPayloadData( const Tr2VoxelData::Coord& coord ) const
+{
+	if( !m_snapshot.m_voxelData->IsWithinBounds( coord ) )
+	{
+		PyErr_SetString( PyExc_ValueError, "Coordinates out of bounds" );
+		return {};
+	}
+
+	switch( m_snapshot.m_type.type )
+	{
+	case Tr2VoxelDataType::Boolean:
+		return WrapPayloadElement<bool>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::Float:
+		return WrapPayloadElement<float>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::Float16:
+		return WrapPayloadElement<Float_16>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::UInt8:
+		return WrapPayloadElement<uint8_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::UInt16:
+		return WrapPayloadElement<uint16_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::UInt32:
+		return WrapPayloadElement<uint32_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::Int8:
+		return WrapPayloadElement<int8_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::Int16:
+		return WrapPayloadElement<int16_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	case Tr2VoxelDataType::Int32:
+		return WrapPayloadElement<int32_t>( m_snapshot.m_voxelData->GetDimensions(), m_snapshot.m_type, m_snapshot.m_data, coord );
+	default:
+		return {};
+	}
 }

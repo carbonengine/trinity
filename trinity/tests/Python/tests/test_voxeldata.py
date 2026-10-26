@@ -98,3 +98,14 @@ class TestVoxelData(unittest.TestCase):
             self.assertEqual(data.depth, data1.depth)
             self.assertEqual(data.GetPayloadData(0, (1, 1, 1)), 7)
             self.assertAlmostEqual(data.GetPayloadData(1, (1, 1, 1)), (0.5, 0.2), places=2)
+
+    def test_asyncAccess(self):
+        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.UInt8, "elementCount": 1, "normalized": False}])
+        data.SetVoxels([((1, 1, 1), 7)])
+        accessor = trinity.Tr2VoxelDataTestAccessor(data, 0)
+        # The accessor should have a snapshot of the data at the time of creation, so changing the data afterwards should not affect the accessor.
+        self.assertEqual(accessor.GetData((1, 1, 1)), 7)
+        data.SetVoxels([((1, 1, 1), 8)])
+        self.assertEqual(accessor.GetData((1, 1, 1)), 7)
+        accessor = trinity.Tr2VoxelDataTestAccessor(data, 0)
+        self.assertEqual(accessor.GetData((1, 1, 1)), 8)
