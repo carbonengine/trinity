@@ -8,6 +8,7 @@
 #include "Resources/Tr2LoadPrepareFence.h"
 
 
+BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2SerializedMorphAnimation );
 
 BLUE_CLASS( Tr2SerializedMorphAnimation ) :
@@ -52,7 +53,7 @@ public:
 	const char* GetLowResMeshResPath() const;
 	void SetLowResMeshResPath( const char* path );
 
-	TriGeometryRes* GetGeometryResource() const override;
+	Tr2GeometryProvider* GetGeometryResource() const override;
 	void SetGeometryRes( TriGeometryRes * res );
 
 	bool IsLoading() const override;
@@ -85,7 +86,6 @@ private:
 	void InitializeMorphTargets();
 
 	void PySetGeometryRes( TriGeometryRes * geometryRes );
-	int GetAreasCount() const;
 	void SetLowResGeometryRes( TriGeometryRes * res );
 
 private:

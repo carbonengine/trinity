@@ -338,6 +338,38 @@ bool Tr2MeshBase::GetDisplay() const
 	return m_display;
 }
 
+std::vector<std::string>* Tr2MeshBase::GetMorphTargetNames() const
+{
+	return nullptr;
+}
+bool Tr2MeshBase::IsBakedMorph( int index ) const
+{
+	return false;
+}
+void Tr2MeshBase::SetMorphTargetWeight( const char* name, float weight )
+{
+}
+float Tr2MeshBase::GetMorphTargetWeight( const char* name )
+{
+	return 0.f;
+}
+std::vector<bool>* Tr2MeshBase::GetAllBakedMorphTargetStates() const
+{
+	return nullptr;
+}
+void Tr2MeshBase::SetBakedMorphTarget( const char* name, bool isBaked )
+{
+}
+bool Tr2MeshBase::GetBakedMorphTarget( const char* name )
+{
+	return false;
+}
+const std::unordered_map<std::string, Tr2MorphTargetAnimationData>& Tr2MeshBase::GetMorphAnimations() const
+{
+	static const std::unordered_map<std::string, Tr2MorphTargetAnimationData> s_empty;
+	return s_empty;
+}
+
 Tr2RenderBatch CreateGeometryBatch( TriGeometryResLodData* lod, Tr2MeshArea* area, const Tr2PerObjectData* data, bool reverseWinding )
 {
 	Tr2RenderBatch batch;
@@ -424,7 +456,7 @@ void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 // -------------------------------------------------------------
 const wchar_t* Tr2MeshBase::GetGeometryResPath() const
 {
-	const TriGeometryRes* currentRes = GetGeometryResource();
+	const Tr2GeometryProvider* currentRes = GetGeometryResource();
 	if( !currentRes )
 	{
 		return L"";
@@ -610,4 +642,9 @@ Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
 Tr2RaytracingMesh* Tr2MeshBase::GetRtMesh() const
 {
 	return m_rtMesh.get();
+}
+
+int Tr2MeshBase::GetAreasCount() const
+{
+	return TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
 }

@@ -11,7 +11,7 @@ BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
 BLUE_DECLARE( Tr2Effect );
-BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE( Tr2GeometryProvider );
 BLUE_DECLARE( Tr2RaytracingGeometry );
 
 struct TriGeometryResLodData;
@@ -46,7 +46,7 @@ class Tr2RaytracingMesh
 public:
 	Tr2RaytracingMesh();
 
-	void UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
+	void UpdateRtMesh( Tr2GeometryProvider* geometry, uint32_t meshIndex, float screenSize );
 	bool SetBoneTransforms( size_t count, const Float4x3* transforms, uint32_t offset );
 	bool SetMorphAnimations( size_t count, const Tr2MorphTargetAnimationData* morphTargets, uint32_t morphTargetAnimationDataOffset );
 
@@ -67,7 +67,7 @@ public:
 
 private:
 	const Tr2BufferAL* m_skinnedVertices;
-	TriGeometryResPtr m_geometry;
+	Tr2GeometryProviderPtr m_geometry;
 	uint32_t m_meshIndex;
 	std::vector<float> m_transforms;
 	uint32_t m_boneOffset;
