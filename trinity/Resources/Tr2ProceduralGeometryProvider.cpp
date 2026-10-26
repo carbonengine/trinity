@@ -200,7 +200,6 @@ void Tr2ProceduralGeometryProvider::CancelBuild()
 		return;
 	}
 	m_build->cancel = true;
-	m_build->owner = nullptr;
 	m_build = nullptr;
 	m_isLoading = false;
 }
