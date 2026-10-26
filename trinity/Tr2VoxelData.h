@@ -4,6 +4,19 @@
 
 BLUE_CLASS_IMPL( Tr2VoxelData );
 
+enum class Tr2VoxelDataType
+{
+	Boolean,
+	Float,
+	Float16,
+	UInt8,
+	UInt16,
+	UInt32,
+	Int8,
+	Int16,
+	Int32
+};
+
 class Tr2VoxelData : public IRoot
 {
 public:
@@ -18,39 +31,64 @@ public:
 
 	using CoordType = int32_t;
 
+	struct Coord
+	{
+		CoordType x = 0;
+		CoordType y = 0;
+		CoordType z = 0;
+	};
+
+
+	struct PayloadType
+	{
+		Tr2VoxelDataType type = Tr2VoxelDataType::Float;
+		uint8_t elementCount = 1;
+		bool normalized = false;
+
+		bool IsValid() const;
+		size_t GetBytesPerValue() const;
+		size_t GetStoreSize( const Dimensions& dimensions ) const;
+	};
+
 	Tr2VoxelData( IRoot* lockobj = nullptr );
 
-	bool Construct( const Dimensions& dimensions, const std::vector<ImageIO::PixelFormat>& payload );
+	BlueStdResult Construct( const Dimensions& dimensions, std::vector<PayloadType> payload );
 
-	bool IsOccupied( CoordType x, CoordType y, CoordType z ) const;
-	bool IsWithinBounds( CoordType x, CoordType y, CoordType z ) const;
+	bool IsWithinBounds( const Coord& coord ) const;
 
 	Dimensions GetDimensions() const;
 	size_t GetPayloadChannelCount() const;
+	const PayloadType& GetPayloadType( size_t index ) const;
+	const void* GetPayloadData( size_t index ) const;
 
 private:
 	struct Payload
 	{
-		ImageIO::PixelFormat format;
+		PayloadType type;
 		std::vector<uint8_t> data;
 	};
 
-	size_t OccupancyIndex( CoordType x, CoordType y, CoordType z ) const;
+	//BluePy PopulateSparse( PyObject* generator );
+	BluePy SetVoxels( PyObject* set );
+	BluePy PyGetPayloadData( size_t index, const Coord& coord );
 
-	BlueStdResult __init__( uint32_t width, uint32_t height, uint32_t depth, std::vector<ImageIO::PixelFormat> payload );
-	BluePy PopulateSparse( PyObject* generator );
-	BluePy SetVoxels( PyObject* set, PyObject* remove );
+	bool ExtractPayload( PyObject* element, const Coord& coord );
 
-	bool ExtractPayload( PyObject* element, CoordType x, CoordType y, CoordType z );
-
-	template <typename Dst, size_t N>
-	bool ExtractPayloadElement( PyObject* element, size_t index, CoordType x, CoordType y, CoordType z );
-	template <typename Dst, size_t N>
-	bool ExtractUniformPayloadElement( PyObject* element, size_t index, CoordType x, CoordType y, CoordType z );
+	template <typename Dst>
+	bool ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord );
+	template <typename Dst>
+	bool ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord );
+	template <typename T>
+	BluePy WrapPayloadElement( const Payload& payload, const Coord& coord ) const;
 
 	Dimensions m_dimensions;
-	std::vector<bool> m_occupied;
 	std::vector<Payload> m_payload;
 };
 
 TYPEDEF_BLUECLASS( Tr2VoxelData );
+
+bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Dimensions& resultRef, unsigned int argID );
+bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Coord& resultRef, unsigned int argID );
+bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::PayloadType& resultRef, unsigned int argID );
+
+
