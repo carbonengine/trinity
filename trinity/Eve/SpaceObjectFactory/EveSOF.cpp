@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Utilities/StringUtils.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "EveSOF.h"
 #include "EveSOFDNA.h"
 #include "EveSOFUtils.h"

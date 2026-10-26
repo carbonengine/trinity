@@ -3,7 +3,7 @@
 #include "StdAfx.h"
 #include "EveSceneStaticParticles.h"
 
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2RuntimeInstanceData.h"
 #include "Tr2InstancedMesh.h"

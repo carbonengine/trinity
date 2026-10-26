@@ -8,7 +8,7 @@
 #include "TriFrustum.h"
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 #include "Tr2DebugRenderer.h"
 
 // forwards

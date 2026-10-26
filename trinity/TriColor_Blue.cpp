@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "include/TriColor.h"
-#include "Include/ITriVector.h"
+#include "include/ITriVector.h"
 
 #if BLUE_WITH_PYTHON
 BLUE_DEFINE( TriColor );

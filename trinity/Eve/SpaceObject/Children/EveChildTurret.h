@@ -7,7 +7,7 @@
 #include "EveChildMesh.h"
 #include "Eve/Turret/EveTurretAiming.h"
 #include "Eve/Turret/EveTurretTarget.h"
-#include "Include/ITr2PoseModifier.h"
+#include "include/ITr2PoseModifier.h"
 
 BLUE_DECLARE( EveTurretFiringFX );
 BLUE_DECLARE( EveTurretTarget );
