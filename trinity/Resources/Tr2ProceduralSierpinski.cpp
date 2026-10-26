@@ -71,10 +71,10 @@ void Sierpinski( const Vector3& up,
 
 	if( depth == 0 )
 	{
-		AddTriangle( up, left, right, packedTangents[0], indicesMap, indices, vertices );
-		AddTriangle( up, right, back, packedTangents[1], indicesMap, indices, vertices );
-		AddTriangle( up, back, left, packedTangents[2], indicesMap, indices, vertices );
-		AddTriangle( left, back, right, packedTangents[3], indicesMap, indices, vertices );
+		AddTriangle( up, right, left, packedTangents[0], indicesMap, indices, vertices );
+		AddTriangle( up, back, right, packedTangents[1], indicesMap, indices, vertices );
+		AddTriangle( up, left, back, packedTangents[2], indicesMap, indices, vertices );
+		AddTriangle( left, right, back, packedTangents[3], indicesMap, indices, vertices );
 		return;
 	}
 
@@ -116,10 +116,10 @@ bool Tr2ProceduralSierpinskiBuilder::BuildCmf( cmf::MemoryAllocator& allocator, 
 		Normalize( right - back )
 	};
 	std::array<Vector3, 4> normals = {
-		Normalize( Cross( edges[0], edges[1] ) ),
-		Normalize( Cross( edges[3], edges[1] ) ),
-		Normalize( Cross( edges[0], edges[2] ) ),
-		Normalize( Cross( edges[3], edges[2] ) )
+		Normalize( Cross( edges[1], edges[0] ) ),
+		Normalize( Cross( edges[1], edges[3] ) ),
+		Normalize( Cross( edges[2], edges[0] ) ),
+		Normalize( Cross( edges[2], edges[3] ) )
 	};
 	std::array<Vector4, 4> packedTangents = {
 		cmf::PackTangents( cmf::TangentCompression::PackedTangent, normals[0], edges[0], Cross( normals[0], edges[0] ) ),
