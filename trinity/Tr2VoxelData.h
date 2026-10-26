@@ -17,7 +17,7 @@ enum class Tr2VoxelDataType
 	Int32
 };
 
-class Tr2VoxelData : public IRoot
+class Tr2VoxelData : public ICustomPersist
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -60,6 +60,11 @@ public:
 	size_t GetPayloadChannelCount() const;
 	const PayloadType& GetPayloadType( size_t index ) const;
 	const void* GetPayloadData( size_t index ) const;
+
+	void GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize ) override;
+	void ReleaseWriteBuffer( unsigned char* buffer ) override;
+	unsigned char* AllocateReadBuffer( const char* memberName, size_t bufferSize ) override;
+	void SetBufferAndSize( const char* memberName, unsigned char* buffer, size_t bufferSize ) override;
 
 private:
 	struct Payload

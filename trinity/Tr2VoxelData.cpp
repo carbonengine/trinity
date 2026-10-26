@@ -2,6 +2,8 @@
 
 #include "StdAfx.h"
 #include "Tr2VoxelData.h"
+#include <numeric>
+
 
 namespace
 {
@@ -423,6 +425,61 @@ bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord )
 	}
 	return true;
 }
+
+void Tr2VoxelData::GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize )
+{
+	*bufferSize = std::accumulate( m_payload.begin(), m_payload.end(), sizeof( PayloadType ) * m_payload.size(), []( size_t sum, const Payload& p ) { return sum + p.data.size(); } );
+	uint8_t* buf = new uint8_t[*bufferSize];
+	if( !buf )
+	{
+		*bufferSize = 0;
+		return;
+	}
+	*buffer = buf;
+	for ( const auto& p : m_payload )
+	{
+		new( buf ) PayloadType( p.type );
+		buf += sizeof( PayloadType );
+		memcpy( buf, p.data.data(), p.data.size() );
+		buf += p.data.size();
+	}
+}
+
+void Tr2VoxelData::ReleaseWriteBuffer( unsigned char* buffer )
+{
+	delete[] buffer;
+}
+
+unsigned char* Tr2VoxelData::AllocateReadBuffer( const char* memberName, size_t bufferSize )
+{
+	return new uint8_t[bufferSize];
+}
+
+void Tr2VoxelData::SetBufferAndSize( const char* memberName, unsigned char* buffer, size_t bufferSize )
+{
+	auto initialBuffer = buffer;
+
+	while ( true )
+	{
+		if( bufferSize < sizeof( PayloadType ) )
+		{
+			break;
+		}
+		PayloadType payloadType = *reinterpret_cast<PayloadType*>( buffer );
+		buffer += sizeof( PayloadType );
+		bufferSize -= sizeof( PayloadType );
+		size_t payloadSize = payloadType.GetStoreSize( m_dimensions );
+		if( bufferSize < payloadSize )
+		{
+			break;
+		}
+		m_payload.emplace_back( Payload{ payloadType, std::vector<uint8_t>( buffer, buffer + payloadSize ) } );
+		buffer += payloadSize;
+		bufferSize -= payloadSize;
+	}
+	delete[] initialBuffer;
+}
+
 
 bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Dimensions& resultRef, unsigned int argID )
 {

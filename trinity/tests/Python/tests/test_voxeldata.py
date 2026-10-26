@@ -3,6 +3,8 @@ import unittest
 import blue
 import trinity
 
+from ._util import TempRes
+
 
 class TestVoxelData(unittest.TestCase):
     def assertAlmostEqual(self, first, second, places = None, msg = None, delta = None):
@@ -81,3 +83,18 @@ class TestVoxelData(unittest.TestCase):
         data.SetVoxels([((1, 1, 1), 7, (0.5, 0.2))])
         data.SetVoxels([((1, 0, 0), 3, (0.3, 0.7)), ((1, 1, 1), 8, (0.6, 0.4))])
         self.assertEqual(data.GetPayloadData(0, (1, 1, 1)), 8)
+
+    def test_canPersistData(self):
+        with TempRes():
+            data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.UInt8, "elementCount": 1, "normalized": False}, {"type": trinity.Tr2VoxelDataType.Float16, "elementCount": 2, "normalized": False}])
+            data.SetVoxels([((1, 1, 1), 7, (0.5, 0.2))])
+
+            self.assertTrue(blue.resMan.SaveObject(data, "res:/test_voxeldata.red"))
+
+            data1 = blue.resMan.LoadObject("res:/test_voxeldata.red")
+            self.assertEqual(data.payloadChannelCount, data1.payloadChannelCount)
+            self.assertEqual(data.width, data1.width)
+            self.assertEqual(data.height, data1.height)
+            self.assertEqual(data.depth, data1.depth)
+            self.assertEqual(data.GetPayloadData(0, (1, 1, 1)), 7)
+            self.assertAlmostEqual(data.GetPayloadData(1, (1, 1, 1)), (0.5, 0.2), places=2)

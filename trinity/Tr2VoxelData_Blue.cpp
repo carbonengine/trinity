@@ -29,12 +29,15 @@ BLUE_DEFINE( Tr2VoxelData );
 const Be::ClassInfo* Tr2VoxelData::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2VoxelData, "" )
+		MAP_INTERFACE( ICustomPersist )
 
 		MAP_ATTRIBUTE( "width", m_dimensions.width, "The width of the voxel data", Be::READ | Be::PERSIST );
 		MAP_ATTRIBUTE( "height", m_dimensions.height, "The height of the voxel data", Be::READ | Be::PERSIST );
 		MAP_ATTRIBUTE( "depth", m_dimensions.depth, "The depth of the voxel data", Be::READ | Be::PERSIST );
 
 		MAP_PROPERTY_READONLY( "payloadChannelCount", GetPayloadChannelCount, "Number of channels in the payload" )
+
+		MAP_ATTRIBUTE_AS_CUSTOM_BINARY_BLOCK( "payload" )
 
 		MAP_METHOD_AND_WRAP( 
 			"__init__", 
