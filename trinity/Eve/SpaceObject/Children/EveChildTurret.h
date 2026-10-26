@@ -39,7 +39,7 @@ public:
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 
 	void UpdateCachedGeometryData();
-	void BuildCachedGeometryData( TriGeometryRes & geometryRes );
+	void BuildCachedGeometryData( Tr2GeometryProvider & geometryRes );
 	void ReleaseCachedGeometryData();
 
 	// action
@@ -81,7 +81,7 @@ protected:
 
 	Matrix GetTurretBoneTransform( uint32_t boneID ) const;
 
-	TriGeometryRes* GetGeometryRes() const;
+	Tr2GeometryProvider* GetGeometryRes() const;
 
 	// animation
 	float PlayAnimation( const std::string& animName, const std::string& animNameIdle, float delay = 0.f );
@@ -141,7 +141,7 @@ protected:
 	std::wstring m_idleToTargetingMovementAudioEvent;
 	std::wstring m_targetingToIdleMovementAudioEvent;
 
-	TriGeometryResPtr m_cachedGeometryRes;
+	Tr2GeometryProviderPtr m_cachedGeometryRes;
 };
 
 TYPEDEF_BLUECLASS( EveChildTurret );

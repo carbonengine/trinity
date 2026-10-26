@@ -169,7 +169,7 @@ Tr2RaytracingMesh::Tr2RaytracingMesh() :
 {
 }
 
-void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize )
+void Tr2RaytracingMesh::UpdateRtMesh( Tr2GeometryProvider* geometry, uint32_t meshIndex, float screenSize )
 {
 	if( m_geometry != geometry || m_meshIndex != meshIndex )
 	{
