@@ -43,7 +43,7 @@ struct EveChildGeometryArea
  */
 struct EveChildGeometry
 {
-	class TriGeometryRes* geometry = nullptr;
+	class Tr2GeometryProvider* geometry = nullptr;
 	Matrix childToObject = IdentityMatrix();
 	uint32_t areaStart = 0;
 	uint32_t areaCount = 0;

@@ -17,6 +17,14 @@ public:
 	explicit Tr2CmfContents( IBlueStream& stream, const char* filename );
 
 	/**
+	 * @brief Creates the cmf contents in memory.
+	 * @param data The cmf.
+	 * @param size The size of the cmf.
+	 * @param name The name for the cmf.
+	 */
+	Tr2CmfContents( const void* data, size_t size, const char* name );
+
+	/**
 	 * @brief Returns true if the .cmf file was successfully read and parsed, false otherwise.
 	 */
 	operator bool() const;
@@ -54,4 +62,6 @@ private:
 		std::unique_ptr<uint8_t[]> data;
 	};
 	std::vector<Section> m_sections;
+
+	void Initialize( const void* data, size_t size, const char* name, cmf::ValidationOptions options );
 };

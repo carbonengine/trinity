@@ -7,22 +7,16 @@
 #include <cmf/compression.h>
 
 
-Tr2CmfContents::Tr2CmfContents( IBlueStream& stream, const char* filename )
+void Tr2CmfContents::Initialize( const void* data, size_t size, const char* name, cmf::ValidationOptions options )
 {
-	void* data;
-	if( !stream.LockData( &data, 0 ) )
-	{
-		CCP_LOGERR( "Failed to read CMF file %s", filename );
-		return;
-	}
-	auto size = stream.GetSize();
-	auto validated = cmf::ValidateFile( data, size, { true, true } );
+	auto validated = cmf::ValidateFile( data, size, options );
 	if( !validated )
 	{
-		CCP_LOGERR( "Invalid CMF file %s: %s", filename, validated.error.c_str() );
+		CCP_LOGERR( "Invalid CMF data %s: %s", name, validated.error.c_str() );
 		return;
 	}
-	auto header = static_cast<cmf::Header*>( data );
+
+	auto header = static_cast<const cmf::Header*>( data );
 	m_sections.reserve( header->sections.size() );
 	for( const auto& section : header->sections )
 	{
@@ -32,7 +26,25 @@ Tr2CmfContents::Tr2CmfContents( IBlueStream& stream, const char* filename )
 		dest.data = std::make_unique<uint8_t[]>( section.compressedSize );
 		memcpy( dest.data.get(), (uint8_t*)data + section.offset, section.compressedSize );
 	}
+
 	cmf::OffsetsToPointers( *reinterpret_cast<cmf::Data*>( m_sections[0].data.get() ) );
+}
+
+Tr2CmfContents::Tr2CmfContents( IBlueStream& stream, const char* filename )
+{
+	void* data;
+	if( !stream.LockData( &data, 0 ) )
+	{
+		CCP_LOGERR( "Failed to read CMF file %s", filename );
+		return;
+	}
+	auto size = stream.GetSize();
+	Initialize( data, size, filename, { true, true } );
+}
+
+Tr2CmfContents::Tr2CmfContents( const void* data, size_t size, const char* name )
+{
+	Initialize( data, size, name, { false, true } );
 }
 
 Tr2CmfContents::operator bool() const

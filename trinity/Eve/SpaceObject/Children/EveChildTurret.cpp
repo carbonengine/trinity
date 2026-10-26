@@ -313,7 +313,7 @@ void EveChildTurret::UpdateCachedGeometryData()
 		m_cachedGeometryRes = geometryRes;
 	}
 }
-void EveChildTurret::BuildCachedGeometryData( TriGeometryRes& geometryRes )
+void EveChildTurret::BuildCachedGeometryData( Tr2GeometryProvider& geometryRes )
 {
 	if( geometryRes.GetSkeletonCount() )
 	{
@@ -771,7 +771,7 @@ Matrix EveChildTurret::GetTurretBoneTransform( uint32_t boneID ) const
 	return matrix;
 }
 
-TriGeometryRes* EveChildTurret::GetGeometryRes() const
+Tr2GeometryProvider* EveChildTurret::GetGeometryRes() const
 {
 	return m_mesh ? m_mesh->GetGeometryResource() : nullptr;
 }

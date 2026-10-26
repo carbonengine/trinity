@@ -225,7 +225,7 @@ void EveChildMesh::InitializeAnimation()
 			if( auto geometry = m_mesh->GetGeometryResource() )
 			{
 				m_animationUpdater->SetUseMeshBinding( true );
-				m_animationUpdater->SetSharedGeometryRes( geometry );
+				m_animationUpdater->SetSharedGeometryRes( BlueCastPtr( geometry ) );
 				return;
 			}
 		}
@@ -711,7 +711,7 @@ void EveChildMesh::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batc
 		return;
 	}
 
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = m_mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
@@ -1167,6 +1167,7 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 		UnregisterAudioGeometry();
 	}
 	m_allowAudioGeometry = allowAudioGeometry;
+
 	if( m_animationUpdater )
 	{
 		if( m_mesh && m_animationUpdater->GetResPath().empty() )
@@ -1185,9 +1186,16 @@ void EveChildMesh::UpdateSyncronous( const EveUpdateContext& updateContext, cons
 
 		if( m_mesh && !m_animationUpdater->HasMeshBinding() )
 		{
-			if( !m_meshBinding || m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != m_mesh->GetGeometryResource() || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() )
+			auto geometryRes = dynamic_cast<TriGeometryRes*>( m_mesh->GetGeometryResource() );
+
+			if( m_meshBinding && ( m_meshBinding->GetAnimation() != m_animationUpdater || m_meshBinding->GetGeometryRes() != geometryRes || m_meshBinding->GetMeshIndex() != m_mesh->GetMeshIndex() ) )
 			{
-				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex() );
+				m_meshBinding = {};
+			}
+
+			if( !m_meshBinding && geometryRes )
+			{
+				m_meshBinding = std::make_unique<Tr2AnimationMeshBinding>( m_animationUpdater, geometryRes, m_mesh->GetMeshIndex() );
 			}
 		}
 		else
@@ -1428,10 +1436,14 @@ void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 			m_mesh->RenderDebugInfo( m_worldTransform, renderer, nullptr );
 		}
 
-		if( bvhOptionEnabled && !m_bvhVisualizationGeometry && m_mesh->GetGeometryResource() && m_mesh->GetGeometryResource()->IsGood() )
+		if( bvhOptionEnabled && !m_bvhVisualizationGeometry )
 		{
-			m_bvhVisualizationGeometry = m_mesh->GetGeometryResource();
-			m_bvhVisualizationGeometry->PrepareRayCaster();
+			TriGeometryResPtr geometryRes = BlueCastPtr( m_mesh->GetGeometryResource() );
+			if( geometryRes && geometryRes->IsGood() )
+			{
+				m_bvhVisualizationGeometry = geometryRes;
+				m_bvhVisualizationGeometry->PrepareRayCaster();
+			}
 		}
 		if( m_bvhVisualizationGeometry && m_bvhVisualizationGeometry->IsRayCasterReady() )
 		{
@@ -1543,16 +1555,12 @@ std::pair<const Float4x3*, size_t> EveChildMesh::GetRestPoseBoneTransforms() con
 		return std::make_pair( nullptr, 0 );
 	}
 
-	// Skinned shaders without an animation get rest-pose (identity) skin matrices, sized to the
-	// geometry's bone bindings. Unskinned geometry drawn with a skinned shader (e.g. a SOF hull
-	// flagged isSkinned) has no bindings and no blend indices in the vertex stream, so every
-	// vertex reads bone 0 - a single identity matrix covers it.
+	// Fixes skinned shader used with uninitialized animationUpdater (no skeleton), or used with no boneBindings. Otherwise shader would read garbage.
 	size_t boneCount = 1;
-	auto cmfData = m_mesh->GetGeometryResource()->GetCMFData();
-	auto meshIndex = m_mesh->GetMeshIndex();
-	if( cmfData && meshIndex < cmfData->meshes.size() )
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
+	if( meshData )
 	{
-		boneCount = std::max<size_t>( cmfData->meshes[meshIndex].boneBindings.size(), 1 );
+		boneCount = std::max<size_t>( meshData->m_jointBindings.size(), 1 );
 	}
 	if( m_restPoseBoneTransforms.size() != boneCount )
 	{

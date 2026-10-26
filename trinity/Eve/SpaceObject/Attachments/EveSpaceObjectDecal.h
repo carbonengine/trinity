@@ -128,7 +128,7 @@ public:
 
 	// access
 	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
-	void GetRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, TriGeometryRes * geomRes, float screensize );
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, Tr2GeometryProvider * geomRes, float screensize );
 	void GetInstancedRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
 	// access position etc.
@@ -160,10 +160,10 @@ public:
 
 private:
 	// create
-	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache & meshCache );
+	void CreateDecalIndexBuffers( Tr2GeometryProviderPtr geomRes, DecalMeshCache & meshCache );
 	// update
 	void UpdateDecalMatrix();
-	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
+	void CreateStaticIndexBuffers( Tr2GeometryProviderPtr geomRes );
 
 	bool HasStaticIndexBuffers() const;
 	std::vector<std::vector<uint32_t>> GetStaticIndexBuffers() const;
@@ -195,7 +195,7 @@ private:
 	Matrix m_inverseDecalMatrix;
 
 	// base mesh geometry
-	TriGeometryResPtr m_baseGeometryResource;
+	Tr2GeometryProviderPtr m_baseGeometryResource;
 	int m_geometryLodIndex;
 
 	std::shared_ptr<MeshDecalData> m_decalGeometry;

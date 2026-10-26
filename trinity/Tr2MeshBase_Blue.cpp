@@ -6,6 +6,39 @@
 BLUE_DEFINE_ABSTRACT( Tr2MeshBase );
 
 
+#if BLUE_WITH_PYTHON
+
+static PyObject* PyGetAreas( PyObject* self, PyObject* args )
+{
+	Tr2MeshBase* pThis = BluePythonCast<Tr2MeshBase*>( self );
+	if( !pThis )
+	{
+		return NULL;
+	}
+
+	int areaIndex;
+
+	if( !PyArg_ParseTuple( args, "i", &areaIndex ) )
+	{
+		PyErr_SetString( PyExc_TypeError, "Arguments must be (i)." );
+		return 0;
+	}
+
+	TriBatchType type( static_cast<TriBatchType>( areaIndex ) );
+
+	Tr2MeshAreaVector* areas( pThis->GetAreas( type ) );
+
+	if( !areas )
+	{
+		Py_RETURN_NONE;
+	}
+
+	return PyOS->WrapBlueObject( areas->GetRawRoot() );
+}
+
+#endif
+
+
 const Be::ClassInfo* Tr2MeshBase::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2MeshBase, "" )
@@ -39,6 +72,21 @@ const Be::ClassInfo* Tr2MeshBase::ExposeToBlue()
 			SetMaterialBoundsAdjustment,
 			"Assigns material bounds adjustment parameters. Normally set by the publisher\n"
 			":param adjustment: adjustment values extracted from shaders" )
+
+		MAP_PROPERTY_READONLY(
+			"isLoading",
+			IsLoading,
+			"If set, mesh resources might still be loading" )
+
+		MAP_METHOD(
+			"GetAreas",
+			PyGetAreas,
+			"Returns mesh area list\n"
+			":param areaType: area type\n"
+			":type areaType: int\n"
+			":rtype: None | List" );
+
+		MAP_METHOD_AND_WRAP( "GetAreasCount", GetAreasCount, "" );
 
 	EXPOSURE_END()
 }

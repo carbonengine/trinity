@@ -179,7 +179,7 @@ void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContex
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, TriGeometryRes* geomRes, float screensize )
+void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCache& meshCache, Tr2GeometryProvider* geomRes, float screensize )
 {
 	if( m_isVisible <= 0 || !geomRes )
 	{
@@ -589,7 +589,7 @@ void EveSpaceObjectDecal::SetBoneIndex( int idx )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache& meshCache )
+void EveSpaceObjectDecal::CreateDecalIndexBuffers( Tr2GeometryProviderPtr geomRes, DecalMeshCache& meshCache )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -824,7 +824,7 @@ void EveSpaceObjectDecal::SetMinScreenSize( float minScreenSize )
 	m_minScreenSize = minScreenSize;
 }
 
-void EveSpaceObjectDecal::CreateStaticIndexBuffers( TriGeometryResPtr geomRes )
+void EveSpaceObjectDecal::CreateStaticIndexBuffers( Tr2GeometryProviderPtr geomRes )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 

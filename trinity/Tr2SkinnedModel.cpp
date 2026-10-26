@@ -36,7 +36,7 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 		return;
 	}
 
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
