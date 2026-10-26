@@ -1271,6 +1271,9 @@ set(_SOURCES
     Resources/Tr2ProceduralGeometryProvider.cpp
     Resources/Tr2ProceduralGeometryProvider.h
     Resources/Tr2ProceduralGeometryProvider_Blue.cpp
+    Resources/Tr2ProceduralSierpinski.cpp
+    Resources/Tr2ProceduralSierpinski.h
+    Resources/Tr2ProceduralSierpinski_Blue.cpp
     Resources/Tr2TextureLodManager.cpp
     Resources/Tr2TextureLodManager.h
     Resources/Tr2TextureLodManager_Blue.cpp

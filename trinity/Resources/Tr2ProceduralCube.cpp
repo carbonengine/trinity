@@ -122,7 +122,7 @@ bool Tr2ProceduralCubeBuilder::BuildCmf( cmf::MemoryAllocator& allocator, cmf::B
 std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2ProceduralCube::CreateBuilder() const
 {
 	auto builder = std::make_unique<Tr2ProceduralCubeBuilder>();
-	builder->m_name = "Tr2ProceduralCubeBuilder";
+	builder->m_name = "Tr2ProceduralCube";
 	builder->m_extent = m_extent;
 	return builder;
 }
