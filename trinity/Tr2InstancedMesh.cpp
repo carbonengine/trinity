@@ -424,7 +424,7 @@ bool Tr2InstancedMesh::IsLoading() const
 //   true On success
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-static bool GetMeshVertexDeclaration( TriGeometryRes* geometryRes, int meshIndex, Tr2VertexDefinition& vd )
+static bool GetMeshVertexDeclaration( Tr2GeometryProvider* geometryRes, int meshIndex, Tr2VertexDefinition& vd )
 {
 	if( geometryRes == nullptr || !geometryRes->IsGood() )
 	{

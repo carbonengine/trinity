@@ -239,7 +239,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 			continue;
 		}
 
-		TriGeometryRes* geomRes = mesh->GetGeometryResource();
+		Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 		if( !geomRes || !geomRes->IsGood() )
 		{
 			continue;

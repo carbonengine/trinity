@@ -167,7 +167,7 @@ void Tr2Model::GetBatchesFromMesh( Tr2Mesh* mesh,
 		return;
 	}
 
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2GeometryProvider* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
