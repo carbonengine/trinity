@@ -259,9 +259,7 @@ void Tr2LightManager::ClearReflectionViews()
 
 	if( m_activeView != MAIN_VIEW )
 	{
-		m_activeView = MAIN_VIEW;
-		m_lightBufferVariable = m_views[MAIN_VIEW].lightBuffer;
-		m_indexBufferVariable = m_views[MAIN_VIEW].indexBuffer;
+		SetActiveView( MAIN_VIEW );
 	}
 }
 
@@ -294,7 +292,7 @@ void Tr2LightManager::SetViewFrustum( uint8_t viewIndex, const TriFrustum& frust
 	m_views[viewIndex].frustum = frustum;
 }
 
-void Tr2LightManager::SetActiveView( uint8_t viewIndex, const TriFrustum& frustum )
+void Tr2LightManager::SetActiveView( uint8_t viewIndex )
 {
 	if( viewIndex >= m_views.size() )
 	{
@@ -304,7 +302,6 @@ void Tr2LightManager::SetActiveView( uint8_t viewIndex, const TriFrustum& frustu
 
 	m_activeView = viewIndex;
 	View& view = m_views[viewIndex];
-	view.frustum = frustum;
 	m_lightBufferVariable = view.lightBuffer;
 	m_indexBufferVariable = view.indexBuffer;
 }
@@ -765,9 +762,6 @@ void Tr2LightManager::ResolveView( View& view )
 ALResult Tr2LightManager::UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
 	View& view = GetActiveView();
-	m_lightBufferVariable = view.lightBuffer;
-	m_indexBufferVariable = view.indexBuffer;
-
 	if( view.lightData.empty() )
 	{
 		return ClearLightIndices( view, renderContext );
@@ -808,10 +802,6 @@ bool Tr2LightManager::OnPrepareResources()
 	}
 	m_perFrameData.Create( sizeof( PerFrameData ), Tr2ConstantUsageAL::ONE_SHOT, nullptr, renderContext );
 
-	// DoUpdateLists points the effect at the buffers of the view it works on
-	m_effect->SetParameter( BlueSharedString( "LightBuffer" ), m_views[MAIN_VIEW].lightBuffer );
-	m_effect->SetParameter( BlueSharedString( "LightIndices" ), m_views[MAIN_VIEW].indexBuffer );
-	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), m_views[MAIN_VIEW].indexBufferCounter );
 	m_effect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL() );
 
 	return true;

@@ -27,6 +27,7 @@
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
 #include "EvePicking.h"
+#include "EveSceneView.h"
 
 #include <ITriFunction.h>
 #include <IEveBallpark.h>
@@ -83,7 +84,6 @@ BLUE_DECLARE( Tr2ImpostorManager );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( EveEffectRoot2 );
 BLUE_DECLARE( Tr2ReflectionProbe );
-BLUE_DECLARE( TriProjection );
 BLUE_DECLARE( EvePlanet );
 BLUE_DECLARE_VECTOR( EvePlanet );
 BLUE_DECLARE( EveVirtualCameraSystem );
@@ -96,84 +96,6 @@ BLUE_DECLARE( Tr2PostProcessAttributes );
 BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 
 class EveInstancedMeshManager;
-
-namespace SceneRender 
-{
-// Describes the view being rendered and what it renders. Built with MainView or
-// ReflectionFace as part of a View, which is passed to every per-view call; the scene reads
-// these flags rather than deciding per call site what a kind of view gets.S
-struct ViewInfo
-{
-	// Passed on to GetBatches, so renderables can filter themselves (e.g. ShouldReflect)
-	Tr2RenderReason reason = TR2RENDERREASON_NORMAL;
-	Tr2RenderContextEnum::CullMode cullMode = Tr2RenderContextEnum::CULLMODE_CW;
-	bool distortion = true;
-	// Gather the scene's objects, camera attachments, static particles and impostors.
-	// Otherwise only the reflectable renderables in the component registry are gathered.
-	bool sceneObjects = true;
-	// The view feeds the next frame: view history for reprojection, temporal volumetrics
-	// and lens flare occlusion queries
-	bool temporal = true;
-	// Render the scene as a reflection probe sees it: damped reflection intensity,
-	// reflection background and the reflection shadow map
-	bool reflection = false;
-	bool subsurfaceScattering = true;
-	bool gpuParticles = true;
-	bool lensflares = true;
-
-	static ViewInfo MainView( bool distortion );
-	static ViewInfo ReflectionFace();
-};
-
-// Driver side features of a view. What the scene renders is described by the ViewInfo in
-// View.
-struct Features
-{
-	bool upscaling = true;
-	bool antiAliasing = true;
-	bool reflections = true;
-	bool ssao = true;
-	bool shadows = true;
-	bool velocityMap = true;
-	// special background rendering (f.ex texture background)
-	bool background = true;
-	// special overlay rendering (f.ex texture overlay)
-	bool overlay = true;
-
-	bool dynamicLights = true;
-	bool dynamicLightShadows = true;
-
-	static Features ReflectionFace();
-	static Features ReflectionBackground();
-};
-
-// A view to render: its camera, what the scene renders from it (scene) and which driver
-// features it uses (features). Built by the render driver with Main or ReflectionFace.
-struct View
-{
-	Matrix view;
-	// sets the renderer's projection
-	TriProjectionPtr projectionSource;
-	Matrix projection;
-	Matrix jitterMatrix;
-	TextureSize2D renderSize;
-	float mipLodBias = 0.0f;
-	float upscalingAmount = 1.0f;
-	// derived from the view, the jittered projection and renderSize
-	TriFrustum frustum;
-
-	// The Tr2LightManager view of this view: 0 is the main view, 1.. are reflection probe faces
-	uint32_t lightView = 0;
-
-	ViewInfo scene;
-	Features features;
-
-	static View Main( const Matrix& view, const TriProjectionPtr& projection, const Matrix& jitterMatrix, float mipLodBias, float upscalingAmount, const TextureSize2D& renderSize, bool distortion );
-	// backgroundOnly: the probe's first pass, which draws only the background into the faces
-	static View ReflectionFace( unsigned face, const Tr2ReflectionProbe& probe, const TriProjectionPtr& faceProjection, const TextureSize2D& faceRenderSize, bool backgroundOnly = false );
-};
-
-}
 
 
 BLUE_CLASS( EveSpaceScene ) :
@@ -210,7 +132,7 @@ public:
 		Tr2GpuResourcePool::Texture pointLightShadowDepth;
 	};
 
-	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, const SceneRender::View& view, Tr2RenderContext& renderContext );
+	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	bool RenderMainPass(
 		const Tr2TextureAL& colorMap,
 		const Tr2TextureAL& depthMap,
@@ -218,25 +140,24 @@ public:
 		const Tr2TextureAL& velocityMap,
 		const Tr2TextureAL& opaqueColorMap,
 		Tr2GpuResourcePool& gpuResourcePool,
-		const SceneRender::View& view,
+		const EveSceneView::ViewInfo& view,
 		Tr2RenderContext& renderContext );
 	void RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const SceneRender::View& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
+	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
-	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const SceneRender::View& view, Tr2RenderContext& renderContext );
+	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void RenderReflectionPass( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
 	void BeginFrame( Tr2RenderContext& renderContext );
-	void BeginView( const SceneRender::View& view, Tr2RenderContext& renderContext );
-	void EndRender( const SceneRender::View& view, Tr2RenderContext& renderContext );
+	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
+	void EndRender( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
-	void GatherBatches( const SceneRender::View& view, Tr2RenderContext& renderContext );
+	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
 	
-	void SetViewInfo( const SceneRender::View& view );
-	void UpdateView( const SceneRender::View& view );
+	void SetCamera( const EveSceneView::Camera& camera );
 	Tr2ReflectionProbe* GetReflectionProbe() const;
 
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -689,7 +610,7 @@ protected:
 	void UpdateFrame( Be::Time realTime, Be::Time simTime );
 	void EnsureVisualizerEffect();
 	void ResolveLightingOverrides();
-	void ApplyViewLighting( const SceneRender::View& view );
+	void ApplyViewLighting( const EveSceneView::ViewInfo& view );
 	void GatherDynamicLights( Tr2RenderContext& renderContext );
 	void PrepareLensflares();
 	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );

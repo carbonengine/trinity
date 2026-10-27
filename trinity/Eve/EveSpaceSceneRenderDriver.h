@@ -89,6 +89,41 @@ public:
 
 private:
 
+	// The driver's features a view uses. What the scene renders is described by the
+	// SceneRender::ViewInfo in RenderInfo. The features are off by default and every factory
+	// sets every feature, so a new feature has to be decided for each kind of view.
+	struct Features
+	{
+		bool upscaling = false;
+		bool antiAliasing = false;
+		// the old route renders the reflection probe faces from within this view
+		bool reflections = false;
+		bool ssao = false;
+		bool shadows = false;
+		bool velocityMap = false;
+		// special background rendering (f.ex texture background)
+		bool background = false;
+		// special overlay rendering (f.ex texture overlay)
+		bool overlay = false;
+		bool dynamicLights = false;
+
+		static Features Main();
+		static Features ReflectionFace();
+		// the probe's first pass, which only draws the background into the faces
+		static Features ReflectionBackground();
+	};
+
+	// A view rendered by RenderView: its camera and what the scene renders from it, the
+	// driver's features, and its view in the Tr2LightManager
+	struct RenderInfo
+	{
+		EveSceneView::Camera camera;
+		EveSceneView::ViewInfo scene;
+		Features features;
+		// 0 is the main view, 1.. are the reflection probe faces rendered in the frame
+		uint32_t lightView = 0;
+	};
+
 	// Targets rendered by RenderView
 	struct ViewTargets
 	{
@@ -105,29 +140,29 @@ private:
 		bool firstPass = false;
 		unsigned startFace = 0;
 		Vector3 viewDirection = Vector3( 0.0f, 0.0f, 0.0f );
-		std::vector<SceneRender::View> views;
+		std::vector<RenderInfo> views;
 	};
 
-	ViewTargets RenderView( const SceneRender::View& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
 	void UpdateLightManagerFaceViews( const ReflectionFaces& faces );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
-	void ApplyView( const SceneRender::View& view, Tr2RenderContext& renderContext ) const;
-	void UpdateSceneFrame( const SceneRender::View& mainView, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	void ApplyCamera( const EveSceneView::Camera& camera ) const;
+	void UpdateSceneFrame( const EveSceneView::Camera& mainCamera, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
-	void SetCameraToRenderer( const Matrix& view, TriProjectionPtr projection,	Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
+	EveSceneView::Camera GetMainCamera( const TextureSize2D& renderSize, const Matrix& jitterMatrix, float mipLodBias ) const;
 
 	Matrix GetJitterMatrix( uint32_t renderWidth, uint32_t renderHeight, Tr2RenderContext& renderContext ) const;
 	float GetMipLodBias( ) const;
 
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
-	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
-	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
+	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
+	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
-	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const SceneRender::Features& featureSet );
+	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 
 	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
 	void PrepareLightManager();
