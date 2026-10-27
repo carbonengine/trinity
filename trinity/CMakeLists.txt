@@ -1757,6 +1757,9 @@ set(_SOURCES
     Tr2VolumetricsRenderer.cpp
     Tr2VolumetricsRenderer.h
     Tr2VolumetricsRenderer_Blue.cpp
+    Tr2VoxelData.cpp
+    Tr2VoxelData.h
+    Tr2VoxelData_Blue.cpp
     TriColor.cpp
     TriColor_Blue.cpp
     TriConstants.cpp
