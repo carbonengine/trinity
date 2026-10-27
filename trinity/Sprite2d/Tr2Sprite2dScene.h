@@ -117,6 +117,15 @@ public:
 		unsigned short* indices,
 		unsigned int indexCount );
 
+	// Draws the vertices as a draw call of their own, with the given effect in
+	// place of the scene's shader and none of the scene's textures.
+	void RenderTriangleVerts(
+		Tr2Effect& effect,
+		Tr2Sprite2dD3DVertex* verticesSrc,
+		unsigned int vertexCount,
+		unsigned short* indices,
+		unsigned int indexCount );
+
 	void RenderTriangleVerts(
 		Tr2BufferAL& verticesSrc,
 		unsigned int vertexCount,
@@ -201,6 +210,10 @@ private:
 	PTriCurveSetVector m_curveSets;
 	Tr2EffectPtr m_effect;
 	uint32_t m_textureRegisters[2];
+
+	// Effect to draw with instead of the scene's shader. Only set inside
+	// RenderTriangleVerts with an effect.
+	Tr2Effect* m_effectOverride;
 
 	Tr2EffectConstant m_transformsHandle;
 

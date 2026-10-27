@@ -117,6 +117,7 @@ Tr2Sprite2dScene::Tr2Sprite2dScene( IRoot* lockobj ) :
 	m_maxSpriteCount( 1024 ),
 	m_tileMode( S2D_TS_NONE ),
 	m_drawCallStartIndex( 0 ),
+	m_effectOverride( nullptr ),
 	m_transformsHandle(),
 	m_useLinearColorSpace( false ),
 	m_isGammaCorrectingText( true ),
@@ -1041,6 +1042,17 @@ void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, u
 	CopyIndicesWithOffset( indices, indexCount, vertexOffset );
 }
 
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Effect& effect, Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned int indexCount )
+{
+	// Draw what's already batched with the scene's shader, then batch the
+	// vertices on their own and draw them with the effect
+	IssueDrawCall();
+	m_effectOverride = &effect;
+	RenderTriangleVerts( verticesSrc, vertexCount, indices, indexCount );
+	IssueDrawCall();
+	m_effectOverride = nullptr;
+}
+
 void Tr2Sprite2dScene::RenderTriangleVerts( Tr2BufferAL& verticesSrc, unsigned int vertexCount, Tr2BufferAL& indices, unsigned int indexCount )
 {
 	CCP_ASSERT( !m_captureDisplayList );
@@ -1103,6 +1115,7 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			entry.texture0 = m_texture[0];
 			entry.texture1 = m_texture[1];
 			entry.effect = m_effect;
+			entry.bindTextures = !m_effectOverride;
 			m_texelSizeVar[0].GetValue( entry.texelSize0 );
 			m_texelSizeVar[1].GetValue( entry.texelSize1 );
 
@@ -1177,22 +1190,26 @@ void Tr2Sprite2dScene::SubmitGeometry( Tr2RenderContext& renderContext )
 		transposedMatrixes[i] = Transpose( m_transformArray[i] );
 	}
 
-	for( uint32_t i = 0; i < 2; ++i )
+	// An override effect gets none of the scene's textures
+	if( !m_effectOverride )
 	{
-		Tr2TextureAL* texAL = nullptr;
-		if( m_texture[i] )
+		for( uint32_t i = 0; i < 2; ++i )
 		{
-			texAL = m_texture[i]->GetTexture();
-			if( !texAL )
+			Tr2TextureAL* texAL = nullptr;
+			if( m_texture[i] )
 			{
-				if( m_texture[i]->GetRenderTarget() )
+				texAL = m_texture[i]->GetTexture();
+				if( !texAL )
 				{
-					texAL = m_texture[i]->GetRenderTarget();
+					if( m_texture[i]->GetRenderTarget() )
+					{
+						texAL = m_texture[i]->GetRenderTarget();
+					}
 				}
 			}
+			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+			renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
 		}
-		auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-		renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
 	}
 
 	bool result = FillAndSetConstants(
@@ -1718,8 +1735,17 @@ void Tr2Sprite2dScene::SetOutlineThreshold( float outlineThreshold )
 	m_outlineThreshold = outlineThreshold;
 }
 
+// Selects the effect for the batched vertices and returns whether it can draw
+// them. An override effect always can, even before its shader loads, so that
+// a display list captured meanwhile still records its draw call.
 bool Tr2Sprite2dScene::SelectEffect()
 {
+	if( m_effectOverride )
+	{
+		m_effect = m_effectOverride;
+		return true;
+	}
+
 	Tr2Effect* newEffect;
 
 	newEffect = m_is2dRender ? m_uberShader2d : m_uberShader3d;
