@@ -3,6 +3,9 @@
 #include "StdAfx.h"
 #include "EveChildAudio.h"
 
+#include <ITr2AudParentBall.h>
+#include <ITriFunction.h>
+
 
 EveChildAudio::EveChildAudio( IRoot* lockobj ) :
 	m_mute( false ),
@@ -98,6 +101,11 @@ void EveChildAudio::UpdateSyncronous( const EveUpdateContext& updateContext, con
 
 	if( m_audioEmitter && !m_mute )
 	{
+		if( auto emitter = dynamic_cast<ITr2AudParentBall*>( m_audioEmitter.p ) )
+		{
+			emitter->SetParentBall( params.ballPosition );
+		}
+
 		Vector3 position = m_worldTransform.GetTranslation();
 		Quaternion rotation = RotationQuaternion( m_worldTransform );
 		Matrix rotationMatrix = RotationMatrix( rotation );

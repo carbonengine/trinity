@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include <ITr2AudEmitter.h>
+#include <ITr2AudParentBall.h>
 #include "TriObserverLocal.h"
 
 
@@ -38,6 +39,14 @@ void TriObserverLocal::Update( const Matrix& worldTransform )
 			up = TransformNormal( Vector3( 0.0f, 1.0f, 0.0f ), worldTransform );
 		}
 		m_observer.p->UpdatePlacement( front, up, position );
+	}
+}
+
+void TriObserverLocal::SetParentBall( IRoot* ball )
+{
+	if( auto emitter = dynamic_cast<ITr2AudParentBall*>( m_observer.p ) )
+	{
+		emitter->SetParentBall( ball );
 	}
 }
 

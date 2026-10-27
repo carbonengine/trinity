@@ -507,6 +507,7 @@ void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext,
 	}
 	for( auto it = m_observers.begin(); it != m_observers.end(); it++ )
 	{
+		( *it )->SetParentBall( params.ballPosition );
 		( *it )->Update( m_worldTransform );
 	}
 }
