@@ -72,10 +72,13 @@ void* TriPoolAllocator::Allocate( size_t size )
 		Chunk* chunk = m_chunk.load( std::memory_order_acquire );
 		if( chunk )
 		{
-			uint8_t* p = chunk->current.fetch_add( size, std::memory_order_relaxed );
-			if( p + size <= chunk->end )
+			uint8_t* p = chunk->current.load( std::memory_order_relaxed );
+			while( size_t( chunk->end - p ) >= size )
 			{
-				return p;
+				if( chunk->current.compare_exchange_weak( p, p + size, std::memory_order_relaxed ) )
+				{
+					return p;
+				}
 			}
 		}
 
@@ -159,8 +162,7 @@ TriPoolAllocator::Chunk* TriPoolAllocator::AddChunk( size_t size )
 
 size_t TriPoolAllocator::UsedBytes( const Chunk& chunk )
 {
-	uint8_t* current = chunk.current.load( std::memory_order_relaxed );
-	return size_t( std::min( current, chunk.end ) - chunk.memory );
+	return size_t( chunk.current.load( std::memory_order_relaxed ) - chunk.memory );
 }
 
 void TriPoolAllocator::FreeChunk( Chunk* chunk )

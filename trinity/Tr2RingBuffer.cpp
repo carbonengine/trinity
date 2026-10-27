@@ -56,6 +56,10 @@ uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
 
 void Tr2RingBuffer::PrepareBuffer( Tr2RenderContext& renderContext )
 {
+	if( m_gpuBufferStale )
+	{
+		CreateGpuBuffer( renderContext.GetPrimaryRenderContext() );
+	}
 	for( auto& region : m_dirtyRegions )
 	{
 		if( region.size )
@@ -102,10 +106,14 @@ void Tr2RingBuffer::Resize( uint32_t size )
 	m_head = m_size;
 	m_size = size;
 	m_tail = m_size;
+	m_gpuBufferStale = true;
+}
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	m_buffer.Create( m_stride, size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
+void Tr2RingBuffer::CreateGpuBuffer( Tr2PrimaryRenderContextAL& renderContext )
+{
+	m_buffer.Create( m_stride, m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
 	m_buffer.SetName( m_name.c_str() );
+	m_gpuBufferStale = false;
 }
 
 template <typename T>
@@ -120,6 +128,7 @@ Tr2RingBuffer& Tr2RingBuffer::GetInstance()
 		self->m_stride = sizeof( T );
 		self->SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
 		self->Resize( INITIAL_SIZE );
+		self->CreateGpuBuffer( renderContext );
 	}
 
 	CCP_ASSERT_M( sizeof( T ) == self->m_stride, "Stride has to match size of datatype!" );
@@ -147,6 +156,7 @@ bool Tr2RingBuffer::OnPrepareResources()
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		m_buffer.Create( m_stride, m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
 		m_buffer.SetName( m_name.c_str() );
+		m_gpuBufferStale = false;
 	}
 	return true;
 }

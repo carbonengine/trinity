@@ -440,6 +440,24 @@ bool EveSpaceScene::OnPrepareResources()
 	return true;
 }
 
+#if TBB_ENABLED
+extern size_t g_currentThreadCount;
+#endif
+
+namespace
+{
+// Blocks of up to maxGrainSize objects, but never fewer than four tasks per thread so small scenes still spread out.
+size_t GrainSize( size_t count, size_t maxGrainSize )
+{
+#if TBB_ENABLED
+	size_t grain = count / ( 4 * std::max<size_t>( g_currentThreadCount, 1 ) );
+	return std::clamp<size_t>( grain, 1, maxGrainSize );
+#else
+	return maxGrainSize;
+#endif
+}
+}
+
 void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -572,7 +590,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		Tr2ParallelTaskGroup taskGroup = {};
 		m_updateContext.SetTaskGroup( &taskGroup );
 
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), GrainSize( m_objects.size(), 32 ) ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( size_t i = range.begin(); i != range.end(); ++i )
 			{
 				m_objects[i]->UpdateAsyncronous( m_updateContext );
@@ -883,9 +901,6 @@ void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const 
 	}
 }
 
-bool g_gatherPerObjectDataParallel = true;
-TRI_REGISTER_SETTING( "gatherPerObjectDataParallel", g_gatherPerObjectDataParallel );
-
 namespace
 {
 enum PerObjectFlags : uint8_t
@@ -915,28 +930,25 @@ void GetBatchesFromRenderables(
 	{
 		TRINITY_STATS_ZONE( "PerObjectData" );
 
-		if( g_gatherPerObjectDataParallel )
-		{
-			Tr2ParallelFor( Tr2BlockedRange<unsigned>( 0, renderableCount, 64 ), [&]( Tr2BlockedRange<unsigned> range ) {
-				for( unsigned i = range.begin(); i != range.end(); ++i )
+		Tr2ParallelFor( Tr2BlockedRange<unsigned>( 0, renderableCount, unsigned( GrainSize( renderableCount, 64 ) ) ), [&]( Tr2BlockedRange<unsigned> range ) {
+			for( unsigned i = range.begin(); i != range.end(); ++i )
+			{
+				ITr2Renderable* r = objectRenderables[i];
+				if( !r->SupportsParallelPerObjectData() )
 				{
-					ITr2Renderable* r = objectRenderables[i];
-					if( !r->SupportsParallelPerObjectData() )
-					{
-						flags[i] = PER_OBJECT_DEFERRED;
-						continue;
-					}
-					perObjectData[i] = r->GetPerObjectData( opaqueBatches );
-					if( wantTransparencies && r->HasTransparentBatches() )
-					{
-						flags[i] = PER_OBJECT_TRANSPARENT;
-					}
+					flags[i] = PER_OBJECT_DEFERRED;
+					continue;
 				}
-			} );
-		}
+				perObjectData[i] = r->GetPerObjectData( opaqueBatches );
+				if( wantTransparencies && r->HasTransparentBatches() )
+				{
+					flags[i] = PER_OBJECT_TRANSPARENT;
+				}
+			}
+		} );
 		for( unsigned i = 0; i != renderableCount; ++i )
 		{
-			if( g_gatherPerObjectDataParallel && flags[i] != PER_OBJECT_DEFERRED )
+			if( flags[i] != PER_OBJECT_DEFERRED )
 			{
 				continue;
 			}
@@ -1480,7 +1492,7 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	{
 		TRINITY_STATS_ZONE( "UpdateVisibility" );
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), GrainSize( m_objects.size(), 32 ) ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( size_t i = range.begin(); i != range.end(); ++i )
 			{
 				m_objects[i]->UpdateVisibility( m_updateContext, identity );
@@ -1585,7 +1597,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 	{
 		TRINITY_STATS_ZONE( "PushRtGeometry" );
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, shadowCasters.size(), 32 ), [&]( Tr2BlockedRange<size_t> range ) {
+		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, shadowCasters.size(), GrainSize( shadowCasters.size(), 32 ) ), [&]( Tr2BlockedRange<size_t> range ) {
 			for( size_t i = range.begin(); i != range.end(); ++i )
 			{
 				shadowCasters[i]->PushRtGeometry( *m_rtManager );
@@ -4230,9 +4242,6 @@ void EveSpaceScene::GetLightMatrices( const Tr2LightManager::PerLightData& light
 	view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 }
 
-bool g_rtOutdatedAnimationsParallel = true;
-TRI_REGISTER_SETTING( "rtOutdatedAnimationsParallel", g_rtOutdatedAnimationsParallel );
-
 void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -4302,7 +4311,8 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 	const TriShadowOrthoFrustum sunOrthoFrustum( sunShadowFrustum, SHADOW_MAP_SIZE, sunDir );
 	std::vector<TriShadowFrustum> spotShadowFrustums( begin( spotLightFrustums ), end( spotLightFrustums ) );
 
-	auto processCaster = [&]( IEveShadowCaster* caster ) -> void {
+	auto& casters = m_componentRegistry->GetComponents<IEveShadowCaster>();
+	Tr2ParallelDo( begin( casters ), end( casters ), [&]( IEveShadowCaster* caster ) {
 		if( caster->IsShadowCastingDirty() )
 		{
 			return;
@@ -4338,17 +4348,7 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 				return;
 			}
 		}
-	};
-
-	if( g_rtOutdatedAnimationsParallel )
-	{
-		auto& casters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-		Tr2ParallelDo( begin( casters ), end( casters ), processCaster );
-	}
-	else
-	{
-		m_componentRegistry->ProcessComponents<IEveShadowCaster>( processCaster );
-	}
+	} );
 }
 
 void RegisterWithVariableStore( const EveSpaceScene::ShadowResources& shadowResources, Tr2GpuResourcePool& gpuResourcePool )
