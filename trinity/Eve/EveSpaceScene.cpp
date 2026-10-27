@@ -2452,9 +2452,9 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	{
 		TRINITY_STATS_ZONE( "get shadowbatches for volumetrics" );
 		auto shadowFrustum = TriShadowOrthoFrustum( cloudShadowInformation->shadowFrustum, cloudShadowInformation->shadowMapSize, m_sunData.DirWorld );
-		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
+			float sizeInShadow = 0.0f;
 			caster->IsCastingShadow( frustum, shadowFrustum, TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
@@ -2578,9 +2578,9 @@ void EveSpaceScene::RenderShadowMapForSpotLight(
 	shadowFrustum.DeriveFrustum( &view, &lightPosition, &projection, renderContext.m_esm.GetViewport() );
 	{
 		TRINITY_STATS_ZONE( "get shadowbatches for light" );
-		float sizeInShadow = 0.0f;
 		for( auto& caster : shadowCasters )
 		{
+			float sizeInShadow = 0.0f;
 			caster->IsCastingShadow( m_updateContext.GetFrustum(), TriShadowFrustum( shadowFrustum ), TR2RENDERREASON_NORMAL, sizeInShadow );
 			// special threshold check
 			if( sizeInShadow > 5.0f )
