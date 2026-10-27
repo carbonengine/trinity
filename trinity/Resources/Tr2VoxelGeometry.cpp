@@ -16,10 +16,10 @@ public:
 	}
 };
 
-class SimpleBuilder : public Tr2ProceduralGeometryBuilder
+class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	SimpleBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
+	VoxelBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
 		m_occupancy( std::move( occupancy ) ),
 		m_cellSize( cellSize ),
 		m_dimensions( m_occupancy.m_voxelData->GetDimensions() )
@@ -73,14 +73,37 @@ public:
 		return true;
 	}
 
-private:
+protected:
 	struct Vertex
 	{
 		Vector3 position;
 		Vector3 normal;
 	};
 
-	std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel )
+	virtual std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) = 0;
+
+	bool GetCellOccupancy( const Tr2VoxelData::Coord& coord ) const
+	{
+		size_t index = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
+		auto byte = m_occupancy.m_data[index / 8];
+		return ( byte & ( 1 << ( index % 8 ) ) ) != 0;
+	}
+
+	const Tr2VoxelData::PayloadSnapshot m_occupancy;
+	const float m_cellSize;
+	const Tr2VoxelData::Dimensions m_dimensions;
+};
+
+class SimpleBuilder : public VoxelBuilder
+{
+public:
+	SimpleBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
+		VoxelBuilder( std::move( occupancy ), cellSize )
+	{
+	}
+
+protected:
+	std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
 	{
 		struct Face
 		{
@@ -176,17 +199,27 @@ private:
 
 		return { vbView, ibView };
 	}
+};
 
-	bool GetCellOccupancy( const Tr2VoxelData::Coord& coord ) const
+
+class SmoothingBuilder : public VoxelBuilder
+{
+public:
+	SmoothingBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+		VoxelBuilder( std::move( occupancy ), cellSize ),
+		m_subdivision( subdivision ),
+		m_relaxIterations( relaxIterations )
 	{
-		size_t index = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
-		auto byte = m_occupancy.m_data[index / 8];
-		return ( byte & ( 1 << ( index % 8 ) ) ) != 0;
 	}
 
-	const Tr2VoxelData::PayloadSnapshot m_occupancy;
-	const float m_cellSize;
-	const Tr2VoxelData::Dimensions m_dimensions;
+protected:
+	std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
+	{
+		return {};
+	}
+
+	const uint32_t m_subdivision;
+	const uint32_t m_relaxIterations;
 };
 
 }
