@@ -255,6 +255,7 @@ public:
 
 	virtual void Commit( const Tr2RenderBatch& batch ) = 0;
 	virtual const std::vector<Tr2RenderBatch>& GetGdprBatches() const = 0;
+	virtual std::vector<Tr2RenderBatch>& GetGdprBatches() = 0;
 	virtual const std::vector<Tr2RenderBatch>& GetBatches() const = 0;
 	virtual std::vector<Tr2RenderBatch>& GetBatches() = 0;
 
@@ -369,6 +370,11 @@ public:
 		return m_gdprBatches;
 	}
 
+	std::vector<Tr2RenderBatch>& GetGdprBatches() override
+	{
+		return m_gdprBatches;
+	}
+
 	const std::vector<Tr2RenderBatch>& GetBatches() const override
 	{
 		return m_batches;
@@ -426,5 +432,11 @@ private:
 	std::vector<Tr2RenderBatch> m_gdprBatches;
 	std::vector<Tr2RenderBatch> m_batches;
 };
+
+// Moves the batches of a finalized accumulator into withTechnique or withoutTechnique by whether their
+// shader has the named technique. Order and GDPR groups are kept, so the outputs need no Finalize.
+// Transitional: to be removed, together with the forward opaque and decal lists, once every opaque and decal
+// shader has been ported to the deferred system and has a GBuffer technique.
+void PartitionByTechnique( ITriRenderBatchAccumulator& source, const BlueSharedString& techniqueName, ITriRenderBatchAccumulator& withTechnique, ITriRenderBatchAccumulator& withoutTechnique );
 
 #endif // TriRenderBatch_H

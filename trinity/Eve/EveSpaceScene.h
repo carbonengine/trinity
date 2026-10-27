@@ -418,6 +418,9 @@ protected:
 	// Primary batches, gathered in BeginRender and
 	// cleared in EndRender
 	BatchMap m_primaryBatches;
+	// Opaque and decal batches split out of m_primaryBatches by whether the shader has a GBuffer technique
+	BatchMap m_gBufferBatches;
+	BatchMap m_forwardBatches;
 	// Secondary batches used to render planets, stars, shadowed objects
 	// and so forth. Should be finalized and cleared each time they're used.
 	BatchMap m_secondaryBatches;

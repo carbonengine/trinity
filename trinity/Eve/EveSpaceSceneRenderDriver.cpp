@@ -722,7 +722,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetOpaqueColorMapIfNeeded
 	if( !needsOpaqueBackBuffer )
 	{
 		// If there are SSSSS batches, we need an opaque back buffer
-		auto batches = m_scene->m_primaryBatches[TRIBATCHTYPE_OPAQUE];
+		auto batches = m_scene->m_forwardBatches[TRIBATCHTYPE_OPAQUE];
 		static const auto SSSSS = BlueSharedString( "SSSSS" );
 		needsOpaqueBackBuffer = Tr2RenderContext::TechniqueInBatch( batches->GetGdprBatches(), SSSSS ) || Tr2RenderContext::TechniqueInBatch( batches->GetBatches(), SSSSS );
 	}

@@ -61,6 +61,8 @@ CCP_STATS_DECLARE( shadowsRendered, "Trinity/EveSpaceScene/shadowsRendered", tru
 CCP_STATS_DECLARE( raytracedShadowsTime, "Trinity/EveSpaceScene/raytracedShadowsTime", true, CST_TIME, "Time it took to set up raytraced shadows" );
 CCP_STATS_DECLARE( shLightingUpdateTime, "Trinity/EveSpaceScene/shLightingUpdateTime", true, CST_TIME, "Time took to update SH lighting for EveSpaceScene" );
 CCP_STATS_DECLARE( gatherDynamicLights, "Trinity/EveSpaceScene/gatherDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
+CCP_STATS_DECLARE( gBufferBatches, "Trinity/EveSpaceScene/gBufferBatches", true, CST_COUNTER_HIGH, "Opaque and decal batches with a GBuffer technique" );
+CCP_STATS_DECLARE( forwardBatches, "Trinity/EveSpaceScene/forwardBatches", true, CST_COUNTER_HIGH, "Opaque and decal batches without a GBuffer technique" );
 
 
 bool g_eveIsSpaceObjectResourceUnloadingEnabled = true;
@@ -228,6 +230,12 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_primaryBatches[TRIBATCHTYPE_TRANSPARENT] = CCP_NEW( "EveSpaceScene/m_sortedBatches" ) TriRenderBatchAccumulator<>( allocator );
 	m_primaryBatches[TRIBATCHTYPE_DEPTH] = CCP_NEW( "EveSpaceScene/m_depthBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 
+	for( auto type : { TRIBATCHTYPE_OPAQUE, TRIBATCHTYPE_DECAL } )
+	{
+		m_gBufferBatches[type] = CCP_NEW( "EveSpaceScene/m_gBufferBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
+		m_forwardBatches[type] = CCP_NEW( "EveSpaceScene/m_forwardBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
+	}
+
 	m_secondaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_DECAL] = CCP_NEW( "EveSpaceScene/m_decalBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_ADDITIVE] = CCP_NEW( "EveSpaceScene/m_additiveBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -320,6 +328,11 @@ EveSpaceScene::~EveSpaceScene()
 	for( auto it = m_secondaryBatches.begin(); it != m_secondaryBatches.end(); ++it )
 	{
 		CCP_DELETE( it->second );
+	}
+	for( auto& [type, batches] : m_gBufferBatches )
+	{
+		CCP_DELETE( batches );
+		CCP_DELETE( m_forwardBatches[type] );
 	}
 	CCP_DELETE( m_pickingBatches );
 
@@ -1519,6 +1532,14 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	FinalizeBatches( m_primaryBatches );
 
+	static const BlueSharedString gBufferTechnique( "GBuffer" );
+	for( auto& [type, batches] : m_gBufferBatches )
+	{
+		PartitionByTechnique( *m_primaryBatches[type], gBufferTechnique, *batches, *m_forwardBatches[type] );
+		CCP_STATS_ADD( gBufferBatches, batches->GetBatchCount() );
+		CCP_STATS_ADD( forwardBatches, m_forwardBatches[type]->GetBatchCount() );
+	}
+
 	UpdateShLighting( allObjects );
 }
 
@@ -2277,9 +2298,13 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 		ApplyPerFrameData( renderContext );
 
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		renderContext.RenderBatches( m_forwardBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+		renderContext.m_esm.ApplyStandardStates( renderingMode );
+		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		renderContext.m_esm.ApplyStandardStates( renderingMode );
+		renderContext.RenderBatches( m_forwardBatches[TRIBATCHTYPE_DECAL], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_primaryBatches[TRIBATCHTYPE_DEPTH], techniqueName );
 
@@ -2720,18 +2745,20 @@ bool EveSpaceScene::RenderMainPass(
 			{
 				if( !m_velocityMapDirty )
 				{
-					ClearRenderTargetIfNoBatches( velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
+					ClearRenderTargetIfNoBatches( velocityMap, 1, renderContext, m_gBufferBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() + m_forwardBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
 				}
 
 				Tr2PushPopRT rt( velocityMap, renderContext, 1 );
 				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
-				RenderOpaqueBatches( m_primaryBatches, renderContext );
+				RenderOpaqueBatches( m_gBufferBatches, renderContext );
+				RenderOpaqueBatches( m_forwardBatches, renderContext );
 				m_velocityMapDirty = true;
 			}
 			else
 			{
 				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::DONT_CARE } );
-				RenderOpaqueBatches( m_primaryBatches, renderContext );
+				RenderOpaqueBatches( m_gBufferBatches, renderContext );
+				RenderOpaqueBatches( m_forwardBatches, renderContext );
 			}
 		}
 	}
@@ -2749,7 +2776,7 @@ bool EveSpaceScene::RenderMainPass(
 		GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", opaqueColorMap );
 	}
 
-	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
+	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_forwardBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
 
 	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 
@@ -2862,6 +2889,8 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 
 	// Clear primary batches
 	ClearBatches( m_primaryBatches );
+	ClearBatches( m_gBufferBatches );
+	ClearBatches( m_forwardBatches );
 
 	// Store the view transform from this frame
 	m_viewLast = Tr2Renderer::GetViewTransform();

@@ -242,3 +242,61 @@ bool Compare( const Tr2RenderBatch& batch1, const Tr2RenderBatch& batch2 )
 	}
 	return batch1.m_renderingMode < batch2.m_renderingMode;
 }
+
+namespace
+{
+
+using BatchVector = std::vector<Tr2RenderBatch>;
+
+void MoveAll( BatchVector& source, BatchVector& target )
+{
+	if( target.empty() )
+	{
+		std::swap( source, target );
+	}
+	else
+	{
+		target.insert( end( target ), std::make_move_iterator( begin( source ) ), std::make_move_iterator( end( source ) ) );
+	}
+}
+
+void PartitionBatches( BatchVector& source, const BlueSharedString& techniqueName, BatchVector& withTechnique, BatchVector& withoutTechnique )
+{
+	const Tr2Shader* shader = nullptr;
+	bool shaderHasTechnique = false;
+	auto hasTechnique = [&]( const Tr2RenderBatch& batch ) {
+		if( batch.m_shader != shader )
+		{
+			uint32_t technique;
+			shader = batch.m_shader;
+			shaderHasTechnique = shader->GetTechniqueIndex( techniqueName, technique );
+		}
+		return shaderHasTechnique;
+	};
+
+	if( std::none_of( begin( source ), end( source ), hasTechnique ) )
+	{
+		MoveAll( source, withoutTechnique );
+	}
+	else if( std::all_of( begin( source ), end( source ), hasTechnique ) )
+	{
+		MoveAll( source, withTechnique );
+	}
+	else
+	{
+		for( auto& batch : source )
+		{
+			( hasTechnique( batch ) ? withTechnique : withoutTechnique ).push_back( std::move( batch ) );
+		}
+	}
+	source.clear();
+}
+
+}
+
+void PartitionByTechnique( ITriRenderBatchAccumulator& source, const BlueSharedString& techniqueName, ITriRenderBatchAccumulator& withTechnique, ITriRenderBatchAccumulator& withoutTechnique )
+{
+	PartitionBatches( source.GetGdprBatches(), techniqueName, withTechnique.GetGdprBatches(), withoutTechnique.GetGdprBatches() );
+	PartitionBatches( source.GetBatches(), techniqueName, withTechnique.GetBatches(), withoutTechnique.GetBatches() );
+	source.Clear();
+}
