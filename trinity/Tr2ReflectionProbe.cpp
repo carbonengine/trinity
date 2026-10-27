@@ -30,7 +30,6 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 	m_hasData( false ),
 	m_position( 0, 0, 0 ),
 	m_intermediateSize( FILTER_SIZE * 4 ),
-	m_prevCullInversion( false ),
 	m_customSourceTexture(),
 	m_renderFrequency( ONE_SIDE_PER_FRAME ),
 	m_currentFrame( 0 ),
@@ -70,13 +69,6 @@ bool Tr2ReflectionProbe::HasData() const
 	return m_hasData && m_postFilterTarget->IsValid();
 }
 
-TriFrustum Tr2ReflectionProbe::GetFrustum( Tr2RenderContext& renderContext )
-{
-	TriFrustum frustum = TriFrustum();
-	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &m_position, &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
-	return frustum;
-}
-
 uint8_t Tr2ReflectionProbe::GetStartFace() const
 {
 	if( m_renderFrequency == ALL_SIDES_PER_FRAME || !m_onePassDone )
@@ -103,62 +95,6 @@ Tr2ReflectionProbe::ReflectionProbeRenderFrequency Tr2ReflectionProbe::GetRender
 bool Tr2ReflectionProbe::IsFirstPass() const
 {
 	return !m_onePassDone;
-}
-
-
-void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext& renderContext )
-{
-	if( !m_lockPosition )
-	{
-		m_position = Tr2Renderer::GetViewPosition();
-	}
-
-	renderContext.m_esm.PushViewport();
-	Tr2Renderer::PushViewTransform();
-	Tr2Renderer::PushProjection();
-	renderContext.m_esm.PushRenderTarget();
-	renderContext.m_esm.PushDepthStencilBuffer();
-
-	renderContext.m_esm.SetViewport( m_intermediateSize, m_intermediateSize, 0, 0, 0, 1 );
-
-	Tr2Renderer::SetProjectionTransform( GetFaceProjection( Tr2Renderer::GetProjectionTransform() ) );
-
-	// We need to invert cull-mode because of the left-handed coordinates of the cube rendertarget
-	m_prevCullInversion = renderContext.m_esm.IsCullModeInverted();
-	renderContext.m_esm.SetInvertedCullMode( true );
-
-#if !TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
-	{
-		GPU_REGION( renderContext, "Reflection Depth Clear" );
-
-		for( int i = GetStartFace(); i < GetEndFace(); i++ )
-		{
-			renderContext.SetRenderTarget( *m_renderTargets[i], 0 );
-			renderContext.m_esm.SetDepthStencilBuffer( m_stencilMaps[i] );
-			CR( renderContext.Clear( CLEARFLAGS_ZBUFFER | CLEARFLAGS_TARGET, 0, 0, 0 ) );
-		}
-	}
-#endif
-}
-
-Tr2TextureAL Tr2ReflectionProbe::GetDepthBuffer( unsigned face )
-{
-	return m_stencilMaps[face];
-}
-
-void Tr2ReflectionProbe::StartRenderFace( unsigned face, Tr2RenderContext& renderContext )
-{
-	renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE, 0 }, { Tr2LoadAction::CLEAR, Tr2StoreAction::DONT_CARE, 0.F } );
-
-	renderContext.m_esm.SetRenderTarget( 0, *m_renderTargets[face] );
-	renderContext.m_esm.SetDepthStencilBuffer( m_stencilMaps[face] );
-
-	Tr2Renderer::SetViewTransform( GetFaceViewTransform( face, m_position ) );
-}
-
-unsigned Tr2ReflectionProbe::GetFaceSize() const
-{
-	return static_cast<unsigned>( m_intermediateSize );
 }
 
 Matrix Tr2ReflectionProbe::GetFaceProjection( const Matrix& currentProjection ) const
@@ -238,28 +174,6 @@ void Tr2ReflectionProbe::FinishFaces( const Vector3& viewDirection, Tr2RenderCon
 	}
 }
 
-void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext& renderContext )
-{
-	{
-		GPU_REGION( renderContext, "Reflection RT Copy" );
-
-		for( int i = GetStartFace(); i < GetEndFace(); i++ )
-		{
-			CR( m_renderTargetCube->GetRenderTarget().CopySubresourceRegion( Tr2TextureSubresource( i, 0 ), *m_renderTargets[i], Tr2TextureSubresource( 0, 0 ), renderContext ) );
-		}
-	}
-
-	renderContext.m_esm.SetInvertedCullMode( m_prevCullInversion );
-
-	renderContext.m_esm.PopDepthStencilBuffer();
-	renderContext.m_esm.PopRenderTarget();
-	Tr2Renderer::PopProjection();
-	Tr2Renderer::PopViewTransform();
-	renderContext.m_esm.PopViewport();
-
-	FinishFaces( Tr2Renderer::GetInverseViewTransform().GetZ(), renderContext );
-}
-
 Tr2RenderTargetPtr Tr2ReflectionProbe::GetReflection()
 {
 	return m_postFilterTarget;
@@ -305,12 +219,6 @@ bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2P
 		if( !m_renderTargets[i]->IsValid() )
 		{
 			CR_RETURN_VAL( m_renderTargets[i]->CreateManual( m_intermediateSize, m_intermediateSize, 1, rtFormat, 0, 0, EX_BIND_UNORDERED_ACCESS, TEX_TYPE_2D, Tr2CpuUsage::NONE, Tr2GpuUsage::RENDER_TARGET ), false );
-		}
-
-		if( !m_stencilMaps[i].IsValid() )
-		{
-			int stencilSize = ( m_customSourceTexture && m_customSourceTexture->IsValid() ) ? m_customSourceTexture->GetWidth() : m_intermediateSize;
-			CR_RETURN_VAL( m_stencilMaps[i].Create( Tr2BitmapDimensions( stencilSize, stencilSize, 1, PIXEL_FORMAT_D32_FLOAT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, renderContext ), false );
 		}
 	}
 
@@ -390,7 +298,6 @@ void Tr2ReflectionProbe::DestroyRenderTargets()
 	for( unsigned i = 0; i < 6; i++ )
 	{
 		m_renderTargets[i]->Destroy();
-		m_stencilMaps[i] = Tr2TextureAL();
 	}
 
 	m_renderTargetCube->Destroy();

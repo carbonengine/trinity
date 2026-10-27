@@ -146,7 +146,6 @@ public:
 	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void RenderReflectionPass( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
 	void BeginFrame( Tr2RenderContext& renderContext );
 	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void EndRender( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );

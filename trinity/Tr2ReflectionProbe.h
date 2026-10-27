@@ -33,12 +33,7 @@ public:
 
 	bool IsValid();
 	bool HasData() const;
-	void InitRenderPass( Tr2RenderContext & renderContext );
-	void StartRenderFace( unsigned face, Tr2RenderContext& renderContext );
-	void EndRenderPass( Tr2RenderContext & renderContext );
 	Tr2TextureAL GetDepthBuffer( unsigned face );
-
-	TriFrustum GetFrustum( Tr2RenderContext& renderContext );
 
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );
@@ -58,14 +53,6 @@ public:
 	// True until the first FinishFaces: until then every face is rendered, whatever the render frequency.
 	bool IsFirstPass() const;
 
-	const Tr2TextureAL& GetDepthBuffer( unsigned face ) const
-	{
-		return m_stencilMaps[face];
-	}
-
-	// External path: faces are rendered elsewhere (e.g. render driver) and submitted here.
-	// Source textures must match GetFaceSize() and the probe's intermediate format.
-	unsigned GetFaceSize() const;
 	Matrix GetFaceViewTransform( unsigned face, const Vector3& position ) const;
 	Matrix GetFaceProjection( const Matrix& currentProjection ) const;
 	void SubmitFace( unsigned face, const Tr2TextureAL& source, Tr2RenderContext& renderContext );
@@ -88,7 +75,6 @@ private:
 	int m_intermediateSize;
 
 	std::array<Tr2RenderTargetPtr, 6> m_renderTargets;
-	std::array<Tr2TextureAL, 6> m_stencilMaps;
 	Tr2RenderTargetPtr m_renderTargetCube;
 
 	Tr2EffectPtr m_preFilterEffect;
@@ -99,7 +85,6 @@ private:
 
 	ITriTextureResPtr m_customSourceTexture;
 
-	bool m_prevCullInversion;
 	bool m_hdrOutput;
 	ReflectionProbeRenderFrequency m_renderFrequency;
 	uint8_t m_currentFrame;
