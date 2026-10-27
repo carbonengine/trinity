@@ -1277,6 +1277,9 @@ set(_SOURCES
     Resources/Tr2TextureLodManager.cpp
     Resources/Tr2TextureLodManager.h
     Resources/Tr2TextureLodManager_Blue.cpp
+    Resources/Tr2VoxelGeometry.cpp
+    Resources/Tr2VoxelGeometry.h
+    Resources/Tr2VoxelGeometry_Blue.cpp
     Resources/TriGeometryRes.cpp
     Resources/TriGeometryRes.h
     Resources/TriGeometryRes_Blue.cpp
