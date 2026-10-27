@@ -3,8 +3,6 @@
 #pragma once
 
 #include "Tr2DeviceResource.h"
-#include <array>
-#include "TriFrustum.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -33,7 +31,6 @@ public:
 
 	bool IsValid();
 	bool HasData() const;
-	Tr2TextureAL GetDepthBuffer( unsigned face );
 
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );
@@ -49,17 +46,12 @@ public:
 
 	uint8_t GetStartFace() const;
 	uint8_t GetEndFace() const;
-	ReflectionProbeRenderFrequency GetRenderFrequency() const;
-	// True until the first FinishFaces: until then every face is rendered, whatever the render frequency.
-	bool IsFirstPass() const;
 
-	Matrix GetFaceViewTransform( unsigned face, const Vector3& position ) const;
+	Matrix GetFaceViewTransform( unsigned face ) const;
 	Matrix GetFaceProjection( const Matrix& currentProjection ) const;
-	void SubmitFace( unsigned face, const Tr2TextureAL& source, Tr2RenderContext& renderContext );
 	void UpdatePosition( const Vector3& viewPosition );
-	const Vector3& GetPosition() const;
-	const Tr2TextureAL& GetFaceTarget( unsigned face ) const;
-	// Filters the rendered faces and advances to the next faces. Called by both paths.
+	const Tr2TextureAL& GetCubeTarget() const;
+	// Filters the rendered faces and advances to the next faces.
 	void FinishFaces( const Vector3& viewDirection, Tr2RenderContext& renderContext );
 
 private:
@@ -74,7 +66,6 @@ private:
 	Vector3 m_position;
 	int m_intermediateSize;
 
-	std::array<Tr2RenderTargetPtr, 6> m_renderTargets;
 	Tr2RenderTargetPtr m_renderTargetCube;
 
 	Tr2EffectPtr m_preFilterEffect;

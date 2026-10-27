@@ -107,8 +107,6 @@ private:
 
 		static Features Main();
 		static Features ReflectionFace();
-		// the probe's first pass, which only draws the background into the faces
-		static Features ReflectionBackground();
 	};
 
 	// A view rendered by RenderView: its camera and what the scene renders from it, the
@@ -118,7 +116,8 @@ private:
 		EveSceneView::Camera camera;
 		EveSceneView::ViewInfo scene;
 		Features features;
-		// 0 is the main view, 1.. are the reflection probe faces rendered in the frame
+		// the view's index in the Tr2LightManager, set by SetLightViews: 0 is the main view,
+		// then the reflection faces that have dynamic lights
 		uint32_t lightView = 0;
 	};
 
@@ -134,16 +133,14 @@ private:
 	struct ReflectionFaces
 	{
 		Tr2ReflectionProbe* probe = nullptr;
-		// the probe's first pass only draws the background into the faces
-		bool firstPass = false;
 		unsigned startFace = 0;
 		Vector3 viewDirection = Vector3( 0.0f, 0.0f, 0.0f );
 		std::vector<RenderInfo> views;
 	};
 
-	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
+	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
 	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
-	void UpdateLightManagerFaceViews( const ReflectionFaces& faces );
+	void SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();

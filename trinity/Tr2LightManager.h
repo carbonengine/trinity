@@ -57,16 +57,20 @@ struct Tr2LightTags
 // Description:
 //   Manages light sources for tiled/clustered lighting. An object of this class does not
 //   store lights permanently. Rather a user adds lights every frame and then the object
-//   updates GPU buffers needed for tiled lighting. Normally the per-frame operations
-//   for the light manager would look like:
-//     lightManager.Clear();
-//     lightManager.SetFrustum( frustum );
+//   updates GPU buffers needed for tiled lighting. The lights are gathered once per frame
+//   for every view (the main view and the reflection probe faces), and each view has its
+//   own lights and buffers. Normally the per-frame operations for the light manager would
+//   look like:
+//     lightManager.SetViews( frustums, renderContext ); // the main view first
+//     lightManager.Clear( renderContext );
 //     for each in scene.lights
-//       lightManager.AddPointLight( each ); // this can be done in parallel
-//	   lightManager.ResolveLightData();
-//     lightManager.UpdateLists();
-//     renderYourStuff();
-//  Light manager GPU buffers are accessed through variable store with names
+//       lightManager.AddLight( each ); // this can be done in parallel
+//     lightManager.ResolveLightData();
+//     for each view
+//       lightManager.SetActiveView( position of the view in frustums );
+//       lightManager.UpdateLists( depthMap, renderContext );
+//       renderYourStuff();
+//  The active view's GPU buffers are accessed through variable store with names
 //  "LightBuffer" and "LightIndexBuffer".
 // --------------------------------------------------------------------------------------
 class Tr2LightManager : public Tr2DeviceResource
@@ -134,11 +138,12 @@ public:
 
 	void Clear( Tr2RenderContext& renderContext );
 
-	void ClearReflectionViews();
-	uint8_t AddReflectionView();
-	uint32_t GetReflectionViewCount() const;
-	void SetViewFrustum( uint8_t viewIndex, const TriFrustum& frustum );
-	void SetActiveView( uint8_t viewIndex );
+	// The views the lights are gathered for this frame, set before the gather. The first
+	// frustum is the main view's, the others are reflection probe faces. A view's index for
+	// SetActiveView is its position in frustums. Views are created when the list grows and
+	// released when it shrinks.
+	void SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext );
+	void SetActiveView( uint32_t viewIndex );
 
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
 	void AddLight( PerLightData& data, bool scaleBrightness = true, const Tr2LightTags& tags = Tr2LightTags() );
@@ -239,7 +244,7 @@ private:
 	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
 	void CreateShadowMapAtlas( std::vector<PerLightData>& lightData, uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
 
-	static const uint32_t MAIN_VIEW = 0; // faces are 1..6
+	static const uint32_t MAIN_VIEW = 0; // the reflection probe faces follow it
 	std::vector<View> m_views;
 	uint32_t m_activeView = MAIN_VIEW;
 

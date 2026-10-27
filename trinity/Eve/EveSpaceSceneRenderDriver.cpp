@@ -24,18 +24,18 @@ extern bool g_lensflaresInReflections;
 namespace
 {
 
-void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_list<Tr2TextureAL>& colorAttachments, const Tr2TextureAL& depthAttachment )
+void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_list<std::pair<Tr2TextureAL, uint32_t>>& colorAttachments, const Tr2TextureAL& depthAttachment )
 {
 	uint32_t index = 0;
 	for( auto& colorAttachment : colorAttachments )
 	{
-		renderContext.m_esm.SetRenderTarget( index++, colorAttachment );
+		renderContext.m_esm.SetRenderTarget( index++, colorAttachment.first, true, colorAttachment.second );
 	}
 	// clear out remaining slots, generously assuming max 4 render targets
 	const uint32_t maxRenderTargets = 4;
 	for( ; index < maxRenderTargets; ++index )
 	{
-		renderContext.m_esm.SetRenderTarget( index++, Tr2TextureAL{} );
+		renderContext.m_esm.SetRenderTarget( index, Tr2TextureAL{} );
 	}
 	renderContext.m_esm.SetDepthStencilBuffer( depthAttachment );
 	renderContext.m_esm.SetFullScreenViewport();
@@ -64,7 +64,7 @@ void ApplyDistortion( const Tr2TextureAL& destination, const Tr2TextureAL& disto
 	auto backBufferCopy = gpuResourcePool.GetTempTexture( "backBufferCopy", destination.GetWidth(), destination.GetHeight(), destination.GetFormat(), Tr2GpuUsage::COPY_DESTINATION | Tr2GpuUsage::SHADER_RESOURCE );
 	backBufferCopy->CopySubresourceRegion( {}, destination, {}, renderContext );
 
-	BeginRenderPass( renderContext, { destination }, {} );
+	BeginRenderPass( renderContext, { { destination, 0 } }, {} );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 	effect->SetParameter( BlueSharedString( "BlitCurrent" ), backBufferCopy );
 	effect->SetParameter( BlueSharedString( "TexDistortion" ), distortion );
@@ -355,21 +355,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	return features;
 }
 
-EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::ReflectionBackground()
-{
-	// the probe's first pass: nothing but the background
-	Features features;
-	features.upscaling = false;
-	features.antiAliasing = false;
-	features.ssao = false;
-	features.shadows = false;
-	features.velocityMap = false;
-	features.background = true;
-	features.overlay = false;
-	features.dynamicLights = false;
-	return features;
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Set the camera's view transform to the renderer and the camera to the scene, which
@@ -573,7 +558,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		auto prevVisualizeMethod = m_scene->m_visualizeMethod;
 		m_scene->m_visualizeMethod = m_settings.visualizeMethod;
 		ON_BLOCK_EXIT( [&] { m_scene->m_visualizeMethod = prevVisualizeMethod; } );
-		BeginRenderPass( renderContext, { colorTarget }, {} );
+		BeginRenderPass( renderContext, { { colorTarget, 0 } }, {} );
 
 		UpdateSceneFrame( mainView.camera, realTime, simTime, rootTimer, renderContext );
 		ReflectionFaces reflectionFaces;
@@ -583,21 +568,9 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 			m_scene->BeginFrame( renderContext );
 
 			reflectionFaces = PrepareReflectionFaces( renderContext );
-			UpdateLightManagerFaceViews( reflectionFaces );
 
 			// the lights are gathered once, for all views
-			if( auto lightManager = Tr2LightManager::GetInstance() )
-			{
-				lightManager->SetViewFrustum( static_cast<uint8_t>( mainView.lightView ), mainView.camera.frustum );
-
-				for( const RenderInfo& faceView : reflectionFaces.views )
-				{
-					if( faceView.features.dynamicLights )
-					{
-						lightManager->SetViewFrustum( static_cast<uint8_t>( faceView.lightView ), faceView.camera.frustum );
-					}
-				}
-			}
+			SetLightViews( mainView, reflectionFaces, renderContext );
 			m_scene->GatherDynamicLights( renderContext );
 		}
 		{
@@ -684,10 +657,9 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render the scene from one view (the main view or a reflection probe face) into
-//   colorTarget. Returns the targets the view rendered, for post processing or for
-//   submitting to the reflection probe.
+//   colorTarget. Returns the targets the view rendered, for post processing
 // --------------------------------------------------------------------------------------
-EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
+EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
 {
 	const TextureSize2D& renderSize = view.camera.renderSize;
 
@@ -700,7 +672,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	{
 		if( auto lightManager = Tr2LightManager::GetInstance() )
 		{
-			lightManager->SetActiveView( static_cast<uint8_t>( view.lightView ) );
+			lightManager->SetActiveView( view.lightView );
 		}
 	}
 
@@ -708,7 +680,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	if( renderBackgroundNode )
 	{
 		// render background effect to back buffer before rendering the scene
-		BeginRenderPass( renderContext, { backBuffer }, {} );
+		BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, {} );
 		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, m_settings.clearColor, 0 );
 
 		m_background->Execute( { &backBuffer, 1 }, {}, realTime, simTime, rootTimer, renderContext );
@@ -717,7 +689,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	targets.depth = m_gpuResourcePool.GetTempTexture( "depthBuffer", renderSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
 	const Tr2TextureAL& depthBuffer = targets.depth;
 
-	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
+	BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, depthBuffer );
 	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
 	
 	{
@@ -806,7 +778,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		if( targets.opaqueColor.IsValid() )
 		{
 			renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-			BeginRenderPass( renderContext, { targets.opaqueColor.Get() }, {} );
+			BeginRenderPass( renderContext, { { targets.opaqueColor.Get(), 0 } }, {} );
 			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 			Tr2Renderer::DrawTexture( renderContext, backBuffer );
 		}
@@ -819,7 +791,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", Tr2TextureAL{} );
 	normalMap = {};
 
-	BeginRenderPass( renderContext, { backBuffer }, depthBuffer );
+	BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, depthBuffer );
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_scene->RunLensflareOcclusionQueries( depthBuffer, renderContext );
@@ -852,27 +824,17 @@ EveSpaceSceneRenderDriver::ReflectionFaces EveSpaceSceneRenderDriver::PrepareRef
 	SetCameraToRenderer( renderContext );
 	probe->UpdatePosition( Tr2Renderer::GetViewPosition() );
 	const Matrix faceProjection = probe->GetFaceProjection( Tr2Renderer::GetProjectionTransform() );
-	const TextureSize2D faceRenderSize = probe->GetFaceTarget( 0 ).GetDesc();
+	const TextureSize2D faceRenderSize = probe->GetCubeTarget().GetDesc();
 
 	faces.probe = probe;
-	faces.firstPass = probe->IsFirstPass();
 	faces.startFace = probe->GetStartFace();
 	faces.viewDirection = Tr2Renderer::GetInverseViewTransform().GetZ();
 
 	const bool lensflares = g_lensflaresInReflections && m_settings.reflectionQuality == ReflectionQuality::ULTRA;
 	for( unsigned face = probe->GetStartFace(); face < probe->GetEndFace(); ++face )
 	{
-		const EveSceneView::Camera camera = EveSceneView::Camera( probe->GetFaceViewTransform( face, probe->GetPosition() ), faceProjection, faceRenderSize );
-		if( faces.firstPass )
-		{
-			// the probe's first pass draws only the background: no lens flares and no light view
-			faces.views.push_back( { camera, EveSceneView::ViewInfo::ReflectionFace( false ), Features::ReflectionBackground() } );
-		}
-		else
-		{
-			// with one side per frame, the rendered face always uses the first face light view
-			faces.views.push_back( { camera, EveSceneView::ViewInfo::ReflectionFace( lensflares ), Features::ReflectionFace(), 1 + ( face - faces.startFace ) } );
-		}
+		const EveSceneView::Camera camera = EveSceneView::Camera( probe->GetFaceViewTransform( face ), faceProjection, faceRenderSize );
+		faces.views.push_back( { camera, EveSceneView::ViewInfo::ReflectionFace( lensflares ), Features::ReflectionFace() } );
 	}
 
 	return faces;
@@ -880,12 +842,10 @@ EveSpaceSceneRenderDriver::ReflectionFaces EveSpaceSceneRenderDriver::PrepareRef
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   The light manager has one view per face rendered in a frame: one with one side per
-//   frame and six with all sides per frame. The views
-//   are only recreated when that number changes, which is when the probe's render frequency
-//   changes.
+//   Give the main view and every reflection face that has dynamic lights a view in the
+//   light manager, in that order. A view's lightView is its position in that list.
 // --------------------------------------------------------------------------------------
-void EveSpaceSceneRenderDriver::UpdateLightManagerFaceViews( const ReflectionFaces& faces )
+void EveSpaceSceneRenderDriver::SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext )
 {
 	auto lightManager = Tr2LightManager::GetInstance();
 	if( !lightManager )
@@ -893,20 +853,17 @@ void EveSpaceSceneRenderDriver::UpdateLightManagerFaceViews( const ReflectionFac
 		return;
 	}
 
-	uint32_t faceViewCount = 0;
-	if( faces.probe && !faces.firstPass )
+	// the main view is first, matching its lightView of 0
+	std::vector<TriFrustum> frustums = { mainView.camera.frustum };
+	for( RenderInfo& faceView : faces.views )
 	{
-		faceViewCount = faces.probe->GetRenderFrequency() == Tr2ReflectionProbe::ALL_SIDES_PER_FRAME ? 6 : 1;
-	}
-
-	if( lightManager->GetReflectionViewCount() != faceViewCount )
-	{
-		lightManager->ClearReflectionViews();
-		for( uint32_t i = 0; i < faceViewCount; ++i )
+		if( faceView.features.dynamicLights )
 		{
-			lightManager->AddReflectionView();
+			faceView.lightView = static_cast<uint32_t>( frustums.size() );
+			frustums.push_back( faceView.camera.frustum );
 		}
 	}
+	lightManager->SetViews( frustums, renderContext );
 }
 
 void EveSpaceSceneRenderDriver::RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )
@@ -923,20 +880,19 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( const ReflectionFaces& fa
 	renderContext.m_esm.SetInvertedCullMode( true );
 	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedCullMode( prevCullInversion ); } );
 
+	const Tr2TextureAL& faceTarget = probe->GetCubeTarget();
 	unsigned face = faces.startFace;
 	for( const RenderInfo& faceView : faces.views )
 	{
 		std::string regionName = "Reflection Face " + std::to_string( face );
 		GPU_REGION( renderContext, regionName.c_str() );
 
-		// render straight into the probe's face target, then copy it into the cubemap
-		const Tr2TextureAL& faceTarget = probe->GetFaceTarget( face );
-		RenderView( faceView, faceTarget, {}, realTime, simTime, rootTimer, renderContext );
-
-		probe->SubmitFace( face, faceTarget, renderContext );
-		++face;
+		// render straight into the probe's face
+		RenderView( faceView, faceTarget, {}, realTime, simTime, rootTimer, renderContext, face++ );
 	}
 
+	// unbind the probe cube so it can be used as a shader resource in the main view
+	renderContext.m_esm.SetRenderTarget( 0, Tr2TextureAL{} );
 	probe->FinishFaces( faces.viewDirection, renderContext );
 	SetCameraToRenderer( renderContext );
 }

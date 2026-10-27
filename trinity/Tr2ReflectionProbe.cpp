@@ -40,11 +40,6 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
 	m_backlightColor( 1, 1, 1, 1 ),
 	m_backlightContrast( 16 )
 {
-	for( unsigned i = 0; i < 6; i++ )
-	{
-		m_renderTargets[i].CreateInstance();
-	}
-
 	m_renderTargetCube.CreateInstance();
 	m_preFilterEffect.CreateInstance();
 	m_copyMipEffect.CreateInstance();
@@ -87,16 +82,6 @@ uint8_t Tr2ReflectionProbe::GetEndFace() const
 	return m_currentFrame + 1;
 }
 
-Tr2ReflectionProbe::ReflectionProbeRenderFrequency Tr2ReflectionProbe::GetRenderFrequency() const
-{
-	return m_renderFrequency;
-}
-
-bool Tr2ReflectionProbe::IsFirstPass() const
-{
-	return !m_onePassDone;
-}
-
 Matrix Tr2ReflectionProbe::GetFaceProjection( const Matrix& currentProjection ) const
 {
 	// Square projection matrix, with near and far clip planes from the current projection
@@ -108,7 +93,7 @@ Matrix Tr2ReflectionProbe::GetFaceProjection( const Matrix& currentProjection ) 
 	return newProjection;
 }
 
-Matrix Tr2ReflectionProbe::GetFaceViewTransform( unsigned face, const Vector3& position ) const
+Matrix Tr2ReflectionProbe::GetFaceViewTransform( unsigned face ) const
 {
 	static const Vector3 faceDirections[] = {
 		Vector3( 0, 1, 0 ), Vector3( 1, 0, 0 ), //+X
@@ -130,18 +115,7 @@ Matrix Tr2ReflectionProbe::GetFaceViewTransform( unsigned face, const Vector3& p
 
 	const Vector3& up = faceDirections[face * 2];
 	const Vector3& at = faceDirections[face * 2 + 1];
-	return LookAtMatrix( position, position + at, up ) * xInverter;
-}
-
-void Tr2ReflectionProbe::SubmitFace( unsigned face, const Tr2TextureAL& source, Tr2RenderContext& renderContext )
-{
-	if( face >= 6 || !source.IsValid() || !IsValid() )
-	{
-		return;
-	}
-
-	GPU_REGION( renderContext, "Reflection External Face Copy" );
-	CR( m_renderTargetCube->GetRenderTarget().CopySubresourceRegion( Tr2TextureSubresource( face, 0 ), source, Tr2TextureSubresource( 0, 0 ), renderContext ) );
+	return LookAtMatrix( m_position, m_position + at, up ) * xInverter;
 }
 
 void Tr2ReflectionProbe::UpdatePosition( const Vector3& viewPosition )
@@ -152,14 +126,9 @@ void Tr2ReflectionProbe::UpdatePosition( const Vector3& viewPosition )
 	}
 }
 
-const Vector3& Tr2ReflectionProbe::GetPosition() const
+const Tr2TextureAL& Tr2ReflectionProbe::GetCubeTarget() const
 {
-	return m_position;
-}
-
-const Tr2TextureAL& Tr2ReflectionProbe::GetFaceTarget( unsigned face ) const
-{
-	return m_renderTargets[face]->GetRenderTarget();
+	return m_renderTargetCube->GetRenderTarget();
 }
 
 void Tr2ReflectionProbe::FinishFaces( const Vector3& viewDirection, Tr2RenderContext& renderContext )
@@ -213,15 +182,6 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 
 bool Tr2ReflectionProbe::DoPrepareResources( ImageIO::PixelFormat rtFormat, Tr2PrimaryRenderContext& renderContext )
 {
-
-	for( int i = 0; i < 6; i++ )
-	{
-		if( !m_renderTargets[i]->IsValid() )
-		{
-			CR_RETURN_VAL( m_renderTargets[i]->CreateManual( m_intermediateSize, m_intermediateSize, 1, rtFormat, 0, 0, EX_BIND_UNORDERED_ACCESS, TEX_TYPE_2D, Tr2CpuUsage::NONE, Tr2GpuUsage::RENDER_TARGET ), false );
-		}
-	}
-
 	if( !m_renderTargetCube->IsValid() )
 	{
 		CR_RETURN_VAL( m_renderTargetCube->Create( m_intermediateSize, m_intermediateSize, 1, rtFormat, 0, 0, EX_BIND_UNORDERED_ACCESS, TEX_TYPE_CUBE ), false );
@@ -295,11 +255,6 @@ bool Tr2ReflectionProbe::OnModified( Be::Var* value )
 
 void Tr2ReflectionProbe::DestroyRenderTargets()
 {
-	for( unsigned i = 0; i < 6; i++ )
-	{
-		m_renderTargets[i]->Destroy();
-	}
-
 	m_renderTargetCube->Destroy();
 	m_preFilterTarget->Destroy();
 	m_postFilterTarget->Destroy();

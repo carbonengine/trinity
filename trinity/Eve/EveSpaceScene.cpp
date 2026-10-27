@@ -1433,7 +1433,7 @@ void EveSpaceScene::ApplyViewLighting( const EveSceneView::ViewInfo& view )
 // --------------------------------------------------------------------------------------
 // Description:
 //   Gather the dynamic lights visible in the frustum of each of the light manager's views.
-//   The caller sets the frustums (SetViewFrustum) and calls this once per frame, after the
+//   The caller sets the views (SetViews) and calls this once per frame, after the
 //   main view's update and BeginFrame and before the first view is rendered.
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::GatherDynamicLights( Tr2RenderContext& renderContext )

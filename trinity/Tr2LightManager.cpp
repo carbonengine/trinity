@@ -250,49 +250,41 @@ void Tr2LightManager::CreateViewBuffers( View& view, Tr2RenderContext& renderCon
 	ClearLightIndices( view, renderContext );
 }
 
-void Tr2LightManager::ClearReflectionViews()
+void Tr2LightManager::SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext )
 {
-	while( m_views.size() > MAIN_VIEW + 1 )
+	if( frustums.empty() )
 	{
-		m_views.pop_back();
+		CCP_LOGERR( "Tr2LightManager: SetViews needs at least the main view" );
+		return;
 	}
 
-	if( m_activeView != MAIN_VIEW )
+	if( m_views.size() > frustums.size() )
+	{
+		m_views.erase( m_views.begin() + frustums.size(), m_views.end() );
+	}
+	while( m_views.size() < frustums.size() )
+	{
+		m_views.emplace_back( MAX_NUM_VOLUMETRIC_LIGHTS_IN_REFLECTIONS, 0u, INDEX_BUFFER_SIZE_IN_REFLECTIONS, true );
+		// during a device reset OnPrepareResources creates the buffers later
+		if( Tr2Renderer::IsResourceCreationAllowed() )
+		{
+			CreateViewBuffers( m_views.back(), renderContext );
+		}
+	}
+
+	auto frustum = frustums.begin();
+	for( auto& view : m_views )
+	{
+		view.frustum = *frustum++;
+	}
+
+	if( m_activeView >= m_views.size() )
 	{
 		SetActiveView( MAIN_VIEW );
 	}
 }
 
-uint8_t Tr2LightManager::AddReflectionView()
-{
-	m_views.emplace_back( MAX_NUM_VOLUMETRIC_LIGHTS_IN_REFLECTIONS, 0u, INDEX_BUFFER_SIZE_IN_REFLECTIONS, true );
-
-	if( Tr2Renderer::IsResourceCreationAllowed() )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CreateViewBuffers( m_views.back(), renderContext );
-	}
-
-	return static_cast<uint8_t>( m_views.size() - 1 );
-}
-
-uint32_t Tr2LightManager::GetReflectionViewCount() const
-{
-	return static_cast<uint32_t>( m_views.size() - ( MAIN_VIEW + 1 ) );
-}
-
-void Tr2LightManager::SetViewFrustum( uint8_t viewIndex, const TriFrustum& frustum )
-{
-	if( viewIndex >= m_views.size() )
-	{
-		CCP_LOGERR( "Tr2LightManager: invalid view index %u", viewIndex );
-		return;
-	}
-
-	m_views[viewIndex].frustum = frustum;
-}
-
-void Tr2LightManager::SetActiveView( uint8_t viewIndex )
+void Tr2LightManager::SetActiveView( uint32_t viewIndex )
 {
 	if( viewIndex >= m_views.size() )
 	{
@@ -308,7 +300,7 @@ void Tr2LightManager::SetActiveView( uint8_t viewIndex )
 
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
-	for( auto& view: m_views )
+	for( auto& view : m_views )
 	{
 		ClearLightIndices( view, renderContext );
 		for( auto& data : view.tlsLightData )
