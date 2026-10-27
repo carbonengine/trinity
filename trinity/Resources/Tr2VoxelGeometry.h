@@ -6,24 +6,34 @@
 #include "../Tr2VoxelData.h"
 
 BLUE_CLASS_IMPL( Tr2VoxelGeometry )
-class Tr2VoxelGeometry : public Tr2ProceduralGeometryProvider
+class Tr2VoxelGeometry : public Tr2ProceduralGeometryProvider, public IInitialize
 {
 public:
 	EXPOSE_TO_BLUE();
 
+	void Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> occupancyChannelIndex, Be::Optional<float> cellSize );
+
+	bool Initialize() override;
 
 	IRootPtr GetVoxelData() const;
 	void SetVoxelData( Tr2VoxelData* voxelData );
 
+	uint32_t GetOccupancyChannelIndex() const;
+	void SetOccupancyChannelIndex( uint32_t channelIndex );
+
 	float GetCellSize() const;
 	void SetCellSize( float cellSize );
+
+	BlueStdResult TestBuildFile( const char* resPath );
 
 protected:
 	std::unique_ptr<Tr2ProceduralGeometryBuilder> CreateBuilder() const override;
 
 private:
-	Tr2VoxelDataPtr m_voxelData;
+	void DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels );
 
+	Tr2VoxelDataPtr m_voxelData;
+	uint32_t m_occupancyChannelIndex = 0;
 	float m_cellSize = 1.f;
 };
 
