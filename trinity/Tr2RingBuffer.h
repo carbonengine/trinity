@@ -51,7 +51,7 @@ private:
 	// UploadTransforms may run on worker threads, so Resize only grows the mirror;
 	// the GPU buffer is recreated in PrepareBuffer on the main thread.
 	void Resize( uint32_t size );
-	void CreateGpuBuffer( Tr2PrimaryRenderContextAL& renderContext );
+	void CreateGpuBuffer( Tr2PrimaryRenderContextAL & renderContext );
 
 	std::string m_name;
 
