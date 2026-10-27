@@ -275,6 +275,7 @@ protected:
 
 	bool m_separateAlphaBlendEnabled;
 	bool m_srgbWriteEnable;
+	uint8_t m_colorWriteMasks[3];
 
 	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
 

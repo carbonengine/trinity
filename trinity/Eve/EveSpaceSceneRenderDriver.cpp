@@ -33,7 +33,7 @@ void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_li
 	const uint32_t maxRenderTargets = 4;
 	for( ; index < maxRenderTargets; ++index )
 	{
-		renderContext.m_esm.SetRenderTarget( index++, Tr2TextureAL{} );
+		renderContext.m_esm.SetRenderTarget( index, Tr2TextureAL{} );
 	}
 	renderContext.m_esm.SetDepthStencilBuffer( depthAttachment );
 	renderContext.m_esm.SetFullScreenViewport();

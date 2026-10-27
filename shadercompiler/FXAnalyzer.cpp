@@ -335,9 +335,9 @@ StateDescription g_renderStates[] = {
 	{ "BlendOpAlpha", SVT_DWORD, s_blendOpValues, 0 },
 	{ "SrcBlendAlpha", SVT_DWORD, s_blendValues, 0 },
 	{ "DestBlendAlpha", SVT_DWORD, s_blendValues, 0 },
-	{ "ColorWriteEnable1", SVT_BOOL, s_boolValues, 0 },
-	{ "ColorWriteEnable2", SVT_BOOL, s_boolValues, 0 },
-	{ "ColorWriteEnable3", SVT_BOOL, s_boolValues, 0 },
+	{ "ColorWriteEnable1", SVT_DWORD, s_colorWriteValues, 0 },
+	{ "ColorWriteEnable2", SVT_DWORD, s_colorWriteValues, 0 },
+	{ "ColorWriteEnable3", SVT_DWORD, s_colorWriteValues, 0 },
 	{ "CullMode", SVT_DWORD, s_cullModeValues, 0 },
 	{ "LocalViewer", SVT_BOOL, s_boolValues, 0 },
 

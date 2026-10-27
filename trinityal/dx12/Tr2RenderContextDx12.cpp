@@ -96,6 +96,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw() :
 	m_dynamicIB( false ),
 	m_separateAlphaBlendEnabled( false ),
 	m_srgbWriteEnable( false ),
+	m_colorWriteMasks{ 0xf, 0xf, 0xf },
 	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES ),
 	m_uavBarriersDisabledCounter( 0 )
 {
@@ -399,6 +400,17 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 			m_dirtyPso = true;
 		}
 		break;
+	case Tr2RenderContextEnum::RS_COLORWRITEENABLE1:
+	case Tr2RenderContextEnum::RS_COLORWRITEENABLE2:
+	case Tr2RenderContextEnum::RS_COLORWRITEENABLE3: {
+		auto& mask = m_colorWriteMasks[state - Tr2RenderContextEnum::RS_COLORWRITEENABLE1];
+		if( mask != ( value & 0xf ) )
+		{
+			mask = uint8_t( value & 0xf );
+			m_dirtyPso = true;
+		}
+		break;
+	}
 
 		HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_psoDescription.m_rasterizerDesc.CullMode );
 		HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_psoDescription.m_rasterizerDesc.FillMode );
@@ -818,6 +830,21 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 		desc.BlendOpAlpha = desc.BlendOp;
 		desc.SrcBlendAlpha = alphaBlendRemap[desc.SrcBlend];
 		desc.DestBlendAlpha = alphaBlendRemap[desc.DestBlend];
+	}
+
+	auto& blend = m_psoDescription.m_blendDesc;
+	blend.IndependentBlendEnable = m_colorWriteMasks[0] != 0xf || m_colorWriteMasks[1] != 0xf || m_colorWriteMasks[2] != 0xf;
+	for( uint32_t i = 1; i < 4; ++i )
+	{
+		if( blend.IndependentBlendEnable )
+		{
+			blend.RenderTarget[i] = blend.RenderTarget[0];
+			blend.RenderTarget[i].RenderTargetWriteMask = blend.RenderTarget[0].RenderTargetWriteMask & m_colorWriteMasks[i - 1];
+		}
+		else
+		{
+			blend.RenderTarget[i] = D3D12_RENDER_TARGET_BLEND_DESC{};
+		}
 	}
 
 	m_psoDescription.UpdateHash();
@@ -1608,6 +1635,7 @@ void Tr2RenderContextAL::ResetDx12()
 	m_viewport = Tr2Viewport();
 	m_separateAlphaBlendEnabled = false;
 	m_srgbWriteEnable = false;
+	std::fill( std::begin( m_colorWriteMasks ), std::end( m_colorWriteMasks ), uint8_t( 0xf ) );
 }
 
 void Tr2RenderContextAL::AddGpuMarker( const char* marker )
