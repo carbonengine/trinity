@@ -1,3 +1,4 @@
+import json
 import unittest
 
 import blue
@@ -46,3 +47,18 @@ class TestVoxelGeometry(unittest.TestCase):
             f1 = blue.paths.GetFileContentsWithYield("res:/voxels1.cmf").read()
             f2 = blue.paths.GetFileContentsWithYield("res:/voxels2.cmf").read()
             self.assertEqual(f1, f2)
+
+    def test_canCreateSmoothGeometry(self):
+        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Boolean, "elementCount": 1, "normalized": False}])
+        data.SetVoxels([((0, 0, 0), True), ((1, 0, 0), True), ((1, 1, 1), True)])
+        geometry = trinity.Tr2VoxelGeometry()
+        geometry.voxelData = data
+        geometry.method = trinity.Tr2VoxelGeometryMethod.Smoothed
+        geometry.subdivision = 1
+        geometry.relaxIterations = 0
+        with TempRes():
+            geometry.TestBuildFile( "res:/voxels.cmf")
+            granny = trinity.TriGrannyRes()
+            self.assertTrue(granny.LoadForTools("res:/voxels.cmf"))
+            self.assertEqual(granny.GetMeshCount(), 1)
+            self.assertEqual(granny.GetMeshAreaCount(0), 1)

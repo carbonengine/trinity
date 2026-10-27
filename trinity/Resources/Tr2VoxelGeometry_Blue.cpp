@@ -6,6 +6,22 @@
 BLUE_DEFINE( Tr2VoxelGeometry );
 
 
+namespace
+{
+Be::VarChooser Tr2VoxelGeometryMethodChooser[] = {
+	{ "Simple", BeCast( Tr2VoxelGeometry::Method::Simple ), "" },
+	{ "Smoothed", BeCast( Tr2VoxelGeometry::Method::Smoothed ), "" },
+	{ 0 }
+};
+}
+
+BLUE_REGISTER_ENUM_EX(
+	"Tr2VoxelGeometryMethod",
+	Tr2VoxelGeometry::Method,
+	Tr2VoxelGeometryMethodChooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+
 const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2VoxelGeometry, "" )
@@ -20,6 +36,12 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_ATTRIBUTE( "occupancyChannelIndex", m_occupancyChannelIndex, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "cellSize", GetCellSize, SetCellSize, "Size of each voxel cell" )
 		MAP_ATTRIBUTE( "cellSize", m_cellSize, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry" )
+		MAP_ATTRIBUTE( "subdivision", m_subdivision, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing" )
+		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "method", GetMethod, SetMethod, "Method used for generating the geometry (Simple or Smoothed)" )
+		MAP_ATTRIBUTE( "method", m_method, "", Be::PERSISTONLY )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
 			"__init__", 
