@@ -331,7 +331,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Main()
 	Features features;
 	features.upscaling = true;
 	features.antiAliasing = true;
-	features.reflections = true;
 	features.ssao = true;
 	features.shadows = true;
 	features.velocityMap = true;
@@ -347,7 +346,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	Features features;
 	features.upscaling = false;
 	features.antiAliasing = false;
-	features.reflections = false; // no reflections rendered in the reflection faces, this can be removed when m_newRoute is removed
 	features.ssao = false;
 	features.shadows = true;
 	features.velocityMap = false;
@@ -363,7 +361,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	Features features;
 	features.upscaling = false;
 	features.antiAliasing = false;
-	features.reflections = false;
 	features.ssao = false;
 	features.shadows = false;
 	features.velocityMap = false;
@@ -588,7 +585,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 			reflectionFaces = PrepareReflectionFaces( renderContext );
 			UpdateLightManagerFaceViews( reflectionFaces );
 
-			// the lights are gathered once, for the main view and the faces that have lights
+			// the lights are gathered once, for all views
 			if( auto lightManager = Tr2LightManager::GetInstance() )
 			{
 				lightManager->SetViewFrustum( static_cast<uint8_t>( mainView.lightView ), mainView.camera.frustum );
@@ -603,10 +600,6 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 			}
 			m_scene->GatherDynamicLights( renderContext );
 		}
-
-		// The new route renders the reflection faces through RenderView. The old route lets
-		// the scene render them from within the main view (see RenderView).
-		if( m_newRoute )
 		{
 			TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
 			RenderReflectionFaces( reflectionFaces, realTime, simTime, rootTimer, renderContext );
@@ -731,12 +724,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
 		m_scene->BeginView( view.scene, renderContext );
 	}
-	// Old route: the scene renders the reflection faces itself, from within the main view
-	if( view.features.reflections && !m_newRoute )
-	{
-		TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
-		m_scene->RenderReflectionPass( m_gpuResourcePool, renderContext );
-	}
+
 	GlobalStore().RegisterVariable( "DepthMap", targets.depth );
 
 	SetNamedOutput( outputs, "DepthMap", targets.depth );
@@ -855,7 +843,7 @@ EveSpaceSceneRenderDriver::ReflectionFaces EveSpaceSceneRenderDriver::PrepareRef
 {
 	ReflectionFaces faces;
 
-	Tr2ReflectionProbe* probe = m_newRoute ? m_scene->GetReflectionProbe() : nullptr;
+	Tr2ReflectionProbe* probe = m_scene->GetReflectionProbe();
 	if( !probe || !probe->IsValid() || !m_scene->m_display )
 	{
 		return faces;

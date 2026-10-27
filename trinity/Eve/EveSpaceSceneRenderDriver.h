@@ -96,8 +96,6 @@ private:
 	{
 		bool upscaling = false;
 		bool antiAliasing = false;
-		// the old route renders the reflection probe faces from within this view
-		bool reflections = false;
 		bool ssao = false;
 		bool shadows = false;
 		bool velocityMap = false;
@@ -228,8 +226,6 @@ private:
 		Tr2ProfileTimer shadows;
 		Tr2ProfileTimer ssao;
 	} m_timers;
-
-	bool m_newRoute = false;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceSceneRenderDriver );

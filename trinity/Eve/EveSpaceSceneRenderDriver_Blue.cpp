@@ -77,12 +77,6 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			Be::READWRITE )
 
 		MAP_ATTRIBUTE(
-			"newRoute",
-			m_newRoute,
-			"",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
 			"enableRendering",
 			m_enableRendering,
 			"Turns off rendering the scene (including post-processing). The scene is still updated",
