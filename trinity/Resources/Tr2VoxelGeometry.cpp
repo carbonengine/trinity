@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "Tr2VoxelGeometry.h"
+#include "../Utilities/Vector3d.h"
 #include <cmf/writer.h>
 
 
@@ -236,6 +237,8 @@ protected:
 		Vector3 position;
 		Vector3 normal;
 	};
+	using Float = float;
+	using VectorT = Vector3;
 
 	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
 	{
@@ -260,6 +263,12 @@ protected:
 	// the SDF. Quads are emitted as two triangles each.
 	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
 	{
+		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+		ON_BLOCK_EXIT( [&]() {
+			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
+			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
+			CCP_LOG( "SurfaceNetsBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
+		} );
 		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
 		{
 			return {};
@@ -277,7 +286,7 @@ protected:
 			return {};
 		}
 
-		std::vector<Vec3d> positions;
+		std::vector<VectorT> positions;
 		std::vector<uint32_t> quads;
 		Sweep( window, scale, cancel, positions, quads );
 		if( cancel || quads.empty() )
@@ -334,18 +343,18 @@ protected:
 	}
 
 private:
-	using Vec3d = std::array<double, 3>;
+	using Vec3d = std::array<Float, 3>;
 	using Int3 = std::array<int32_t, 3>;
 
-	static constexpr double s_sdfClamp = 3.0; // encode clamp in cells
-	static constexpr double s_sdfDecode = s_sdfClamp / 127.5;
-	static constexpr double s_deepEmpty = -s_sdfClamp; // field value sampled outside the grid
+	static constexpr Float s_sdfClamp = 3.0; // encode clamp in cells
+	static constexpr Float s_sdfDecode = s_sdfClamp / 127.5;
+	static constexpr Float s_deepEmpty = -s_sdfClamp; // field value sampled outside the grid
 	static constexpr int32_t s_sdfSearchRadius = 4; // surface band radius for the chamfer distance transform
-	static constexpr double s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
-	static constexpr double s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
-	static constexpr double s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
-	static constexpr double s_roamMargin = 0.15; // dual vertex clamp cube inset, keeps neighbouring vertices apart
-	static constexpr double s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
+	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
+	static constexpr Float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
+	static constexpr Float s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
+	static constexpr Float s_roamMargin = 0.15; // dual vertex clamp cube inset, keeps neighbouring vertices apart
+	static constexpr Float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// (u, v) per axis, right-handed: u x v = +axis
 	static constexpr std::array<std::array<int, 2>, 3> s_axisUV = { { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
@@ -357,7 +366,7 @@ private:
 			lattice( lattice_ ),
 			strides( { 1, size_t( lattice_[0] + 2 ), size_t( lattice_[0] + 2 ) * size_t( lattice_[1] + 2 ) } ),
 			occupancy( strides[2] * size_t( lattice_[2] + 2 ), 0 ),
-			field( occupancy.size(), std::numeric_limits<double>::quiet_NaN() )
+			field( occupancy.size(), std::numeric_limits<Float>::quiet_NaN() )
 		{
 		}
 
@@ -369,7 +378,7 @@ private:
 		const Int3 lattice;
 		const std::array<size_t, 3> strides;
 		std::vector<uint8_t> occupancy;
-		std::vector<double> field; // NaN where the cell has no field value
+		std::vector<Float> field; // NaN where the cell has no field value
 	};
 
 	Int3 GetGridSize() const
@@ -395,7 +404,7 @@ private:
 		return occupancy;
 	}
 
-	static uint8_t EncodeDistance( double distance )
+	static uint8_t EncodeDistance( Float distance )
 	{
 		return uint8_t( std::max( 0.0, std::min( 255.0, 127.5 + distance * 127.5 / s_sdfClamp + 0.5 ) ) );
 	}
@@ -472,9 +481,9 @@ private:
 		}
 
 		std::vector<uint32_t> cells;
-		const double infinity = std::numeric_limits<double>::infinity();
-		std::vector<double> distanceToEmpty( count, infinity );
-		std::vector<double> distanceToSolid( count, infinity );
+		const Float infinity = std::numeric_limits<Float>::infinity();
+		std::vector<Float> distanceToEmpty( count, infinity );
+		std::vector<Float> distanceToSolid( count, infinity );
 		for( size_t i = 0; i < count; ++i )
 		{
 			if( band[i] )
@@ -489,7 +498,7 @@ private:
 		{
 			Int3 offset;
 			ptrdiff_t flatOffset;
-			double weight;
+			Float weight;
 		};
 		std::vector<Neighbor> forward;
 		std::vector<Neighbor> backward;
@@ -502,7 +511,7 @@ private:
 					if( dx || dy || dz )
 					{
 						const ptrdiff_t flatOffset = dx + ptrdiff_t( strides[1] ) * dy + ptrdiff_t( strides[2] ) * dz;
-						( flatOffset < 0 ? forward : backward ).push_back( { { dx, dy, dz }, flatOffset, std::sqrt( double( dx * dx + dy * dy + dz * dz ) ) } );
+						( flatOffset < 0 ? forward : backward ).push_back( { { dx, dy, dz }, flatOffset, std::sqrt( Float( dx * dx + dy * dy + dz * dz ) ) } );
 					}
 				}
 			}
@@ -510,8 +519,8 @@ private:
 
 		auto propagate = [&]( uint32_t i, const std::vector<Neighbor>& neighbors ) {
 			const Int3 coord = { int32_t( i % strides[1] ), int32_t( ( i / strides[1] ) % dims[1] ), int32_t( i / strides[2] ) };
-			double bestEmpty = distanceToEmpty[i];
-			double bestSolid = distanceToSolid[i];
+			Float bestEmpty = distanceToEmpty[i];
+			Float bestSolid = distanceToSolid[i];
 			for( const auto& neighbor : neighbors )
 			{
 				bool inside = true;
@@ -555,12 +564,12 @@ private:
 			}
 			else if( occupancy[i] )
 			{
-				const double d = distanceToEmpty[i] - 0.5;
+				const Float d = distanceToEmpty[i] - Float( 0.5 );
 				sdf[i] = d >= s_sdfClamp ? encodedSolid : EncodeDistance( d );
 			}
 			else
 			{
-				const double d = distanceToSolid[i] - 0.5;
+				const Float d = distanceToSolid[i] - Float( 0.5 );
 				sdf[i] = d >= s_sdfClamp ? encodedEmpty : EncodeDistance( -d );
 			}
 		}
@@ -569,7 +578,7 @@ private:
 
 	// Decoded field at the grid cell centres, low-passed and clamped back to the occupancy sign so no solid cell can
 	// vanish from the mesh and no empty cell can seal over.
-	std::vector<double> CreateField( const std::atomic<bool>& cancel ) const
+	std::vector<Float> CreateField( const std::atomic<bool>& cancel ) const
 	{
 		const Int3 dims = GetGridSize();
 		const auto occupancy = GetOccupancy();
@@ -585,7 +594,7 @@ private:
 		auto paddedIndex = [&]( int32_t x, int32_t y, int32_t z ) {
 			return size_t( x + 1 ) + strides[1] * size_t( y + 1 ) + strides[2] * size_t( z + 1 );
 		};
-		std::vector<double> values( strides[2] * padded[2], s_deepEmpty );
+		std::vector<Float> values( strides[2] * padded[2], s_deepEmpty );
 		size_t i = 0;
 		for( int32_t z = 0; z < dims[2]; ++z )
 		{
@@ -593,14 +602,14 @@ private:
 			{
 				for( int32_t x = 0; x < dims[0]; ++x )
 				{
-					values[paddedIndex( x, y, z )] = ( double( sdf[i++] ) - 127.5 ) * s_sdfDecode;
+					values[paddedIndex( x, y, z )] = ( Float( sdf[i++] ) - Float( 127.5 ) ) * s_sdfDecode;
 				}
 			}
 		}
 
 		// Separable Jacobi low-pass per axis. Only interior samples of each line move. The correction form is an exact
 		// identity wherever the field is locally linear, so only cell-frequency curvature is damped.
-		const double half = 0.5 * s_blurAlpha;
+		const Float half = 0.5 * s_blurAlpha;
 		for( int axis = 0; axis < 3; ++axis )
 		{
 			const int u = s_axisUV[axis][0];
@@ -615,14 +624,14 @@ private:
 					for( int32_t k = 1; k + 1 < padded[axis]; ++k )
 					{
 						const size_t index = base + step * k;
-						const double value = source[index];
+						const Float value = source[index];
 						values[index] = value + half * ( ( source[index - step] - value ) + ( source[index + step] - value ) );
 					}
 				}
 			}
 		}
 
-		std::vector<double> field( occupancy.size() );
+		std::vector<Float> field( occupancy.size() );
 		i = 0;
 		for( int32_t z = 0; z < dims[2]; ++z )
 		{
@@ -630,7 +639,7 @@ private:
 			{
 				for( int32_t x = 0; x < dims[0]; ++x, ++i )
 				{
-					double value = values[paddedIndex( x, y, z )];
+					Float value = values[paddedIndex( x, y, z )];
 					if( occupancy[i] )
 					{
 						if( value < s_signFloor )
@@ -650,7 +659,7 @@ private:
 	}
 
 	// Lattice equal to the grid: occupancy straight from the grid, field from the filtered SDF
-	Window CreateGridWindow( const std::vector<double>& field ) const
+	Window CreateGridWindow( const std::vector<Float>& field ) const
 	{
 		const Int3 dims = GetGridSize();
 		Window window( dims );
@@ -673,7 +682,7 @@ private:
 	// Lattice of dim * scale cells per axis, each the trilinear interpolation of the 8 grid samples of its cube (samples outside
 	// the grid read deep empty). Only cubes straddling a sign change, plus one cube of dilation, get the real per-cell trilinear;
 	// the rest take the cube's uniform sign and have no field value.
-	Window CreateSubdividedWindow( const std::vector<double>& field, int32_t scale, const std::atomic<bool>& cancel ) const
+	Window CreateSubdividedWindow( const std::vector<Float>& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
 		const Int3 dims = GetGridSize();
 		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale } );
@@ -734,10 +743,10 @@ private:
 			}
 		}
 
-		std::vector<double> t( scale );
+		std::vector<Float> t( scale );
 		for( int32_t i = 0; i < scale; ++i )
 		{
-			t[i] = i / double( scale );
+			t[i] = i / Float( scale );
 		}
 
 		// Only cubes 0..dim-1 cover lattice cells
@@ -755,29 +764,29 @@ private:
 					if( band[cube] )
 					{
 						// Lerped hierarchically so each cube costs 4k + 2k^2 + k^3 lerps
-						const double s000 = sample( cx, cy, cz );
-						const double s100 = sample( cx + 1, cy, cz );
-						const double s010 = sample( cx, cy + 1, cz );
-						const double s110 = sample( cx + 1, cy + 1, cz );
-						const double s001 = sample( cx, cy, cz + 1 );
-						const double s101 = sample( cx + 1, cy, cz + 1 );
-						const double s011 = sample( cx, cy + 1, cz + 1 );
-						const double s111 = sample( cx + 1, cy + 1, cz + 1 );
+						const Float s000 = sample( cx, cy, cz );
+						const Float s100 = sample( cx + 1, cy, cz );
+						const Float s010 = sample( cx, cy + 1, cz );
+						const Float s110 = sample( cx + 1, cy + 1, cz );
+						const Float s001 = sample( cx, cy, cz + 1 );
+						const Float s101 = sample( cx + 1, cy, cz + 1 );
+						const Float s011 = sample( cx, cy + 1, cz + 1 );
+						const Float s111 = sample( cx + 1, cy + 1, cz + 1 );
 						for( int32_t iz = 0; iz < scale; ++iz )
 						{
-							const double tz = t[iz];
-							const double e00 = s000 + ( s001 - s000 ) * tz;
-							const double e10 = s100 + ( s101 - s100 ) * tz;
-							const double e01 = s010 + ( s011 - s010 ) * tz;
-							const double e11 = s110 + ( s111 - s110 ) * tz;
+							const Float tz = t[iz];
+							const Float e00 = s000 + ( s001 - s000 ) * tz;
+							const Float e10 = s100 + ( s101 - s100 ) * tz;
+							const Float e01 = s010 + ( s011 - s010 ) * tz;
+							const Float e11 = s110 + ( s111 - s110 ) * tz;
 							for( int32_t iy = 0; iy < scale; ++iy )
 							{
-								const double ty = t[iy];
-								const double f0 = e00 + ( e01 - e00 ) * ty;
-								const double f1 = e10 + ( e11 - e10 ) * ty;
+								const Float ty = t[iy];
+								const Float f0 = e00 + ( e01 - e00 ) * ty;
+								const Float f1 = e10 + ( e11 - e10 ) * ty;
 								for( int32_t ix = 0; ix < scale; ++ix )
 								{
-									const double value = f0 + ( f1 - f0 ) * t[ix];
+									const Float value = f0 + ( f1 - f0 ) * t[ix];
 									const size_t index = window.Index( cx * scale + ix, cy * scale + iy, cz * scale + iz );
 									window.field[index] = value;
 									window.occupancy[index] = value >= 0.0 ? 1 : 0;
@@ -804,10 +813,10 @@ private:
 
 	// Mean of the sign crossings on the block's 12 edges, clamped to the block's inset unit cube and scaled back into
 	// grid cell space
-	static Vec3d GetDualVertex( const Window& window, const Int3& block, int32_t scale )
+	static VectorT GetDualVertex( const Window& window, const Int3& block, int32_t scale )
 	{
 		const size_t base = window.Index( block[0], block[1], block[2] );
-		Vec3d sum = { 0.0, 0.0, 0.0 };
+		VectorT sum = { 0.0, 0.0, 0.0 };
 		int32_t count = 0;
 		for( int axis = 0; axis < 3; ++axis )
 		{
@@ -831,13 +840,13 @@ private:
 					const bool loSolid = window.occupancy[ia] != 0;
 					const Int3& solidOffset = loSolid ? lo : hi;
 					const Int3& emptyOffset = loSolid ? hi : lo;
-					const double da = window.field[loSolid ? ia : ib];
-					const double db = window.field[loSolid ? ib : ia];
-					double t = 0.5;
+					const Float da = window.field[loSolid ? ia : ib];
+					const Float db = window.field[loSolid ? ib : ia];
+					Float t = 0.5;
 					// NaN is a cell without a field value, so split the edge
 					if( !std::isnan( da ) && !std::isnan( db ) && da != db )
 					{
-						t = std::min( std::max( da / ( da - db ), s_tMin ), 1.0 - s_tMin );
+						t = std::min( std::max( da / ( da - db ), s_tMin ), Float( 1.0 - s_tMin ) );
 					}
 					for( int j = 0; j < 3; ++j )
 					{
@@ -847,10 +856,10 @@ private:
 				}
 			}
 		}
-		Vec3d result;
+		VectorT result;
 		for( int j = 0; j < 3; ++j )
 		{
-			const double position = block[j] + sum[j] / count;
+			const Float position = block[j] + sum[j] / count;
 			result[j] = std::min( std::max( position, block[j] + s_roamMargin ), block[j] + 1 - s_roamMargin ) / scale;
 		}
 		return result;
@@ -858,7 +867,7 @@ private:
 
 	// Emits a quad for every occupancy sign change, as 4 indices into shared dual vertices (one per block), wound
 	// counter-clockwise seen from the empty side
-	static void Sweep( const Window& window, int32_t scale, const std::atomic<bool>& cancel, std::vector<Vec3d>& positions, std::vector<uint32_t>& quads )
+	static void Sweep( const Window& window, int32_t scale, const std::atomic<bool>& cancel, std::vector<VectorT>& positions, std::vector<uint32_t>& quads )
 	{
 		const Int3& lattice = window.lattice;
 		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
@@ -921,7 +930,7 @@ private:
 	}
 
 	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
-	void Relax( std::vector<Vec3d>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	void Relax( std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
 		if( m_relaxIterations == 0 || quads.empty() )
 		{
@@ -944,7 +953,7 @@ private:
 			list.erase( std::unique( list.begin(), list.end() ), list.end() );
 		}
 
-		std::vector<Vec3d> moved( positions.size() );
+		std::vector<VectorT> moved( positions.size() );
 		for( uint32_t iteration = 0; iteration < m_relaxIterations; ++iteration )
 		{
 			if( cancel )
@@ -959,15 +968,12 @@ private:
 					moved[i] = p;
 					continue;
 				}
-				Vec3d sum = { 0.0, 0.0, 0.0 };
+				VectorT sum = { 0.0, 0.0, 0.0 };
 				for( auto neighbor : neighbors[i] )
 				{
-					for( int j = 0; j < 3; ++j )
-					{
-						sum[j] += positions[neighbor][j];
-					}
+					sum += positions[neighbor];
 				}
-				const double count = double( neighbors[i].size() );
+				const Float count = Float( neighbors[i].size() );
 				for( int j = 0; j < 3; ++j )
 				{
 					moved[i][j] = p[j] + s_relaxAlpha * ( sum[j] / count - p[j] );
@@ -979,18 +985,18 @@ private:
 
 	// Area-weighted vertex normals: every quad adds its diagonal cross product (outward by the emitted winding) to each of
 	// its four corners, then each vertex normalises its sum
-	static std::vector<Vec3d> ComputeNormals( const std::vector<Vec3d>& positions, const std::vector<uint32_t>& quads )
+	static std::vector<VectorT> ComputeNormals( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads )
 	{
-		std::vector<Vec3d> normals( positions.size(), Vec3d{ 0.0, 0.0, 0.0 } );
+		std::vector<VectorT> normals( positions.size(), VectorT{ 0.0, 0.0, 0.0 } );
 		for( size_t q = 0; q < quads.size(); q += 4 )
 		{
 			const auto& p0 = positions[quads[q]];
 			const auto& p1 = positions[quads[q + 1]];
 			const auto& p2 = positions[quads[q + 2]];
 			const auto& p3 = positions[quads[q + 3]];
-			const Vec3d a = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
-			const Vec3d b = { p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2] };
-			const Vec3d n = { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+			const VectorT a = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
+			const VectorT b = { p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2] };
+			const VectorT n = { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
 			for( size_t i = 0; i < 4; ++i )
 			{
 				auto& normal = normals[quads[q + i]];
@@ -1002,7 +1008,7 @@ private:
 		}
 		for( auto& normal : normals )
 		{
-			const double length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
+			const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
 			if( length > 1e-12 )
 			{
 				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
