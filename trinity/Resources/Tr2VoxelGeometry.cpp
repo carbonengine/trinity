@@ -308,15 +308,15 @@ private:
 	using Vec3d = std::array<double, 3>;
 	using Int3 = std::array<int32_t, 3>;
 
-	static constexpr double s_sdfClamp = 3.0;             // encode clamp in cells
+	static constexpr double s_sdfClamp = 3.0; // encode clamp in cells
 	static constexpr double s_sdfDecode = s_sdfClamp / 127.5;
-	static constexpr double s_deepEmpty = -s_sdfClamp;    // field value sampled outside the grid
-	static constexpr int32_t s_sdfSearchRadius = 4;       // surface band radius for the chamfer distance transform
-	static constexpr double s_relaxAlpha = 0.5;           // Laplacian relaxation strength per iteration
-	static constexpr double s_blurAlpha = 0.15;           // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
-	static constexpr double s_signFloor = 0.12;           // min |field| kept at an in-grid cell centre after the low-pass
-	static constexpr double s_roamMargin = 0.15;          // dual vertex clamp cube inset, keeps neighbouring vertices apart
-	static constexpr double s_tMin = 0.10;                // bound of the edge crossing interpolant off 0/1
+	static constexpr double s_deepEmpty = -s_sdfClamp; // field value sampled outside the grid
+	static constexpr int32_t s_sdfSearchRadius = 4; // surface band radius for the chamfer distance transform
+	static constexpr double s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
+	static constexpr double s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
+	static constexpr double s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
+	static constexpr double s_roamMargin = 0.15; // dual vertex clamp cube inset, keeps neighbouring vertices apart
+	static constexpr double s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// (u, v) per axis, right-handed: u x v = +axis
 	static constexpr std::array<std::array<int, 2>, 3> s_axisUV = { { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
@@ -1020,7 +1020,7 @@ bool Tr2VoxelGeometry::Initialize()
 	Rebuild();
 	return true;
 }
-	
+
 IRootPtr Tr2VoxelGeometry::GetVoxelData() const
 {
 	return m_voxelData.p;
@@ -1122,7 +1122,10 @@ void Tr2VoxelGeometry::SetMethod( Method method )
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
-	Rebuild();
+	if( modifiedChannels.IsChannelModified( m_occupancyChannelIndex ) )
+	{
+		Rebuild();
+	}
 }
 
 std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() const
@@ -1131,7 +1134,7 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
-	auto occupancySnapshot = m_voxelData->GetPayloadSnapshot( 0 );
+	auto occupancySnapshot = m_voxelData->GetPayloadSnapshot( m_occupancyChannelIndex );
 	if( !occupancySnapshot.m_data )
 	{
 		return std::make_unique<EmptyBuilder>();
