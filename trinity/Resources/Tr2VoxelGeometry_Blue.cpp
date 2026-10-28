@@ -11,6 +11,7 @@ namespace
 Be::VarChooser Tr2VoxelGeometryMethodChooser[] = {
 	{ "Simple", BeCast( Tr2VoxelGeometry::Method::Simple ), "" },
 	{ "SurfaceNets", BeCast( Tr2VoxelGeometry::Method::SurfaceNets ), "" },
+	{ "DualContouring", BeCast( Tr2VoxelGeometry::Method::DualContouring ), "" },
 	{ 0 }
 };
 }

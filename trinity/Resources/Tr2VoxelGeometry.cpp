@@ -34,7 +34,7 @@ public:
 		}
 
 		CcpMath::AxisAlignedBox meshBounds;
-		auto [vbView, ibView] = CreateBuffers( allocator, buffers, cancel, meshBounds );
+		auto [vbView, ibView, decl] = CreateBuffers( allocator, buffers, cancel, meshBounds );
 		if( cancel || vbView.size == 0 )
 		{
 			return false;
@@ -55,8 +55,7 @@ public:
 
 		cmf::Mesh mesh = {};
 		mesh.name = allocator.AllocateString( "VoxelData" );
-		cmf::Modify( mesh.decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
-		cmf::Modify( mesh.decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
+		mesh.decl = decl;
 		cmf::Modify( mesh.lods, allocator ).emplace_back( lod );
 		cmf::Modify( mesh.areas, allocator ).emplace_back( area );
 		mesh.topology = cmf::MeshTopology::TriangleList;
@@ -69,30 +68,9 @@ public:
 	}
 
 protected:
-	struct Vertex
-	{
-		Vector3 position;
-		Vector3 normal;
-	};
 
 	// Returns vertex and index buffer views, and the bounds of the generated vertices in bounds
-	virtual std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) = 0;
-
-	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
-	{
-		if( vertices.empty() )
-		{
-			return CcpMath::AxisAlignedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 0.f, 0.f, 0.f ) );
-		}
-		Vector3 minimum = vertices[0].position;
-		Vector3 maximum = vertices[0].position;
-		for( const auto& vertex : vertices )
-		{
-			minimum = Vector3( std::min( minimum.x, vertex.position.x ), std::min( minimum.y, vertex.position.y ), std::min( minimum.z, vertex.position.z ) );
-			maximum = Vector3( std::max( maximum.x, vertex.position.x ), std::max( maximum.y, vertex.position.y ), std::max( maximum.z, vertex.position.z ) );
-		}
-		return CcpMath::AxisAlignedBox( minimum, maximum );
-	}
+	virtual std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) = 0;
 
 	bool GetCellOccupancy( const Tr2VoxelData::Coord& coord ) const
 	{
@@ -115,7 +93,29 @@ public:
 	}
 
 protected:
-	std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
+	struct Vertex
+	{
+		Vector3 position;
+		Vector3 normal;
+	};
+
+	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
+	{
+		if( vertices.empty() )
+		{
+			return CcpMath::AxisAlignedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 0.f, 0.f, 0.f ) );
+		}
+		Vector3 minimum = vertices[0].position;
+		Vector3 maximum = vertices[0].position;
+		for( const auto& vertex : vertices )
+		{
+			minimum = Vector3( std::min( minimum.x, vertex.position.x ), std::min( minimum.y, vertex.position.y ), std::min( minimum.z, vertex.position.z ) );
+			maximum = Vector3( std::max( maximum.x, vertex.position.x ), std::max( maximum.y, vertex.position.y ), std::max( maximum.z, vertex.position.z ) );
+		}
+		return CcpMath::AxisAlignedBox( minimum, maximum );
+	}
+
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
 	{
 		struct Face
 		{
@@ -211,7 +211,11 @@ protected:
 			uint32_t( indices.size() * indexStride ),
 			indexStride );
 
-		return { vbView, ibView };
+		cmf::Span<cmf::VertexElement> decl;
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
+
+		return { vbView, ibView, decl };
 	}
 };
 
@@ -227,12 +231,34 @@ public:
 	}
 
 protected:
+	struct Vertex
+	{
+		Vector3 position;
+		Vector3 normal;
+	};
+
+	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
+	{
+		if( vertices.empty() )
+		{
+			return CcpMath::AxisAlignedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 0.f, 0.f, 0.f ) );
+		}
+		Vector3 minimum = vertices[0].position;
+		Vector3 maximum = vertices[0].position;
+		for( const auto& vertex : vertices )
+		{
+			minimum = Vector3( std::min( minimum.x, vertex.position.x ), std::min( minimum.y, vertex.position.y ), std::min( minimum.z, vertex.position.z ) );
+			maximum = Vector3( std::max( maximum.x, vertex.position.x ), std::max( maximum.y, vertex.position.y ), std::max( maximum.z, vertex.position.z ) );
+		}
+		return CcpMath::AxisAlignedBox( minimum, maximum );
+	}
+
 	// Surface Nets extraction. Cell centres sit at integer lattice coordinates, a dual
 	// vertex lives in every 2x2x2 block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad
 	// joining the four blocks sharing it. Cells outside the grid read as empty, so the surface closes at the grid boundary.
 	// m_subdivision > 1 runs the construction on a lattice subdivided k-fold whose field is the trilinear interpolation of
 	// the SDF. Quads are emitted as two triangles each.
-	std::pair<cmf::BufferView, cmf::BufferView> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
 	{
 		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
 		{
@@ -300,7 +326,11 @@ protected:
 			uint32_t( indices.size() * indexStride ),
 			indexStride );
 
-		return { vbView, ibView };
+		cmf::Span<cmf::VertexElement> decl;
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
+
+		return { vbView, ibView, decl };
 	}
 
 private:
@@ -990,6 +1020,44 @@ private:
 	const uint32_t m_relaxIterations;
 };
 
+
+class DualContouringBuilder : public VoxelBuilder
+{
+public:
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot minedFlag, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+		VoxelBuilder( std::move( occupancy ), cellSize ),
+		m_minedFlag( std::move( minedFlag ) ),
+		m_subdivision( subdivision ),
+		m_relaxIterations( relaxIterations )
+	{
+	}
+
+protected:
+	struct Vertex
+	{
+		Vector3 position;
+		Vector3 displacementNormal;
+		Vector3 shadingNormal;
+		float curvature;
+		float curvatureSmoothed;
+		float minedFaceWeight;
+		float debugInfo;
+	};
+
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
+	{
+		return {
+			{},
+			{},
+			{}
+		};
+	}
+
+	const Tr2VoxelData::PayloadSnapshot m_minedFlag;
+	const uint32_t m_subdivision;
+	const uint32_t m_relaxIterations;
+};
+
 }
 
 
@@ -1055,6 +1123,21 @@ void Tr2VoxelGeometry::SetOccupancyChannelIndex( uint32_t channelIndex )
 		return;
 	}
 	m_occupancyChannelIndex = channelIndex;
+	Rebuild();
+}
+
+uint32_t Tr2VoxelGeometry::GetMinedFlagChannelIndex() const
+{
+	return m_minedFlagChannelIndex;
+}
+
+void Tr2VoxelGeometry::SetMinedFlagChannelIndex( uint32_t channelIndex )
+{
+	if( m_minedFlagChannelIndex == channelIndex )
+	{
+		return;
+	}
+	m_minedFlagChannelIndex = channelIndex;
 	Rebuild();
 }
 
@@ -1138,11 +1221,22 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
-	if( m_method == Method::Simple )
+	auto minedFlagSnapshot = m_voxelData->GetPayloadSnapshot( m_minedFlagChannelIndex );
+	if( !minedFlagSnapshot.m_data )
 	{
-		return std::make_unique<SimpleBuilder>( std::move( occupancySnapshot ), m_cellSize );
+		return std::make_unique<EmptyBuilder>();
 	}
-	return std::make_unique<SurfaceNetsBuilder>( std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+	switch( m_method )
+	{
+	case Method::Simple:
+		return std::make_unique<SimpleBuilder>( std::move( occupancySnapshot ), m_cellSize );
+	case Method::SurfaceNets:
+		return std::make_unique<SurfaceNetsBuilder>( std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+	case Method::DualContouring:
+		return std::make_unique<DualContouringBuilder>( std::move( occupancySnapshot ), std::move( minedFlagSnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+	default:
+		return std::make_unique<EmptyBuilder>();
+	}
 }
 
 BlueStdResult Tr2VoxelGeometry::TestBuildFile( const char* resPath )
