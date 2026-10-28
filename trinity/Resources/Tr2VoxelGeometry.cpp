@@ -216,10 +216,10 @@ protected:
 };
 
 
-class SmoothingBuilder : public VoxelBuilder
+class SurfaceNetsBuilder : public VoxelBuilder
 {
 public:
-	SmoothingBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
 		VoxelBuilder( std::move( occupancy ), cellSize ),
 		m_subdivision( subdivision ),
 		m_relaxIterations( relaxIterations )
@@ -227,8 +227,7 @@ public:
 	}
 
 protected:
-	// Surface Nets extraction, a port of extract_surface from spacecomponents compositeasteroid_meshing.py (with the SDF
-	// encoded from occupancy as compositeasteroid._encode_sdf does). Cell centres sit at integer lattice coordinates, a dual
+	// Surface Nets extraction. Cell centres sit at integer lattice coordinates, a dual
 	// vertex lives in every 2x2x2 block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad
 	// joining the four blocks sharing it. Cells outside the grid read as empty, so the surface closes at the grid boundary.
 	// m_subdivision > 1 runs the construction on a lattice subdivided k-fold whose field is the trilinear interpolation of
@@ -1143,7 +1142,7 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	{
 		return std::make_unique<SimpleBuilder>( std::move( occupancySnapshot ), m_cellSize );
 	}
-	return std::make_unique<SmoothingBuilder>( std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+	return std::make_unique<SurfaceNetsBuilder>( std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
 }
 
 BlueStdResult Tr2VoxelGeometry::TestBuildFile( const char* resPath )

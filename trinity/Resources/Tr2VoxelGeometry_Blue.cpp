@@ -10,7 +10,7 @@ namespace
 {
 Be::VarChooser Tr2VoxelGeometryMethodChooser[] = {
 	{ "Simple", BeCast( Tr2VoxelGeometry::Method::Simple ), "" },
-	{ "Smoothed", BeCast( Tr2VoxelGeometry::Method::Smoothed ), "" },
+	{ "SurfaceNets", BeCast( Tr2VoxelGeometry::Method::SurfaceNets ), "" },
 	{ 0 }
 };
 }
@@ -42,7 +42,7 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing" )
 		MAP_ATTRIBUTE( "method", m_method, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "method", GetMethod, SetMethod, "Method used for generating the geometry (Simple or Smoothed)" )
+		MAP_PROPERTY( "method", GetMethod, SetMethod, "Method used for generating the geometry (Simple or SurfaceNets)" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"__init__",

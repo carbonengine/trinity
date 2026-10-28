@@ -14,7 +14,7 @@ public:
 	enum class Method : uint32_t
 	{
 		Simple,
-		Smoothed,
+		SurfaceNets,
 	};
 
 	void Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> occupancyChannelIndex, Be::Optional<float> cellSize );
