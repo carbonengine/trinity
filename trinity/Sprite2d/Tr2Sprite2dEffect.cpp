@@ -15,10 +15,6 @@ Tr2Sprite2dEffect::Tr2Sprite2dEffect( IRoot* lockobj /*= NULL */ ) :
 {
 }
 
-Tr2Sprite2dEffect::~Tr2Sprite2dEffect()
-{
-}
-
 void Tr2Sprite2dEffect::GatherSprites( Tr2Sprite2dScene* renderer )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );

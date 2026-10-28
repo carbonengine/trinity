@@ -27,13 +27,12 @@ public:
 	EXPOSE_TO_BLUE();
 
 	Tr2Sprite2dEffect( IRoot* lockobj = NULL );
-	~Tr2Sprite2dEffect();
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2SpriteObject
-	virtual unsigned int GetVertexCount();
-	virtual void GatherSprites( Tr2Sprite2dScene* renderer );
-	virtual ITr2SpriteObject* PickPoint( float x, float y, Tr2Sprite2dScene* renderer );
+	unsigned int GetVertexCount();
+	void GatherSprites( Tr2Sprite2dScene* renderer ) override;
+	ITr2SpriteObject* PickPoint( float x, float y, Tr2Sprite2dScene* renderer ) override;
 
 private:
 	Tr2EffectPtr m_effect;

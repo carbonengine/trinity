@@ -1817,6 +1817,7 @@ void Tr2Sprite2dScene::RunJob( TriRenderJob* job )
 		entry.primitiveCount = 0;
 		entry.texture0 = nullptr;
 		entry.texture1 = nullptr;
+		entry.bindTextures = true;
 		entry.texelSize0 = Vector4( 0, 0, 0, 0 );
 		entry.texelSize1 = Vector4( 0, 0, 0, 0 );
 
