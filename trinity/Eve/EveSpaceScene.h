@@ -495,10 +495,7 @@ protected:
 	Color m_currentSunColor;
 	float m_currentNebulaIntensity;
 
-	// Lighting resolved once per frame in ResolveLightingOverrides. The m_current* values
-	// are derived from these per view in ApplyViewLighting.
-	Color m_baseSunColor = Color( 1.0f, 1.0f, 1.0f, 1.0f );
-	float m_baseNebulaIntensity = 1.0f;
+	// Base value for the reflection intensity, derived from the lighting overrides and used to derive the per-view values in BeginView.
 	float m_baseReflectionIntensity = 1.0f;
 
 	float m_fogStart; // Depth at which fogging starts
@@ -609,7 +606,6 @@ protected:
 	void UpdateFrame( Be::Time realTime, Be::Time simTime );
 	void EnsureVisualizerEffect();
 	void ResolveLightingOverrides();
-	void ApplyViewLighting( const EveSceneView::ViewInfo& view );
 	void GatherDynamicLights( Tr2RenderContext& renderContext );
 	void PrepareLensflares();
 	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );

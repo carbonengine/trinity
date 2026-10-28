@@ -1272,6 +1272,21 @@ bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2Texture
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Lower the reflection intensity for the objects rendered into the reflection (so the
+//   reflections in the reflections don't get brighter and brighter). We cap it at 0.8
+//   for no good reason, just felt like a good number to cap it at.
+// --------------------------------------------------------------------------------------
+static float GetReflectionIntensityInReflections( float reflectionIntensity )
+{
+	if( reflectionIntensity == 0.0f )
+	{
+		return reflectionIntensity;
+	}
+	return min( 0.8f, 1.0f / ( reflectionIntensity * reflectionIntensity ) );
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Work that does not depend on the view being rendered. Called once per frame, after
 //   the frame's Update and before the first BeginView.
 // --------------------------------------------------------------------------------------
@@ -1326,8 +1341,7 @@ void EveSpaceScene::BeginView( const EveSceneView::ViewInfo& view, Tr2RenderCont
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
 	m_velocityMapDirty = false;
-
-	ApplyViewLighting( view );
+	m_currentReflectionIntensity = view.IsReflection() ? GetReflectionIntensityInReflections( m_baseReflectionIntensity ) : m_baseReflectionIntensity;
 
 	// Set for every view rather than set and reset in pairs, so a view never inherits
 	// the previous view's value. It is read whenever the per-frame data is populated.
@@ -1368,8 +1382,8 @@ void EveSpaceScene::EnsureVisualizerEffect()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Blend the lighting overrides into the per-frame base values. Views derive their
-//   m_current* values from these in ApplyViewLighting.
+//   Blend the lighting overrides into the frame's sun color and nebula intensity, and
+//   into the base reflection intensity that BeginView derives each view's from.
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::ResolveLightingOverrides()
 {
@@ -1399,35 +1413,9 @@ void EveSpaceScene::ResolveLightingOverrides()
 	overrides.push_back( baseline );
 
 	auto over = SimplePriorityBlend( overrides );
-	m_baseSunColor = over.sunColor * over.sunIntensity;
-	m_baseNebulaIntensity = over.backgroundIntensity;
+	m_currentSunColor = over.sunColor * over.sunIntensity;
+	m_currentNebulaIntensity = over.backgroundIntensity;
 	m_baseReflectionIntensity = over.reflectionIntensity;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Lower the reflection intensity for the objects rendered into the reflection (so the
-//   reflections in the reflections don't get brighter and brighter). We cap it at 0.8
-//   for no good reason, just felt like a good number to cap it at.
-// --------------------------------------------------------------------------------------
-static float GetReflectionIntensityInReflections( float reflectionIntensity )
-{
-	if( reflectionIntensity == 0.0f )
-	{
-		return reflectionIntensity;
-	}
-	return min( 0.8f, 1.0f / ( reflectionIntensity * reflectionIntensity ) );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Derive the lighting values for the current view from the per-frame base values.
-// --------------------------------------------------------------------------------------
-void EveSpaceScene::ApplyViewLighting( const EveSceneView::ViewInfo& view )
-{
-	m_currentSunColor = m_baseSunColor;
-	m_currentNebulaIntensity = m_baseNebulaIntensity;
-	m_currentReflectionIntensity = view.IsReflection() ? GetReflectionIntensityInReflections( m_baseReflectionIntensity ) : m_baseReflectionIntensity;
 }
 
 // --------------------------------------------------------------------------------------
@@ -2645,18 +2633,19 @@ bool EveSpaceScene::RenderMainPass(
 	PopulateAndApplyPerFrameData( renderContext );
 	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> froxelFogTextures;
 
-	if( view.reason == TR2RENDERREASON_NORMAL )
+	switch( view.reason )
 	{
+	case TR2RENDERREASON_NORMAL:
 		froxelFogTextures = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
-	}
-	else if( view.reason == TR2RENDERREASON_REFLECTION )
-	{
+		break;
+	case TR2RENDERREASON_REFLECTION:
 		froxelFogTextures = RenderReflectionVolumetrics( depthMap, gpuResourcePool, renderContext );
-	}
-	else 
-	{
+		break;
+	case TR2RENDERREASON_VOLUMETRIC:
 		froxelFogTextures = { Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ), Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
+		break;
 	}
+
 	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFogTextures.first );
 	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", froxelFogTextures.second );
 

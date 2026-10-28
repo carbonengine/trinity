@@ -581,6 +581,10 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		targets = RenderView( mainView, colorTarget, outputs, realTime, simTime, rootTimer, renderContext );
 	}
 
+	// store the last view and projection matrices for the next frame, so the scene can use them for temporal effects
+	m_viewLast = m_scene->m_viewLast;
+	m_projectionLast = m_scene->m_projectionLast;
+
 	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
 	renderContext.m_esm.SetDepthStencilBuffer( {} );
 
@@ -657,7 +661,7 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render the scene from one view (the main view or a reflection probe face) into
-//   colorTarget. Returns the targets the view rendered, for post processing
+//   colorTarget. Returns the targets the view rendered, for post processing.
 // --------------------------------------------------------------------------------------
 EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
 {
@@ -801,9 +805,6 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		TimeSection endRenderSection( m_timers.endRender, "EndRender", rootTimer, renderContext );
 		m_scene->EndRender( view.scene, renderContext );
 	}
-	// non-temporal views leave the scene's history untouched, so this is a no-op for them
-	m_viewLast = m_scene->m_viewLast;
-	m_projectionLast = m_scene->m_projectionLast;
 	m_scene->PopulateAndApplyPerFrameData( renderContext );
 
 	GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", Tr2TextureAL{} );

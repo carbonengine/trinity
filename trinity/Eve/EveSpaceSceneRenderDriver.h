@@ -90,7 +90,7 @@ public:
 private:
 
 	// The driver's features a view uses. What the scene renders is described by the
-	// SceneRender::ViewInfo in RenderInfo. The features are off by default and every factory
+	// EveSceneView::ViewInfo in RenderInfo. The features are off by default and every factory
 	// sets every feature, so a new feature has to be decided for each kind of view.
 	struct Features
 	{

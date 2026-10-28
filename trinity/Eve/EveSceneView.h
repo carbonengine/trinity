@@ -8,7 +8,7 @@
 
 namespace EveSceneView
 {
-// Where a view looks from. Create derives the frustum from the other fields, so build a
+// Where a view looks from. Constructor derives the frustum from the other fields, so build a
 // new Camera rather than changing one.
 struct Camera
 {
