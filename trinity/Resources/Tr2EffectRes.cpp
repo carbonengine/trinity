@@ -137,7 +137,7 @@ Tr2ShaderPtr Tr2EffectRes::GetShader( const Tr2ShaderOption* options, size_t cou
 
 BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_version = 0;
 	m_data.clear();

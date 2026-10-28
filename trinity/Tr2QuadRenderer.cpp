@@ -131,7 +131,7 @@ void Tr2QuadRenderer::AddQuads( EffectKey effectKey, const void* sprites, size_t
 // --------------------------------------------------------------------------------------
 uint32_t Tr2QuadRenderer::MergeBuffers()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Add padding to accomodate alignment
 	for( auto& jt : m_effects )
@@ -177,7 +177,7 @@ uint32_t Tr2QuadRenderer::MergeBuffers()
 // --------------------------------------------------------------------------------------
 void Tr2QuadRenderer::UpdateInstanceBuffer( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_bufferSize && !m_vertexBuffer.IsValid() )
 	{
@@ -243,7 +243,7 @@ void Tr2QuadRenderer::RecreateQuadBuffers( uint32_t quadCount )
 // --------------------------------------------------------------------------------------
 void Tr2QuadRenderer::BeginRendering( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	uint32_t quadCount = MergeBuffers();
 	UpdateInstanceBuffer( renderContext );

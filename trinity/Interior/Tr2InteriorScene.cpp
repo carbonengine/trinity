@@ -137,6 +137,7 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ) :
 	m_optimizeShadows( true ),
 	m_renderShadows( true ),
 	m_debugRenderShadowMaps( false ),
+	m_shadowMapsDirty( true ),
 	m_shadowMap0Var( "SpotlightShadow0", (TriTextureRes*)NULL ),
 	m_shadowMap1Var( "SpotlightShadow1", (TriTextureRes*)NULL ),
 	m_shadowMap2Var( "SpotlightShadow2", (TriTextureRes*)NULL ),
@@ -212,14 +213,9 @@ bool Tr2InteriorScene::OnModified( Be::Var* value )
 		SetBackgroundCubemapResPath();
 	}
 
-	if( IsMatch( value, m_shadowSize ) )
+	if( IsMatch( value, m_shadowSize ) || IsMatch( value, m_shadowCount ) )
 	{
-		SetupShadowMaps();
-	}
-
-	if( IsMatch( value, m_shadowCount ) )
-	{
-		SetupShadowMaps();
+		m_shadowMapsDirty = true;
 	}
 
 	return true;
@@ -230,7 +226,7 @@ void Tr2InteriorScene::OnListModified( long event, ssize_t key, ssize_t key2, IR
 {
 	if( theList == &m_lights )
 	{
-		SetupShadowMaps();
+		m_shadowMapsDirty = true;
 	}
 
 	else if( theList == &m_dynamics )
@@ -404,7 +400,7 @@ void Tr2InteriorScene::SetVisualizationMode( int visualizationMode )
 
 void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( simTime == m_lastUpdateTime )
 		// NB: Multiple calls on the same 'frame' should be ignored,
@@ -423,7 +419,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	m_cameraPosVar = Tr2Renderer::GetViewPosition();
 
 	{
-		CCP_STATS_ZONE( "UpdateCurves" );
+		TRINITY_STATS_ZONE( "UpdateCurves" );
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 		{
 			( *it )->Update( realTime, simTime );
@@ -431,7 +427,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PendingLoads" );
+		TRINITY_STATS_ZONE( "PendingLoads" );
 		// Add any dynamics that have finished loading
 		std::vector<ITr2InteriorDynamic*> dynamicsToRemove;
 		for( ssize_t index = 0; index < m_dynamicsPendingLoad.GetSize(); ++index )
@@ -455,7 +451,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PrePhysicsUpdate" );
+		TRINITY_STATS_ZONE( "PrePhysicsUpdate" );
 		// Do the pre-physics update on the dynamics
 		// Note: this used to happen in the cell pre-physics update, but that can cause double animation ticks
 		// when a skinned object is intersecting multiple cells (e.g. crossing a portal)
@@ -466,7 +462,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "PostPhysicsUpdate" );
+		TRINITY_STATS_ZONE( "PostPhysicsUpdate" );
 		// Do the post-physics update on the dynamics
 		// Note: this used to happen in the cell post-physics update, but that can cause double animation ticks
 		// when a skinned object is intersecting multiple cells (e.g. crossing a portal)
@@ -477,7 +473,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 
 	{
-		CCP_STATS_ZONE( "Update" );
+		TRINITY_STATS_ZONE( "Update" );
 		for( PITr2InteriorLightVector::iterator it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
 			( *it )->Update( simTime );
@@ -510,7 +506,7 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::VisibilityQuery( Tr2VisibilityResults* results, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !results )
 	{
@@ -586,7 +582,7 @@ void Tr2InteriorScene::ResolveVisibility( const Matrix& view, const Matrix& proj
 
 void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	D3DPERF_EVENT( L"Tr2InteriorScene::RenderFullForward" );
 
@@ -659,21 +655,49 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 
 void Tr2InteriorScene::SetupShadowMaps()
 {
-	m_lightRenderTargets.Clear();
+	m_shadowMapsDirty = false;
 
-	for( int i = 0; i < (int)( m_lights.size() ) && i < m_shadowCount; i++ )
+	const unsigned size = m_shadowSize > 0 ? (unsigned)m_shadowSize : 1;
+	int count = (int)m_lights.size();
+	if( count > m_shadowCount )
+	{
+		count = m_shadowCount;
+	}
+	if( count < 0 )
+	{
+		count = 0;
+	}
+
+	if( m_lightDepthStencil && ( !m_lightDepthStencil->IsValid() || m_lightDepthStencil->GetWidth() != size ) )
+	{
+		m_lightDepthStencil = Tr2DepthStencilPtr();
+	}
+	if( !m_lightDepthStencil )
+	{
+		m_lightDepthStencil.CreateInstance();
+		m_lightDepthStencil->Create( size, size, Tr2RenderContextEnum::DSFMT_D32, 0, 0 );
+	}
+
+	if( !m_lightRenderTargets.empty() )
+	{
+		Tr2RenderTarget* first = m_lightRenderTargets[0];
+		if( !first || !first->IsValid() || first->GetWidth() != size )
+		{
+			m_lightRenderTargets.Clear();
+		}
+	}
+	while( (int)m_lightRenderTargets.size() > count )
+	{
+		m_lightRenderTargets.Remove( -1 );
+	}
+	while( (int)m_lightRenderTargets.size() < count )
 	{
 		Tr2RenderTargetPtr rt;
 		rt.CreateInstance();
 		rt->SetName( "ShadowMap" );
-		rt->Create( m_shadowSize, m_shadowSize, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 1, 0 );
+		rt->Create( size, size, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 1, 0 );
 		m_lightRenderTargets.Append( rt );
 	}
-
-	// Setup depth stencil texture
-	m_lightDepthStencil = Tr2DepthStencilPtr();
-	m_lightDepthStencil.CreateInstance();
-	m_lightDepthStencil->Create( m_shadowSize, m_shadowSize, Tr2RenderContextEnum::DSFMT_D32, 0, 0 );
 }
 
 // --------------------------------------------------------------------------------------
@@ -682,14 +706,14 @@ void Tr2InteriorScene::SetupShadowMaps()
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::RenderShadows( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_renderShadows )
 	{
 		return;
 	}
 
-	if( !m_lightDepthStencil )
+	if( m_shadowMapsDirty || !m_lightDepthStencil )
 	{
 		SetupShadowMaps();
 	}
@@ -810,7 +834,7 @@ void Tr2InteriorScene::RenderShadows( Tr2RenderContext& renderContext )
 
 void Tr2InteriorScene::RenderGeometry( Tr2Material* overrideEffect, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// From now on its managed!
 	renderContext.m_esm.BeginManagedRendering();
@@ -926,7 +950,7 @@ void Tr2InteriorScene::AddLightSource( ITr2InteriorLight* lightSource )
 		m_lights.Insert( -1, lightSource );
 	}
 
-	SetupShadowMaps();
+	m_shadowMapsDirty = true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -956,7 +980,7 @@ void Tr2InteriorScene::RemoveLightSource( ITr2InteriorLight* lightSource )
 
 	m_lights.Remove( pos );
 
-	SetupShadowMaps();
+	m_shadowMapsDirty = true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -1099,7 +1123,7 @@ void Tr2InteriorScene::DoQueryBegin( const Tr2VisibilityEvent& event )
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event )
 {
-	CCP_STATS_ZONE( "DoInstanceVisible" );
+	TRINITY_STATS_ZONE( "DoInstanceVisible" );
 
 	{
 		ITr2Interior* interior = dynamic_cast<ITr2Interior*>( event.m_userData.p );

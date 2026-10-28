@@ -80,8 +80,10 @@ void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 		float outerAngle = TRI_2PI * m_lightData.outerAngle / 360.f;
 		float innerAngle = TRI_2PI * m_lightData.innerAngle / 360.f;
 
-		renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 2.0f, baseColor ) );
-		renderer.DrawCone( this, lightMatrix, m_lightData.innerRadius, innerAngle, 15, 15, Tr2DebugRenderer::Solid, Tr2DebugColor( baseColor + colorMod * 3.0f, baseColor + colorMod ) );
+		renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Wireframe, Tr2DebugColor( baseColor + colorMod * 2.0f, baseColor ) );
+		renderer.DrawCone( this, lightMatrix, m_lightData.radius, outerAngle, 15, 15, Tr2DebugRenderer::Solid, Color( 0, 0, 0, 0 ) );
+		renderer.DrawCone( this, lightMatrix, m_lightData.innerRadius, innerAngle, 15, 15, Tr2DebugRenderer::Wireframe, Tr2DebugColor( baseColor + colorMod * 3.0f, baseColor + colorMod ) );
+		renderer.DrawText( TRI_DBG_FONT_SMALL, lightMatrix.GetTranslation(), baseColor, "%s", m_name.empty() ? "Tr2FactionLight" : m_name.c_str() );
 	}
 	else
 	{
@@ -96,7 +98,9 @@ void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 		}
 		lightMatrix *= worldMatrix;
 
-		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
-		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
+		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Wireframe, Tr2DebugColor( selectedColor, baseColor ) );
+		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Color( 0, 0, 0, 0 ) );
+		renderer.DrawSphere( this, lightMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Wireframe, Tr2DebugColor( selectedColor, baseColor ) );
+		renderer.DrawText( TRI_DBG_FONT_SMALL, TransformCoord( m_lightData.position, lightMatrix ), baseColor, "%s", m_name.empty() ? "Tr2FactionLight" : m_name.c_str() );
 	}
 }

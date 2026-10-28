@@ -39,6 +39,7 @@ extern NullContext s_nullContext;
 
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL() :
 	m_usingEXDevice( false ),
+	m_softwareAdapter( false ),
 	m_recodingFrame( 1 ),
 	m_renderedFrame( 0 ),
 	m_vsyncInterval( 0 ),
@@ -82,6 +83,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_defaultBackBuffer.m_texture->Destroy();
 
 	m_usingEXDevice = false;
+	m_softwareAdapter = false;
 	m_deviceStatistics = nullptr;
 
 	m_d3dDevice11 = nullptr;
@@ -164,11 +166,14 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice( uint32_t adapter,
 	D3D_FEATURE_LEVEL levelSupported;
 	CComPtr<IDXGIAdapter1> adapterPtr;
 
+	m_softwareAdapter = pp.software;
+
 	if( !isWindowless )
 	{
 
 		if( FAILED( Tr2VideoAdapterInfo::GetVideoAdapterDX11( adapter, &adapterPtr, &m_dxgiOutput ) ) )
 		{
+			m_softwareAdapter = false;
 			return E_FAIL;
 		}
 
@@ -178,6 +183,11 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice( uint32_t adapter,
 		{
 			CCP_AL_LOG( "DX11 creating device for adapter %s", (LPCTSTR)CW2A( desc1.Description ) );
 			m_adapterVendorId = uint32_t( desc1.VendorId );
+
+			if( desc1.Flags & DXGI_ADAPTER_FLAG_SOFTWARE )
+			{
+				m_softwareAdapter = true;
+			}
 		}
 	}
 
@@ -310,6 +320,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice( uint32_t adapter,
 		m_swapChain = nullptr;
 		m_d3dDevice11 = nullptr;
 		m_dxgiOutput = nullptr;
+		m_softwareAdapter = false;
 		m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 		return E_FAIL;
 	}

@@ -199,7 +199,7 @@ bool TriGrannyRes::Load( const std::string& path )
 
 BlueAsyncRes::LoadingResult TriGrannyRes::DoLoad()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_path.size() >= 4 && m_path.compare( m_path.size() - 4, 4, L".cmf" ) == 0 )
 	{
@@ -233,7 +233,7 @@ BlueAsyncRes::LoadingResult TriGrannyRes::DoLoad()
 				m_grannyFile = NULL;
 			}
 
-			CCP_STATS_ZONE( "TriGrannyRes::DoLoad reading Granny file" );
+			TRINITY_STATS_ZONE( "TriGrannyRes::DoLoad reading Granny file" );
 
 			m_grannyFile = ProtectedGrannyReadEntireFileFromMemory( m_path.c_str(), (uint32_t)m_dataSize, m_data );
 		}
@@ -422,7 +422,7 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const NameToWeightMap& n
 
 bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, Tr2SuballocatedBuffer::Allocation& pVertexData, Tr2RenderContextAL& renderContext, unsigned int vertexDataSize, const NameToWeightMap* const nameToWeight, bool deltaOnly )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( IsUsingCMF() )
 	{

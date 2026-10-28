@@ -4,7 +4,7 @@
 #include "EveStretch.h"
 #include "TriFloat.h"
 #include "Eve/EveUpdateContext.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
 #include "Eve/Turret/EveTurretSet.h"
 #include "Curves/Tr2CurveScalar.h"
@@ -52,7 +52,7 @@ bool EveStretch::OnModified( Be::Var* value )
 // start the update mess!
 void EveStretch::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	Be::Time time = updateContext.GetTime();
 	if( !m_update )

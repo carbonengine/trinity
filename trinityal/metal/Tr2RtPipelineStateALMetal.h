@@ -14,7 +14,6 @@
 //#include "StdAfx.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include "../include/Tr2RtPipelineStateAL.h"
-#include "../include/Tr2ResourceSetAL.h"
 #include "Tr2ShaderAL.h"
 #include <Metal/Metal.h>
 

@@ -4,7 +4,11 @@
 #ifndef EveTurretTarget_H
 #define EveTurretTarget_H
 
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
+
+// maximum time offset for turret firing; godma reads it back through GetShotTimeVariance
+// as the window for grouping shots that belong to one damage message
+const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
 
 namespace ImpactBehaviour
 {
@@ -55,6 +59,10 @@ public:
 	double GetLastShotTime() const;
 	bool PopShotMissed();
 	size_t MissQueueSize() const;
+	float GetShotTimeVariance() const
+	{
+		return EVE_TURRET_RANDOM_DELAY_MAX;
+	}
 
 	// target object queries
 	float GetRadius() const;

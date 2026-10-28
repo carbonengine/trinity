@@ -7,7 +7,7 @@
 #include "EveChildMesh.h"
 #include "Eve/Turret/EveTurretAiming.h"
 #include "Eve/Turret/EveTurretTarget.h"
-#include "Include/ITr2PoseModifier.h"
+#include "include/ITr2PoseModifier.h"
 
 BLUE_DECLARE( EveTurretFiringFX );
 BLUE_DECLARE( EveTurretTarget );
@@ -55,6 +55,10 @@ public:
 	void ForceStateTargeting();
 
 	Matrix GetFiringBoneWorldTransform( unsigned int muzzle ) const;
+
+	// controllers: forwarded to the firing effect, the child owns none itself
+	void SetControllerVariable( const char* name, float value );
+	void StartControllers();
 
 	// turret set states
 	enum State

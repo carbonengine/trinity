@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#include "followASpline.h"
+#include "FollowASpline.h"
 #include "Formation.h"
 
 FollowASpline::FollowASpline( IRoot* lockobj ) :
@@ -200,7 +200,7 @@ void FollowASpline::InitializeScratch( void* scratchMemory )
 
 std::vector<Vector3> FollowASpline::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Vector3> forceVectors;
 	if( !m_enabled )

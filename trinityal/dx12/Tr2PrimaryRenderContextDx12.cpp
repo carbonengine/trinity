@@ -889,7 +889,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p ) -> bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
 
-	SetResourceSet( Tr2ResourceSetAL() );
+	ResetResourceBindings();
 
 	{
 		std::vector<D3D12_RESOURCE_BARRIER> barriers;

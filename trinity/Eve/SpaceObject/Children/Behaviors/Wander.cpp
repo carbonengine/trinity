@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Wander.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "include/TriQuaternion.h"
 
 Wander::Wander( IRoot* lockobj ) :
@@ -27,7 +27,7 @@ int Wander::GetProcessPriority()
 
 std::vector<Vector3> Wander::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Vector3> forceVectors;
 	if( !m_enabled )

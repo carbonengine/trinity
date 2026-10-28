@@ -6,7 +6,7 @@
 
 //#include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "ITr2Renderable.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
 #include "EveDamageOverlay.h"
 
@@ -118,6 +118,8 @@ private:
 	int CreateShieldImpact( int damageLocatorIndex, const Vector3& direction, float lifeTime, float size, float intensity, EveSpaceObject2* parent );
 
 	Vector3 GetShieldImpactPosition( const Matrix& parentInverseWorldTransform, const Vector3& damageLocatorPosWS, const Vector3& impactDirection, const Vector3& shieldEllipsoidCenter, const Vector3& shieldEllipsoidRadii );
+
+	void SpawnImpactDebris( const EveUpdateContext& updateContext, EveSpaceObject2* parent );
 
 	// general data
 	BlueSharedString m_name;

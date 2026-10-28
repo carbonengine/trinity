@@ -152,7 +152,7 @@ void Tr2DynamicEmitter::SpawnParticles( const UpdateArguments& arguments,
 										const Vector3* velocity,
 										float rateModifier )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_isValid || m_particleSystem == nullptr )
 	{

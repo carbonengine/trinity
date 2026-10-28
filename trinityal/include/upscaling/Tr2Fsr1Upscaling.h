@@ -7,7 +7,7 @@
 #include "Tr2UpscalingAL.h"
 #include "Tr2RenderContextAL.h"
 #include "Tr2ShaderAL.h"
-#include "Tr2ResourceSetAL.h"
+#include "Tr2SamplerStateAL.h"
 #include "Tr2ShaderProgramAL.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12

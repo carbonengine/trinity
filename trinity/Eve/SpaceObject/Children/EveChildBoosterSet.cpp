@@ -4,10 +4,11 @@
 #include "EveChildBoosterSet.h"
 
 #include "Utilities/BoundingSphere.h"
+#include "Utilities/MatrixUtils.h"
 #include "Shader/Tr2Effect.h"
 #include "TriRenderBatch.h"
 #include "TriFrustum.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Eve/SpaceObject/Utils/EveBoosterUtilities.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Tr2LightManager.h"
@@ -119,6 +120,7 @@ void EveChildBoosterSet::UpdateAsyncronous( const EveUpdateContext& updateContex
 	}
 
 	m_parentTransform = params.localToWorldTransform;
+	m_parentMirrored = IsMirrored( m_parentTransform );
 
 	// scale with highest scale factor
 	float scaleXSq = LengthSq( m_parentTransform.GetX() );
@@ -491,7 +493,7 @@ void EveChildBoosterSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBat
 	// boosters visible based on LOD?
 	if( m_boostersVisible )
 	{
-		auto& indexBuffer = Tr2Renderer::GetQuadListIndexBuffer();
+		auto& indexBuffer = m_parentMirrored ? Tr2Renderer::GetReversedQuadListIndexBuffer() : Tr2Renderer::GetQuadListIndexBuffer();
 		if( !indexBuffer.IsValid() )
 		{
 			return;

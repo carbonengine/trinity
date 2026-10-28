@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Tr2Effect.h"
-#include "Include/ITriEffectParameter.h"
+#include "include/ITriEffectParameter.h"
 #include "Tr2Shader.h"
 
 BLUE_DEFINE( Tr2Effect );

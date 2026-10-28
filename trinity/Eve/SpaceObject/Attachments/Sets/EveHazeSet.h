@@ -109,6 +109,8 @@ private:
 	unsigned int m_vertexCount;
 	Tr2SuballocatedBuffer::Allocation m_vertexBuffer;
 
+	bool m_parentMirrored = false;
+
 	// bounding box around static items
 	AxisAlignedBoundingBox m_aabb;
 	std::vector<std::pair<int, CcpMath::AxisAlignedBox>> m_boundingBoxes;

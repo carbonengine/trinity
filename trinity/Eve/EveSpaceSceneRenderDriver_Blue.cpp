@@ -29,6 +29,12 @@ Be::VarChooser ShadowQualityChooser[] = {
 	{ "Raytraced", BeCast( ShadowQuality::SHADOW_RAYTRACED ), "" },
 	{ 0 }
 };
+const Be::VarChooser LightingQualityChooser[] = {
+	{ "Low", BeCast( LightingQuality::LOW ), "" },
+	{ "Medium", BeCast( LightingQuality::MEDIUM ), "" },
+	{ "High", BeCast( LightingQuality::HIGH ), "" },
+	{ 0 }
+};
 
 const Be::VarChooser TriRMChooser[] = {
 	// Name		   Value		    Docstring
@@ -52,6 +58,7 @@ extern Be::VarChooser PostProcessQualityChooser[];
 BLUE_REGISTER_ENUM_EX( "EveSpaceSceneRenderDriverAntiAliasingQuality", EveSpaceSceneRenderDriver::AntiAliasingQuality, AntiAliasingQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 BLUE_REGISTER_ENUM_EX( "EveSpaceSceneRenderDriverAmbientOcclusionQuality", EveSpaceSceneRenderDriver::AmbientOcclusionQuality, AmbientOcclusionQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 BLUE_REGISTER_ENUM_EX( "ShadowQuality", ShadowQuality, ShadowQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+BLUE_REGISTER_ENUM_EX( "LightingQuality", LightingQuality, LightingQualityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
 
@@ -151,6 +158,13 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			"Shadow quality setting. One of trinity.ShadowQuality enum",
 			Be::READWRITE | Be::ENUM,
 			ShadowQualityChooser )
+
+		MAP_ATTRIBUTE_WITH_CHOOSER(
+			"lightingQuality",
+			m_settings.lightingQuality,
+			"Lighting quality setting. One of trinity.LightingQuality enum",
+			Be::READWRITE | Be::ENUM,
+			LightingQualityChooser )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"antiAliasingQuality",

@@ -596,6 +596,7 @@ static void PatchCalls( ParserState& state,
 					}
 					if( texture == nullptr || texture->type.symbol )
 					{
+						state.ShowMessage( node->GetLocation(), EC_CUSTOM_ERROR, "Sampler %s is used in a dx9-style texture sampling function without a link to the texture", ToString( samplerArg->name ).c_str() );
 						assert( false );
 						return;
 					}

@@ -8,7 +8,7 @@
 // This is only needed for py2 as the file now belongs in blue.
 // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
 // The file version in the older blue versions had diverged from this one is incompatible.
-#include "Include/ITr2DebugRenderer2.h"
+#include "include/ITr2DebugRenderer2.h"
 #else
 #include <ITr2DebugRenderer2.h>
 #endif
@@ -92,7 +92,7 @@ public:
 	// needs to be called every frame after all Draw methods
 	void EndRender( Tr2RenderContext & renderContext );
 
-	void Pick( EvePendingPickingReadback & readback, bool synchronize, Tr2RenderContext& renderContext );
+	void Pick( EvePendingPickingReadback & readback, Tr2RenderContext & renderContext );
 
 
 	void SetSelectedObjects( const std::vector<std::pair<IRoot*, uint32_t>>& objects );

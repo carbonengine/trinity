@@ -36,7 +36,7 @@ void TriStepRunComputeShader::py__init__(
 
 TriStepResult TriStepRunComputeShader::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	CCP_STATS_INC( rsRunComputeShaderCount );
 
 	if( m_indirectionBuffer )

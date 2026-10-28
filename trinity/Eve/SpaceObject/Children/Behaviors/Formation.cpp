@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Formation.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 
 Formation::Formation( IRoot* lockobj ) :
@@ -57,7 +57,7 @@ bool Formation::InFormation()
 
 std::vector<Vector3> Formation::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<Vector3> returnForces;
 	if( !m_enabled )

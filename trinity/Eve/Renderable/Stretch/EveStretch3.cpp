@@ -5,7 +5,7 @@
 #include "EveStretch3.h"
 #include "TriFloat.h"
 #include "Eve/EveUpdateContext.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
 #include "Curves/TriCurveSet.h"
 #include "Tr2DynamicBinding.h"
@@ -378,7 +378,7 @@ void EveStretch3::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* 
 
 void EveStretch3::UpdateSyncronous( const EveUpdateContext& updateContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_update )
 	{

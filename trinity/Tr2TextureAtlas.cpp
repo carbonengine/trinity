@@ -130,7 +130,7 @@ bool Tr2TextureAtlas::OnPrepareResources()
 // This gets called when atlas textures are preparing themselves
 bool Tr2TextureAtlas::DoPrepare( Tr2AtlasTexture* tex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -222,7 +222,7 @@ void Tr2TextureAtlas::RemoveFromAtlas( Tr2AtlasTexture* tex )
 //to improve further usage.
 void Tr2TextureAtlas::ConsolidateFreeAreas()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	ReleasePendingFreeAreas();
 
@@ -485,7 +485,7 @@ public:
 
 void Tr2TextureAtlas::CollapseFreeAreas()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	ReleasePendingFreeAreas();
 
@@ -687,7 +687,7 @@ bool Tr2TextureAtlas::CollapseAreas( Tr2TextureAtlasArea* area1, Tr2TextureAtlas
 
 Tr2TextureAtlasArea* Tr2TextureAtlas::GetFreeArea( unsigned int width, unsigned int height )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	// Check if the largest free area we have is smaller than requested
 	if( IsLargeTexture( width, height ) )
@@ -1035,7 +1035,7 @@ void Tr2TextureAtlas::PullInOutsiders( bool optimiseInsertion )
 
 bool Tr2TextureAtlas::CopyTextureIntoAtlas( Tr2AtlasTexture* tex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
@@ -1448,7 +1448,7 @@ bool Tr2TextureAtlas::IsLargeTexture( unsigned int width, unsigned int height )
 //Call this manually to update mipmaps when appropriate
 void Tr2TextureAtlas::UpdateMipMaps( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_hasMipMaps || m_dirtyMipRegions.empty() )
 	{

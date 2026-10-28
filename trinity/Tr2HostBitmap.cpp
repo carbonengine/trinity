@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Tr2RenderTarget.h"
 #include "Resources/TriTextureRes.h"
 #include "Tr2HostBitmap.h"
@@ -444,7 +444,7 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 
 bool Tr2HostBitmap::Save( const wchar_t* path )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !IsValid() )
 	{

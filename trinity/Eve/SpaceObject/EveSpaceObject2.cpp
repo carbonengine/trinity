@@ -5,10 +5,10 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
+#include "Utilities/Obb.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "include/IEveBallpark.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
 
@@ -40,6 +40,7 @@
 #include "../../Tr2RingBuffer.h"
 
 #include <limits>
+#include <IEveBallpark.h>
 
 
 std::atomic<uint64_t> EveSpaceObject2::s_nextAudioInstanceId{ 1 };
@@ -55,6 +56,8 @@ float g_secondaryLightingRadiusCutoffFactor = 0.3f;
 TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLightingRadiusCutoffFactor );
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
+
+extern bool g_eveSpaceObjectImpactEffectEnabled;
 
 void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 										 ITriRenderBatchAccumulator* batches,
@@ -1244,6 +1247,10 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 		return;
 	}
 
+	if( !mesh )
+	{
+		return;
+	}
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -1540,6 +1547,10 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 			CCP_STATS_INC( eveLowDetailObjects );
 		}
 	}
+	else if( !m_mesh && m_impactOverlay && m_isMeshVisible )
+	{
+		renderables.push_back( this );
+	}
 
 	PushChildrenAndDecalRenderables( renderables );
 }
@@ -1582,7 +1593,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 
 void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	m_isVisible = false;
 	m_isMeshVisible = false;
@@ -1597,7 +1608,7 @@ void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, c
 	auto& frustum = updateContext.GetFrustum();
 	auto minLodThreshold = updateContext.GetLowDetailThreshold();
 	auto mediumLodThreshold = updateContext.GetMediumDetailThreshold();
-	auto invLodFactor = updateContext.GetLodFactor();
+	auto invLodFactor = updateContext.GetInvLodFactor();
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
@@ -1923,7 +1934,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 			auto transform = TransformationMatrix( locator->scale, locator->direction, locator->position ) * childLocatorSet.childToObject;
 			Locator transformedLocator;
 			transformedLocator.boneIndex = -1;
-			Decompose( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
+			DecomposeMirrorAware( transformedLocator.scale, transformedLocator.direction, transformedLocator.position, transform );
 			transformedLocator.partTag = locator->partTag;
 			( *mergedLocatorSet )->Append( &transformedLocator, 1 );
 		}
@@ -1932,7 +1943,7 @@ void EveSpaceObject2::EnsureChildLocatorMerged() const
 		{
 			LocatorSourceRange range;
 			range.owner = childLocatorSet.owner;
-			range.partTag = childLocatorSet.owner->GetPartTag();
+			range.partTag = childLocatorSet.partTag;
 			range.start = int32_t( ( *mergedLocatorSet )->GetLocators()->size() - childLocatorSet.sets->GetLocators()->size() );
 			range.count = int32_t( childLocatorSet.sets->GetLocators()->size() );
 			range.childToObject = childLocatorSet.childToObject;
@@ -1959,7 +1970,7 @@ void EveSpaceObject2::ReleaseDamageFilterSessions()
 
 bool EveSpaceObject2::CollectOccluders()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_mesh && m_mesh->GetGeometryResource() )
 	{
@@ -2028,7 +2039,7 @@ bool EveSpaceObject2::CollectOccluders()
 
 bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	for( size_t i = 0; i < m_damageFilterOccluders.size(); )
 	{
@@ -2055,7 +2066,7 @@ bool EveSpaceObject2::AreOccludersReadyForRaycasts()
 
 void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* damageLocators )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	std::vector<uint8_t> enabled;
 	enabled.resize( m_damageLocatorEnabled.size() );
@@ -2138,7 +2149,7 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 void EveSpaceObject2::UpdateDamageLocatorFilter()
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( m_damageFilterState == DamageFilterState::Idle )
 	{
@@ -3522,11 +3533,14 @@ void EveSpaceObject2::SetImpactDamageState( float shield, float armor, float hul
 // --------------------------------------------------------------------------------
 EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSourceRange& range )
 {
-	EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay();
+	EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag );
 	if( !overlay )
 	{
-		overlay = const_cast<EveChildMesh*>( range.owner )->EnsureDamageOverlay();
-		overlay->SetArmorDamageShaderEffect( range.owner->GetArmorDamageShaderEffect() );
+		EveSpaceObjectChild* child = const_cast<EveSpaceObjectChild*>( range.owner );
+		child->CreatePartDamageOverlay( range.partTag );
+		overlay = child->GetPartDamageOverlay( range.partTag );
+		CCP_ASSERT( overlay );
+		overlay->SetArmorDamageShaderEffect( range.owner->GetPartArmorDamageShaderEffect( range.partTag ) );
 		// each part gets its own flicker curve instance, the async child updates must not share one
 		if( TriPerlinCurve* flickerCurve = m_impactOverlay->GetHullDamageFlickerCurve() )
 		{
@@ -3534,7 +3548,7 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 			BeClasses->CopyTo( flickerCurve->GetRootObject(), (IRoot**)&flickerCopy );
 			overlay->SetHullDamageFlickerCurve( flickerCopy );
 		}
-		overlay->SetSeed( m_impactOverlay->GetSeed() + range.owner->GetPartTag() );
+		overlay->SetSeed( m_impactOverlay->GetSeed() + range.partTag );
 	}
 	overlay->SetDamageLocatorCount( uint32_t( range.count ) );
 	int rangeStart = min( int32_t( m_damageLocatorEnabled.size() ), range.start );
@@ -3543,6 +3557,25 @@ EveDamageOverlayPtr EveSpaceObject2::EnsureChildDamageOverlay( const LocatorSour
 	// ship and parts share one impact index namespace, so UpdateImpact can resolve any index
 	overlay->SetImpactIndexSource( m_impactOverlay->GetDamageOverlay() );
 	return overlay;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Collects the damage overlays of parts, with offsets into the merged damage locator set.
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>>& out )
+{
+	EnsureChildLocatorMerged();
+	for( const auto& range : m_mergedDamageLocatorSources )
+	{
+		if( range.owner )
+		{
+			if( EveDamageOverlay* overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
+			{
+				out.emplace_back( overlay, range.start );
+			}
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -3588,7 +3621,7 @@ void EveSpaceObject2::ClearImpactDamage()
 	{
 		if( range.owner )
 		{
-			if( EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay() )
+			if( EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
 			{
 				overlay->Clear();
 			}
@@ -3613,9 +3646,14 @@ int EveSpaceObject2::CreateImpact( int damageLocatorIndex, const Vector3& direct
 			{
 				if( range.owner && damageLocatorIndex >= range.start && damageLocatorIndex < range.start + range.count )
 				{
+					if( !g_eveSpaceObjectImpactEffectEnabled )
+					{
+						return -1;
+					}
 					if( EveDamageOverlayPtr overlay = EnsureChildDamageOverlay( range ) )
 					{
-						return overlay->CreateImpact( damageLocatorIndex - range.start, size, false );
+						bool spawnEffects = m_lodLevel != TR2_LOD_LOW;
+						return overlay->CreateImpact( damageLocatorIndex - range.start, size, spawnEffects );
 					}
 				}
 			}
@@ -3666,7 +3704,7 @@ bool EveSpaceObject2::UpdateImpact( Vector3& out, const Vector3& direction, int 
 		{
 			if( range.owner )
 			{
-				if( EveDamageOverlayPtr overlay = range.owner->GetDamageOverlay() )
+				if( EveDamageOverlayPtr overlay = range.owner->GetPartDamageOverlay( range.partTag ) )
 				{
 					if( overlay->HasImpact( impactIndex ) )
 					{
@@ -3733,7 +3771,7 @@ Vector3 EveSpaceObject2::GetDamageLocatorDirectionLocal( uint32_t index ) const
 // --------------------------------------------------------------------------------
 Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
 	if( !damageLocators || index >= damageLocators->size() )
@@ -3757,7 +3795,7 @@ void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direc
 		{
 			if( range.owner && mergedDamageIndex >= range.start && mergedDamageIndex < range.start + range.count )
 			{
-				if( range.owner->GetDamageLocatorAnimatedLocal( mergedDamageIndex - range.start, position, direction ) )
+				if( range.owner->GetPartDamageLocatorAnimatedLocal( range.partTag, mergedDamageIndex - range.start, position, direction ) )
 				{
 					position = XMVector3TransformCoord( position, range.childToObject );
 					direction = Normalize( (Vector3)XMVector3TransformNormal( direction, range.childToObject ) );
@@ -4165,11 +4203,11 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
-bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveSpaceObject2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	min = m_localAabbMin;
-	max = m_localAabbMax;
-	BoundingBoxTransform( min, max, m_worldTransform );
+	localMin = m_localAabbMin;
+	localMax = m_localAabbMax;
+	localToWorld = m_worldTransform;
 	return true;
 }
 

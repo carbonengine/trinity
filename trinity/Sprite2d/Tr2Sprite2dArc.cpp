@@ -48,7 +48,7 @@ unsigned int Tr2Sprite2dArc::GetVertexCount()
 
 void Tr2Sprite2dArc::GatherSprites( Tr2Sprite2dScene* renderer )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_display || ( m_spriteEffect == TR2_SFX_NONE ) || ( m_radius == 0.0f ) || ( m_startAngle >= m_endAngle ) )
 	{

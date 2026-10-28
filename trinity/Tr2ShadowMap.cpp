@@ -143,7 +143,7 @@ AxisAlignedBoundingBox Tr2ShadowMap::CalculateAABB( Matrix projection, Matrix in
 // --------------------------------------------------------------------------------
 ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix invViewTransform, const Vector3 lightDirection, float zNear, float leftDivNear, float rightDivNear, float topDivNear, float bottomDivNear )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	ShadowMap::SplitSetup splitSetup;
 
@@ -225,7 +225,7 @@ ShadowMap::SplitSetup Tr2ShadowMap::SetupShadowSplit( int splitIndex, Matrix inv
 
 Tr2GpuResourcePool::Texture Tr2ShadowMap::PrepareShadowRendering( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto cascadedShadowDepth = gpuResourcePool.GetTempTexture( "cascadedShadowDepth", m_size * m_width, m_size * m_height, PixelFormat::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
 
@@ -252,7 +252,7 @@ Tr2GpuResourcePool::Texture Tr2ShadowMap::PrepareShadowRendering( Tr2GpuResource
 
 void Tr2ShadowMap::BeginShadowRendering( Tr2RenderContext& renderContext, int splitIndex )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( splitIndex < 8 )
 	{
@@ -266,7 +266,7 @@ void Tr2ShadowMap::BeginShadowRendering( Tr2RenderContext& renderContext, int sp
 
 void Tr2ShadowMap::EndShadowRendering( Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	renderContext.SetReadOnlyDepth( false );
 
 	//***** End shadow rendering *****//
@@ -277,7 +277,7 @@ void Tr2ShadowMap::EndShadowRendering( Tr2RenderContext& renderContext )
 
 Tr2GpuResourcePool::Texture Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, Tr2GpuResourcePool& gpuResourcePool, const Tr2TextureAL& depthMap, const Tr2TextureAL& cascadedShadowDepth, float upscaling )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	auto shadowMapResult = gpuResourcePool.GetTempTexture( "shadowMapResult", depthMap.GetWidth(), depthMap.GetHeight(), PixelFormat::PIXEL_FORMAT_R8_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 
@@ -292,7 +292,7 @@ Tr2GpuResourcePool::Texture Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContex
 	m_shadowEffect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL{} );
 
 	{
-		CCP_STATS_ZONE( "DO_DENOISER" );
+		TRINITY_STATS_ZONE( "DO_DENOISER" );
 		if( m_denoiser && m_useDenoiser && depthMap.IsValid() )
 		{
 			shadowMapResult = m_denoiser->Apply( std::move( shadowMapResult ), depthMap, {}, Tr2Renderer::GetReversedDepthProjectionTransform(), upscaling, gpuResourcePool, renderContext );
