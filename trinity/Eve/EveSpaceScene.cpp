@@ -1454,9 +1454,12 @@ void EveSpaceScene::GatherDynamicLights( Tr2RenderContext& renderContext )
 void EveSpaceScene::PrepareLensflares()
 {
 	//  the lensflares need a special pre-render update
+	// visibility is updated for every view, after PrepareRender, so a reflection face
+	// doesn't use the main view's visibility or the previous view's transform
 	for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
 	{
 		( *it )->PrepareRender( m_updateContext.GetFrustum() );
+		( *it )->UpdateVisibility( m_updateContext );
 	}
 }
 
@@ -1542,12 +1545,6 @@ void EveSpaceScene::GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>
 		Tr2ParallelDo( m_staticParticles.begin(), m_staticParticles.end(), [&]( EveSceneStaticParticles* staticParticles ) {
 			staticParticles->UpdateVisibility( m_updateContext );
 		} );
-
-		// until we have proper support for multiple lensflares we just do it in a list...
-		for( auto& lensflare : m_lensflares )
-		{
-			lensflare->UpdateVisibility( m_updateContext );
-		}
 	}
 
 	// objects will be batched up.
