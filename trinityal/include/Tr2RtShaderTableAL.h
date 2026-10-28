@@ -62,7 +62,7 @@ public:
 	Tr2RtShaderTableAL();
 
 	ALResult Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
-	// Rebuilds the table in place, reusing the underlying buffers where the platform supports it
+	// Rebuilds a created table in place, reusing its buffers. Fails before Create and on platforms without in-place updates
 	ALResult Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 

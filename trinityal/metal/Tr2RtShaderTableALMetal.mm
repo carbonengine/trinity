@@ -188,7 +188,7 @@ ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc,
 									 const ::Tr2RtPipelineStateAL& pipeline,
 									 Tr2PrimaryRenderContextAL& renderContext )
 {
-	return Create( desc, pipeline, renderContext );
+	return E_NOTIMPL;
 }
 
 void Tr2RtShaderTableAL::Destroy()

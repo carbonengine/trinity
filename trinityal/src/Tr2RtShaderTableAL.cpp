@@ -39,14 +39,9 @@ ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, 
 {
 	if( m_shaderTable == NullRtShaderTable() )
 	{
-		m_shaderTable = std::make_shared<TrinityALImpl::Tr2RtShaderTableAL>();
+		return E_INVALIDCALL;
 	}
-	auto hr = m_shaderTable->Update( desc, pipeline, renderContext );
-	if( FAILED( hr ) )
-	{
-		m_shaderTable = NullRtShaderTable();
-	}
-	return hr;
+	return m_shaderTable->Update( desc, pipeline, renderContext );
 }
 
 bool Tr2RtShaderTableAL::IsValid() const

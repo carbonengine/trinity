@@ -37,12 +37,13 @@ private:
 		CComPtr<ID3D12Resource> resource;
 		uint8_t* mapped = nullptr;
 		size_t capacity = 0;
+		size_t used = 0;
+		uint64_t frame = 0;
 	};
-	ALResult Build( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext, bool reuseBuffers );
-	void ReleaseBuffers();
+	ALResult Write( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	void ReleaseBuffer( TableBuffer& buffer );
 
-	Tr2RtShaderTableDescriptionAL m_desc;
-	CComPtr<ID3D12Resource> m_table;
+	D3D12_GPU_VIRTUAL_ADDRESS m_tableAddress = 0;
 	std::vector<TableBuffer> m_buffers;
 	std::vector<uint8_t> m_staging;
 	std::vector<const wchar_t*> m_rayGenNames;
