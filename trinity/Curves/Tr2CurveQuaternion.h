@@ -43,6 +43,11 @@ public:
 	virtual float Length();
 
 	Quaternion GetValue( double time ) const;
+	// The value at time, like GetValue, but looking keys up from the caller's
+	// segment cache rather than the curve's own. For callers that sample the
+	// curve at times of their own (bindings with a time offset), so they and the
+	// curve's own UpdateValue don't keep moving each other's cache.
+	Quaternion SampleValue( double time, size_t& segmentCache ) const;
 	Quaternion GetCurrentValue() const;
 
 	void OnKeysChanged();

@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "TriCurveSet.h"
+#include "TriCurveSetTime.h"
 #include "TriValueBinding.h"
 #include <ICurveSetDriver.h>
 #include "include/ITriDuration.h"
@@ -122,7 +123,7 @@ void TriCurveSet::Update( double time )
 
 			if( m_loopedTimeRange )
 			{
-				m_scaledTime = std::fmod( m_scaledTime - m_timeRangeMin, m_timeRangeMax - m_timeRangeMin ) + m_timeRangeMin;
+				m_scaledTime = WrapTimeIntoRange( m_scaledTime, m_timeRangeMin, m_timeRangeMax );
 			}
 			else
 			{
@@ -158,9 +159,10 @@ void TriCurveSet::Apply()
 		( *it )->UpdateValue( m_scaledTime );
 	}
 
+	const TriCurveSetTime time{ m_scaledTime, m_hasTimeRange && m_loopedTimeRange, m_timeRangeMin, m_timeRangeMax };
 	for( ITr2ValueBindingVector::const_iterator it = m_bindings.begin(); it != m_bindings.end(); ++it )
 	{
-		( *it )->CopyValue();
+		( *it )->CopyValueAt( time );
 	}
 }
 

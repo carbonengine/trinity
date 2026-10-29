@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2CurveScalar.h"
+#include "Tr2CurveSegmentSearch.h"
 
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
@@ -26,6 +27,9 @@ public:
 	virtual float Length();
 
 	Color GetValue( double time ) const;
+	// The value at time, like GetValue, but looking each channel's keys up from
+	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
+	Color SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,
@@ -43,6 +47,9 @@ public:
 	PTr2CurveScalar m_a;
 
 private:
+	// Channel values sampled at one time, converted to sRGB if m_srgbOutput is set
+	Color ToOutput( Color color ) const;
+
 	std::string m_name;
 
 	Color m_currentValue;
