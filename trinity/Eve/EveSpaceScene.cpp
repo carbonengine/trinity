@@ -2700,7 +2700,7 @@ void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, 
 // Description:
 //   Render lensflares. Clear primary batches and frame dependant object lists.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::EndRender( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
+void EveSpaceScene::EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 

@@ -148,7 +148,7 @@ public:
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void BeginFrame( Tr2RenderContext& renderContext );
 	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void EndRender( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
+	void EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
@@ -419,7 +419,7 @@ protected:
 	PEveDistanceFieldVector m_distanceFields;
 
 	// Primary batches, gathered in BeginView and
-	// cleared in EndRender
+	// cleared in EndView
 	BatchMap m_primaryBatches;
 	// Secondary batches used to render planets, stars, shadowed objects
 	// and so forth. Should be finalized and cleared each time they're used.
