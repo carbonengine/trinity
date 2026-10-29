@@ -27,9 +27,9 @@ namespace
 void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_list<std::pair<Tr2TextureAL, uint32_t>>& colorAttachments, const Tr2TextureAL& depthAttachment )
 {
 	uint32_t index = 0;
-	for( auto& colorAttachment : colorAttachments )
+	for( auto& [colorAttachment, slice] : colorAttachments )
 	{
-		renderContext.m_esm.SetRenderTarget( index++, colorAttachment.first, true, colorAttachment.second );
+		renderContext.m_esm.SetRenderTarget( index++, colorAttachment, true, slice );
 	}
 	// clear out remaining slots, generously assuming max 4 render targets
 	const uint32_t maxRenderTargets = 4;
@@ -80,7 +80,7 @@ struct TimeSection
 	{
 		if( rootTimer.GetCaptureCpuTime() || rootTimer.GetCaptureGpuTime() )
 		{
-			m_timer.SetStatName( ( rootTimer.GetStatName() + std::string( "/" ) + name ).c_str() );
+			m_timer.SetStatName( rootTimer.GetStatName().c_str() + "/" + name );
 			m_timer.SetCaptureCpuTime( rootTimer.GetCaptureCpuTime() );
 			m_timer.SetCaptureGpuTime( rootTimer.GetCaptureGpuTime() );
 			m_timer.Begin( renderContext );
@@ -563,8 +563,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		UpdateSceneFrame( mainView.camera, realTime, simTime, rootTimer, renderContext );
 		ReflectionFaces reflectionFaces;
 		{
-			TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
-
+			TimeSection beginFrameSection( m_timers.beginFrame, "BeginFrame", rootTimer, renderContext );
 			m_scene->BeginFrame( renderContext );
 
 			reflectionFaces = PrepareReflectionFaces( renderContext );
@@ -575,10 +574,13 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		}
 		{
 			TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
-			RenderReflectionFaces( reflectionFaces, realTime, simTime, rootTimer, renderContext );
+			// set the frame reflection timer as the root timer so we get correct timer paths
+			RenderReflectionFaces( reflectionFaces, realTime, simTime, m_timers.reflections, renderContext );
 		}
-
-		targets = RenderView( mainView, colorTarget, outputs, realTime, simTime, rootTimer, renderContext );
+		{
+			TimeSection totalSection( m_timers.mainView.total, "MainView", rootTimer, renderContext );
+			targets = RenderView( mainView, colorTarget, outputs, m_timers.mainView, realTime, simTime, m_timers.mainView.total, renderContext );
+		}
 	}
 
 	// store the last view and projection matrices for the next frame, so the scene can use them for temporal effects
@@ -629,7 +631,7 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 	}
 	else if( m_scene && m_scene->GetPostProcess() && m_scene->GetPostProcess()->GetTaaIfAvailable() != nullptr )
 	{
-		auto frameIndex = renderContext.GetPrimaryRenderContext().GetRenderedFrameNumber();
+		auto frameIndex = renderContext.GetPrimaryRenderContext().GetRecordingFrameNumber();
 		jitterMatrix = Tr2PostProcessRenderer::GetJitter( frameIndex, renderWidth, renderHeight );
 	}
 	else
@@ -663,7 +665,7 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 //   Render the scene from one view (the main view or a reflection probe face) into
 //   colorTarget. Returns the targets the view rendered, for post processing.
 // --------------------------------------------------------------------------------------
-EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
+EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
 {
 	const TextureSize2D& renderSize = view.camera.renderSize;
 
@@ -697,7 +699,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
 	
 	{
-		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
+		TimeSection beginViewSection( timers.beginView, "BeginView", rootTimer, renderContext );
 		m_scene->BeginView( view.scene, renderContext );
 	}
 
@@ -711,7 +713,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 	bool hasBackgroundDistortionBatches = false;
 	{
-		TimeSection backgroundSection( m_timers.background, "BackgroundPass", rootTimer, renderContext );
+		TimeSection backgroundSection( timers.background, "BackgroundPass", rootTimer, renderContext );
 		hasBackgroundDistortionBatches = m_scene->RenderBackgroundPass( depthBuffer, distortionMap, velocityMap, view.scene, renderContext );
 	}
 	if( view.scene.distortion && hasBackgroundDistortionBatches )
@@ -725,7 +727,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	Tr2GpuResourcePool::Texture normalMap = GetNormalMapIfNeeded( renderSize, outputs, view.features );
 	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
 	{
-		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
+		TimeSection depthPassSection( timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, view.scene, renderContext, m_depthPassTechnique );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
@@ -737,10 +739,10 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	{
 		if( view.features.shadows )
 		{
-			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );
+			TimeSection shadowsSection( timers.shadows, "Shadows", rootTimer, renderContext );
 			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, view.scene, renderContext );
 		}
-		TimeSection ssaoSection( m_timers.ssao, "SSAO", rootTimer, renderContext );
+		TimeSection ssaoSection( timers.ssao, "SSAO", rootTimer, renderContext );
 		auto ssao = view.features.ssao ? RenderSSAO( depthBuffer, normalMap, renderContext ) : GetEmptySSAO( m_gpuResourcePool );
 		ssaoSection.Stop();
 		
@@ -762,7 +764,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		bool hasDistortionBatches = false;
 		distortionMap = GetDistortionMapIfNeeded( renderSize, view.scene.distortion );
 		{
-			TimeSection mainPassSection( m_timers.mainPass, "MainPass", rootTimer, renderContext );
+			TimeSection mainPassSection( timers.mainPass, "MainPass", rootTimer, renderContext );
 			hasDistortionBatches = m_scene->RenderMainPass( backBuffer, depthBuffer, distortionMap, velocityMap, targets.opaqueColor, m_gpuResourcePool, view.scene, renderContext );
 		}
 		RegisterWithVariableStore( {}, m_gpuResourcePool );
@@ -802,8 +804,8 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		renderContext.SetReadOnlyDepth( false );
 	}
 	{
-		TimeSection endRenderSection( m_timers.endRender, "EndRender", rootTimer, renderContext );
-		m_scene->EndRender( view.scene, renderContext );
+		TimeSection endViewSection( timers.endView, "EndView", rootTimer, renderContext );
+		m_scene->EndView( view.scene, renderContext );
 	}
 	m_scene->PopulateAndApplyPerFrameData( renderContext );
 
@@ -885,11 +887,13 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( const ReflectionFaces& fa
 	unsigned face = faces.startFace;
 	for( const RenderInfo& faceView : faces.views )
 	{
-		std::string regionName = "Reflection Face " + std::to_string( face );
+		auto& timers = m_timers.reflectionTimers[face];
+		const std::string regionName = "Face" + std::to_string( face );
 		GPU_REGION( renderContext, regionName.c_str() );
-
+		TimeSection totalSection( timers.total, regionName.c_str(), rootTimer, renderContext );
 		// render straight into the probe's face
-		RenderView( faceView, faceTarget, {}, realTime, simTime, rootTimer, renderContext, face++ );
+		RenderView( faceView, faceTarget, {}, timers, realTime, simTime, timers.total, renderContext, face );
+		++face;
 	}
 
 	// unbind the probe cube so it can be used as a shader resource in the main view

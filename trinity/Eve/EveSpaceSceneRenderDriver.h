@@ -109,6 +109,19 @@ private:
 		static Features ReflectionFace();
 	};
 
+	// Timer collection for the view's rendering, used by RenderView and RenderReflectionFaces
+	struct ViewTimers
+	{
+		Tr2ProfileTimer beginView;
+		Tr2ProfileTimer endView;
+		Tr2ProfileTimer background;
+		Tr2ProfileTimer depthPass;
+		Tr2ProfileTimer mainPass;
+		Tr2ProfileTimer shadows;
+		Tr2ProfileTimer ssao;
+		Tr2ProfileTimer total;
+	};
+
 	// A view rendered by RenderView: its camera and what the scene renders from it, the
 	// driver's features, and its view in the Tr2LightManager
 	struct RenderInfo
@@ -138,7 +151,7 @@ private:
 		std::vector<RenderInfo> views;
 	};
 
-	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
+	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
 	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
 	void SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
@@ -209,20 +222,20 @@ private:
 	TriTextureResPtr m_reflectionCorrectionMap;
 	TriTextureResPtr m_blackReflectionCorrectionMap;
 
-	struct
+	struct FrameTimers
 	{
+		// once per frame timers
+		Tr2ProfileTimer beginFrame;
 		Tr2ProfileTimer update;
-		Tr2ProfileTimer beginRender;
-		Tr2ProfileTimer endRender;
+		Tr2ProfileTimer reflections;
 		Tr2ProfileTimer postProcess;
 		Tr2ProfileTimer ui3d;
-		Tr2ProfileTimer background;
-		Tr2ProfileTimer depthPass;
-		Tr2ProfileTimer mainPass;
-		Tr2ProfileTimer reflections;
-		Tr2ProfileTimer shadows;
-		Tr2ProfileTimer ssao;
-	} m_timers;
+
+		// one set of timers for the main rendering view, and one set of timers for each reflection cube face
+		ViewTimers mainView;
+		std::array<ViewTimers, 6> reflectionTimers;
+	};
+	FrameTimers m_timers;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceSceneRenderDriver );
