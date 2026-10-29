@@ -22,6 +22,8 @@ public:
 	EXPOSE_TO_BLUE();
 
 	void Update( const Matrix& worldTransform );
+	/// Tells an audio emitter observer which ball it is mounted on. Does nothing for other observers.
+	void SetParentBall( IRoot * ball );
 
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
