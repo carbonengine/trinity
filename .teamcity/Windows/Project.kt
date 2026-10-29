@@ -61,6 +61,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String, 
         param("env.CMAKE_PRESET", preset)
         param("env.VCPKG_BINARY_SOURCES", "clear;x-aws,s3://vcpkg-binary-cache-static/cache/,readwrite")
         param("env.X_VCPKG_REGISTRIES_CACHE", "%teamcity.build.checkoutDir%/%github_checkout_folder%/regcache")
+        param("env.VCPKG_MAX_CONCURRENCY", "8")
         param("env.CMAKE_BUILD_PARALLEL_LEVEL", "8")
         param("env.CTEST_PARALLEL_LEVEL", "8")
     }
@@ -111,7 +112,7 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String, 
             name = "Run Tests"
             workingDir = "%env.CMAKE_BUILD_FOLDER%"
             path = "ctest"
-            arguments = "-C %env.CMAKE_CONFIG_TYPE% -V --output-on-failure --output-junit %env.CTEST_JUNIT_OUTPUT_FILE%"
+            arguments = "-C %env.CMAKE_CONFIG_TYPE% -V --output-on-failure --timeout 30 --output-junit %env.CTEST_JUNIT_OUTPUT_FILE%"
         }
         exec {
             name = "Package artifact"

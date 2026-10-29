@@ -305,7 +305,47 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t*, uint32_t )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& )
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2TextureAL&, Tr2RenderContextEnum::ColorSpace ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2TextureAL&, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType, uint32_t ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2SamplerStateAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
 {
 	return S_OK;
 }

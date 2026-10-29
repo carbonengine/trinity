@@ -5,9 +5,8 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2ShaderProgramAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 #include "Tr2ShaderALMetal.h"
-#include "Tr2ResourceSetALMetal.h"
 #include "MetalContext.h"
 
 namespace TrinityALImpl
@@ -38,8 +37,6 @@ public:
 	const std::vector<Tr2ShaderPipelineInputAL>& GetInputs() const;
 	size_t GetInputsHash() const;
 
-	void SetDummyResources( TrinityALImpl::MetalWorkQueue& workQueue );
-
 private:
 	id<MTLFunction>
 		CompileShader( const ::Tr2ShaderAL& shader, NSString* entryFunction, Tr2PrimaryRenderContextAL& renderContext );
@@ -59,7 +56,6 @@ private:
 	bool m_isValid;
 
 	friend class Tr2RenderContextAL;
-	friend class Tr2ResourceSetAL;
 };
 }
 

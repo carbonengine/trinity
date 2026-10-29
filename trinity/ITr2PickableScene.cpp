@@ -14,7 +14,7 @@
 #include "TriView.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2PickBuffer.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Tr2Renderer.h"
 
 
