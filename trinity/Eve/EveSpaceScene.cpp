@@ -503,9 +503,6 @@ void EveSpaceScene::UpdateFrame( Be::Time realTime, Be::Time simTime )
 	m_updateContext.UpdateOrigin( m_ballpark );
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
-	// update the combined postprocess attributes
-	UpdatePostProcessAttributes();
-
 	{
 		TRINITY_STATS_ZONE( "UpdateBackgroundObjects" );
 
@@ -1311,6 +1308,8 @@ void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 	{
 		m_dataTextureMgr->SetVariables();
 	}
+
+	m_instancedMeshManager->CollectMeshes( *m_componentRegistry );
 
 	ResolveLightingOverrides();
 
