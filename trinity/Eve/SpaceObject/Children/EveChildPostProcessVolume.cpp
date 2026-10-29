@@ -215,5 +215,9 @@ void EveChildPostProcessVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 Tr2PostProcessAttributes* EveChildPostProcessVolume::GetPostProcessAttributes()
 {
+	if( m_postProcessAttributes )
+	{
+		m_postProcessAttributes->priority = PostProcessEnums::ClampOverridePriority( m_postProcessAttributes->priority );
+	}
 	return m_postProcessAttributes;
 }
