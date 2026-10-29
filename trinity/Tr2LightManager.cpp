@@ -310,7 +310,7 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 		view.shadowCastingLights.clear();
 		view.volumetricLights.clear();
 	}
-	
+
 	// shadow map is only on the main view currently
 	m_ShadowMap.m_atlasNodes.resize( 1 );
 	m_ShadowMap.m_atlasNodes[0].x = 0;

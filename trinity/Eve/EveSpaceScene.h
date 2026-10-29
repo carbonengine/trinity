@@ -155,7 +155,7 @@ public:
 
 	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
-	
+
 	void SetCamera( const EveSceneView::Camera& camera );
 	Tr2ReflectionProbe* GetReflectionProbe() const;
 
@@ -720,7 +720,7 @@ public:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
-	
+
 	std::unique_ptr<EveInstancedMeshManager> m_instancedMeshManager;
 
 	friend class EveSpaceSceneRenderDriver;

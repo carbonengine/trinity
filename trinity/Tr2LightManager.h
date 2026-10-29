@@ -147,7 +147,7 @@ public:
 
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
 	void AddLight( PerLightData& data, bool scaleBrightness = true, const Tr2LightTags& tags = Tr2LightTags() );
-	void ResolveLightData(); 
+	void ResolveLightData();
 	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void AdjustLightCutoff( float lodFactor );
 

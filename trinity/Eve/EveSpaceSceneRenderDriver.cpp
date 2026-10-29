@@ -80,7 +80,7 @@ struct TimeSection
 	{
 		if( rootTimer.GetCaptureCpuTime() || rootTimer.GetCaptureGpuTime() )
 		{
-			m_timer.SetStatName( (rootTimer.GetStatName() + "/" + name).c_str() );
+			m_timer.SetStatName( ( rootTimer.GetStatName() + "/" + name ).c_str() );
 			m_timer.SetCaptureCpuTime( rootTimer.GetCaptureCpuTime() );
 			m_timer.SetCaptureGpuTime( rootTimer.GetCaptureGpuTime() );
 			m_timer.Begin( renderContext );
@@ -697,7 +697,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 	BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, depthBuffer );
 	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
-	
+
 	{
 		TimeSection beginViewSection( timers.beginView, "BeginView", rootTimer, renderContext );
 		m_scene->BeginView( view.scene, renderContext );
@@ -745,7 +745,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		TimeSection ssaoSection( timers.ssao, "SSAO", rootTimer, renderContext );
 		auto ssao = view.features.ssao ? RenderSSAO( depthBuffer, normalMap, renderContext ) : GetEmptySSAO( m_gpuResourcePool );
 		ssaoSection.Stop();
-		
+
 		GlobalStore().RegisterVariable( "SSAOMap", ssao );
 
 		auto lightManager = Tr2LightManager::GetInstance();

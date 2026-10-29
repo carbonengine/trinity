@@ -88,7 +88,6 @@ public:
 	EXPOSE_TO_BLUE();
 
 private:
-
 	// The driver's features a view uses. What the scene renders is described by the
 	// EveSceneView::ViewInfo in RenderInfo. The features are off by default and every factory
 	// sets every feature, so a new feature has to be decided for each kind of view.
@@ -164,7 +163,7 @@ private:
 	EveSceneView::Camera GetMainCamera( const TextureSize2D& renderSize, const Matrix& jitterMatrix, float mipLodBias ) const;
 
 	Matrix GetJitterMatrix( uint32_t renderWidth, uint32_t renderHeight, Tr2RenderContext& renderContext ) const;
-	float GetMipLodBias( ) const;
+	float GetMipLodBias() const;
 
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
 	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );

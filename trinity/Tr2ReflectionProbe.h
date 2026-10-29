@@ -56,7 +56,7 @@ public:
 
 private:
 	void RunFilter();
-	void Filter( const Vector3& viewDirection, Tr2RenderContext & renderContext );
+	void Filter( const Vector3& viewDirection, Tr2RenderContext& renderContext );
 	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext & renderContext );
 	void DestroyRenderTargets();
 
