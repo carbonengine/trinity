@@ -26,6 +26,23 @@ Be::VarChooser Tr2PostProcessPriorityChooser[] = {
 	{ 0 }
 };
 BLUE_REGISTER_ENUM_EX( "Tr2PostProcessPriority", Priority, Tr2PostProcessPriorityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+Be::VarChooser Tr2PostProcessOverridePriorityChooser[] = {
+
+	{ "UI",
+	  BeCast( Priority::UI_PRIORITY ),
+	  "UI (Top) Priority" },
+	{ "High",
+	  BeCast( Priority::HIGH_PRIORITY ),
+	  "High Priority" },
+	{ "Medium",
+	  BeCast( Priority::MEDIUM_PRIORITY ),
+	  "Medium Priority" },
+	{ "Low",
+	  BeCast( Priority::LOW_PRIORITY ),
+	  "Low (lowest override) Priority" },
+	{ 0 }
+};
 }
 
 
@@ -35,7 +52,7 @@ const Be::ClassInfo* Tr2PostProcessAttributes::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2PostProcessAttributes, "" )
 		MAP_INTERFACE( Tr2PostProcessAttributes )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "priority", priority, "", Be::READWRITE | Be::PERSIST | Be::ENUM, PostProcessEnums::Tr2PostProcessPriorityChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "priority", priority, "", Be::READWRITE | Be::PERSIST | Be::ENUM, PostProcessEnums::Tr2PostProcessOverridePriorityChooser )
 		MAP_ATTRIBUTE( "intensity", intensity, "", Be::READ )
 
 #define POSTPROCESSATTRIBUTE_DEFINE( NAME, GROUP, DESC )                                                                                          \

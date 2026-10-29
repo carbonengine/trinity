@@ -25,7 +25,7 @@ const Be::ClassInfo* EveChildLightingOverride::ExposeToBlue()
 			m_overrides.priority,
 			"Priority of this override. Affects blending between different override objects",
 			Be::READWRITE | Be::PERSIST | Be::ENUM,
-			PostProcessEnums::Tr2PostProcessPriorityChooser )
+			PostProcessEnums::Tr2PostProcessOverridePriorityChooser )
 		MAP_ATTRIBUTE(
 			"intensity",
 			m_intensity,

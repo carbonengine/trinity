@@ -65,5 +65,11 @@ enum Priority
 	PRIORITY_COUNT
 };
 extern Be::VarChooser Tr2PostProcessPriorityChooser[];
+extern Be::VarChooser Tr2PostProcessOverridePriorityChooser[];
+
+inline Priority ClampOverridePriority( Priority priority )
+{
+	return priority < LOW_PRIORITY ? LOW_PRIORITY : ( priority > UI_PRIORITY ? UI_PRIORITY : priority );
+}
 
 };

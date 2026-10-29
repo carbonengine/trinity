@@ -104,6 +104,8 @@ void EveChildLightingOverride::UpdateAsyncronous( const EveUpdateContext& update
 	UpdateTransform( localToWorldTransform );
 	RebuildBoundingSphere();
 
+	m_overrides.priority = PostProcessEnums::ClampOverridePriority( m_overrides.priority );
+
 	if( m_volumes.empty() )
 	{
 		m_overrides.intensity = 1.0f;
