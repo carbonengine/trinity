@@ -80,7 +80,7 @@ struct TimeSection
 	{
 		if( rootTimer.GetCaptureCpuTime() || rootTimer.GetCaptureGpuTime() )
 		{
-			m_timer.SetStatName( rootTimer.GetStatName().c_str() + "/" + name );
+			m_timer.SetStatName( (rootTimer.GetStatName() + "/" + name).c_str() );
 			m_timer.SetCaptureCpuTime( rootTimer.GetCaptureCpuTime() );
 			m_timer.SetCaptureGpuTime( rootTimer.GetCaptureGpuTime() );
 			m_timer.Begin( renderContext );
