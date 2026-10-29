@@ -450,7 +450,9 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 		if( frame == m_lastUpdateFrame )
 		{
-			// already updated this frame
+			// already updated this frame, but another render driver may have changed the
+			// post-process settings since
+			UpdatePostProcessAttributes();
 			return;
 		}
 		m_lastUpdateFrame = frame;
@@ -1297,6 +1299,12 @@ void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
+	// Ensure that the camera attachment parent is updated to the current view transform, 
+	// so that any attached objects are in the correct position for the frame.
+	m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
+	m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
+	m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
+
 	EnsureVisualizerEffect();
 
 	if( m_shLightingManager )
@@ -1534,9 +1542,6 @@ void EveSpaceScene::GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>
 	{
 		TRINITY_STATS_ZONE( "UpdateVisibility" );
 
-		m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
-		m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
-		m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
 		m_cameraAttachmentParent->UpdateVisibility( m_updateContext, identity );
 
 		Tr2ParallelDo( m_staticParticles.begin(), m_staticParticles.end(), [&]( EveSceneStaticParticles* staticParticles ) {
@@ -2666,7 +2671,7 @@ bool EveSpaceScene::RenderMainPass(
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Non-temporal views use the reflection fog, so they don't disturb the main view's fog
+//   Reflection views use the reflection fog, so they don't disturb the main view's fog
 //   history.
 // --------------------------------------------------------------------------------------
 std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )

@@ -215,6 +215,11 @@ public:
 		return m_objects;
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
+	// the scene's own post process, which the render driver sets the TAA on
+	const Tr2PostProcess2Ptr& GetDefaultPostProcess() const
+	{
+		return m_sceneDefaultPostProcess;
+	}
 
 	Matrix GetReprojectionMatrix() const;
 

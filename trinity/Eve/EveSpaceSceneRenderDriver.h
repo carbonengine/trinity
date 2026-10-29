@@ -96,7 +96,9 @@ private:
 		bool upscaling = false;
 		bool antiAliasing = false;
 		bool ssao = false;
-		bool shadows = false;
+		// the view gets raytraced shadows when they are selected, which read the normal map;
+		// reflection faces get the scene's cascaded reflection shadows instead
+		bool raytracedShadows = false;
 		bool velocityMap = false;
 		// special background rendering (f.ex texture background)
 		bool background = false;
