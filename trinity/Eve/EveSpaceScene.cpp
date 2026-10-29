@@ -1512,8 +1512,6 @@ void EveSpaceScene::GatherBatches( const EveSceneView::ViewInfo& view, Tr2Render
 
 	if( gatherObjects )
 	{
-		m_instancedMeshManager->CollectMeshes( *m_componentRegistry );
-
 		// passing the reason filters out instanced meshes that should not be reflected
 		m_instancedMeshManager->GetBatches( m_updateContext.GetFrustum(), m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_primaryBatches[TRIBATCHTYPE_OPAQUE] }, { TRIBATCHTYPE_DECAL, *m_primaryBatches[TRIBATCHTYPE_DECAL] }, { TRIBATCHTYPE_ADDITIVE, *m_primaryBatches[TRIBATCHTYPE_ADDITIVE] }, { TRIBATCHTYPE_DEPTH, *m_primaryBatches[TRIBATCHTYPE_DEPTH] }, { TRIBATCHTYPE_DISTORTION, *m_primaryBatches[TRIBATCHTYPE_DISTORTION] } }, view.reason );
 
