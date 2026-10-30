@@ -146,11 +146,11 @@ public:
 	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void BeginFrame( Tr2RenderContext& renderContext );
+	void BeginFrame( Tr2RenderContext & renderContext );
 	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
-	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
+	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
 	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
@@ -611,12 +611,12 @@ protected:
 	void UpdateFrame( Be::Time realTime, Be::Time simTime );
 	void EnsureVisualizerEffect();
 	void ResolveLightingOverrides();
-	void GatherDynamicLights( Tr2RenderContext& renderContext );
+	void GatherDynamicLights( Tr2RenderContext & renderContext );
 	void PrepareLensflares();
-	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );
-	void GatherReflectionRenderables( std::vector<ITr2Renderable*>& renderables );
+	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*> & allObjects, std::vector<ITr2Renderable*> & renderables, Tr2RenderContext & renderContext );
+	void GatherReflectionRenderables( std::vector<ITr2Renderable*> & renderables );
 	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-	
+
 	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
