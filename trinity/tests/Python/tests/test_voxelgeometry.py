@@ -1,4 +1,5 @@
 import json
+import math
 import unittest
 
 import blue
@@ -14,17 +15,9 @@ class TestVoxelGeometry(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 geometry.TestBuildFile("res:/voxels.cmf")
 
-    def test_occupancyMustBeBoolean(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.UInt8, "elementCount": 1, "normalized": False}])
-        geometry = trinity.Tr2VoxelGeometry()
-        geometry.voxelData = data
-        with TempRes():
-            with self.assertRaises(RuntimeError):
-                geometry.TestBuildFile("res:/voxels.cmf")
-
     def test_canCreateSimpleGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Boolean, "elementCount": 1, "normalized": False}])
-        data.SetVoxels([((0, 0, 0), True), ((1, 0, 0), True), ((1, 1, 1), True)])
+        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry()
         geometry.voxelData = data
         with TempRes():
@@ -35,8 +28,8 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
 
     def test_canPersistGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Boolean, "elementCount": 1, "normalized": False}])
-        data.SetVoxels([((0, 0, 0), True), ((1, 0, 0), True), ((1, 1, 1), True)])
+        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry(data)
         with TempRes():
             geometry.TestBuildFile( "res:/voxels1.cmf")
@@ -48,12 +41,12 @@ class TestVoxelGeometry(unittest.TestCase):
             f2 = blue.paths.GetFileContentsWithYield("res:/voxels2.cmf").read()
             self.assertEqual(f1, f2)
 
-    def test_canCreateSmoothGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Boolean, "elementCount": 1, "normalized": False}])
-        data.SetVoxels([((0, 0, 0), True), ((1, 0, 0), True), ((1, 1, 1), True)])
+    def test_canCreateSurfaceNetsGeometry(self):
+        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry()
         geometry.voxelData = data
-        geometry.method = trinity.Tr2VoxelGeometryMethod.Smoothed
+        geometry.method = trinity.Tr2VoxelGeometryMethod.SurfaceNets
         geometry.subdivision = 1
         geometry.relaxIterations = 0
         with TempRes():

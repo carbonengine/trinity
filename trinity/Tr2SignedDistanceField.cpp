@@ -50,6 +50,11 @@ Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnaps
 {
 }
 
+bool Tr2SignedDistanceField::IsValid() const
+{
+	return !m_sdf.empty();
+}
+
 float Tr2SignedDistanceField::GetValue( size_t index ) const
 {
 	return m_sdf[index];
@@ -64,6 +69,12 @@ float Tr2SignedDistanceField::GetValue( int32_t x, int32_t y, int32_t z ) const
 	}
 	return m_sdf[LinearIndex( m_dimensions, coord )];
 }
+
+bool Tr2SignedDistanceField::IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type )
+{
+	return type.elementCount == 1 && ( type.type == Tr2VoxelDataType::Float || ( type.type == Tr2VoxelDataType::Int8 && type.normalized ) );
+}
+
 
 Tr2SignedDistanceField::Int3 Tr2SignedDistanceField::GetGridSize() const
 {

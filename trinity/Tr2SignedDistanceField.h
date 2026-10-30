@@ -16,7 +16,7 @@ public:
 	{
 		float scale = 1.f;
 		float offset = 0.f;
-		float Apply( float value ) const
+		[[nodiscard]] float Apply( float value ) const
 		{
 			return value * scale + offset;
 		}
@@ -38,13 +38,11 @@ public:
 	 */
 	Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnapshot& occupancy, const std::atomic<bool>& cancel );
 
-	bool IsValid() const
-	{
-		return !m_sdf.empty();
-	}
+	[[nodiscard]] bool IsValid() const;
+	[[nodiscard]] float GetValue( size_t index ) const;
+	[[nodiscard]] float GetValue( int32_t x, int32_t y, int32_t z ) const;
 
-	float GetValue( size_t index ) const;
-	float GetValue( int32_t x, int32_t y, int32_t z ) const;
+	[[nodiscard]] static bool IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type );
 
 private:
 	Tr2VoxelData::Dimensions m_dimensions;

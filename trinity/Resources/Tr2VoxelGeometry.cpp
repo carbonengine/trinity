@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "Tr2VoxelGeometry.h"
 #include "../Utilities/Vector3d.h"
+#include "../Tr2SignedDistanceField.h"
 #include <cmf/writer.h>
 
 
@@ -20,10 +21,10 @@ public:
 class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	VoxelBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
-		m_occupancy( std::move( occupancy ) ),
+	VoxelBuilder( Tr2VoxelData::PayloadSnapshot shape, float cellSize ) :
+		m_sdf( std::move( shape ) ),
 		m_cellSize( cellSize ),
-		m_dimensions( m_occupancy.m_voxelData->GetDimensions() )
+		m_dimensions( m_sdf.m_voxelData->GetDimensions() )
 	{
 	}
 
@@ -73,14 +74,7 @@ protected:
 	// Returns vertex and index buffer views, and the bounds of the generated vertices in bounds
 	virtual std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) = 0;
 
-	bool GetCellOccupancy( const Tr2VoxelData::Coord& coord ) const
-	{
-		size_t index = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
-		auto byte = m_occupancy.m_data[index / 8];
-		return ( byte & ( 1 << ( index % 8 ) ) ) != 0;
-	}
-
-	const Tr2VoxelData::PayloadSnapshot m_occupancy;
+	const Tr2VoxelData::PayloadSnapshot m_sdf;
 	const float m_cellSize;
 	const Tr2VoxelData::Dimensions m_dimensions;
 };
@@ -88,8 +82,8 @@ protected:
 class SimpleBuilder : public VoxelBuilder
 {
 public:
-	SimpleBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
-		VoxelBuilder( std::move( occupancy ), cellSize )
+	SimpleBuilder( Tr2VoxelData::PayloadSnapshot shape, float cellSize ) :
+		VoxelBuilder( std::move( shape ), cellSize )
 	{
 	}
 
@@ -140,12 +134,14 @@ protected:
 		const auto depth = Tr2VoxelData::CoordType( m_dimensions.depth );
 		const Vector3 origin = Vector3( float( width ), float( height ), float( depth ) ) * -0.5f;
 
+		auto sdf = Tr2SignedDistanceField( m_sdf, {}, cancel );
+
 		auto isOccupied = [&]( const Tr2VoxelData::Coord& coord ) {
 			if( coord.x < 0 || coord.y < 0 || coord.z < 0 || coord.x >= width || coord.y >= height || coord.z >= depth )
 			{
 				return false;
 			}
-			return GetCellOccupancy( coord );
+			return sdf.GetValue( coord.x, coord.y, coord.z ) <= 0.f;
 		};
 
 		// Vertices are shared between faces only if they have the same grid corner and the same normal (hard edges)
@@ -174,7 +170,7 @@ protected:
 			{
 				for( Tr2VoxelData::CoordType x = 0; x < width; ++x )
 				{
-					if( !GetCellOccupancy( { x, y, z } ) )
+					if( !isOccupied( { x, y, z } ) )
 					{
 						continue;
 					}
@@ -224,8 +220,8 @@ protected:
 class SurfaceNetsBuilder : public VoxelBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
-		VoxelBuilder( std::move( occupancy ), cellSize ),
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+		VoxelBuilder( std::move( sdf ), cellSize ),
 		m_subdivision( subdivision ),
 		m_relaxIterations( relaxIterations )
 	{
@@ -275,7 +271,7 @@ protected:
 		}
 		const int32_t scale = int32_t( std::max( m_subdivision, 1u ) );
 
-		auto field = CreateField( cancel );
+		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
 		if( cancel )
 		{
 			return {};
@@ -311,7 +307,6 @@ protected:
 			vertices[i].normal = Vector3( float( n[0] ), float( n[1] ), float( n[2] ) );
 		}
 
-		// Quads are wound counter-clockwise seen from the empty side
 		std::vector<uint32_t> indices;
 		indices.reserve( quads.size() / 4 * 6 );
 		for( size_t q = 0; q < quads.size(); q += 4 )
@@ -346,14 +341,8 @@ private:
 	using Vec3d = std::array<Float, 3>;
 	using Int3 = std::array<int32_t, 3>;
 
-	static constexpr Float s_sdfClamp = 3.0; // encode clamp in cells
-	static constexpr Float s_sdfDecode = s_sdfClamp / 127.5;
-	static constexpr Float s_deepEmpty = -s_sdfClamp; // field value sampled outside the grid
-	static constexpr int32_t s_sdfSearchRadius = 4; // surface band radius for the chamfer distance transform
 	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
-	static constexpr Float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
-	static constexpr Float s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
-	static constexpr Float s_roamMargin = 0.15; // dual vertex clamp cube inset, keeps neighbouring vertices apart
+	static constexpr Float s_roamMargin = 0.015; // dual vertex clamp cube inset, keeps neighbouring vertices apart
 	static constexpr Float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// (u, v) per axis, right-handed: u x v = +axis
@@ -386,280 +375,8 @@ private:
 		return { Tr2VoxelData::CoordType( m_dimensions.width ), Tr2VoxelData::CoordType( m_dimensions.height ), Tr2VoxelData::CoordType( m_dimensions.depth ) };
 	}
 
-	std::vector<uint8_t> GetOccupancy() const
-	{
-		const Int3 dims = GetGridSize();
-		std::vector<uint8_t> occupancy( size_t( dims[0] ) * dims[1] * dims[2] );
-		size_t i = 0;
-		for( Tr2VoxelData::CoordType z = 0; z < dims[2]; ++z )
-		{
-			for( Tr2VoxelData::CoordType y = 0; y < dims[1]; ++y )
-			{
-				for( Tr2VoxelData::CoordType x = 0; x < dims[0]; ++x )
-				{
-					occupancy[i++] = GetCellOccupancy( { x, y, z } ) ? 1 : 0;
-				}
-			}
-		}
-		return occupancy;
-	}
-
-	static uint8_t EncodeDistance( Float distance )
-	{
-		return uint8_t( std::max( 0.0, std::min( 255.0, 127.5 + distance * 127.5 / s_sdfClamp + 0.5 ) ) );
-	}
-
-	// Encoded signed distance (byte = 127.5 + dist * 127.5 / clamp, positive inside solid) for every cell via a two-pass
-	// chamfer distance transform restricted to the surface band. Deep cells clamp to the sentinels.
-	std::vector<uint8_t> EncodeSdf( const std::vector<uint8_t>& occupancy, const std::atomic<bool>& cancel ) const
-	{
-		const Int3 dims = GetGridSize();
-		const std::array<size_t, 3> strides = { 1, size_t( dims[0] ), size_t( dims[0] ) * dims[1] };
-		const size_t count = occupancy.size();
-
-		// Cells within Chebyshev s_sdfSearchRadius of a face occupancy transition
-		std::vector<uint8_t> band( count, 0 );
-		for( int32_t z = 0; z < dims[2]; ++z )
-		{
-			for( int32_t y = 0; y < dims[1]; ++y )
-			{
-				for( int32_t x = 0; x < dims[0]; ++x )
-				{
-					const Int3 coord = { x, y, z };
-					const size_t i = x + strides[1] * y + strides[2] * z;
-					for( int axis = 0; axis < 3; ++axis )
-					{
-						if( coord[axis] + 1 < dims[axis] && occupancy[i + strides[axis]] != occupancy[i] )
-						{
-							band[i] = 1;
-							band[i + strides[axis]] = 1;
-						}
-					}
-				}
-			}
-		}
-		for( int axis = 0; axis < 3; ++axis )
-		{
-			const int u = s_axisUV[axis][0];
-			const int v = s_axisUV[axis][1];
-			const auto mask = band;
-			for( int32_t j = 0; j < dims[v]; ++j )
-			{
-				for( int32_t i = 0; i < dims[u]; ++i )
-				{
-					const size_t base = strides[u] * i + strides[v] * j;
-					int32_t last = -( 1 << 30 );
-					for( int32_t k = 0; k < dims[axis]; ++k )
-					{
-						if( mask[base + strides[axis] * k] )
-						{
-							last = k;
-						}
-						if( k - last <= s_sdfSearchRadius )
-						{
-							band[base + strides[axis] * k] = 1;
-						}
-					}
-					last = 1 << 30;
-					for( int32_t k = dims[axis] - 1; k >= 0; --k )
-					{
-						if( mask[base + strides[axis] * k] )
-						{
-							last = k;
-						}
-						if( last - k <= s_sdfSearchRadius )
-						{
-							band[base + strides[axis] * k] = 1;
-						}
-					}
-				}
-			}
-		}
-		if( cancel )
-		{
-			return {};
-		}
-
-		std::vector<uint32_t> cells;
-		const Float infinity = std::numeric_limits<Float>::infinity();
-		std::vector<Float> distanceToEmpty( count, infinity );
-		std::vector<Float> distanceToSolid( count, infinity );
-		for( size_t i = 0; i < count; ++i )
-		{
-			if( band[i] )
-			{
-				cells.push_back( uint32_t( i ) );
-				( occupancy[i] ? distanceToSolid : distanceToEmpty )[i] = 0.0;
-			}
-		}
-
-		// Local Euclidean step lengths for the 26 neighbours, split by raster direction
-		struct Neighbor
-		{
-			Int3 offset;
-			ptrdiff_t flatOffset;
-			Float weight;
-		};
-		std::vector<Neighbor> forward;
-		std::vector<Neighbor> backward;
-		for( int32_t dz = -1; dz <= 1; ++dz )
-		{
-			for( int32_t dy = -1; dy <= 1; ++dy )
-			{
-				for( int32_t dx = -1; dx <= 1; ++dx )
-				{
-					if( dx || dy || dz )
-					{
-						const ptrdiff_t flatOffset = dx + ptrdiff_t( strides[1] ) * dy + ptrdiff_t( strides[2] ) * dz;
-						( flatOffset < 0 ? forward : backward ).push_back( { { dx, dy, dz }, flatOffset, std::sqrt( Float( dx * dx + dy * dy + dz * dz ) ) } );
-					}
-				}
-			}
-		}
-
-		auto propagate = [&]( uint32_t i, const std::vector<Neighbor>& neighbors ) {
-			const Int3 coord = { int32_t( i % strides[1] ), int32_t( ( i / strides[1] ) % dims[1] ), int32_t( i / strides[2] ) };
-			Float bestEmpty = distanceToEmpty[i];
-			Float bestSolid = distanceToSolid[i];
-			for( const auto& neighbor : neighbors )
-			{
-				bool inside = true;
-				for( int axis = 0; axis < 3; ++axis )
-				{
-					const int32_t c = coord[axis] + neighbor.offset[axis];
-					inside = inside && c >= 0 && c < dims[axis];
-				}
-				if( !inside )
-				{
-					continue;
-				}
-				const size_t j = size_t( ptrdiff_t( i ) + neighbor.flatOffset );
-				bestEmpty = std::min( bestEmpty, distanceToEmpty[j] + neighbor.weight );
-				bestSolid = std::min( bestSolid, distanceToSolid[j] + neighbor.weight );
-			}
-			distanceToEmpty[i] = bestEmpty;
-			distanceToSolid[i] = bestSolid;
-		};
-		for( auto i : cells )
-		{
-			propagate( i, forward );
-		}
-		if( cancel )
-		{
-			return {};
-		}
-		for( auto iter = cells.rbegin(); iter != cells.rend(); ++iter )
-		{
-			propagate( *iter, backward );
-		}
-
-		const uint8_t encodedSolid = EncodeDistance( s_sdfClamp );
-		const uint8_t encodedEmpty = EncodeDistance( -s_sdfClamp );
-		std::vector<uint8_t> sdf( count );
-		for( size_t i = 0; i < count; ++i )
-		{
-			if( !band[i] )
-			{
-				sdf[i] = occupancy[i] ? encodedSolid : encodedEmpty;
-			}
-			else if( occupancy[i] )
-			{
-				const Float d = distanceToEmpty[i] - Float( 0.5 );
-				sdf[i] = d >= s_sdfClamp ? encodedSolid : EncodeDistance( d );
-			}
-			else
-			{
-				const Float d = distanceToSolid[i] - Float( 0.5 );
-				sdf[i] = d >= s_sdfClamp ? encodedEmpty : EncodeDistance( -d );
-			}
-		}
-		return sdf;
-	}
-
-	// Decoded field at the grid cell centres, low-passed and clamped back to the occupancy sign so no solid cell can
-	// vanish from the mesh and no empty cell can seal over.
-	std::vector<Float> CreateField( const std::atomic<bool>& cancel ) const
-	{
-		const Int3 dims = GetGridSize();
-		const auto occupancy = GetOccupancy();
-		const auto sdf = EncodeSdf( occupancy, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-
-		// Decode into a copy padded by one ring of deep empty so every in-grid sample has its full blur stencil
-		const Int3 padded = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
-		const std::array<size_t, 3> strides = { 1, size_t( padded[0] ), size_t( padded[0] ) * padded[1] };
-		auto paddedIndex = [&]( int32_t x, int32_t y, int32_t z ) {
-			return size_t( x + 1 ) + strides[1] * size_t( y + 1 ) + strides[2] * size_t( z + 1 );
-		};
-		std::vector<Float> values( strides[2] * padded[2], s_deepEmpty );
-		size_t i = 0;
-		for( int32_t z = 0; z < dims[2]; ++z )
-		{
-			for( int32_t y = 0; y < dims[1]; ++y )
-			{
-				for( int32_t x = 0; x < dims[0]; ++x )
-				{
-					values[paddedIndex( x, y, z )] = ( Float( sdf[i++] ) - Float( 127.5 ) ) * s_sdfDecode;
-				}
-			}
-		}
-
-		// Separable Jacobi low-pass per axis. Only interior samples of each line move. The correction form is an exact
-		// identity wherever the field is locally linear, so only cell-frequency curvature is damped.
-		const Float half = 0.5 * s_blurAlpha;
-		for( int axis = 0; axis < 3; ++axis )
-		{
-			const int u = s_axisUV[axis][0];
-			const int v = s_axisUV[axis][1];
-			const size_t step = strides[axis];
-			const auto source = values;
-			for( int32_t b = 0; b < padded[v]; ++b )
-			{
-				for( int32_t a = 0; a < padded[u]; ++a )
-				{
-					const size_t base = strides[u] * a + strides[v] * b;
-					for( int32_t k = 1; k + 1 < padded[axis]; ++k )
-					{
-						const size_t index = base + step * k;
-						const Float value = source[index];
-						values[index] = value + half * ( ( source[index - step] - value ) + ( source[index + step] - value ) );
-					}
-				}
-			}
-		}
-
-		std::vector<Float> field( occupancy.size() );
-		i = 0;
-		for( int32_t z = 0; z < dims[2]; ++z )
-		{
-			for( int32_t y = 0; y < dims[1]; ++y )
-			{
-				for( int32_t x = 0; x < dims[0]; ++x, ++i )
-				{
-					Float value = values[paddedIndex( x, y, z )];
-					if( occupancy[i] )
-					{
-						if( value < s_signFloor )
-						{
-							value = s_signFloor;
-						}
-					}
-					else if( value > -s_signFloor )
-					{
-						value = -s_signFloor;
-					}
-					field[i] = value;
-				}
-			}
-		}
-		return field;
-	}
-
 	// Lattice equal to the grid: occupancy straight from the grid, field from the filtered SDF
-	Window CreateGridWindow( const std::vector<Float>& field ) const
+	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
 	{
 		const Int3 dims = GetGridSize();
 		Window window( dims );
@@ -671,8 +388,8 @@ private:
 				for( int32_t x = 0; x < dims[0]; ++x, ++i )
 				{
 					const size_t index = window.Index( x, y, z );
-					window.occupancy[index] = field[i] > 0.0 ? 1 : 0;
-					window.field[index] = field[i];
+					window.occupancy[index] = field.GetValue(i) <= 0.0 ? 1 : 0;
+					window.field[index] = field.GetValue(i);
 				}
 			}
 		}
@@ -682,18 +399,10 @@ private:
 	// Lattice of dim * scale cells per axis, each the trilinear interpolation of the 8 grid samples of its cube (samples outside
 	// the grid read deep empty). Only cubes straddling a sign change, plus one cube of dilation, get the real per-cell trilinear;
 	// the rest take the cube's uniform sign and have no field value.
-	Window CreateSubdividedWindow( const std::vector<Float>& field, int32_t scale, const std::atomic<bool>& cancel ) const
+	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
 		const Int3 dims = GetGridSize();
 		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale } );
-
-		auto sample = [&]( int32_t x, int32_t y, int32_t z ) {
-			if( x < 0 || y < 0 || z < 0 || x >= dims[0] || y >= dims[1] || z >= dims[2] )
-			{
-				return s_deepEmpty;
-			}
-			return field[x + size_t( dims[0] ) * ( y + size_t( dims[1] ) * z )];
-		};
 
 		// Cubes are keyed by their minimum sample, -1..dim per axis
 		const Int3 cubes = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
@@ -713,7 +422,7 @@ private:
 					bool all = true;
 					for( int32_t corner = 0; corner < 8; ++corner )
 					{
-						const bool positive = sample( x + ( corner & 1 ), y + ( ( corner >> 1 ) & 1 ), z + ( corner >> 2 ) ) > 0.0;
+						const bool positive = field.GetValue( x + ( corner & 1 ), y + ( ( corner >> 1 ) & 1 ), z + ( corner >> 2 ) ) <= 0.0;
 						any = any || positive;
 						all = all && positive;
 					}
@@ -764,14 +473,14 @@ private:
 					if( band[cube] )
 					{
 						// Lerped hierarchically so each cube costs 4k + 2k^2 + k^3 lerps
-						const Float s000 = sample( cx, cy, cz );
-						const Float s100 = sample( cx + 1, cy, cz );
-						const Float s010 = sample( cx, cy + 1, cz );
-						const Float s110 = sample( cx + 1, cy + 1, cz );
-						const Float s001 = sample( cx, cy, cz + 1 );
-						const Float s101 = sample( cx + 1, cy, cz + 1 );
-						const Float s011 = sample( cx, cy + 1, cz + 1 );
-						const Float s111 = sample( cx + 1, cy + 1, cz + 1 );
+						const Float s000 = field.GetValue( cx, cy, cz );
+						const Float s100 = field.GetValue( cx + 1, cy, cz );
+						const Float s010 = field.GetValue( cx, cy + 1, cz );
+						const Float s110 = field.GetValue( cx + 1, cy + 1, cz );
+						const Float s001 = field.GetValue( cx, cy, cz + 1 );
+						const Float s101 = field.GetValue( cx + 1, cy, cz + 1 );
+						const Float s011 = field.GetValue( cx, cy + 1, cz + 1 );
+						const Float s111 = field.GetValue( cx + 1, cy + 1, cz + 1 );
 						for( int32_t iz = 0; iz < scale; ++iz )
 						{
 							const Float tz = t[iz];
@@ -789,7 +498,7 @@ private:
 									const Float value = f0 + ( f1 - f0 ) * t[ix];
 									const size_t index = window.Index( cx * scale + ix, cy * scale + iy, cz * scale + iz );
 									window.field[index] = value;
-									window.occupancy[index] = value >= 0.0 ? 1 : 0;
+									window.occupancy[index] = value <= 0.0 ? 1 : 0;
 								}
 							}
 						}
@@ -1027,54 +736,32 @@ private:
 };
 
 
-class DualContouringBuilder : public VoxelBuilder
-{
-public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot minedFlag, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
-		VoxelBuilder( std::move( occupancy ), cellSize ),
-		m_minedFlag( std::move( minedFlag ) ),
-		m_subdivision( subdivision ),
-		m_relaxIterations( relaxIterations )
-	{
-	}
-
-protected:
-	struct Vertex
-	{
-		Vector3 position;
-		Vector3 displacementNormal;
-		Vector3 shadingNormal;
-		float curvature;
-		float curvatureSmoothed;
-		float minedFaceWeight;
-		float debugInfo;
-	};
-
-	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
-	{
-		return {
-			{},
-			{},
-			{}
-		};
-	}
-
-	const Tr2VoxelData::PayloadSnapshot m_minedFlag;
-	const uint32_t m_subdivision;
-	const uint32_t m_relaxIterations;
-};
 
 }
 
 
-void Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> occupancyChannelIndex, Be::Optional<float> cellSize )
+BlueStdResult Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<float> cellSize )
 {
 	auto size = cellSize.IsAssigned() ? cellSize.GetValue() : 1.f;
-	if( m_voxelData == voxelData && m_occupancyChannelIndex == occupancyChannelIndex && m_cellSize == size )
+	if( m_voxelData == voxelData && m_shapeChannelIndex == shapeChannelIndex && m_cellSize == size )
 	{
-		return;
+		return {};
 	}
-	m_occupancyChannelIndex = occupancyChannelIndex;
+
+	if ( voxelData.GetValue() )
+	{
+		if( shapeChannelIndex >= voxelData.GetValue()->GetPayloadChannelCount() )
+		{
+			return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Invalid shape channel index" );
+		}
+		auto& type = voxelData.GetValue()->GetPayloadType( shapeChannelIndex );
+		if( !Tr2SignedDistanceField::IsValidSdfChannelType( type ) )
+		{
+			return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Not supported shape channel type" );
+		}
+	}
+
+	m_shapeChannelIndex = shapeChannelIndex;
 	m_cellSize = size;
 	if( m_voxelData )
 	{
@@ -1086,6 +773,7 @@ void Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Option
 		m_voxelData->m_onDataChanged.RegisterListener<Tr2VoxelGeometry, &Tr2VoxelGeometry::DataModified>( this );
 	}
 	Rebuild();
+	return {};
 }
 
 bool Tr2VoxelGeometry::Initialize()
@@ -1117,33 +805,18 @@ void Tr2VoxelGeometry::SetVoxelData( Tr2VoxelData* voxelData )
 	Rebuild();
 }
 
-uint32_t Tr2VoxelGeometry::GetOccupancyChannelIndex() const
+uint32_t Tr2VoxelGeometry::GetShapeChannelIndex() const
 {
-	return m_occupancyChannelIndex;
+	return m_shapeChannelIndex;
 }
 
-void Tr2VoxelGeometry::SetOccupancyChannelIndex( uint32_t channelIndex )
+void Tr2VoxelGeometry::SetShapeChannelIndex( uint32_t channelIndex )
 {
-	if( m_occupancyChannelIndex == channelIndex )
+	if( m_shapeChannelIndex == channelIndex )
 	{
 		return;
 	}
-	m_occupancyChannelIndex = channelIndex;
-	Rebuild();
-}
-
-uint32_t Tr2VoxelGeometry::GetMinedFlagChannelIndex() const
-{
-	return m_minedFlagChannelIndex;
-}
-
-void Tr2VoxelGeometry::SetMinedFlagChannelIndex( uint32_t channelIndex )
-{
-	if( m_minedFlagChannelIndex == channelIndex )
-	{
-		return;
-	}
-	m_minedFlagChannelIndex = channelIndex;
+	m_shapeChannelIndex = channelIndex;
 	Rebuild();
 }
 
@@ -1210,7 +883,7 @@ void Tr2VoxelGeometry::SetMethod( Method method )
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
-	if( modifiedChannels.IsChannelModified( m_occupancyChannelIndex ) )
+	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) )
 	{
 		Rebuild();
 	}
@@ -1222,24 +895,25 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
-	auto occupancySnapshot = m_voxelData->GetPayloadSnapshot( m_occupancyChannelIndex );
-	if( !occupancySnapshot.m_data )
+	// Shape channel is optional; builders compute the SDF from occupancy when it is missing
+	auto shapeSnapshot = m_voxelData->GetPayloadSnapshot( m_shapeChannelIndex );
+	if( !shapeSnapshot.m_data )
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
-	auto minedFlagSnapshot = m_voxelData->GetPayloadSnapshot( m_minedFlagChannelIndex );
-	if( !minedFlagSnapshot.m_data )
+	if( !Tr2SignedDistanceField::IsValidSdfChannelType( shapeSnapshot.m_type ) )
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
+
 	switch( m_method )
 	{
 	case Method::Simple:
-		return std::make_unique<SimpleBuilder>( std::move( occupancySnapshot ), m_cellSize );
+		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), m_cellSize );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
-	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( occupancySnapshot ), std::move( minedFlagSnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+	//case Method::DualContouring:
+	//	return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision, m_noiseStrength );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}

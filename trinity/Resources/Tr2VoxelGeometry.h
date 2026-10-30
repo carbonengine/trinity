@@ -18,18 +18,15 @@ public:
 		DualContouring,
 	};
 
-	void Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> occupancyChannelIndex, Be::Optional<float> cellSize );
+	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<float> cellSize );
 
 	bool Initialize() override;
 
 	IRootPtr GetVoxelData() const;
 	void SetVoxelData( Tr2VoxelData* voxelData );
 
-	uint32_t GetOccupancyChannelIndex() const;
-	void SetOccupancyChannelIndex( uint32_t channelIndex );
-
-	uint32_t GetMinedFlagChannelIndex() const;
-	void SetMinedFlagChannelIndex( uint32_t channelIndex );
+	uint32_t GetShapeChannelIndex() const;
+	void SetShapeChannelIndex( uint32_t channelIndex );
 
 	float GetCellSize() const;
 	void SetCellSize( float cellSize );
@@ -52,8 +49,7 @@ private:
 	void DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels );
 
 	Tr2VoxelDataPtr m_voxelData;
-	uint32_t m_occupancyChannelIndex = 0;
-	uint32_t m_minedFlagChannelIndex = 0;
+	uint32_t m_shapeChannelIndex = 0;
 	float m_cellSize = 1.f;
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
