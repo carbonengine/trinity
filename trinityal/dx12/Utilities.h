@@ -26,6 +26,8 @@ void ResourceBarrier( ID3D12GraphicsCommandList* commandList, UINT count, const 
 
 D3D12_HEAP_PROPERTIES HeapDesc( D3D12_HEAP_TYPE type );
 
+void ColorComponents( uint32_t color, float components[4] );
+
 void MemcpySubresource(
 	_In_ const D3D12_MEMCPY_DEST* pDest,
 	_In_ const D3D12_SUBRESOURCE_DATA* pSrc,

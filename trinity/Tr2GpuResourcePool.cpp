@@ -104,11 +104,21 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name
 	return GetTempTexture( name, Tr2BitmapDimensions( size.width, size.height, 1, pixelFormat ), gpuUsage );
 }
 
+Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name, const TextureSize2D& size, Tr2RenderContextEnum::PixelFormat pixelFormat, Tr2GpuUsage::Type gpuUsage, const Tr2ClearValue& optimizedClearValue )
+{
+	return GetTempTexture( name, Tr2BitmapDimensions( size.width, size.height, 1, pixelFormat ), gpuUsage, std::optional<Tr2ClearValue>( optimizedClearValue ) );
+}
+
 Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name, const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage )
+{
+	return GetTempTexture( name, desc, gpuUsage, std::nullopt );
+}
+
+Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name, const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, const std::optional<Tr2ClearValue>& optimizedClearValue )
 {
 	if( m_outer && !m_debugMode )
 	{
-		return m_outer->GetTempTexture( name, desc, gpuUsage );
+		return m_outer->GetTempTexture( name, desc, gpuUsage, optimizedClearValue );
 	}
 	if( !IsValid( desc ) )
 	{
@@ -119,9 +129,9 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name
 	auto found = find_if( begin( m_tempTextures ), end( m_tempTextures ), [&]( const auto& x ) {
 		if( m_debugMode )
 		{
-			return x->lockCount == 0 && x->resource.GetDesc() == desc && x->resource.GetGpuUsage() == gpuUsage && x->name == name;
+			return x->lockCount == 0 && x->resource.GetDesc() == desc && x->resource.GetGpuUsage() == gpuUsage && x->optimizedClearValue == optimizedClearValue && x->name == name;
 		}
-		return x->lockCount == 0 && x->resource.GetDesc() == desc && x->resource.GetGpuUsage() == gpuUsage;
+		return x->lockCount == 0 && x->resource.GetDesc() == desc && x->resource.GetGpuUsage() == gpuUsage && x->optimizedClearValue == optimizedClearValue;
 	} );
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -129,7 +139,8 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name
 	if( found == end( m_tempTextures ) )
 	{
 		auto tex = std::make_shared<TextureRec>();
-		if( FAILED( tex->resource.Create( desc, gpuUsage, renderContext ) ) )
+		const auto hr = optimizedClearValue ? tex->resource.Create( desc, gpuUsage, *optimizedClearValue, renderContext ) : tex->resource.Create( desc, gpuUsage, renderContext );
+		if( FAILED( hr ) )
 		{
 			CCP_LOGERR( "Failed to create a temporary texture %s (%s usage=%u)", name, ToString( desc ).c_str(), (uint32_t)gpuUsage );
 			return Texture();
@@ -137,6 +148,7 @@ Tr2GpuResourcePool::Texture Tr2GpuResourcePool::GetTempTexture( const char* name
 		tex->resource.SetName( name );
 		tex->lastAccessFrame = renderContext.GetRecordingFrameNumber();
 		tex->name = name;
+		tex->optimizedClearValue = optimizedClearValue;
 		m_tempTextures.push_back( tex );
 		return Texture( tex );
 	}

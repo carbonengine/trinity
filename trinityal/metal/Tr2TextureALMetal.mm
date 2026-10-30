@@ -97,6 +97,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 							   Tr2GpuUsage::Type gpuUsage,
 							   Tr2CpuUsage::Type cpuUsage,
 							   Tr2SubresourceData* initialData,
+							   const Tr2ClearValue*,
 							   Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();

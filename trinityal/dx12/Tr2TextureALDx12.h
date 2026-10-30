@@ -59,7 +59,7 @@ public:
 	Tr2TextureAL();
 	~Tr2TextureAL();
 
-	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, const Tr2ClearValue* optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext );
 	ALResult OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 	{
 		return E_NOTIMPL;

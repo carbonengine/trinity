@@ -297,4 +297,23 @@ struct Tr2MsaaDesc
 	}
 };
 
+struct Tr2ClearValue
+{
+	uint32_t color;
+	float depth;
+	uint32_t stencil;
+
+	explicit Tr2ClearValue( uint32_t color_ = 0, float depth_ = 0.0f, uint32_t stencil_ = 0 ) :
+		color( color_ ),
+		depth( depth_ ),
+		stencil( stencil_ )
+	{
+	}
+
+	bool operator==( const Tr2ClearValue& other ) const
+	{
+		return color == other.color && depth == other.depth && stencil == other.stencil;
+	}
+};
+
 #endif //Tr2HalHelperStructures_h_

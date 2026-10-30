@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2DeviceResource.h"
+#include <optional>
 #include <variant>
 
 
@@ -86,6 +87,7 @@ public:
 	using TextureInitializer = std::variant<std::function<void( Tr2TextureAL& texture, Tr2RenderContextAL& renderContext )>, Tr2SubresourceData*>;
 	[[nodiscard]] Texture GetTempTexture( const char* name, uint32_t width, uint32_t height, Tr2RenderContextEnum::PixelFormat pixelFormat, Tr2GpuUsage::Type gpuUsage );
 	[[nodiscard]] Texture GetTempTexture( const char* name, const TextureSize2D& size, Tr2RenderContextEnum::PixelFormat pixelFormat, Tr2GpuUsage::Type gpuUsage );
+	[[nodiscard]] Texture GetTempTexture( const char* name, const TextureSize2D& size, Tr2RenderContextEnum::PixelFormat pixelFormat, Tr2GpuUsage::Type gpuUsage, const Tr2ClearValue& optimizedClearValue );
 	[[nodiscard]] Texture GetTempTexture( const char* name, const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage );
 	[[nodiscard]] Texture GetPersistentTexture( const char* name, uint32_t width, uint32_t height, Tr2RenderContextEnum::PixelFormat pixelFormat, Tr2GpuUsage::Type gpuUsage, const TextureInitializer& initializer );
 	[[nodiscard]] Texture GetPersistentTexture( const char* name, const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, const TextureInitializer& initializer );
@@ -103,8 +105,13 @@ public:
 	void DebugGetAllTempTextures( std::vector<Tr2TextureAL>& out ) const;
 
 private:
-	using TextureRec = GpuResource<Tr2TextureAL>;
+	struct TextureRec : GpuResource<Tr2TextureAL>
+	{
+		std::optional<Tr2ClearValue> optimizedClearValue;
+	};
 	using BufferRec = GpuResource<Tr2BufferAL>;
+
+	[[nodiscard]] Texture GetTempTexture( const char* name, const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, const std::optional<Tr2ClearValue>& optimizedClearValue );
 
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;

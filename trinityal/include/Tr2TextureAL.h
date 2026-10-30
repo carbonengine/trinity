@@ -18,6 +18,7 @@ class Tr2PrimaryRenderContextAL;
 class Tr2RenderContextAL;
 struct Tr2SubresourceData;
 struct Tr2MsaaDesc;
+struct Tr2ClearValue;
 struct Tr2TextureSubresource;
 
 class Tr2ReadbackAL
@@ -47,6 +48,7 @@ public:
 	Tr2TextureAL();
 
 	ALResult Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, const Tr2ClearValue& optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext );
 	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
 	ALResult Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
 	ALResult Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContextAL& renderContext );
@@ -95,6 +97,8 @@ public:
 	const char* GetName() const;
 
 private:
+	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, const Tr2ClearValue* optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext );
+
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;
 
 	friend class Tr2PrimaryRenderContextAL;

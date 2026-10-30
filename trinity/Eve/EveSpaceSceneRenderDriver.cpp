@@ -528,11 +528,18 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 	}
 	distortionMap = {};
 
-	Tr2GpuResourcePool::Texture normalMap = GetNormalMapIfNeeded( renderSize, outputs );
+	Tr2GpuResourcePool::Texture normalMap = GetNormalMap( renderSize, outputs );
 	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
 	{
 		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique );
+	}
+	{
+		const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
+		auto albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
+		auto materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
+		TimeSection gBufferPassSection( m_timers.gBufferPass, "GBufferPass", rootTimer, renderContext );
+		m_scene->RenderGBufferPass( depthBuffer, albedoMap, normalMap, materialMap, velocityMap, renderContext );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
 	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
@@ -685,19 +692,11 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( c
 	return {};
 }
 
-Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs )
+Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMap( const TextureSize2D& size, const Span<TempOutput>& outputs )
 {
-	auto namedOutput = FindNamedOutput( outputs, "NormalMap" );
-	if( ( ( m_settings.aoQuality != AmbientOcclusionQuality::Disabled || m_settings.shadowQuality == ShadowQuality::SHADOW_RAYTRACED ) && Tr2Renderer::GetShaderModel() != TR2SM_3_0_LO ) || m_settings.forceNormalMap || namedOutput )
-	{
-		auto texture = m_gpuResourcePool.GetTempTexture( "normalMap", size, ImageIO::PIXEL_FORMAT_R10G10B10A2_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
-		if( namedOutput )
-		{
-			namedOutput->texture = texture;
-		}
-		return texture;
-	}
-	return {};
+	auto texture = m_gpuResourcePool.GetTempTexture( "normalMap", size, ImageIO::PIXEL_FORMAT_R10G10B10A2_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
+	SetNamedOutput( outputs, "NormalMap", texture );
+	return texture;
 }
 
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs )

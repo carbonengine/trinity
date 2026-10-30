@@ -65,6 +65,11 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Typ
 	return Create( desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, nullptr, renderContext );
 }
 
+ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, const Tr2ClearValue& optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext )
+{
+	return Create( desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, nullptr, &optimizedClearValue, renderContext );
+}
+
 ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return Create( desc, msaa, gpuUsage, Tr2CpuUsage::NONE, nullptr, renderContext );
@@ -87,8 +92,13 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Typ
 
 ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 {
+	return Create( desc, msaa, gpuUsage, cpuUsage, initialData, nullptr, renderContext );
+}
+
+ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, const Tr2ClearValue* optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext )
+{
 	m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
-	auto hr = m_texture->Create( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext );
+	auto hr = m_texture->Create( desc, msaa, gpuUsage, cpuUsage, initialData, optimizedClearValue, renderContext );
 	if( FAILED( hr ) )
 	{
 		m_texture = NullTexture();

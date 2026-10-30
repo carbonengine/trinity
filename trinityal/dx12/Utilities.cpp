@@ -1512,6 +1512,15 @@ D3D12_HEAP_PROPERTIES HeapDesc( D3D12_HEAP_TYPE type )
 	return heap;
 }
 
+void ColorComponents( uint32_t color, float components[4] )
+{
+	const float f = 1.0f / 255.0f;
+	components[0] = f * (float)(uint8_t)( color >> 16 );
+	components[1] = f * (float)(uint8_t)( color >> 8 );
+	components[2] = f * (float)(uint8_t)( color >> 0 );
+	components[3] = f * (float)(uint8_t)( color >> 24 );
+}
+
 //------------------------------------------------------------------------------------------------
 // Row-by-row memcpy
 void MemcpySubresource(

@@ -102,7 +102,7 @@ private:
 
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size );
 	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
-	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
+	Tr2GpuResourcePool::Texture GetNormalMap( const TextureSize2D& size, const Span<TempOutput>& outputs );
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 
@@ -162,6 +162,7 @@ private:
 		Tr2ProfileTimer ui3d;
 		Tr2ProfileTimer background;
 		Tr2ProfileTimer depthPass;
+		Tr2ProfileTimer gBufferPass;
 		Tr2ProfileTimer mainPass;
 		Tr2ProfileTimer reflections;
 		Tr2ProfileTimer shadows;

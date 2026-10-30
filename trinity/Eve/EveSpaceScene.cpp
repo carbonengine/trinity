@@ -146,6 +146,12 @@ TriFrustum CreatePickingFrustum()
 	pickFrustum.DeriveFrustum( &view, &camPos, &proj, vp );
 	return pickFrustum;
 }
+
+const BlueSharedString& GBufferTechnique()
+{
+	static const BlueSharedString gBufferTechnique( "GBuffer" );
+	return gBufferTechnique;
+}
 }
 
 
@@ -1532,10 +1538,9 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	FinalizeBatches( m_primaryBatches );
 
-	static const BlueSharedString gBufferTechnique( "GBuffer" );
 	for( auto& [type, batches] : m_gBufferBatches )
 	{
-		PartitionByTechnique( *m_primaryBatches[type], gBufferTechnique, *batches, *m_forwardBatches[type] );
+		PartitionByTechnique( *m_primaryBatches[type], GBufferTechnique(), *batches, *m_forwardBatches[type] );
 		CCP_STATS_ADD( gBufferBatches, batches->GetBatchCount() );
 		CCP_STATS_ADD( forwardBatches, m_forwardBatches[type]->GetBatchCount() );
 	}
@@ -2380,6 +2385,52 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 	}
 }
 
+// --------------------------------------------------------------------------------------
+// Description:
+//   Render the G-buffer batches into albedo, normal, material and velocity, on top of the
+//   depth the depth pass wrote.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
+{
+	TRINITY_STATS_ZONE( __FUNCTION__ );
+
+	if( !m_display )
+	{
+		return;
+	}
+
+	renderContext.m_esm.BeginManagedRendering();
+	{
+		renderContext.AddGpuMarker( __FUNCTION__ );
+		GPU_REGION( renderContext, "G-Buffer Pass" );
+
+		Tr2PushPopRT albedoTarget( albedoMap, renderContext, 0 );
+		Tr2PushPopRT normalTarget( normalMap, renderContext, 1 );
+		Tr2PushPopRT materialTarget( materialMap, renderContext, 2 );
+		Tr2PushPopRT velocityTarget( velocityMap, renderContext, 3 );
+		renderContext.m_esm.SetDepthStencilBuffer( depthMap );
+
+		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 0 );
+		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 2 );
+		if( velocityMap.IsValid() && !m_velocityMapDirty )
+		{
+			renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 3 );
+		}
+
+		ApplyPerFrameData( renderContext );
+
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
+		renderContext.SetReadOnlyDepth( true );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
+		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], GBufferTechnique() );
+		renderContext.SetReadOnlyDepth( false );
+
+		m_velocityMapDirty = m_velocityMapDirty || velocityMap.IsValid();
+	}
+	renderContext.m_esm.EndManagedRendering();
+}
+
 void EveSpaceScene::RenderVolumetricShadowMap( Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -2745,19 +2796,17 @@ bool EveSpaceScene::RenderMainPass(
 			{
 				if( !m_velocityMapDirty )
 				{
-					ClearRenderTargetIfNoBatches( velocityMap, 1, renderContext, m_gBufferBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() + m_forwardBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
+					ClearRenderTargetIfNoBatches( velocityMap, 1, renderContext, m_forwardBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
 				}
 
 				Tr2PushPopRT rt( velocityMap, renderContext, 1 );
 				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
-				RenderOpaqueBatches( m_gBufferBatches, renderContext );
 				RenderOpaqueBatches( m_forwardBatches, renderContext );
 				m_velocityMapDirty = true;
 			}
 			else
 			{
 				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::DONT_CARE } );
-				RenderOpaqueBatches( m_gBufferBatches, renderContext );
 				RenderOpaqueBatches( m_forwardBatches, renderContext );
 			}
 		}

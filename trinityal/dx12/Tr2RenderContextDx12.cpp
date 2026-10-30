@@ -224,13 +224,8 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 
 		if( rtClear )
 		{
-			float f = 1.0f / 255.0f;
-			float colorComponents[] = {
-				f * (float)(uint8_t)( color >> 16 ),
-				f * (float)(uint8_t)( color >> 8 ),
-				f * (float)(uint8_t)( color >> 0 ),
-				f * (float)(uint8_t)( color >> 24 )
-			};
+			float colorComponents[4];
+			TrinityALImpl::ColorComponents( color, colorComponents );
 
 			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[slot].texture.m_texture->GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::COLOR_SPACE_LINEAR, m_boundRenderTargets[slot].slice );
 			m_commandList->ClearRenderTargetView( rtv->GetHandleCPU(), colorComponents, 0, nullptr );

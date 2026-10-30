@@ -710,7 +710,7 @@ Tr2TextureAL::~Tr2TextureAL()
 	m_mipMapGenerator = nullptr;
 }
 
-ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, const Tr2ClearValue* optimizedClearValue, Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();
 
@@ -787,6 +787,22 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 		creationState = D3D12_RESOURCE_STATE_COPY_DEST;
 	}
 
+	D3D12_CLEAR_VALUE clearValue = {};
+	const bool hasClearValue = optimizedClearValue && ( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) || HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) );
+	if( hasClearValue )
+	{
+		clearValue.Format = DXGI_FORMAT( desc.GetFormat() );
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
+		{
+			clearValue.DepthStencil.Depth = optimizedClearValue->depth;
+			clearValue.DepthStencil.Stencil = UINT8( optimizedClearValue->stencil );
+		}
+		else
+		{
+			ColorComponents( optimizedClearValue->color, clearValue.Color );
+		}
+	}
+
 	CComPtr<ID3D12Resource> texture;
 	auto heap = HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
 	auto resourceDesc = TextureDesc( desc, msaa, resourceFlags );
@@ -795,7 +811,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
 		creationState,
-		nullptr,
+		hasClearValue ? &clearValue : nullptr,
 		IID_PPV_ARGS( &texture ) ) );
 
 	if( renderContext.m_device1 )

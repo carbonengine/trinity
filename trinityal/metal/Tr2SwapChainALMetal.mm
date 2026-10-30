@@ -58,7 +58,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 	// Have to make this READ to get the screeshot facility to work
 	Tr2CpuUsage::Type cpuUsage = Tr2CpuUsage::READ;
 
-	CR_RETURN_HR( m_backBuffer.m_texture->Create( textureInfo, msaaDesc, gpuUsage, cpuUsage, nil, renderContext ) );
+	CR_RETURN_HR( m_backBuffer.m_texture->Create( textureInfo, msaaDesc, gpuUsage, cpuUsage, nil, nullptr, renderContext ) );
 
 	m_windowHandle = windowHandle;
 
