@@ -310,7 +310,7 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 		view.shadowCastingLights.clear();
 		view.volumetricLights.clear();
 	}
-	
+
 	// shadow map is only on the main view currently
 	m_ShadowMap.m_atlasNodes.resize( 1 );
 	m_ShadowMap.m_atlasNodes[0].x = 0;
@@ -1037,7 +1037,8 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	const uint32_t clearValue[] = { 0, 0, 0, 0 };
 	renderContext.ClearUav( destTex, 0, clearValue );
 
-	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+	renderContext.SetRtPipelineState( pipelineState, rayGenName.c_str() );
+	m_Raytracing.m_effect->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
 	renderContext.UseAccelerationStructure( geometry->GetTLAS() );
 
 	{

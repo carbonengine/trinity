@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "BoundingSphere.h"
 #include "Utilities/Vector3d.h"
 #include "Utilities/Vector4d.h"

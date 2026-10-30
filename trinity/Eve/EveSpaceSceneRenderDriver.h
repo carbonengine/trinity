@@ -88,7 +88,6 @@ public:
 	EXPOSE_TO_BLUE();
 
 private:
-
 	// The driver's features a view uses. What the scene renders is described by the
 	// EveSceneView::ViewInfo in RenderInfo. The features are off by default and every factory
 	// sets every feature, so a new feature has to be decided for each kind of view.
@@ -97,7 +96,9 @@ private:
 		bool upscaling = false;
 		bool antiAliasing = false;
 		bool ssao = false;
-		bool shadows = false;
+		// the view gets raytraced shadows when they are selected, which read the normal map;
+		// reflection faces get the scene's cascaded reflection shadows instead
+		bool raytracedShadows = false;
 		bool velocityMap = false;
 		// special background rendering (f.ex texture background)
 		bool background = false;
@@ -107,6 +108,19 @@ private:
 
 		static Features Main();
 		static Features ReflectionFace();
+	};
+
+	// Timer collection for the view's rendering, used by RenderView and RenderReflectionFaces
+	struct ViewTimers
+	{
+		Tr2ProfileTimer beginView;
+		Tr2ProfileTimer endView;
+		Tr2ProfileTimer background;
+		Tr2ProfileTimer depthPass;
+		Tr2ProfileTimer mainPass;
+		Tr2ProfileTimer shadows;
+		Tr2ProfileTimer ssao;
+		Tr2ProfileTimer total;
 	};
 
 	// A view rendered by RenderView: its camera and what the scene renders from it, the
@@ -138,7 +152,7 @@ private:
 		std::vector<RenderInfo> views;
 	};
 
-	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
+	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
 	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
 	void SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
@@ -151,7 +165,7 @@ private:
 	EveSceneView::Camera GetMainCamera( const TextureSize2D& renderSize, const Matrix& jitterMatrix, float mipLodBias ) const;
 
 	Matrix GetJitterMatrix( uint32_t renderWidth, uint32_t renderHeight, Tr2RenderContext& renderContext ) const;
-	float GetMipLodBias( ) const;
+	float GetMipLodBias() const;
 
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
 	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
@@ -209,20 +223,20 @@ private:
 	TriTextureResPtr m_reflectionCorrectionMap;
 	TriTextureResPtr m_blackReflectionCorrectionMap;
 
-	struct
+	struct FrameTimers
 	{
+		// once per frame timers
+		Tr2ProfileTimer beginFrame;
 		Tr2ProfileTimer update;
-		Tr2ProfileTimer beginRender;
-		Tr2ProfileTimer endRender;
+		Tr2ProfileTimer reflections;
 		Tr2ProfileTimer postProcess;
 		Tr2ProfileTimer ui3d;
-		Tr2ProfileTimer background;
-		Tr2ProfileTimer depthPass;
-		Tr2ProfileTimer mainPass;
-		Tr2ProfileTimer reflections;
-		Tr2ProfileTimer shadows;
-		Tr2ProfileTimer ssao;
-	} m_timers;
+
+		// one set of timers for the main rendering view, and one set of timers for each reflection cube face
+		ViewTimers mainView;
+		std::array<ViewTimers, 6> reflectionTimers;
+	};
+	FrameTimers m_timers;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceSceneRenderDriver );

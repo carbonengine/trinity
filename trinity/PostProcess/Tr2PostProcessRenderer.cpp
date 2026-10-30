@@ -4,7 +4,7 @@
 #include "Tr2PostProcessRenderer.h"
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Shader/Parameter/TriTextureParameter.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "TriSettingsRegistrar.h"
 
 // FidelityFX headers

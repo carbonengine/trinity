@@ -43,7 +43,7 @@
     },
     {
       "name": "carbon-trinityaudioapi",
-      "version>=": "2.0.3"
+      "version>=": "3.1.0"
     },
     {
       "name": "freetype",
@@ -80,6 +80,11 @@
     {
       "name": "carbon-mesh",
       "version>=": "1.0.1"
+    },
+    {
+      "name": "carbon-exefile",
+      "version>=": "4.1.1",
+      "host": true
     }
   ],
   "features": {

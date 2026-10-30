@@ -7,7 +7,7 @@
 #if WITH_GRANNY
 #include "granny.h"
 #endif
-#include "Include/ITr2AnimationUpdater.h"
+#include "include/ITr2AnimationUpdater.h"
 #include "GrannyBoneOffset.h"
 #include <BlueAsyncRes.h>
 

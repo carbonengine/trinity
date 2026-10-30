@@ -5,7 +5,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "../include/Tr2ShaderProgramAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 #include "../include/Tr2ShaderAL.h"
 
 class DescriptorStateCache;
@@ -111,7 +111,6 @@ private:
 	std::string m_name;
 
 	friend class ::Tr2RenderContextAL;
-	friend class Tr2ResourceSetAL;
 	friend class ::DescriptorStateCache;
 	friend class PSODescription;
 };

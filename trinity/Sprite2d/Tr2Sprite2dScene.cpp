@@ -17,7 +17,7 @@
 #include "RenderJob/TriRenderJob.h"
 #include "TriSettingsRegistrar.h"
 #include "include/ITr2DebugRenderer.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 
 using namespace Tr2RenderContextEnum;
@@ -117,6 +117,7 @@ Tr2Sprite2dScene::Tr2Sprite2dScene( IRoot* lockobj ) :
 	m_maxSpriteCount( 1024 ),
 	m_tileMode( S2D_TS_NONE ),
 	m_drawCallStartIndex( 0 ),
+	m_effectOverride( nullptr ),
 	m_transformsHandle(),
 	m_useLinearColorSpace( false ),
 	m_isGammaCorrectingText( true ),
@@ -997,7 +998,7 @@ bool Tr2Sprite2dScene::PrepareTriangleVerts( Tr2Sprite2dD3DVertex* destVerts, Tr
 	return true;
 }
 
-void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned short indexCount )
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned int indexCount )
 {
 	if( m_transformCurrent >= TR2_SS_MAX_TRANSFORM_COUNT - 1 )
 	{
@@ -1018,7 +1019,41 @@ void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, u
 	CopyIndicesWithOffset( indices, indexCount, vertexOffset );
 }
 
-void Tr2Sprite2dScene::RenderTriangleVerts( Tr2BufferAL& verticesSrc, unsigned int vertexCount, Tr2BufferAL& indices, unsigned short indexCount )
+// 32-bit index overload for large text batches: glyph index counts AND values can exceed 65535
+// (e.g. huge contract / acceleration-gate popups). The GPU index buffer is already 32-bit.
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned int* indices, unsigned int indexCount )
+{
+	if( m_transformCurrent >= TR2_SS_MAX_TRANSFORM_COUNT - 1 )
+	{
+		// Buffers are full, kick off what we've got
+		IssueDrawCall();
+	}
+
+	// Offset applied to indices
+	int vertexOffset;
+
+	bool canRender = EnsureBufferSpace( vertexCount, indexCount, vertexOffset );
+	if( !canRender )
+	{
+		return;
+	}
+
+	ProcessVertices( verticesSrc, vertexCount );
+	CopyIndicesWithOffset( indices, indexCount, vertexOffset );
+}
+
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2Effect& effect, Tr2Sprite2dD3DVertex* verticesSrc, unsigned int vertexCount, unsigned short* indices, unsigned int indexCount )
+{
+	// Draw what's already batched with the scene's shader, then batch the
+	// vertices on their own and draw them with the effect
+	IssueDrawCall();
+	m_effectOverride = &effect;
+	RenderTriangleVerts( verticesSrc, vertexCount, indices, indexCount );
+	IssueDrawCall();
+	m_effectOverride = nullptr;
+}
+
+void Tr2Sprite2dScene::RenderTriangleVerts( Tr2BufferAL& verticesSrc, unsigned int vertexCount, Tr2BufferAL& indices, unsigned int indexCount )
 {
 	CCP_ASSERT( !m_captureDisplayList );
 
@@ -1080,6 +1115,7 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			entry.texture0 = m_texture[0];
 			entry.texture1 = m_texture[1];
 			entry.effect = m_effect;
+			entry.bindTextures = !m_effectOverride;
 			m_texelSizeVar[0].GetValue( entry.texelSize0 );
 			m_texelSizeVar[1].GetValue( entry.texelSize1 );
 
@@ -1125,27 +1161,6 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			}
 			else
 			{
-				if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
-				{
-					for( uint32_t i = 0; i < 2; ++i )
-					{
-						Tr2TextureAL* texAL = nullptr;
-						if( m_texture[i] )
-						{
-							texAL = m_texture[i]->GetTexture();
-							if( !texAL )
-							{
-								if( m_texture[i]->GetRenderTarget() )
-								{
-									texAL = m_texture[i]->GetRenderTarget();
-								}
-							}
-						}
-						auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-						desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
-					}
-				}
-
 				m_drawCallStartIndex /= sizeof( uint32_t );
 				renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer.GetBuffer(), vertexBufferOffset, sizeof( Tr2Sprite2dD3DVertex ) );
 				renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer.GetBuffer() );
@@ -1173,6 +1188,28 @@ void Tr2Sprite2dScene::SubmitGeometry( Tr2RenderContext& renderContext )
 	for( unsigned i = 0; i < TR2_SS_MAX_TRANSFORM_COUNT; ++i )
 	{
 		transposedMatrixes[i] = Transpose( m_transformArray[i] );
+	}
+
+	// An override effect gets none of the scene's textures
+	if( !m_effectOverride )
+	{
+		for( uint32_t i = 0; i < 2; ++i )
+		{
+			Tr2TextureAL* texAL = nullptr;
+			if( m_texture[i] )
+			{
+				texAL = m_texture[i]->GetTexture();
+				if( !texAL )
+				{
+					if( m_texture[i]->GetRenderTarget() )
+					{
+						texAL = m_texture[i]->GetRenderTarget();
+					}
+				}
+			}
+			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+			renderContext.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
+		}
 	}
 
 	bool result = FillAndSetConstants(
@@ -1698,8 +1735,17 @@ void Tr2Sprite2dScene::SetOutlineThreshold( float outlineThreshold )
 	m_outlineThreshold = outlineThreshold;
 }
 
+// Selects the effect for the batched vertices and returns whether it can draw
+// them. An override effect always can, even before its shader loads, so that
+// a display list captured meanwhile still records its draw call.
 bool Tr2Sprite2dScene::SelectEffect()
 {
+	if( m_effectOverride )
+	{
+		m_effect = m_effectOverride;
+		return true;
+	}
+
 	Tr2Effect* newEffect;
 
 	newEffect = m_is2dRender ? m_uberShader2d : m_uberShader3d;
@@ -1771,6 +1817,7 @@ void Tr2Sprite2dScene::RunJob( TriRenderJob* job )
 		entry.primitiveCount = 0;
 		entry.texture0 = nullptr;
 		entry.texture1 = nullptr;
+		entry.bindTextures = true;
 		entry.texelSize0 = Vector4( 0, 0, 0, 0 );
 		entry.texelSize1 = Vector4( 0, 0, 0, 0 );
 
@@ -2112,10 +2159,9 @@ void Tr2Sprite2dScene::ReplayCapture( Tr2Sprite2dDisplayList* dl )
 			m_texelSizeVar[0] = entry.texelSize0;
 			m_texelSizeVar[1] = entry.texelSize1;
 
-			auto desc = entry.effect->GetPassDescription( 0, 0 );
-			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[0], ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[1], ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
+			entry.textureRegisters[0] = m_textureRegisters[0];
+			entry.textureRegisters[1] = m_textureRegisters[1];
+			entry.colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 
 			CCP_STATS_INC( spriteSceneDrawCallCount );
 
@@ -2478,7 +2524,7 @@ void Tr2Sprite2dScene::GrowCaptureVertexBuffer( unsigned int vertexCount )
 
 // Grow the index buffer used for capturing display lists. 'indexCount' is the number
 // indices that need to be added.
-void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned short indexCount )
+void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned int indexCount )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2495,7 +2541,7 @@ void Tr2Sprite2dScene::GrowCaptureIndexBuffer( unsigned short indexCount )
 }
 
 // Copy indices to current index data, adding the given vertex offset
-void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned short indexCount, int vertexOffset )
+void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned int indexCount, int vertexOffset )
 {
 	unsigned short* curIndex = indices;
 	for( unsigned int i = 0; i < indexCount; ++i )
@@ -2508,7 +2554,21 @@ void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned short* indices, unsigned 
 	m_indexCount += indexCount;
 }
 
-bool Tr2Sprite2dScene::EnsureBufferSpace( unsigned int vertexCount, unsigned short indexCount, int& vertexOffset )
+// 32-bit index overload (see the 32-bit RenderTriangleVerts above). m_currentIndexData is uint32.
+void Tr2Sprite2dScene::CopyIndicesWithOffset( unsigned int* indices, unsigned int indexCount, int vertexOffset )
+{
+	unsigned int* curIndex = indices;
+	for( unsigned int i = 0; i < indexCount; ++i )
+	{
+		*m_currentIndexData = *curIndex + vertexOffset;
+		++m_currentIndexData;
+		++curIndex;
+	}
+
+	m_indexCount += indexCount;
+}
+
+bool Tr2Sprite2dScene::EnsureBufferSpace( unsigned int vertexCount, unsigned int indexCount, int& vertexOffset )
 {
 	if( m_captureDisplayList )
 	{

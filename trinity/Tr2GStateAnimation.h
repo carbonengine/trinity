@@ -6,7 +6,7 @@
 
 #if GSTATE_ENABLED
 
-#include "Include/ITr2AnimationUpdater.h"
+#include "include/ITr2AnimationUpdater.h"
 #include "Resources/Tr2GrannyStateRes.h"
 #if WITH_GRANNY
 #include "gstate.h"

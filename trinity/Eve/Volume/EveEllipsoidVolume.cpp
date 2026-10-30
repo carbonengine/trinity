@@ -123,18 +123,18 @@ void EveEllipsoidVolume::GeneratePointsInVolume( std::vector<Vector3>& points, s
 
 	for( size_t i = 0; i < howManyToAdd; i++ )
 	{
-		float a = TRI_2PI * ( float( rand() ) / RAND_MAX );
-		float z = ( float( rand() ) / RAND_MAX ) * 2.f - 1.f;
+		float a = TRI_2PI * ( float( rand() ) / float( RAND_MAX ) );
+		float z = ( float( rand() ) / float( RAND_MAX ) ) * 2.f - 1.f;
 		Vector3 angle( sqrt( 1.f - z * z ) * cos( a ), sqrt( 1.f - z * z ) * sin( a ), z );
 		angle = Normalize( angle );
 
-		if( ( float( rand() ) / RAND_MAX ) > sizeDifference )
+		if( ( float( rand() ) / float( RAND_MAX ) ) > sizeDifference )
 		{
-			position = angle * ( m_innerShape + ( m_shape - m_innerShape ) * pow( (float)rand() / RAND_MAX, 0.75f * fallOffFactor ) );
+			position = angle * ( m_innerShape + ( m_shape - m_innerShape ) * pow( (float)rand() / float( RAND_MAX ), 0.75f * fallOffFactor ) );
 		}
 		else
 		{
-			position = angle * ( m_innerShape * pow( (float)rand() / RAND_MAX, 1.f / 3.f ) );
+			position = angle * ( m_innerShape * pow( (float)rand() / float( RAND_MAX ), 1.f / 3.f ) );
 		}
 
 		points.push_back( position );

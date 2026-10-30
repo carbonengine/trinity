@@ -13,7 +13,6 @@
 #include "../include/Tr2TextureAL.h"
 #include "Tr2TextureALDx12.h"
 #include "Tr2RenderContextDx12.h"
-#include "Tr2ResourceSetALDx12.h"
 #include "Tr2GpuTimerALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Tr2RenderContextDx12.h"

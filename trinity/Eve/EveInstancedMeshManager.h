@@ -198,6 +198,7 @@ private:
 			const StaticPerInstanceData* staticInstances = nullptr;
 			const DynamicPerInstanceData* dynamicInstances;
 		};
+		Tr2EffectPtr material = nullptr;
 		uint32_t count = 0;
 		uint32_t sphereGroupIndex = 0;
 		uint32_t perObjectDataIndex = 0;
@@ -240,7 +241,6 @@ private:
 	{
 		std::vector<MeshGroup> meshGroups;
 
-		Tr2EffectPtr material = nullptr;
 		float radius = 0.0f;
 		float maxScreenSize = 0.0f;
 		uint32_t totalVisibleInstances = 0;

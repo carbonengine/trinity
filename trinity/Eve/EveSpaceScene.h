@@ -148,14 +148,14 @@ public:
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void BeginFrame( Tr2RenderContext& renderContext );
 	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void EndRender( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
+	void EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
 	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
-	
+
 	void SetCamera( const EveSceneView::Camera& camera );
 	Tr2ReflectionProbe* GetReflectionProbe() const;
 
@@ -215,6 +215,11 @@ public:
 		return m_objects;
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
+	// the scene's own post process, which the render driver sets the TAA on
+	const Tr2PostProcess2Ptr& GetDefaultPostProcess() const
+	{
+		return m_sceneDefaultPostProcess;
+	}
 
 	Matrix GetReprojectionMatrix() const;
 
@@ -419,7 +424,7 @@ protected:
 	PEveDistanceFieldVector m_distanceFields;
 
 	// Primary batches, gathered in BeginView and
-	// cleared in EndRender
+	// cleared in EndView
 	BatchMap m_primaryBatches;
 	// Secondary batches used to render planets, stars, shadowed objects
 	// and so forth. Should be finalized and cleared each time they're used.
@@ -720,7 +725,7 @@ public:
 
 	// reprojection matrix
 	Matrix m_reprojectionMatrix;
-	
+
 	std::unique_ptr<EveInstancedMeshManager> m_instancedMeshManager;
 
 	friend class EveSpaceSceneRenderDriver;

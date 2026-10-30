@@ -9,7 +9,7 @@
 #include "TriPythonContext.h"
 #include "RenderJob/Tr2RenderJobs.h"
 #include "Curves/TriCurveSet.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Tr2SyncToGpu.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2GpuResourcePool.h"

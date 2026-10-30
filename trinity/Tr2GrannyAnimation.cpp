@@ -6,7 +6,7 @@
 #include "Resources/TriGeometryRes.h"
 #include "Tr2Renderer.h"
 #include "include/ITr2DebugRenderer.h"
-#include "Include/ITr2PoseModifier.h"
+#include "include/ITr2PoseModifier.h"
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2VertexDefinitionUtilities.h"

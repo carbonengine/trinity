@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "Tr2Sprite2dDisplayList.h"
 #include "TriDevice.h"
+#include "Tr2AtlasTexture.h"
 #include "Tr2Renderer.h"
 
 using namespace Tr2RenderContextEnum;
@@ -63,6 +64,12 @@ void Tr2Sprite2dDisplayList::Entry::SubmitGeometry( Tr2RenderContext& renderCont
 	for( unsigned i = 0; i < TR2_SS_MAX_TRANSFORM_COUNT; ++i )
 	{
 		transposedMatrixes[i] = Transpose( transformArray[i] );
+	}
+
+	if( bindTextures )
+	{
+		renderContext.SetSrv( PIXEL_SHADER, textureRegisters[0], ( texture0 && texture0->GetTexture() ) ? *texture0->GetTexture() : Tr2TextureAL(), colorSpace );
+		renderContext.SetSrv( PIXEL_SHADER, textureRegisters[1], ( texture1 && texture1->GetTexture() ) ? *texture1->GetTexture() : Tr2TextureAL(), colorSpace );
 	}
 
 	FillAndSetConstants(

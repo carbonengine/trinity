@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "EveChildModifierStretch.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 EveChildModifierStretch::EveChildModifierStretch( IRoot* lockobj ) :
 	m_destPosition( 0, 0, 0 )

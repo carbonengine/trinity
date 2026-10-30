@@ -52,7 +52,7 @@ float Random( float a, float b )
 	{
 		return ( ( b - a ) * 0.41f ) + a;
 	}
-	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+	return ( ( b - a ) * ( (float)rand() / float( RAND_MAX ) ) ) + a;
 }
 
 // --------------------------------------------------------------------------------
@@ -89,7 +89,7 @@ Tr2CurveScalarExpression::Tr2CurveScalarExpression( IRoot* lockobj ) :
 	PARENTLOCK( m_inputs ),
 	m_currentValue( 0 ),
 	m_timeScale( 1 ),
-	m_randomConstant( float( rand() ) / RAND_MAX )
+	m_randomConstant( float( rand() ) / float( RAND_MAX ) )
 {
 }
 
@@ -236,7 +236,7 @@ float Tr2CurveScalarExpression::GetRandomConstant() const
 // --------------------------------------------------------------------------------
 void Tr2CurveScalarExpression::ResetRandomConstant()
 {
-	m_randomConstant = float( rand() ) / RAND_MAX;
+	m_randomConstant = float( rand() ) / float( RAND_MAX );
 }
 
 // --------------------------------------------------------------------------------

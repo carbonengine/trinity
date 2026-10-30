@@ -10,11 +10,12 @@
 #include "Tr2VertexLayoutALDx12.h"
 #include "Tr2ShaderProgramALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
-#include "Tr2ResourceSetALDx12.h"
+#include "Tr2SamplerStateALDx12.h"
 #include "Tr2RtPipelineStateALDx12.h"
 #include "Tr2RtShaderTableALDx12.h"
 #include "Utilities.h"
 #include "util/AmdExtDevice.h"
+#include "ALLog.h"
 
 extern bool g_requestDebugMarkers;
 extern bool g_dredBreadcrumbsEnabled;
@@ -113,6 +114,8 @@ void Tr2RenderContextAL::Destroy() throw()
 		// unregister from the crash tracker before doing anything else
 		m_ownerDevice->UnRegisterFromCrashTracker( m_commandList2 );
 	}
+
+	m_bindings.Discard();
 
 	ResetDx12();
 
@@ -329,6 +332,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader 
 	{
 		m_psoDescription.m_shaderProgram = shader;
 		m_dirtyPso = true;
+		m_bindings.SetRootSignature( GetProgramRootSignatureDx12() );
 	}
 	return S_OK;
 }
@@ -491,41 +495,49 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
 {
-	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
-	{
-		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_outTransitions.size(), m_resourceSet.m_resourceSet->m_outTransitions.data() );
-	}
-	m_resourceSet = resourceSet;
-	if( !m_resourceSet.IsValid() )
-	{
-		return S_OK;
-	}
-	auto rs = resourceSet.m_resourceSet.get();
-	if( !rs->m_inTransitions.empty() )
-	{
-		ResourceBarrierDx12( rs->m_inTransitions.size(), rs->m_inTransitions.data() );
-	}
+	return m_bindings.SetSrv( *this, stage, registerIndex, buffer );
+}
 
-	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetSamplers( 0, rs->m_samplerCount, rs->m_sampler );
+ALResult Tr2RenderContextAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace ) throw()
+{
+	return m_bindings.SetSrv( *this, stage, registerIndex, texture, colorSpace );
+}
 
-	// Because SRVs and UAVs are stacked in the resource slots, this will filter them out into the correct heap setup calls
-	// It's not great, but if the system is changed in the future to separate SRVs and UAVs then this is an easy change
-	for( uint32_t idx = 0; idx < rs->m_resourceCount; ++idx )
-	{
-		if( ( rs->m_srvMask & ( 1 << idx ) ) != 0 )
-		{
-			m_descriptorCache[bufferIndex]->SetShaderResources( idx, 1, &rs->m_srv[idx] );
-		}
-		else if( ( rs->m_uavMask & ( 1 << idx ) ) != 0 )
-		{
-			m_descriptorCache[bufferIndex]->SetUnorderedAccessViews( idx, 1, &rs->m_uav[idx] );
-		}
-	}
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw()
+{
+	return m_bindings.SetUav( *this, stage, registerIndex, buffer );
+}
 
-	return S_OK;
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip ) throw()
+{
+	return m_bindings.SetUav( *this, stage, registerIndex, texture, mip );
+}
+
+ALResult Tr2RenderContextAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetSrvHeapView( *this, stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetUavHeapView( *this, stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw()
+{
+	return m_bindings.SetSampler( *this, stage, registerIndex, sampler );
+}
+
+ALResult Tr2RenderContextAL::SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw()
+{
+	return m_bindings.SetSamplerHeapView( *this, stage, registerIndex );
+}
+
+ALResult Tr2RenderContextAL::ResetResourceBindings() throw()
+{
+	return m_bindings.Reset( *this );
 }
 
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw()
@@ -729,6 +741,11 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 	auto st = shaderTable.TrinityALImpl_GetObject();
 	auto p = pipeline.TrinityALImpl_GetObject();
 
+	if( m_bindings.GetRootSignature() != &p->GetGlobalRootSignature() )
+	{
+		return E_INVALIDCALL;
+	}
+
 	D3D12_DISPATCH_RAYS_DESC desc = {};
 	desc.RayGenerationShaderRecord.StartAddress = st->GetRayGenShader( rayGenShader );
 	desc.RayGenerationShaderRecord.SizeInBytes = st->GetEntrySize();
@@ -747,6 +764,7 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 
 	m_commandList->SetComputeRootSignature( p->GetGlobalRootSignature().m_rootSignature );
 	uint32_t bufferIndex = m_ownerDevice->GetCurrentBackBufferIndex();
+	m_bindings.Commit( *this );
 	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), GetPrimaryRenderContextPointer()->GetGlobalSamplerHeap(), &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );
 	FlushComputeBarriersDx12();
 
@@ -756,7 +774,18 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
 		m_commandList4->DispatchRays( &desc );
 	}
 
+	m_bindings.SetRootSignature( GetProgramRootSignatureDx12() );
 	m_dirtyPso = true;
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* )
+{
+	if( !pipeline.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	m_bindings.SetRootSignature( &pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature() );
 	return S_OK;
 }
 
@@ -807,8 +836,24 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 	return pipelineState;
 }
 
+const TrinityALImpl::Tr2RootSignatureAL* Tr2RenderContextAL::GetProgramRootSignatureDx12() const
+{
+	return m_psoDescription.m_shaderProgram.IsValid() ? &m_psoDescription.m_shaderProgram.m_program->m_rootSignature : nullptr;
+}
+
+ALResult Tr2RenderContextAL::UseResourceBindings() throw()
+{
+	if( !m_bindings.GetRootSignature() )
+	{
+		return S_OK;
+	}
+	return m_bindings.Commit( *this );
+}
+
 ALResult Tr2RenderContextAL::SetAllState()
 {
+	UseResourceBindings();
+
 	if( ( m_dynamicVBs & m_psoDescription.m_vertexStreamMask ) != 0 )
 	{
 		D3D12_VERTEX_BUFFER_VIEW vb[4];
@@ -886,8 +931,8 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 		return;
 	}
 	size_t count = 0;
-	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + m_resourceSet
-	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + used resources
+	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + 2 * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
 
 	if( resource )
 	{
@@ -916,10 +961,11 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 		resources[count++] = m_indexBuffer.m_buffer->m_buffer.GetResource();
 	}
 
-	if( m_resourceSet.IsValid() )
+	const auto& usedResources = m_bindings.GetUsedResources();
+	if( !usedResources.empty() )
 	{
-		std::copy( begin( m_resourceSet.m_resourceSet->m_usedResources ), end( m_resourceSet.m_resourceSet->m_usedResources ), resources + count );
-		count += m_resourceSet.m_resourceSet->m_usedResources.size();
+		std::copy( begin( usedResources ), end( usedResources ), resources + count );
+		count += usedResources.size();
 	}
 
 	FlushBarriersDx12( count, resources );
@@ -931,25 +977,23 @@ void Tr2RenderContextAL::FlushComputeBarriersDx12( ID3D12Resource* resource )
 	{
 		return;
 	}
-	if( !resource )
+	size_t count = 0;
+	ID3D12Resource* resources[1 + 2 * Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE];
+
+	if( resource )
 	{
-		if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_usedResources.empty() )
-		{
-			FlushBarriersDx12( m_resourceSet.m_resourceSet->m_usedResources.size(), m_resourceSet.m_resourceSet->m_usedResources.data() );
-		}
-	}
-	else
-	{
-		size_t count = 0;
-		ID3D12Resource* resources[1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		resources[count++] = resource;
+	}
 
-		if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_usedResources.empty() )
-		{
-			std::copy( begin( m_resourceSet.m_resourceSet->m_usedResources ), end( m_resourceSet.m_resourceSet->m_usedResources ), resources + count );
-			count += m_resourceSet.m_resourceSet->m_usedResources.size();
-		}
+	const auto& usedResources = m_bindings.GetUsedResources();
+	if( !usedResources.empty() )
+	{
+		std::copy( begin( usedResources ), end( usedResources ), resources + count );
+		count += usedResources.size();
+	}
 
+	if( count )
+	{
 		FlushBarriersDx12( count, resources );
 	}
 }
@@ -1536,10 +1580,7 @@ bool Tr2RenderContextAL::IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture
 
 void Tr2RenderContextAL::ResetDx12()
 {
-	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
-	{
-		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_outTransitions.size(), m_resourceSet.m_resourceSet->m_outTransitions.data() );
-	}
+	ResetResourceBindings();
 
 	for( uint32_t i = 0; i < 4; ++i )
 	{
@@ -1549,9 +1590,8 @@ void Tr2RenderContextAL::ResetDx12()
 	m_indexBuffer = Tr2BufferAL();
 	m_dynamicIB = false;
 
-	m_resourceSet = Tr2ResourceSetAL();
-
 	m_psoDescription = TrinityALImpl::PSODescription();
+	m_bindings.SetRootSignature( nullptr );
 	m_topology = Tr2RenderContextEnum::TOP_INVALID;
 	m_primitiveToVertexCount = std::make_pair( 0, 0 );
 

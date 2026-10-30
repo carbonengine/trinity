@@ -7,7 +7,7 @@
 
 
 #include "Tr2TextureALDx11.h"
-#include "Tr2BufferAlDx11.h"
+#include "Tr2BufferALDx11.h"
 
 #include <filesystem>
 #include <sl_security.h>

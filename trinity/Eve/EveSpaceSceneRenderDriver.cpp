@@ -27,9 +27,9 @@ namespace
 void BeginRenderPass( Tr2RenderContext& renderContext, const std::initializer_list<std::pair<Tr2TextureAL, uint32_t>>& colorAttachments, const Tr2TextureAL& depthAttachment )
 {
 	uint32_t index = 0;
-	for( auto& colorAttachment : colorAttachments )
+	for( auto& [colorAttachment, slice] : colorAttachments )
 	{
-		renderContext.m_esm.SetRenderTarget( index++, colorAttachment.first, true, colorAttachment.second );
+		renderContext.m_esm.SetRenderTarget( index++, colorAttachment, true, slice );
 	}
 	// clear out remaining slots, generously assuming max 4 render targets
 	const uint32_t maxRenderTargets = 4;
@@ -80,7 +80,7 @@ struct TimeSection
 	{
 		if( rootTimer.GetCaptureCpuTime() || rootTimer.GetCaptureGpuTime() )
 		{
-			m_timer.SetStatName( ( rootTimer.GetStatName() + std::string( "/" ) + name ).c_str() );
+			m_timer.SetStatName( ( rootTimer.GetStatName() + "/" + name ).c_str() );
 			m_timer.SetCaptureCpuTime( rootTimer.GetCaptureCpuTime() );
 			m_timer.SetCaptureGpuTime( rootTimer.GetCaptureGpuTime() );
 			m_timer.Begin( renderContext );
@@ -220,21 +220,21 @@ void EveSpaceSceneRenderDriver::SetupUpscaling( const TextureSize2D& displaySize
 void EveSpaceSceneRenderDriver::PropagateSettings()
 {
 	// AA setting
-	if( m_scene->m_sceneDefaultPostProcess )
+	if( const auto& defaultPostProcess = m_scene->GetDefaultPostProcess() )
 	{
 		if( m_settings.antiAliasingQuality == AntiAliasingQuality::Disabled )
 		{
-			m_scene->m_sceneDefaultPostProcess->SetTaa( nullptr );
+			defaultPostProcess->SetTaa( nullptr );
 		}
 		else
 		{
-			if( !m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable() )
+			if( !defaultPostProcess->GetTaaIfAvailable() )
 			{
 				Tr2PPTaaEffectPtr taa;
 				taa.CreateInstance();
-				m_scene->m_sceneDefaultPostProcess->SetTaa( taa );
+				defaultPostProcess->SetTaa( taa );
 			}
-			m_scene->m_sceneDefaultPostProcess->GetTaaIfAvailable()->m_quality = (Tr2PPTaaEffect::Quality)m_settings.antiAliasingQuality;
+			defaultPostProcess->GetTaaIfAvailable()->m_quality = (Tr2PPTaaEffect::Quality)m_settings.antiAliasingQuality;
 		}
 	}
 
@@ -332,7 +332,7 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Main()
 	features.upscaling = true;
 	features.antiAliasing = true;
 	features.ssao = true;
-	features.shadows = true;
+	features.raytracedShadows = true;
 	features.velocityMap = true;
 	features.background = true;
 	features.overlay = true;
@@ -347,7 +347,7 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	features.upscaling = false;
 	features.antiAliasing = false;
 	features.ssao = false;
-	features.shadows = true;
+	features.raytracedShadows = false;
 	features.velocityMap = false;
 	features.background = false;
 	features.overlay = false;
@@ -449,7 +449,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::RenderSSAO( const Tr2Text
 	{
 		renderContext.SetReadOnlyDepth( true );
 
-		auto scenePostProcess = m_scene->m_sceneDefaultPostProcess;
+		const auto& scenePostProcess = m_scene->GetDefaultPostProcess();
 		bool temporal = m_upscalingInfo.temporal || ( scenePostProcess != nullptr && scenePostProcess->GetTaaIfAvailable() != nullptr );
 
 		ssao = m_ssao->Filter( depthMap, normalMap, m_gpuResourcePool, renderContext, temporal );
@@ -563,8 +563,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		UpdateSceneFrame( mainView.camera, realTime, simTime, rootTimer, renderContext );
 		ReflectionFaces reflectionFaces;
 		{
-			TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
-
+			TimeSection beginFrameSection( m_timers.beginFrame, "BeginFrame", rootTimer, renderContext );
 			m_scene->BeginFrame( renderContext );
 
 			reflectionFaces = PrepareReflectionFaces( renderContext );
@@ -575,10 +574,13 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		}
 		{
 			TimeSection reflectionsSection( m_timers.reflections, "RenderReflections", rootTimer, renderContext );
-			RenderReflectionFaces( reflectionFaces, realTime, simTime, rootTimer, renderContext );
+			// set the frame reflection timer as the root timer so we get correct timer paths
+			RenderReflectionFaces( reflectionFaces, realTime, simTime, m_timers.reflections, renderContext );
 		}
-
-		targets = RenderView( mainView, colorTarget, outputs, realTime, simTime, rootTimer, renderContext );
+		{
+			TimeSection totalSection( m_timers.mainView.total, "MainView", rootTimer, renderContext );
+			targets = RenderView( mainView, colorTarget, outputs, m_timers.mainView, realTime, simTime, m_timers.mainView.total, renderContext );
+		}
 	}
 
 	// store the last view and projection matrices for the next frame, so the scene can use them for temporal effects
@@ -620,6 +622,9 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 {
 	Matrix jitterMatrix;
 
+	// The TAA is read from the scene's default post process, which PropagateSettings has set
+	// up for this driver. The combined post process only picks it up in the scene update,
+	// which runs after the main view's camera is built.
 	if( m_upscalingInfo.temporal )
 	{
 		float jitterX = 0.0f;
@@ -627,9 +632,9 @@ Matrix EveSpaceSceneRenderDriver::GetJitterMatrix( uint32_t renderWidth, uint32_
 		m_upscalingContext->GetJitter( jitterX, jitterY );
 		jitterMatrix = TranslationMatrix( Vector3( jitterX, jitterY, 0 ) );
 	}
-	else if( m_scene && m_scene->GetPostProcess() && m_scene->GetPostProcess()->GetTaaIfAvailable() != nullptr )
+	else if( m_scene && m_scene->GetDefaultPostProcess() && m_scene->GetDefaultPostProcess()->GetTaaIfAvailable() != nullptr )
 	{
-		auto frameIndex = renderContext.GetPrimaryRenderContext().GetRenderedFrameNumber();
+		auto frameIndex = renderContext.GetPrimaryRenderContext().GetRecordingFrameNumber();
 		jitterMatrix = Tr2PostProcessRenderer::GetJitter( frameIndex, renderWidth, renderHeight );
 	}
 	else
@@ -646,10 +651,11 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 	float mipLodBias = m_upscalingInfo.mipLevelBias;
 
 	// The post process bias belongs to its TAA. A temporal upscaler replaces the TAA and
-	// its bias already accounts for it.
+	// its bias already accounts for it. Read from the default post process, as in
+	// GetJitterMatrix.
 	if( !m_upscalingInfo.temporal && m_scene )
 	{
-		auto postprocess = m_scene->GetPostProcess();
+		const auto& postprocess = m_scene->GetDefaultPostProcess();
 		if( postprocess && postprocess->GetTaaIfAvailable() != nullptr )
 		{
 			mipLodBias += postprocess->GetMipLodBias();
@@ -663,7 +669,7 @@ float EveSpaceSceneRenderDriver::GetMipLodBias() const
 //   Render the scene from one view (the main view or a reflection probe face) into
 //   colorTarget. Returns the targets the view rendered, for post processing.
 // --------------------------------------------------------------------------------------
-EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
+EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice )
 {
 	const TextureSize2D& renderSize = view.camera.renderSize;
 
@@ -688,6 +694,9 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, m_settings.clearColor, 0 );
 
 		m_background->Execute( { &backBuffer, 1 }, {}, realTime, simTime, rootTimer, renderContext );
+
+		// the background node can set its own camera
+		ApplyCamera( view.camera );
 	}
 
 	targets.depth = m_gpuResourcePool.GetTempTexture( "depthBuffer", renderSize, ImageIO::PIXEL_FORMAT_D32_FLOAT, Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE );
@@ -695,9 +704,9 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 	BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, depthBuffer );
 	renderContext.Clear( renderBackgroundNode ? Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER : ( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ), m_settings.clearColor, 0 );
-	
+
 	{
-		TimeSection beginRenderSection( m_timers.beginRender, "BeginRender", rootTimer, renderContext );
+		TimeSection beginViewSection( timers.beginView, "BeginView", rootTimer, renderContext );
 		m_scene->BeginView( view.scene, renderContext );
 	}
 
@@ -711,7 +720,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 
 	bool hasBackgroundDistortionBatches = false;
 	{
-		TimeSection backgroundSection( m_timers.background, "BackgroundPass", rootTimer, renderContext );
+		TimeSection backgroundSection( timers.background, "BackgroundPass", rootTimer, renderContext );
 		hasBackgroundDistortionBatches = m_scene->RenderBackgroundPass( depthBuffer, distortionMap, velocityMap, view.scene, renderContext );
 	}
 	if( view.scene.distortion && hasBackgroundDistortionBatches )
@@ -725,7 +734,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	Tr2GpuResourcePool::Texture normalMap = GetNormalMapIfNeeded( renderSize, outputs, view.features );
 	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
 	{
-		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
+		TimeSection depthPassSection( timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, view.scene, renderContext, m_depthPassTechnique );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
@@ -735,15 +744,14 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	EveSpaceScene::ShadowResources shadowResources;
 	if( m_scene->m_display && m_mainPassRenderingEnabled )
 	{
-		if( view.features.shadows )
 		{
-			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );
+			TimeSection shadowsSection( timers.shadows, "Shadows", rootTimer, renderContext );
 			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, view.scene, renderContext );
 		}
-		TimeSection ssaoSection( m_timers.ssao, "SSAO", rootTimer, renderContext );
+		TimeSection ssaoSection( timers.ssao, "SSAO", rootTimer, renderContext );
 		auto ssao = view.features.ssao ? RenderSSAO( depthBuffer, normalMap, renderContext ) : GetEmptySSAO( m_gpuResourcePool );
 		ssaoSection.Stop();
-		
+
 		GlobalStore().RegisterVariable( "SSAOMap", ssao );
 
 		auto lightManager = Tr2LightManager::GetInstance();
@@ -762,7 +770,7 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		bool hasDistortionBatches = false;
 		distortionMap = GetDistortionMapIfNeeded( renderSize, view.scene.distortion );
 		{
-			TimeSection mainPassSection( m_timers.mainPass, "MainPass", rootTimer, renderContext );
+			TimeSection mainPassSection( timers.mainPass, "MainPass", rootTimer, renderContext );
 			hasDistortionBatches = m_scene->RenderMainPass( backBuffer, depthBuffer, distortionMap, velocityMap, targets.opaqueColor, m_gpuResourcePool, view.scene, renderContext );
 		}
 		RegisterWithVariableStore( {}, m_gpuResourcePool );
@@ -796,14 +804,16 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	normalMap = {};
 
 	BeginRenderPass( renderContext, { { backBuffer, colorTargetSlice } }, depthBuffer );
+	// each lens flare has one occlusion result, which belongs to the main view
+	if( view.scene.temporal )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_scene->RunLensflareOcclusionQueries( depthBuffer, renderContext );
 		renderContext.SetReadOnlyDepth( false );
 	}
 	{
-		TimeSection endRenderSection( m_timers.endRender, "EndRender", rootTimer, renderContext );
-		m_scene->EndRender( view.scene, renderContext );
+		TimeSection endViewSection( timers.endView, "EndView", rootTimer, renderContext );
+		m_scene->EndView( view.scene, renderContext );
 	}
 	m_scene->PopulateAndApplyPerFrameData( renderContext );
 
@@ -885,11 +895,13 @@ void EveSpaceSceneRenderDriver::RenderReflectionFaces( const ReflectionFaces& fa
 	unsigned face = faces.startFace;
 	for( const RenderInfo& faceView : faces.views )
 	{
-		std::string regionName = "Reflection Face " + std::to_string( face );
+		auto& timers = m_timers.reflectionTimers[face];
+		const std::string regionName = "Face" + std::to_string( face );
 		GPU_REGION( renderContext, regionName.c_str() );
-
+		TimeSection totalSection( timers.total, regionName.c_str(), rootTimer, renderContext );
 		// render straight into the probe's face
-		RenderView( faceView, faceTarget, {}, realTime, simTime, rootTimer, renderContext, face++ );
+		RenderView( faceView, faceTarget, {}, timers, realTime, simTime, timers.total, renderContext, face );
+		++face;
 	}
 
 	// unbind the probe cube so it can be used as a shader resource in the main view
@@ -959,7 +971,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( c
 Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet )
 {
 	// SSAO and raytraced shadows read the normal map
-	const bool needsNormalMap = ( featureSet.ssao && m_settings.aoQuality != AmbientOcclusionQuality::Disabled ) || ( featureSet.shadows && m_settings.shadowQuality == ShadowQuality::SHADOW_RAYTRACED );
+	const bool needsNormalMap = ( featureSet.ssao && m_settings.aoQuality != AmbientOcclusionQuality::Disabled ) || ( featureSet.raytracedShadows && m_settings.shadowQuality == ShadowQuality::SHADOW_RAYTRACED );
 	auto namedOutput = FindNamedOutput( outputs, "NormalMap" );
 	if( ( needsNormalMap && Tr2Renderer::GetShaderModel() != TR2SM_3_0_LO ) || m_settings.forceNormalMap || namedOutput )
 	{

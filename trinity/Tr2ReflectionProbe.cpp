@@ -96,7 +96,8 @@ Matrix Tr2ReflectionProbe::GetFaceProjection( const Matrix& currentProjection ) 
 Matrix Tr2ReflectionProbe::GetFaceViewTransform( unsigned face ) const
 {
 	static const Vector3 faceDirections[] = {
-		Vector3( 0, 1, 0 ), Vector3( 1, 0, 0 ), //+X
+		Vector3( 0, 1, 0 ),
+		Vector3( 1, 0, 0 ), //+X
 		Vector3( 0, 1, 0 ),
 		Vector3( -1, 0, 0 ), //-X
 		Vector3( 0, 0, -1 ),
