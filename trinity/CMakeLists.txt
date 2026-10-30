@@ -1689,6 +1689,8 @@ set(_SOURCES
     Tr2ShadowMap.cpp
     Tr2ShadowMap.h
     Tr2ShadowMap_Blue.cpp
+    Tr2SignedDistanceField.cpp
+    Tr2SignedDistanceField.h
     Tr2ShLightingManager.cpp
     Tr2ShLightingManager.h
     Tr2ShLightingManager_Blue.cpp
