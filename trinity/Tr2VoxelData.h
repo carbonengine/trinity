@@ -190,6 +190,22 @@ private:
 
 TYPEDEF_BLUECLASS( Tr2VoxelData );
 
+/**
+ * @brief Checks if the given coordinates are inside the specified dimensions of the voxel data.
+ * @param dims The dimensions of the voxel data.
+ * @param coord The coordinates to check.
+ * @return True if the coordinates are inside the dimensions, false otherwise.
+ */
+bool IsInside( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord );
+
+/**
+ * @brief Converts the given coordinates to a linear index based on the specified dimensions.
+ * @param dims The dimensions of the voxel data.
+ * @param coord The coordinates to convert.
+ * @return The linear index corresponding to the given coordinates.
+ */
+int32_t LinearIndex( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord );
+
 
 bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Dimensions& resultRef, unsigned int argID );
 bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Coord& resultRef, unsigned int argID );

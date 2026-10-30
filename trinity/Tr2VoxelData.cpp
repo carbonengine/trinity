@@ -623,6 +623,17 @@ void Tr2VoxelData::SetBufferAndSize( const char*, unsigned char* buffer, size_t 
 }
 
 
+bool IsInside( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord )
+{
+	return coord.x >= 0 && coord.y >= 0 && coord.z >= 0 &&
+		coord.x < int32_t( dims.width ) && coord.y < int32_t( dims.height ) && coord.z < int32_t( dims.depth );
+}
+
+int32_t LinearIndex( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord )
+{
+	return coord.x + int32_t( dims.width ) * ( coord.y + int32_t( dims.height ) * coord.z );
+}
+
 bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Dimensions& resultRef, unsigned int argID )
 {
 	if( !PyTuple_Check( argument ) )
