@@ -150,6 +150,7 @@ public:
 
 	Tr2RaytracingPipelineStateManager m_pipelineManager;
 	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
+	Tr2RtShaderTableAL m_rtShadowShaderTable;
 
 private:
 	struct FogViewDependentResources
