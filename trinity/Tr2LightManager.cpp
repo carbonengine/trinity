@@ -30,6 +30,9 @@ namespace
 const uint32_t LIGHT_BUFFER_SIZE = 1024;
 // Size of the light index buffer (number of indices)
 const uint32_t INDEX_BUFFER_SIZE = 8 * 1024 * 1024;
+// Size of the light index buffer of a reflection probe face (number of indices)
+const uint32_t INDEX_BUFFER_SIZE_IN_REFLECTIONS = 1024 * 1024;
+
 // Minimal size of a point light sphere in pixels before it is culled out
 const float CUTOFF_PIXEL_SIZE = 7.f;
 // Size (in pixels) for the light to stat dimming out before disappeating
@@ -44,6 +47,7 @@ const uint32_t HIGH_QUALITY_ATLAS_SIZE_LOG2 = 14;
 const uint32_t HIGH_QUALITY_ATLAS_ENTRY_MAX_SIZE = 1 << 13;
 const uint32_t MAX_NUM_SHADOWCASTING_LIGHTS = 16;
 const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS = 16;
+const uint32_t MAX_NUM_VOLUMETRIC_LIGHTS_IN_REFLECTIONS = 16;
 
 const uint32_t RAYTRACING_DUMMY_RESOLUTION = 4;
 
@@ -143,18 +147,27 @@ const BlueSharedString RtSceneTechniqueName = BlueSharedString( "RtShadowScene" 
 
 }
 
+Tr2LightManager::View::View( uint32_t maxVolumetricLights, uint32_t maxShadowCastingLights, uint32_t indexBufferSize, bool reflection ) :
+	reflection( reflection ),
+	maxVolumetricLights( maxVolumetricLights ),
+	maxShadowCastingLights( maxShadowCastingLights ),
+	indexBufferSize( indexBufferSize )
+{
+	lightBuffer.CreateInstance();
+	indexBuffer.CreateInstance();
+	indexBufferCounter.CreateInstance();
+}
+
 Tr2LightManager::Tr2LightManager( const char* effectPath )
 {
 	m_effect.CreateInstance();
 	m_effect->SetEffectPathName( effectPath );
 
-	m_lightBuffer.CreateInstance();
-	m_indexBuffer.CreateInstance();
+	m_views.emplace_back( MAX_NUM_VOLUMETRIC_LIGHTS, MAX_NUM_SHADOWCASTING_LIGHTS, INDEX_BUFFER_SIZE, false );
+	View& mainView = m_views[MAIN_VIEW];
 
-	m_indexBufferCounter.CreateInstance();
-
-	m_lightBufferVariable.Register( "LightBuffer", m_lightBuffer );
-	m_indexBufferVariable.Register( "LightIndexBuffer", m_indexBuffer );
+	m_lightBufferVariable.Register( "LightBuffer", mainView.lightBuffer );
+	m_indexBufferVariable.Register( "LightIndexBuffer", mainView.indexBuffer );
 	GlobalStore().RegisterVariable( "LightProfileArray", &GetLightProfileArray() );
 
 	m_currentSpaceSceneShadowQuality = ShadowQuality::SHADOW_DISABLED;
@@ -211,31 +224,94 @@ void Tr2LightManager::DeleteInstance()
 	singleton = nullptr;
 }
 
-void Tr2LightManager::SetVariableStore()
-{
-	m_lightBufferVariable = m_lightBuffer;
-	m_indexBufferVariable = m_indexBuffer;
-}
-
 uint16_t Tr2LightManager::PackFlags( uint16_t flags, uint16_t profileIndex )
 {
 	return ( flags & ( ( 1 << FLAG_BITS ) - 1 ) ) | ( profileIndex << FLAG_BITS );
 }
 
+Tr2LightManager::View& Tr2LightManager::GetActiveView()
+{
+	return m_views[m_activeView];
+}
+
+const Tr2LightManager::View& Tr2LightManager::GetActiveView() const
+{
+	return m_views[m_activeView];
+}
+
+void Tr2LightManager::CreateViewBuffers( View& view, Tr2RenderContext& renderContext )
+{
+	view.lightBuffer->Create( LIGHT_BUFFER_SIZE, sizeof( PerLightData ), Tr2GpuBuffer::CPU_WRITABLE );
+	view.lightBuffer->SetName( "Light buffer" );
+	view.indexBuffer->Create( view.indexBufferSize, sizeof( uint32_t ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
+	view.indexBuffer->SetName( "Light indices" );
+	view.indexBufferCounter->Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer::GPU_WRITABLE );
+	ClearLightIndices( view, renderContext );
+}
+
+void Tr2LightManager::SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext )
+{
+	if( frustums.empty() )
+	{
+		CCP_LOGERR( "Tr2LightManager: SetViews needs at least the main view" );
+		return;
+	}
+
+	if( m_views.size() > frustums.size() )
+	{
+		m_views.erase( m_views.begin() + frustums.size(), m_views.end() );
+	}
+	while( m_views.size() < frustums.size() )
+	{
+		m_views.emplace_back( MAX_NUM_VOLUMETRIC_LIGHTS_IN_REFLECTIONS, 0u, INDEX_BUFFER_SIZE_IN_REFLECTIONS, true );
+		// during a device reset OnPrepareResources creates the buffers later
+		if( Tr2Renderer::IsResourceCreationAllowed() )
+		{
+			CreateViewBuffers( m_views.back(), renderContext );
+		}
+	}
+
+	auto frustum = frustums.begin();
+	for( auto& view : m_views )
+	{
+		view.frustum = *frustum++;
+	}
+
+	if( m_activeView >= m_views.size() )
+	{
+		SetActiveView( MAIN_VIEW );
+	}
+}
+
+void Tr2LightManager::SetActiveView( uint32_t viewIndex )
+{
+	if( viewIndex >= m_views.size() )
+	{
+		CCP_LOGERR( "Tr2LightManager: invalid view index %u", viewIndex );
+		return;
+	}
+
+	m_activeView = viewIndex;
+	View& view = m_views[viewIndex];
+	m_lightBufferVariable = view.lightBuffer;
+	m_indexBufferVariable = view.indexBuffer;
+}
+
 void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 {
-	m_lightBufferVariable = m_lightBuffer;
-	m_indexBufferVariable = m_indexBuffer;
-	ClearLightIndices( renderContext );
-
-	for( auto& data : m_tlsLightData )
+	for( auto& view : m_views )
 	{
-		data.clear();
+		ClearLightIndices( view, renderContext );
+		for( auto& data : view.tlsLightData )
+		{
+			data.clear();
+		}
+		view.lightData.clear();
+		view.shadowCastingLights.clear();
+		view.volumetricLights.clear();
 	}
-	m_lightData.clear();
-	m_shadowCastingLights.clear();
-	m_volumetricLights.clear();
 
+	// shadow map is only on the main view currently
 	m_ShadowMap.m_atlasNodes.resize( 1 );
 	m_ShadowMap.m_atlasNodes[0].x = 0;
 	m_ShadowMap.m_atlasNodes[0].y = 0;
@@ -246,14 +322,14 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 	m_ShadowMap.m_atlasNodes[0].lightIndex = -1;
 }
 
-void Tr2LightManager::SetFrustum( const TriFrustum& frustum )
-{
-	m_frustum = frustum;
-}
-
 void Tr2LightManager::AdjustLightCutoff( float lodFactor )
 {
 	m_adjustedCutoff = CUTOFF_PIXEL_SIZE * lodFactor;
+}
+
+void Tr2LightManager::SetReflectionQuality( ReflectionQuality reflectionQuality )
+{
+	m_reflectionQuality = reflectionQuality;
 }
 
 // This entire thing is annoyingly complex for what should be a simple thing...
@@ -323,12 +399,15 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 	{
 		return;
 	}
-	if( !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
+
+	View& mainView = m_views[MAIN_VIEW];
+
+	if( !mainView.frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
 	{
 		return;
 	}
 
-	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
+	float size = mainView.frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
 
 	if( size > m_adjustedCutoff )
 	{
@@ -346,11 +425,11 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 		data.direction = Vector3_16( Vector3( 1.f, 0.f, 0.f ) );
 		data.outerAngle = Float_16( 0.f );
 		data.innerAngle = Float_16( 0.f );
-		m_tlsLightData.local().push_back( data );
+		mainView.tlsLightData.local().push_back( data );
 	}
 }
 
-void Tr2LightManager::AddLight( PerLightData& data, bool scaleBrightness )
+void Tr2LightManager::AddLight( PerLightData& data, bool scaleBrightness, const Tr2LightTags& tags )
 {
 	if( !AreLightFlagsValid( data.flags ) )
 	{
@@ -362,72 +441,92 @@ void Tr2LightManager::AddLight( PerLightData& data, bool scaleBrightness )
 	{
 		return;
 	}
-	if( !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
-	{
-		return;
-	}
 
-	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
-	if( size > m_adjustedCutoff )
+	for( auto& view : m_views )
 	{
-		float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
-		if( scaleBrightness )
+		// a face view only takes the lights that are tagged for the current reflection quality
+		if( view.reflection && !tags.reflects.HasBit( m_reflectionQuality ) )
 		{
-			dimming *= data.radius;
+			continue;
 		}
-		data.color.x *= dimming;
-		data.color.y *= dimming;
-		data.color.z *= dimming;
-		bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
-		if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED ||
-			( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
-			!g_useDynamicLightsShadows )
+
+		if( !view.frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
 		{
-			data.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+			continue;
 		}
-		m_tlsLightData.local().push_back( data );
+		float size = view.frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
+		if( size > m_adjustedCutoff )
+		{
+			// every view works on its own copy, as the fade and the flags differ per view
+			PerLightData viewData = data;
+			float dimming = std::min( ( size - m_adjustedCutoff ) / FADE_SIZE, 1.f );
+			if( scaleBrightness )
+			{
+				dimming *= viewData.radius;
+			}
+			viewData.color.x *= dimming;
+			viewData.color.y *= dimming;
+			viewData.color.z *= dimming;
+
+			bool usingShadowMap = m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH;
+			if( view.reflection ||
+				m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED ||
+				( usingShadowMap && m_ShadowMap.m_qualityUsedByAtlas == ShadowQuality::SHADOW_DISABLED ) ||
+				!g_useDynamicLightsShadows )
+			{
+				viewData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+			}
+			view.tlsLightData.local().push_back( viewData );
+		}
 	}
 }
 
-ALResult Tr2LightManager::ClearLightIndices( Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::ClearLightIndices( Tr2LightManager::View& view, Tr2RenderContext& renderContext )
 {
-	if( !m_indexBuffer || !m_indexBuffer->GetGpuBuffer( 0 ) )
+	if( !view.indexBuffer || !view.indexBuffer->GetGpuBuffer( 0 ) )
 	{
 		return S_OK;
 	}
 	const uint32_t clear[] = { 0, 0, 0, 0 };
-	return renderContext.ClearUav( *m_indexBuffer->GetGpuBuffer( 0 ), clear );
+	return renderContext.ClearUav( *view.indexBuffer->GetGpuBuffer( 0 ), clear );
 }
 
 ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
 {
-	if( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count < uint32_t( m_lightData.size() ) )
+	View& view = GetActiveView();
+	if( view.lightBuffer->GetGpuBuffer( 0 )->GetDesc().count < uint32_t( view.lightData.size() ) )
 	{
-		CR_RETURN_HR( m_lightBuffer->Create(
-			std::max( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count + 1024, uint32_t( m_lightData.size() ) ),
+		CR_RETURN_HR( view.lightBuffer->Create(
+			std::max( view.lightBuffer->GetGpuBuffer( 0 )->GetDesc().count + 1024, uint32_t( view.lightData.size() ) ),
 			sizeof( PerLightData ),
 			Tr2GpuBuffer::CPU_WRITABLE ) );
-		m_lightBuffer->SetName( "Light buffer" );
+		view.lightBuffer->SetName( "Light buffer" );
 	}
 
-	auto lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
+	auto lightCount = std::min( view.lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( view.lightData.size() ) );
 
 	Vector4* data;
-	CR_RETURN_HR( m_lightBuffer->GetGpuBuffer( 0 )->MapForWriting( data, renderContext ) );
-	memcpy( data, m_lightData.data(), lightCount * sizeof( PerLightData ) );
-	CCP_STATS_ADD( lightsGathered, m_lightData.size() );
-	m_lightBuffer->GetGpuBuffer( 0 )->UnmapForWriting( renderContext );
+	CR_RETURN_HR( view.lightBuffer->GetGpuBuffer( 0 )->MapForWriting( data, renderContext ) );
+	memcpy( data, view.lightData.data(), lightCount * sizeof( PerLightData ) );
+	CCP_STATS_ADD( lightsGathered, view.lightData.size() );
+	view.lightBuffer->GetGpuBuffer( 0 )->UnmapForWriting( renderContext );
 	return S_OK;
 }
 
 ALResult Tr2LightManager::DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	if( !m_lightBuffer->IsValid() || !m_indexBuffer->IsValid() || !m_indexBufferCounter->IsValid() )
+	View& view = GetActiveView();
+	if( !view.lightBuffer->IsValid() || !view.indexBuffer->IsValid() || !view.indexBufferCounter->IsValid() )
 	{
 		return E_INVALIDCALL;
 	}
 
 	CR_RETURN_HR( UpdateLightBuffer( renderContext ) );
+
+	// the effect is shared by all the views, so it has to be pointed at the buffers of the active one
+	m_effect->SetParameter( BlueSharedString( "LightBuffer" ), view.lightBuffer );
+	m_effect->SetParameter( BlueSharedString( "LightIndices" ), view.indexBuffer );
+	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), view.indexBufferCounter );
 
 	PerFrameData perFrameData;
 	perFrameData.projInverse = Transpose( Tr2Renderer::GetInverseProjectionTransform() );
@@ -437,8 +536,8 @@ ALResult Tr2LightManager::DoUpdateLists( const Tr2TextureAL& depthMap, Tr2Render
 	perFrameData.height = uint32_t( renderContext.m_esm.GetRenderTargetHeight() );
 	perFrameData.tilesX = ( perFrameData.width + ( TILE_WIDTH - 1 ) ) / TILE_WIDTH;
 	perFrameData.tilesY = ( perFrameData.height + ( TILE_HEIGHT - 1 ) ) / TILE_HEIGHT;
-	perFrameData.lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
-	perFrameData.indexBufferSize = INDEX_BUFFER_SIZE;
+	perFrameData.lightCount = std::min( view.lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( view.lightData.size() ) );
+	perFrameData.indexBufferSize = view.indexBufferSize;
 
 
 	m_effect->SetParameter( BlueSharedString( "DepthMap" ), depthMap );
@@ -461,7 +560,7 @@ ALResult Tr2LightManager::DoUpdateLists( const Tr2TextureAL& depthMap, Tr2Render
 	return S_OK;
 }
 
-void Tr2LightManager::CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples )
+void Tr2LightManager::CreateShadowMapAtlas( std::vector<PerLightData>& lightDataList, uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples )
 {
 	bool everythingFit = false;
 	// 5 iterations are more than enough. With the current values we should actually only need at most 4 iterations.
@@ -485,7 +584,7 @@ void Tr2LightManager::CreateShadowMapAtlas( uint32_t numShadowCastingLights, con
 		for( uint32_t i = 0; i < numShadowCastingLights; i++ )
 		{
 			uint32_t lightIndex = lightTuples[i].lightIndex;
-			Tr2LightManager::PerLightData& lightData = m_lightData[lightIndex];
+			Tr2LightManager::PerLightData& lightData = lightDataList[lightIndex];
 
 			uint32_t size = ( (uint32_t)lightTuples[i].sizeAcross ) >> entryInverseScaleFactorLog2;
 			size = ClampUInt( size, m_ShadowMap.m_atlasSettings.entryMinSize, entryMaxSize );
@@ -541,27 +640,36 @@ Tr2RtShaderTableDescriptionAL* Tr2LightManager::GetRaytracingShaderTableDesc()
 
 void Tr2LightManager::ResolveLightData()
 {
-	m_lightData.clear();
-	for( auto& data : m_tlsLightData )
+	for( auto& view : m_views )
+	{
+		ResolveView( view );
+	}
+}
+
+void Tr2LightManager::ResolveView( View& view )
+{
+	std::vector<PerLightData>& lightData = view.lightData;
+	lightData.clear();
+	for( auto& data : view.tlsLightData )
 	{
 		if( !data.empty() )
 		{
-			m_lightData.insert( end( m_lightData ), begin( data ), end( data ) );
+			lightData.insert( end( lightData ), begin( data ), end( data ) );
 		}
 		data.clear();
 	}
 
-	m_shadowCastingLights.clear();
-	m_volumetricLights.clear();
+	view.shadowCastingLights.clear();
+	view.volumetricLights.clear();
 
 	// filter volumetric lights
 	std::vector<LightScreenSizeTuple> lightTuples;
 	{
-		for( uint32_t i = 0; i < m_lightData.size(); i++ )
+		for( uint32_t i = 0; i < lightData.size(); i++ )
 		{
-			if( ( m_lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
+			if( ( lightData[i].flags & FLAG_IS_VOLUMETRIC ) != 0 )
 			{
-				float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+				float sizeAcross = view.frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &lightData[i].position ) );
 				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? ( 1 << HIGH_QUALITY_ATLAS_SIZE_LOG2 ) : sizeAcross;
 				lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
 			}
@@ -573,21 +681,22 @@ void Tr2LightManager::ResolveLightData()
 		} );
 
 		// keep only the largest lights
-		uint32_t numVolumetricLights = min( MAX_NUM_VOLUMETRIC_LIGHTS, (uint32_t)lightTuples.size() );
-		m_volumetricLights.resize( numVolumetricLights );
+		uint32_t numVolumetricLights = min( view.maxVolumetricLights, (uint32_t)lightTuples.size() );
+		view.volumetricLights.resize( numVolumetricLights );
 		uint32_t i = 0;
 		for( ; i < numVolumetricLights; i++ )
 		{
-			m_volumetricLights[i] = lightTuples[i].lightIndex;
+			view.volumetricLights[i] = lightTuples[i].lightIndex;
 		}
 		for( ; i < lightTuples.size(); i++ )
 		{
-			Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
-			lightData.flags &= ~Tr2LightManager::FLAG_IS_VOLUMETRIC;
+			Tr2LightManager::PerLightData& light = lightData[lightTuples[i].lightIndex];
+			light.flags &= ~Tr2LightManager::FLAG_IS_VOLUMETRIC;
 		}
 	}
 
-	if( !g_useDynamicLightsShadows || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
+	// the shadow map atlas is only on the main view currently
+	if( view.reflection || !g_useDynamicLightsShadows || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_DISABLED )
 	{
 		return;
 	}
@@ -596,11 +705,11 @@ void Tr2LightManager::ResolveLightData()
 	uint32_t numShadowCastingLights = 0;
 	lightTuples.resize( 0 );
 	{
-		for( uint32_t i = 0; i < m_lightData.size(); i++ )
+		for( uint32_t i = 0; i < lightData.size(); i++ )
 		{
-			if( ( m_lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
+			if( ( lightData[i].flags & FLAG_CASTS_SHADOWS ) != 0 )
 			{
-				float sizeAcross = m_frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &m_lightData[i].position ) );
+				float sizeAcross = view.frustum.GetPixelSizeAccrossEst( reinterpret_cast<Vector4*>( &lightData[i].position ) );
 				sizeAcross = sizeAcross == std::numeric_limits<float>::max() ? ( 1 << HIGH_QUALITY_ATLAS_SIZE_LOG2 ) : sizeAcross;
 				lightTuples.push_back( LightScreenSizeTuple{ i, sizeAcross } );
 			}
@@ -612,49 +721,47 @@ void Tr2LightManager::ResolveLightData()
 		} );
 
 		// keep only the largest lights
-		numShadowCastingLights = min( MAX_NUM_SHADOWCASTING_LIGHTS, (uint32_t)lightTuples.size() );
-		m_shadowCastingLights.resize( numShadowCastingLights );
+		numShadowCastingLights = min( view.maxShadowCastingLights, (uint32_t)lightTuples.size() );
+		view.shadowCastingLights.resize( numShadowCastingLights );
 		uint32_t i = 0;
 		for( ; i < numShadowCastingLights; i++ )
 		{
-			m_shadowCastingLights[i] = lightTuples[i].lightIndex;
+			view.shadowCastingLights[i] = lightTuples[i].lightIndex;
 			if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_RAYTRACED )
 			{
-				Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
-				lightData.Raytracing.shadowMask = 1 << i;
+				Tr2LightManager::PerLightData& light = lightData[lightTuples[i].lightIndex];
+				light.Raytracing.shadowMask = 1 << i;
 			}
 		}
 		for( ; i < lightTuples.size(); i++ )
 		{
-			Tr2LightManager::PerLightData& lightData = m_lightData[lightTuples[i].lightIndex];
-			lightData.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
+			Tr2LightManager::PerLightData& light = lightData[lightTuples[i].lightIndex];
+			light.flags &= ~Tr2LightManager::FLAG_CASTS_SHADOWS;
 			if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_RAYTRACED )
 			{
-				lightData.Raytracing.shadowMask = 0;
+				light.Raytracing.shadowMask = 0;
 			}
 		}
 	}
 
 	if( m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_LOW || m_currentSpaceSceneShadowQuality == ShadowQuality::SHADOW_HIGH )
 	{
-		CreateShadowMapAtlas( numShadowCastingLights, lightTuples );
+		CreateShadowMapAtlas( lightData, numShadowCastingLights, lightTuples );
 	}
 }
 
 ALResult Tr2LightManager::UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	m_lightBufferVariable = m_lightBuffer;
-	m_indexBufferVariable = m_indexBuffer;
-
-	if( m_lightData.empty() )
+	View& view = GetActiveView();
+	if( view.lightData.empty() )
 	{
-		return ClearLightIndices( renderContext );
+		return ClearLightIndices( view, renderContext );
 	}
 
 	auto hr = DoUpdateLists( depthMap, renderContext );
 	if( FAILED( hr ) )
 	{
-		ClearLightIndices( renderContext );
+		ClearLightIndices( view, renderContext );
 	}
 
 	return hr;
@@ -680,17 +787,12 @@ bool Tr2LightManager::OnPrepareResources()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	m_lightBuffer->Create( LIGHT_BUFFER_SIZE, sizeof( PerLightData ), Tr2GpuBuffer::CPU_WRITABLE );
-	m_lightBuffer->SetName( "Light buffer" );
-	m_indexBuffer->Create( INDEX_BUFFER_SIZE, sizeof( uint32_t ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
-	m_indexBuffer->SetName( "Light indices" );
-	m_indexBufferCounter->Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer::GPU_WRITABLE );
-	ClearLightIndices( renderContext );
+	for( auto& view : m_views )
+	{
+		CreateViewBuffers( view, renderContext );
+	}
 	m_perFrameData.Create( sizeof( PerFrameData ), Tr2ConstantUsageAL::ONE_SHOT, nullptr, renderContext );
 
-	m_effect->SetParameter( BlueSharedString( "LightBuffer" ), m_lightBuffer );
-	m_effect->SetParameter( BlueSharedString( "LightIndices" ), m_indexBuffer );
-	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), m_indexBufferCounter );
 	m_effect->SetParameter( BlueSharedString( "DepthMap" ), Tr2TextureAL() );
 
 	return true;
@@ -709,17 +811,17 @@ Tr2TextureArray& Tr2LightManager::GetLightProfileArray()
 
 const std::vector<uint32_t>& Tr2LightManager::GetShadowCastingLights() const
 {
-	return m_shadowCastingLights;
+	return GetActiveView().shadowCastingLights;
 }
 
 const std::vector<uint32_t>& Tr2LightManager::GetVolumetricLights() const
 {
-	return m_volumetricLights;
+	return GetActiveView().volumetricLights;
 }
 
 const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index ) const
 {
-	return m_lightData[index];
+	return GetActiveView().lightData[index];
 }
 
 Tr2GpuResourcePool::Texture Tr2LightManager::GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool )
@@ -849,7 +951,8 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
-	if( m_shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
+	const View& view = GetActiveView();
+	if( view.shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
 	{
 		return {};
 	}
@@ -910,13 +1013,13 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 
 		data->resolution = Vector2( float( destTex->GetWidth() ), float( destTex->GetHeight() ) );
 
-		for( uint32_t j = 0; j < m_shadowCastingLights.size(); j++ )
+		for( uint32_t j = 0; j < view.shadowCastingLights.size(); j++ )
 		{
-			uint32_t lightIndex = m_shadowCastingLights[j];
-			PerLightData& lightData = m_lightData[lightIndex];
+			uint32_t lightIndex = view.shadowCastingLights[j];
+			const PerLightData& lightData = view.lightData[lightIndex];
 			data->dynamicLights[j] = lightData;
 		}
-		data->numDynamicLights = (uint32_t)m_shadowCastingLights.size();
+		data->numDynamicLights = (uint32_t)view.shadowCastingLights.size();
 
 		m_Raytracing.m_perFrameData.Unlock( renderContext );
 	}

@@ -3,8 +3,6 @@
 #pragma once
 
 #include "Tr2DeviceResource.h"
-#include <array>
-#include "TriFrustum.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -33,12 +31,6 @@ public:
 
 	bool IsValid();
 	bool HasData() const;
-	void InitRenderPass( Tr2RenderContext & renderContext );
-	void StartRenderFace( unsigned face, Tr2RenderContext& renderContext );
-	void EndRenderPass( Tr2RenderContext & renderContext );
-	Tr2TextureAL GetDepthBuffer( unsigned face );
-
-	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
 
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );
@@ -55,14 +47,16 @@ public:
 	uint8_t GetStartFace() const;
 	uint8_t GetEndFace() const;
 
-	const Tr2TextureAL& GetDepthBuffer( unsigned face ) const
-	{
-		return m_stencilMaps[face];
-	}
+	Matrix GetFaceViewTransform( unsigned face ) const;
+	Matrix GetFaceProjection( const Matrix& currentProjection ) const;
+	void UpdatePosition( const Vector3& viewPosition );
+	const Tr2TextureAL& GetCubeTarget() const;
+	// Filters the rendered faces and advances to the next faces.
+	void FinishFaces( const Vector3& viewDirection, Tr2RenderContext& renderContext );
 
 private:
 	void RunFilter();
-	void Filter( Tr2RenderContext & renderContext );
+	void Filter( const Vector3& viewDirection, Tr2RenderContext& renderContext );
 	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext & renderContext );
 	void DestroyRenderTargets();
 
@@ -72,8 +66,6 @@ private:
 	Vector3 m_position;
 	int m_intermediateSize;
 
-	std::array<Tr2RenderTargetPtr, 6> m_renderTargets;
-	std::array<Tr2TextureAL, 6> m_stencilMaps;
 	Tr2RenderTargetPtr m_renderTargetCube;
 
 	Tr2EffectPtr m_preFilterEffect;
@@ -84,7 +76,6 @@ private:
 
 	ITriTextureResPtr m_customSourceTexture;
 
-	bool m_prevCullInversion;
 	bool m_hdrOutput;
 	ReflectionProbeRenderFrequency m_renderFrequency;
 	uint8_t m_currentFrame;

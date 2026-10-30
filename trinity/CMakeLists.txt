@@ -832,6 +832,8 @@ set(_SOURCES
     Eve/EveRootTransform.cpp
     Eve/EveRootTransform.h
     Eve/EveRootTransform_Blue.cpp
+    Eve/EveSceneView.cpp
+    Eve/EveSceneView.h
     Eve/EveSpaceScene.cpp
     Eve/EveSpaceScene.h
     Eve/EveSpaceScene_Blue.cpp

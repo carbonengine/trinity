@@ -146,7 +146,6 @@ TriFrustum CreatePickingFrustum()
 }
 }
 
-
 struct ShadowReceiver
 {
 	float estimatedSize;
@@ -217,8 +216,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_projectionLast( IdentityMatrix() ),
 	m_jitteredProjection( IdentityMatrix() ),
 	m_reprojectionMatrix( IdentityMatrix() ),
-	m_jitter( 0.f, 0.f, 0.f, 0.f ),
-	m_upscalingAmount( 1.0f )
+	m_upscalingAmount( 1.0f ),
+	m_mipLodBias( 0.0f )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -471,26 +470,52 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 		if( frame == m_lastUpdateFrame )
 		{
-			// already updated this frame
-
-			TriFrustum frustum;
-			frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
-
-			m_updateContext.SetFrustum( frustum );
-			m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
-			m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
-			m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
-			m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
-
-			// update the combined postprocess attributes
+			// already updated this frame, but another render driver may have changed the
+			// post-process settings since
 			UpdatePostProcessAttributes();
 			return;
 		}
 		m_lastUpdateFrame = frame;
 	}
 
+	UpdateFrame( realTime, simTime );
+}
+
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Per-view part of the update: set the view's camera matrices and rendering parameters,
+//   apply the jittered projection to the renderer, and set the frustum and the detail
+//   thresholds that culling and LOD use. Called for every view before the frame's Update
+//   and before it is rendered. Only depends on the camera, so it is safe to call more than
+//   once for a view.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::SetCamera( const EveSceneView::Camera& camera )
+{
+	m_projection = camera.projection;
+	m_jitterMatrix = camera.jitterMatrix;
+	m_jitteredProjection = m_projection * m_jitterMatrix;
+	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( camera.view ) * m_viewLast * m_projectionLast;
+	m_upscalingAmount = camera.upscalingAmount;
+	m_mipLodBias = camera.mipLodBias;
+	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
+
+	m_updateContext.SetFrustum( camera.frustum );
+	m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / camera.upscalingAmount );
+	m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / camera.upscalingAmount );
+	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / camera.upscalingAmount );
+	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / camera.upscalingAmount );
+	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / camera.upscalingAmount );
+	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Per-frame part of the update: animates and updates all objects, using the camera set
+//   with SetCamera before it for LOD.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::UpdateFrame( Be::Time realTime, Be::Time simTime )
+{
 	if( !m_update )
 	{
 		return;
@@ -499,17 +524,6 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 	m_updateContext.SetTime( simTime );
 	m_updateContext.UpdateOrigin( m_ballpark );
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
-
-	TriFrustum frustum;
-	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), Tr2Renderer::GetViewport() );
-
-	m_updateContext.SetFrustum( frustum );
-	m_updateContext.SetHighDetailThreshold( g_eveSpaceSceneHighDetailThreshold / m_upscalingAmount );
-	m_updateContext.SetMediumDetailThreshold( g_eveSpaceSceneMediumDetailThreshold / m_upscalingAmount );
-	m_updateContext.SetLowDetailThreshold( g_eveSpaceSceneLowDetailThreshold / m_upscalingAmount );
-	m_updateContext.SetVisibilityThreshold( g_eveSpaceSceneVisibilityThreshold / m_upscalingAmount );
-	m_updateContext.SetLodFactor( g_eveSpaceSceneLODFactor / m_upscalingAmount );
-	m_updateContext.m_raytracingEnabled = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows;
 
 	{
 		TRINITY_STATS_ZONE( "UpdateBackgroundObjects" );
@@ -1309,71 +1323,43 @@ bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, const Tr2Texture
 	return true;
 }
 
-void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
+// --------------------------------------------------------------------------------------
+// Description:
+//   Lower the reflection intensity for the objects rendered into the reflection (so the
+//   reflections in the reflections don't get brighter and brighter). We cap it at 0.8
+//   for no good reason, just felt like a good number to cap it at.
+// --------------------------------------------------------------------------------------
+static float GetReflectionIntensityInReflections( float reflectionIntensity )
 {
-	m_projection = Tr2Renderer::GetProjectionTransform();
-
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	if( upscalingInfo.technique != Tr2UpscalingAL::NONE && upscalingInfo.temporal )
+	if( reflectionIntensity == 0.0f )
 	{
-		m_jitter.x = upscalingInfo.jitterX;
-		m_jitter.y = upscalingInfo.jitterY;
-		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
-		m_jitteredProjection = m_projection * m_jitterMatrix;
+		return reflectionIntensity;
 	}
-	else if( m_sceneDefaultPostProcess && m_sceneDefaultPostProcess->GetTaaIfAvailable() != nullptr )
-	{
-		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
-		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
-		const Vector2 samplingPatterns[] = { Vector2( .125f, -.375f ),
-											 Vector2( -.125f, .375f ),
-											 Vector2( .375f, .125f ),
-											 Vector2( -.375f, -.125f ) };
-
-		auto frame = renderContext.GetPrimaryRenderContext().GetRecordingFrameNumber();
-		auto samplingIndex = frame % ( sizeof( samplingPatterns ) / sizeof( samplingPatterns[0] ) );
-
-		m_jitter.x = 2.0f * samplingPatterns[samplingIndex].x / float( rtWidth );
-		m_jitter.y = 2.0f * samplingPatterns[samplingIndex].y / float( rtHeight );
-
-		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
-
-		m_jitterMatrix = TranslationMatrix( currJitterOffset );
-		m_jitteredProjection = m_projection * m_jitterMatrix;
-	}
-	else
-	{
-		m_jitterMatrix = IdentityMatrix();
-		m_jitteredProjection = m_projection;
-		m_jitter.x = m_jitter.y = 0.0f;
-	}
+	return min( 0.8f, 1.0f / ( reflectionIntensity * reflectionIntensity ) );
 }
-
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Set up rendering states, frustum and gather all batches.
+//   Work that does not depend on the view being rendered. Called once per frame, after
+//   the frame's Update and before the first BeginView.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& renderContext )
+void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 {
-	TRINITY_STATS_ZONE( __FUNCTION__ );
-
 	if( !m_display )
 	{
 		return;
 	}
 
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
-	if( m_visualizeMethod != VM_NONE )
-	{
-		if( !m_visualizerEffects[m_visualizeMethod].effect )
-		{
-			m_visualizerEffects[m_visualizeMethod].effect.CreateInstance();
-			const char* path = VISUALIZER_EFFECT_PATH[m_visualizeMethod];
-			m_visualizerEffects[m_visualizeMethod].effect->SetEffectPathName( path );
-		}
-	}
+	// Ensure that the camera attachment parent is updated to the current view transform,
+	// so that any attached objects are in the correct position for the frame.
+	m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
+	m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
+	m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
+
+	EnsureVisualizerEffect();
 
 	if( m_shLightingManager )
 	{
@@ -1385,102 +1371,164 @@ void EveSpaceScene::BeginRender( bool enableDistortion, Tr2RenderContext& render
 		m_dataTextureMgr->SetVariables();
 	}
 
-	Jitter( renderContext );
+	m_instancedMeshManager->CollectMeshes( *m_componentRegistry );
 
-	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
-	m_reprojectionMatrix = Inverse( m_projection ) * Inverse( Tr2Renderer::GetViewTransform() ) * m_viewLast * m_projectionLast;
+	ResolveLightingOverrides();
 
-	m_velocityMapDirty = false;
-
-	{
-		std::vector<IEveLightingOverride::OverrideInfo> overrides;
-		m_componentRegistry->ProcessComponents<IEveLightingOverride>( [&overrides]( IEveLightingOverride* component ) -> void {
-			overrides.push_back( component->GetOverrides() );
-		} );
-		sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
-			return a.priority > b.priority;
-		} );
-
-		IEveLightingOverride::OverrideInfo baseline;
-		baseline.priority = (PostProcessEnums::Priority)-1;
-		baseline.intensity = 1;
-		auto sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
-		baseline.value.sunIntensity = std::max( { sunColor.r, sunColor.g, sunColor.b } );
-		if( baseline.value.sunIntensity != 0 )
-		{
-			baseline.value.sunColor = sunColor * ( 1.f / baseline.value.sunIntensity );
-		}
-		else
-		{
-			baseline.value.sunColor = sunColor;
-		}
-		baseline.value.backgroundIntensity = m_nebulaIntensity;
-		baseline.value.reflectionIntensity = m_reflectionIntensity;
-		overrides.push_back( baseline );
-
-		auto over = SimplePriorityBlend( overrides );
-		m_currentSunColor = over.sunColor * over.sunIntensity;
-		m_currentNebulaIntensity = over.backgroundIntensity;
-		m_currentReflectionIntensity = over.reflectionIntensity;
-	}
-
+	// fog settings and the environment map accumulate over time, so they must only advance once per frame
 	if( m_volumetricsRenderer )
 	{
 		m_volumetricsRenderer->UpdateFogSettings( *m_componentRegistry, m_updateContext );
 		UpdateVariableStore();
 		m_volumetricsRenderer->UpdateFogEnvironmentMap( renderContext );
 	}
+}
 
-	renderContext.m_esm.BeginManagedRendering();
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Per-view setup: lighting values, states, and frustum dependent gathering of batches.
+//   Called for the main view and for each reflection face, after BeginFrame.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
+{
+	TRINITY_STATS_ZONE( __FUNCTION__ );
+
+	if( !m_display )
+	{
+		return;
+	}
+
+	renderContext.AddGpuMarker( __FUNCTION__ );
+
+	m_velocityMapDirty = false;
+	m_currentReflectionIntensity = view.IsReflection() ? GetReflectionIntensityInReflections( m_baseReflectionIntensity ) : m_baseReflectionIntensity;
+
+	// Set for every view rather than set and reset in pairs, so a view never inherits
+	// the previous view's value. It is read whenever the per-frame data is populated.
+	if( m_volumetricsRenderer )
+	{
+		m_volumetricsRenderer->SetIsReflectionProbe( view.IsReflection() );
+	}
+
+	renderContext.m_esm.BeginManagedRendering( view.cullMode );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 
-	GatherBatches( enableDistortion, renderContext );
+	GatherBatches( view, renderContext );
 
-	if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
+	// reflection views use the reflection shadow map, which is not raytraced
+	if( !view.IsReflection() && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
 	{
 		PrepareRaytracedShadows( renderContext );
 	}
 
 	UpdateVariableStore();
 
-	if( auto lightManager = Tr2LightManager::GetInstance() )
-	{
-		TRINITY_STATS_SCOPED_TIME( gatherDynamicLights );
-
-		lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
-		lightManager->Clear( renderContext );
-		lightManager->SetFrustum( m_updateContext.GetFrustum() );
-		lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
-
-		auto lightOwners = m_componentRegistry->GetComponents<ITr2LightOwner>();
-
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, lightOwners.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
-			for( auto i = range.begin(); i != range.end(); ++i )
-			{
-				ITr2LightOwnerPtr lightOwner = lightOwners[i];
-				lightOwner->GetLights( *lightManager );
-			}
-		} );
-
-		lightManager->ResolveLightData();
-	}
-
-	//  the lensflares need a special pre-render update
-	for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
-	{
-		( *it )->PrepareRender( m_updateContext.GetFrustum() );
-	}
+	PrepareLensflares();
 
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
 	ApplyPerFrameData( renderContext );
 }
 
+void EveSpaceScene::EnsureVisualizerEffect()
+{
+	if( m_visualizeMethod != VM_NONE && !m_visualizerEffects[m_visualizeMethod].effect )
+	{
+		m_visualizerEffects[m_visualizeMethod].effect.CreateInstance();
+		const char* path = VISUALIZER_EFFECT_PATH[m_visualizeMethod];
+		m_visualizerEffects[m_visualizeMethod].effect->SetEffectPathName( path );
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Blend the lighting overrides into the frame's sun color and nebula intensity, and
+//   into the base reflection intensity that BeginView derives each view's from.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::ResolveLightingOverrides()
+{
+	std::vector<IEveLightingOverride::OverrideInfo> overrides;
+	m_componentRegistry->ProcessComponents<IEveLightingOverride>( [&overrides]( IEveLightingOverride* component ) -> void {
+		overrides.push_back( component->GetOverrides() );
+	} );
+	sort( begin( overrides ), end( overrides ), []( const auto& a, const auto& b ) {
+		return a.priority > b.priority;
+	} );
+
+	IEveLightingOverride::OverrideInfo baseline;
+	baseline.priority = (PostProcessEnums::Priority)-1;
+	baseline.intensity = 1;
+	auto sunColor = m_useSunColorWithDynamicLights && g_eveSpaceSceneDynamicLighting ? m_sunColorWithDynamicLights : m_sunColor;
+	baseline.value.sunIntensity = std::max( { sunColor.r, sunColor.g, sunColor.b } );
+	if( baseline.value.sunIntensity != 0 )
+	{
+		baseline.value.sunColor = sunColor * ( 1.f / baseline.value.sunIntensity );
+	}
+	else
+	{
+		baseline.value.sunColor = sunColor;
+	}
+	baseline.value.backgroundIntensity = m_nebulaIntensity;
+	baseline.value.reflectionIntensity = m_reflectionIntensity;
+	overrides.push_back( baseline );
+
+	auto over = SimplePriorityBlend( overrides );
+	m_currentSunColor = over.sunColor * over.sunIntensity;
+	m_currentNebulaIntensity = over.backgroundIntensity;
+	m_baseReflectionIntensity = over.reflectionIntensity;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Gather the dynamic lights visible in the frustum of each of the light manager's views.
+//   The caller sets the views (SetViews) and calls this once per frame, after the
+//   main view's update and BeginFrame and before the first view is rendered.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::GatherDynamicLights( Tr2RenderContext& renderContext )
+{
+	auto lightManager = Tr2LightManager::GetInstance();
+	if( !m_display || !lightManager )
+	{
+		return;
+	}
+
+	TRINITY_STATS_SCOPED_TIME( gatherDynamicLights );
+
+	lightManager->SetShadowQuality( m_shadowQuality, renderContext.GetPrimaryRenderContextPointer()->GetRecordingFrameNumber() );
+	lightManager->Clear( renderContext );
+	lightManager->AdjustLightCutoff( m_updateContext.GetLodFactor() );
+
+	auto lightOwners = m_componentRegistry->GetComponents<ITr2LightOwner>();
+
+	Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, lightOwners.size(), 20 ), [&]( Tr2BlockedRange<size_t> range ) {
+		for( auto i = range.begin(); i != range.end(); ++i )
+		{
+			ITr2LightOwnerPtr lightOwner = lightOwners[i];
+			lightOwner->GetLights( *lightManager );
+		}
+	} );
+
+	lightManager->ResolveLightData();
+}
+
+void EveSpaceScene::PrepareLensflares()
+{
+	//  the lensflares need a special pre-render update
+	// visibility is updated for every view, after PrepareRender, so a reflection face
+	// doesn't use the main view's visibility or the previous view's transform
+	for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
+	{
+		( *it )->PrepareRender( m_updateContext.GetFrustum() );
+		( *it )->UpdateVisibility( m_updateContext );
+	}
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Gather all batches into the m_primaryBatches BatchMap.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext )
+void EveSpaceScene::GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -1490,33 +1538,72 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 	Tr2RenderableSortList transparentObjects;
 	const Matrix& identity = IdentityMatrix();
 
+	// Reflection views only get the dynamic objects once the probe is ready for them
+	const bool gatherObjects = view.sceneObjects || ( m_dynamicObjectReflectionEnabled && m_reflectionProbe && m_reflectionProbe->ReadyForDynamicObjectReflections() );
+
 	{
 		TRINITY_STATS_ZONE( "UpdateVisibility" );
-		Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), GrainSize( m_objects.size(), 32 ) ), [&]( Tr2BlockedRange<size_t> range ) {
-			for( size_t i = range.begin(); i != range.end(); ++i )
-			{
-				m_objects[i]->UpdateVisibility( m_updateContext, identity );
-			}
-		} );
+		if( gatherObjects )
+		{
+			Tr2ParallelFor( Tr2BlockedRange<size_t>( 0, m_objects.size(), GrainSize( m_objects.size(), 32 ) ), [&]( Tr2BlockedRange<size_t> range ) {
+				for( size_t i = range.begin(); i != range.end(); ++i )
+				{
+					m_objects[i]->UpdateVisibility( m_updateContext, identity );
+				}
+			} );
+		}
 
-		m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
-		m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
-		m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
+		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) {
+			obj->UpdateZOnlyVisibility( m_updateContext );
+		} );
+	}
+
+	if( view.sceneObjects )
+	{
+		GatherSceneObjectRenderables( allObjects, renderables, renderContext );
+	}
+	else if( gatherObjects )
+	{
+		GatherReflectionRenderables( renderables );
+	}
+
+	UpdateQuadRenderer( m_updateContext.GetFrustum(), allObjects, renderContext );
+	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_OPAQUE, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
+	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_ADDITIVE, m_primaryBatches[TRIBATCHTYPE_ADDITIVE] );
+
+	GetAllBatchesFromRenderables( renderables, transparentObjects, view.distortion, m_primaryBatches, view.reason );
+	PrepareTransparentBatch( transparentObjects, m_primaryBatches, view.reason );
+
+	if( gatherObjects )
+	{
+		// passing the reason filters out instanced meshes that should not be reflected
+		m_instancedMeshManager->GetBatches( m_updateContext.GetFrustum(), m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_primaryBatches[TRIBATCHTYPE_OPAQUE] }, { TRIBATCHTYPE_DECAL, *m_primaryBatches[TRIBATCHTYPE_DECAL] }, { TRIBATCHTYPE_ADDITIVE, *m_primaryBatches[TRIBATCHTYPE_ADDITIVE] }, { TRIBATCHTYPE_DEPTH, *m_primaryBatches[TRIBATCHTYPE_DEPTH] }, { TRIBATCHTYPE_DISTORTION, *m_primaryBatches[TRIBATCHTYPE_DISTORTION] } }, view.reason );
+
+		m_instancedMeshManager->ReportUsedScreenSizes();
+	}
+
+	FinalizeBatches( m_primaryBatches );
+
+	UpdateShLighting( allObjects );
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Gather the renderables of the scene's objects, camera attachments and static
+//   particles, updating the impostors on the way.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext )
+{
+	const Matrix& identity = IdentityMatrix();
+
+	{
+		TRINITY_STATS_ZONE( "UpdateVisibility" );
+
 		m_cameraAttachmentParent->UpdateVisibility( m_updateContext, identity );
 
 		Tr2ParallelDo( m_staticParticles.begin(), m_staticParticles.end(), [&]( EveSceneStaticParticles* staticParticles ) {
 			staticParticles->UpdateVisibility( m_updateContext );
 		} );
-
-		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) {
-			obj->UpdateZOnlyVisibility( m_updateContext );
-		} );
-
-		// until we have proper support for multiple lensflares we just do it in a list...
-		for( auto& lensflare : m_lensflares )
-		{
-			lensflare->UpdateVisibility( m_updateContext );
-		}
 	}
 
 	// objects will be batched up.
@@ -1558,23 +1645,23 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 	{
 		( *it )->GetRenderables( m_updateContext.GetFrustum(), renderables );
 	}
+}
 
-	UpdateQuadRenderer( m_updateContext.GetFrustum(), allObjects, renderContext );
-	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_OPAQUE, m_primaryBatches[TRIBATCHTYPE_OPAQUE] );
-	Tr2QuadRenderer::Instance()->GetBatches( TRIBATCHTYPE_ADDITIVE, m_primaryBatches[TRIBATCHTYPE_ADDITIVE] );
-
-	GetAllBatchesFromRenderables( renderables, transparentObjects, includeDistortions, m_primaryBatches );
-	PrepareTransparentBatch( transparentObjects, m_primaryBatches );
-
-	m_instancedMeshManager->CollectMeshes( *m_componentRegistry );
-
-	m_instancedMeshManager->GetBatches( m_updateContext.GetFrustum(), m_updateContext.GetInvLodFactor(), { { TRIBATCHTYPE_OPAQUE, *m_primaryBatches[TRIBATCHTYPE_OPAQUE] }, { TRIBATCHTYPE_DECAL, *m_primaryBatches[TRIBATCHTYPE_DECAL] }, { TRIBATCHTYPE_ADDITIVE, *m_primaryBatches[TRIBATCHTYPE_ADDITIVE] }, { TRIBATCHTYPE_DEPTH, *m_primaryBatches[TRIBATCHTYPE_DEPTH] }, { TRIBATCHTYPE_DISTORTION, *m_primaryBatches[TRIBATCHTYPE_DISTORTION] } } );
-
-	m_instancedMeshManager->ReportUsedScreenSizes();
-
-	FinalizeBatches( m_primaryBatches );
-
-	UpdateShLighting( allObjects );
+// --------------------------------------------------------------------------------------
+// Description:
+//   Gather the visible renderables from the component registry. Each renderable decides
+//   in GetBatches (via TR2RENDERREASON_REFLECTION / ShouldReflect) whether it shows up.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::GatherReflectionRenderables( std::vector<ITr2Renderable*>& renderables )
+{
+	renderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
+	m_componentRegistry->ProcessComponents<ITr2Renderable>(
+		[&]( ITr2Renderable* renderable ) -> void {
+			if( renderable->IsVisible( m_updateContext ) )
+			{
+				renderables.push_back( renderable );
+			}
+		} );
 }
 
 void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
@@ -1817,253 +1904,13 @@ Tr2QuadRenderer* EveSpaceScene::GetQuadRenderer() const
 	return Tr2QuadRenderer::Instance();
 }
 
-void EveSpaceScene::RenderReflectionPass( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
-{
-	if( !HasReflectionProbe() || !m_display )
-	{
-		return;
-	}
-
-	TRINITY_STATS_ZONE( __FUNCTION__ );
-
-	// set the current reflection
-	GPU_REGION( renderContext, "Reflection" );
-
-	m_volumetricsRenderer->SetIsReflectionProbe( true );
-	ON_BLOCK_EXIT( [&] {
-		m_volumetricsRenderer->SetIsReflectionProbe( false );
-	} );
-
-	// lower the reflection intensity for the objects rendered into the reflection
-	// (so the reflections in the reflections don't get brighter and brighter)
-	// we cap it at 0.8 for no good reason, just felt like a good number to cap the reflection intensity in the reflections
-	auto tmp = m_currentReflectionIntensity;
-	if( m_currentReflectionIntensity != 0.0f )
-	{
-		m_currentReflectionIntensity = min( 0.8f, 1.0f / ( m_currentReflectionIntensity * m_currentReflectionIntensity ) );
-	}
-
-	{
-		// Override DepthMap in the variable store
-		ITr2TextureProvider* bkDepthMapTexVar = nullptr;
-		CTr2TextureReference faceDepthBuffer;
-		if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
-		{
-			m_depthMapVar.GetValue( bkDepthMapTexVar );
-			if( bkDepthMapTexVar )
-			{
-				bkDepthMapTexVar->Lock();
-			}
-
-			m_depthMapVar = &faceDepthBuffer;
-		}
-		ON_BLOCK_EXIT( [&] {
-			if( m_depthMapVar.GetType() == TRIVARIABLE_TEXTURE_RES )
-			{
-				m_depthMapVar = bkDepthMapTexVar;
-				if( bkDepthMapTexVar )
-				{
-					bkDepthMapTexVar->Unlock();
-				}
-			}
-			UpdateVariableStore();
-		} );
-
-		auto bkProjection = m_projection;
-		ON_BLOCK_EXIT( [&] { m_projection = bkProjection; } );
-		auto bkJitter = m_jitterMatrix;
-		m_jitterMatrix = IdentityMatrix();
-		ON_BLOCK_EXIT( [&] { m_jitterMatrix = bkJitter; } );
-
-		// we change the frustum during reflection updates/renderings
-		// we need the old one for resetting
-		auto normalFrustum = m_updateContext.GetFrustum();
-
-
-		m_reflectionProbe->InitRenderPass( renderContext );
-
-		m_projection = Tr2Renderer::GetProjectionTransform();
-
-		for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
-		{
-			std::string contextName = "Reflection Face " + std::to_string( i );
-
-			GPU_REGION( renderContext, contextName.c_str() );
-			m_reflectionProbe->StartRenderFace( i, renderContext );
-
-			PopulatePerFramePSData( m_perFramePS, renderContext );
-			PopulatePerFrameVSData( m_perFrameVS, renderContext );
-
-			ApplyPerFrameData( renderContext );
-			*faceDepthBuffer.GetTexture() = m_reflectionProbe->GetDepthBuffer( i );
-
-			{
-				Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
-				Matrix planetViewMatrix = CreatePlanetViewMatrix( orgViewMatrix );
-				Tr2Renderer::SetViewTransform( planetViewMatrix );
-
-				TriFrustum frustum;
-				Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
-				frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &planetProjection, renderContext.m_esm.GetViewport() );
-				m_updateContext.SetFrustum( frustum );
-
-				for( auto& planet : m_planets )
-				{
-					planet->UpdatePlanetVisibility( m_updateContext, m_planetScale );
-				}
-
-				Tr2Renderer::SetViewTransform( orgViewMatrix );
-			}
-
-			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
-			m_updateContext.SetFrustum( currentFrustum );
-			// get the background reflection renderables from the component registry
-			RenderBackgroundPassObjects( {}, {}, renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION );
-
-			if( g_lensflaresInReflections && !m_lensflares.empty() && g_eveReflectionMode == EntityComponents::REFLECTION_SETTING_ULTRA )
-			{
-				GPU_REGION( renderContext, "Lens Flares in reflections" );
-				std::vector<ITr2Renderable*> visible;
-
-				// lensflares
-				for( auto it = m_lensflares.cbegin(); it != m_lensflares.cend(); ++it )
-				{
-					( *it )->GetRenderables( currentFrustum, visible );
-				}
-
-				if( !visible.empty() )
-				{
-					renderContext.SetReadOnlyDepth( true );
-					RenderRenderables( visible,
-									   m_secondaryBatches[TRIBATCHTYPE_ADDITIVE],
-									   TRIBATCHTYPE_ADDITIVE,
-									   Tr2EffectStateManager::RM_ALPHA_ADDITIVE,
-									   renderContext,
-									   Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-					renderContext.SetReadOnlyDepth( false );
-				}
-			}
-
-			if( m_dynamicObjectReflectionEnabled && m_reflectionProbe->ReadyForDynamicObjectReflections() )
-			{
-				std::vector<ITr2Renderable*> visibleRenderables;
-				visibleRenderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
-
-				// Filter out the non-visible reflection renderables based on the current frustum
-				m_componentRegistry->ProcessComponents<ITr2Renderable>(
-					[&]( ITr2Renderable* renderable ) -> void {
-						if( renderable->IsVisible( m_updateContext ) )
-						{
-							visibleRenderables.push_back( renderable );
-						}
-					} );
-
-				bool hasFog = m_volumetricsRenderer && m_volumetricsRenderer->HasFog();
-
-				ClearBatches( m_secondaryBatches );
-
-				bool hasInstancedBatches = m_instancedMeshManager->GetBatches(
-											   m_updateContext.GetFrustum(),
-											   m_updateContext.GetInvLodFactor(),
-											   {
-												   { TRIBATCHTYPE_OPAQUE, *m_secondaryBatches[TRIBATCHTYPE_OPAQUE] },
-												   { TRIBATCHTYPE_DECAL, *m_secondaryBatches[TRIBATCHTYPE_DECAL] },
-												   { TRIBATCHTYPE_ADDITIVE, *m_secondaryBatches[TRIBATCHTYPE_ADDITIVE] },
-												   { TRIBATCHTYPE_DEPTH, *m_secondaryBatches[TRIBATCHTYPE_DEPTH] },
-											   } ) > 0;
-
-				m_instancedMeshManager->ReportUsedScreenSizes();
-
-				if( hasFog || !visibleRenderables.empty() || hasInstancedBatches )
-				{
-					// clear planets
-					renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
-
-					// We are rendering in a left hand coordinate system (for cubemaps) so don't override the cullmode!!!
-					renderContext.m_esm.BeginManagedRendering( CullMode::CULLMODE_NONE );
-
-					Tr2RenderableSortList transparentObjects;
-					GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, false, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-
-					PrepareTransparentBatch( transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-					FinalizeBatches( m_secondaryBatches );
-
-					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
-					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_OPAQUE], BlueSharedString( "Depth" ) );
-					renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
-
-					EveSpaceScene::ShadowResources shadowResources;
-
-					if( m_enableShadows && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_reflectionShadowMap )
-					{
-						// We have so many ways to turn off shadows...
-						bool reallyHaveShadows = false;
-						if( m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED )
-						{
-							reallyHaveShadows = m_rtManager != nullptr;
-						}
-						else
-						{
-							reallyHaveShadows = m_cascadedShadowMap != nullptr;
-						}
-
-						if( reallyHaveShadows )
-						{
-							renderContext.m_esm.SetInvertedCullMode( false );
-							shadowResources = SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, currentFrustum, m_reflectionProbe->GetDepthBuffer( i ), gpuResourcePool, renderContext );
-							renderContext.m_esm.SetInvertedCullMode( true );
-						}
-					}
-
-					// TODO: raytraced shadows here
-					RegisterWithVariableStore( shadowResources, gpuResourcePool );
-
-					renderContext.SetReadOnlyDepth( true );
-
-					RenderOpaqueBatches( m_secondaryBatches, renderContext );
-
-					Tr2GpuResourcePool::Texture froxelFog;
-					if( m_volumetricsRenderer )
-					{
-						uint32_t width = Tr2Renderer::GetViewport().width;
-						uint32_t height = Tr2Renderer::GetViewport().height;
-						Vector3d origin = m_updateContext.GetOrigin();
-						froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, width, height, m_sunData.DirWorld, m_currentSunColor, origin, Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
-					}
-					GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
-
-					RenderTransparentBatches( m_secondaryBatches, renderContext );
-					renderContext.SetReadOnlyDepth( false );
-
-					GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", Tr2TextureAL{} );
-					RegisterWithVariableStore( ShadowResources{}, gpuResourcePool );
-
-					ClearBatches( m_secondaryBatches );
-					renderContext.m_esm.EndManagedRendering();
-				}
-			}
-		}
-
-		m_reflectionProbe->EndRenderPass( renderContext );
-
-		m_updateContext.SetFrustum( normalFrustum );
-
-		// reset the reflection intensity
-		m_currentReflectionIntensity = tmp;
-	}
-
-	PopulatePerFramePSData( m_perFramePS, renderContext );
-	PopulatePerFrameVSData( m_perFrameVS, renderContext );
-	ApplyPerFrameData( renderContext );
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render the background scene with all objects, and generate reflection map
 // Returns:
 //   boolean indicating whether background distortion is required.
 // --------------------------------------------------------------------------------------
-bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
+bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2122,7 +1969,7 @@ bool EveSpaceScene::RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr
 		else
 		{
 			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
-			hasBackgroundDistortionBatches = RenderBackgroundPassObjects( depthMap, distortionMap, renderContext, BACKGROUND_RENDER_COLOR );
+			hasBackgroundDistortionBatches = RenderBackgroundPassObjects( depthMap, distortionMap, renderContext, view.IsReflection() ? BACKGROUND_RENDER_REFLECTION : BACKGROUND_RENDER_COLOR );
 		}
 		if( !m_planets.empty() )
 		{
@@ -2259,7 +2106,7 @@ bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, c
 // Description:
 //   Render opaque objects to populate a readable depth stencil.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
+void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2268,7 +2115,7 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 		return;
 	}
 
-	renderContext.m_esm.BeginManagedRendering();
+	renderContext.m_esm.BeginManagedRendering( view.cullMode );
 
 	{ // Update mesh morphs
 		auto& meshMorphs = m_componentRegistry->GetComponents<ITr2MeshMorph>();
@@ -2676,11 +2523,38 @@ void EveSpaceScene::FinishRenderingShadowMapForLights( Tr2RenderContext& renderC
 	ApplyPerFrameData( renderContext );
 }
 
-EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+// --------------------------------------------------------------------------------------
+// Description:
+//   Reflection views get cascaded shadows from the reflection shadow map, whenever the
+//   main view has shadows.
+// --------------------------------------------------------------------------------------
+EveSpaceScene::ShadowResources EveSpaceScene::RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+{
+	// We have so many ways to turn off shadows...
+	const bool haveShadows = m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED ? m_rtManager != nullptr : m_cascadedShadowMap != nullptr;
+	if( !m_enableShadows || !m_reflectionShadowMap || !haveShadows || m_shadowQuality == ShadowQuality::SHADOW_DISABLED )
+	{
+		return {};
+	}
+
+	// the shadow map is not rendered into the cubemap, so it must not use the inverted cull mode
+	bool prevCullInversion = renderContext.m_esm.IsCullModeInverted();
+	renderContext.m_esm.SetInvertedCullMode( false );
+	ShadowResources result = SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, m_updateContext.GetFrustum(), depthMap, gpuResourcePool, renderContext );
+	renderContext.m_esm.SetInvertedCullMode( prevCullInversion );
+	return result;
+}
+
+EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
 {
 	if( !m_display || !m_enableShadows )
 	{
 		return {};
+	}
+
+	if( view.IsReflection() )
+	{
+		return RenderReflectionShadows( depthMap, gpuResourcePool, renderContext );
 	}
 
 	EveSpaceScene::ShadowResources result;
@@ -2754,13 +2628,14 @@ bool EveSpaceScene::RenderMainPass(
 	const Tr2TextureAL& velocityMap,
 	const Tr2TextureAL& opaqueColorMap,
 	Tr2GpuResourcePool& gpuResourcePool,
+	const EveSceneView::ViewInfo& view,
 	Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	bool hasForegroundDistortionBatches = false;
 
-	renderContext.m_esm.BeginManagedRendering();
+	renderContext.m_esm.BeginManagedRendering( view.cullMode );
 
 	if( !m_display )
 	{
@@ -2810,14 +2685,31 @@ bool EveSpaceScene::RenderMainPass(
 		GlobalStore().RegisterVariable( "EveSpaceSceneOpaqueMap", opaqueColorMap );
 	}
 
-	m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
+	if( view.subsurfaceScattering )
+	{
+		m_sssss->SetupScreenSpaceSubSurfaceScattering( renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE], colorMap, opaqueColorMap, depthMap, gpuResourcePool );
+	}
 
 	Tr2Renderer::SetProjectionTransform( m_jitteredProjection );
 
 	PopulateAndApplyPerFrameData( renderContext );
-	auto [froxelFog, volumetricSlices] = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
-	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", volumetricSlices );
-	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFog );
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> froxelFogTextures;
+
+	switch( view.reason )
+	{
+	case TR2RENDERREASON_NORMAL:
+		froxelFogTextures = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
+		break;
+	case TR2RENDERREASON_REFLECTION:
+		froxelFogTextures = RenderReflectionVolumetrics( depthMap, gpuResourcePool, renderContext );
+		break;
+	case TR2RENDERREASON_VOLUMETRIC:
+		froxelFogTextures = { Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ), Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
+		break;
+	}
+
+	GlobalStore().RegisterVariable( "EveSceneFroxelFogMap", froxelFogTextures.first );
+	GlobalStore().RegisterVariable( "EveSceneFogVolumeMap", froxelFogTextures.second );
 
 	RenderTransparentBatches( m_primaryBatches, renderContext );
 	if( distortionMap.IsValid() )
@@ -2826,7 +2718,7 @@ bool EveSpaceScene::RenderMainPass(
 	}
 
 	//GPU particles
-	if( GetGpuParticleSystem() )
+	if( view.gpuParticles && GetGpuParticleSystem() )
 	{
 		GetGpuParticleSystem()->Render( renderContext );
 	}
@@ -2838,6 +2730,26 @@ bool EveSpaceScene::RenderMainPass(
 
 	renderContext.m_esm.EndManagedRendering();
 	return hasForegroundDistortionBatches;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Reflection views use the reflection fog, so they don't disturb the main view's fog
+//   history.
+// --------------------------------------------------------------------------------------
+std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+{
+	Tr2GpuResourcePool::Texture froxelFog;
+	if( m_volumetricsRenderer )
+	{
+		froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, depthMap.GetWidth(), depthMap.GetHeight(), m_sunData.DirWorld, m_currentSunColor, m_updateContext.GetOrigin(), Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+	}
+	else
+	{
+		froxelFog = Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool );
+	}
+
+	return { froxelFog, Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
 }
 
 void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
@@ -2853,7 +2765,7 @@ void EveSpaceScene::RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, 
 // Description:
 //   Render lensflares. Clear primary batches and frame dependant object lists.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
+void EveSpaceScene::EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2866,7 +2778,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 
 	Tr2QuadRenderer::Instance()->DoneRendering( renderContext );
 
-	renderContext.m_esm.BeginManagedRendering();
+	renderContext.m_esm.BeginManagedRendering( view.cullMode );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 
 	PopulatePerFramePSData( m_perFramePS, renderContext );
@@ -2898,7 +2810,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	}
 
 	// lensflares
-	if( !m_lensflares.empty() )
+	if( !m_lensflares.empty() && view.lensflares )
 	{
 		GPU_REGION( renderContext, "Lens Flares" );
 		// lensflares
@@ -2914,7 +2826,8 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 							   m_secondaryBatches[TRIBATCHTYPE_ADDITIVE],
 							   TRIBATCHTYPE_ADDITIVE,
 							   Tr2EffectStateManager::RM_ALPHA_ADDITIVE,
-							   renderContext );
+							   renderContext,
+							   view.reason );
 			renderContext.SetReadOnlyDepth( false );
 		}
 	}
@@ -2925,8 +2838,11 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	ClearBatches( m_primaryBatches );
 
 	// Store the view transform from this frame
-	m_viewLast = Tr2Renderer::GetViewTransform();
-	m_projectionLast = m_projection;
+	if( view.temporal )
+	{
+		m_viewLast = Tr2Renderer::GetViewTransform();
+		m_projectionLast = m_projection;
+	}
 
 	ClearVariableStore();
 
@@ -3177,10 +3093,10 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
 
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.Upscaling = 1.0f;
+	data.Upscaling = m_upscalingAmount;
 
 	data.FrameIndex = (uint32_t)Tr2Renderer::GetCurrentFrameCounter();
-	data.Jittering = m_jitter != Vector4( 0, 0, 0, 0 );
+	data.Jittering = LengthSq( m_jitterMatrix.GetTranslation() ) > 0.0f ? 1 : 0;
 
 	data.ShadowQuality = 1 << (uint32_t)m_shadowQuality;
 
@@ -3205,24 +3121,8 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.ProjectionToView.x = projection._43;
 	data.ProjectionToView.y = projection._33;
 
-	data.SceneMipLodBias = 0.0f;
-	m_upscalingAmount = 1.0f;
-
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
-	if( upscalingInfo.technique != Tr2UpscalingAL::NONE )
-	{
-		m_upscalingAmount = upscalingInfo.upscalingAmount;
-		data.SceneMipLodBias = upscalingInfo.mipLevelBias;
-		if( !upscalingInfo.temporal && m_sceneDefaultPostProcess )
-		{
-			data.SceneMipLodBias += m_sceneDefaultPostProcess->GetMipLodBias();
-		}
-		data.Upscaling = m_upscalingAmount;
-	}
-	else if( m_sceneDefaultPostProcess )
-	{
-		data.SceneMipLodBias = m_sceneDefaultPostProcess->GetMipLodBias();
-	}
+	data.SceneMipLodBias = m_mipLodBias;
+	data.Upscaling = m_upscalingAmount;
 
 	if( shadowMap )
 	{
@@ -3263,6 +3163,11 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* 
 	data.VolumetricSlices[3] = 1000000;
 
 	m_volumetricsRenderer->PopulatePerFrameData( data.FroxelFogData );
+}
+
+Tr2ReflectionProbe* EveSpaceScene::GetReflectionProbe() const
+{
+	return m_reflectionProbe;
 }
 
 bool EveSpaceScene::Initialize()

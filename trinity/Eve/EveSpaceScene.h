@@ -27,6 +27,7 @@
 #include "../Tr2VolumetricsRenderer.h"
 #include "../Tr2RuntimeGpuBuffer.h"
 #include "EvePicking.h"
+#include "EveSceneView.h"
 
 #include <ITriFunction.h>
 #include <IEveBallpark.h>
@@ -97,7 +98,6 @@ BLUE_DECLARE_VECTOR( Tr2PostProcessAttributes );
 class EveInstancedMeshManager;
 
 
-
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
 	public IInitialize,
@@ -132,7 +132,7 @@ public:
 		Tr2GpuResourcePool::Texture pointLightShadowDepth;
 	};
 
-	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	ShadowResources RenderShadows( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2GpuResourcePool& gpuResourcePool, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	bool RenderMainPass(
 		const Tr2TextureAL& colorMap,
 		const Tr2TextureAL& depthMap,
@@ -140,20 +140,24 @@ public:
 		const Tr2TextureAL& velocityMap,
 		const Tr2TextureAL& opaqueColorMap,
 		Tr2GpuResourcePool& gpuResourcePool,
+		const EveSceneView::ViewInfo& view,
 		Tr2RenderContext& renderContext );
 	void RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
+	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
-	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext );
-	void RenderReflectionPass( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );
-	void BeginRender( bool enableDistortion, Tr2RenderContext& renderContext );
-	void EndRender( Tr2RenderContext & renderContext );
+	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
+	void BeginFrame( Tr2RenderContext & renderContext );
+	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
+	void EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
-	void GatherBatches( bool includeDistortions, Tr2RenderContext& renderContext );
+	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
+
+	void SetCamera( const EveSceneView::Camera& camera );
+	Tr2ReflectionProbe* GetReflectionProbe() const;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -211,6 +215,11 @@ public:
 		return m_objects;
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
+	// the scene's own post process, which the render driver sets the TAA on
+	const Tr2PostProcess2Ptr& GetDefaultPostProcess() const
+	{
+		return m_sceneDefaultPostProcess;
+	}
 
 	Matrix GetReprojectionMatrix() const;
 
@@ -337,6 +346,7 @@ public:
 		Vector4 sphere = Vector4( 0, 0, 0, 0 );
 		float pixelSize = 0.0;
 	};
+
 	EvePlanetPerObjData m_planetPerObjData;
 	Tr2ShaderBufferPtr m_planetPerObjBuffer;
 
@@ -384,8 +394,6 @@ public:
 	void ReregisterEntities();
 	void ClearComponentRegistry();
 
-	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
 
@@ -415,8 +423,8 @@ protected:
 	EveUpdateContext m_updateContext;
 	PEveDistanceFieldVector m_distanceFields;
 
-	// Primary batches, gathered in BeginRender and
-	// cleared in EndRender
+	// Primary batches, gathered in BeginView and
+	// cleared in EndView
 	BatchMap m_primaryBatches;
 	// Secondary batches used to render planets, stars, shadowed objects
 	// and so forth. Should be finalized and cleared each time they're used.
@@ -491,6 +499,9 @@ protected:
 
 	Color m_currentSunColor;
 	float m_currentNebulaIntensity;
+
+	// Base value for the reflection intensity, derived from the lighting overrides and used to derive the per-view values in BeginView.
+	float m_baseReflectionIntensity = 1.0f;
 
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
@@ -597,6 +608,18 @@ protected:
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
 
+	void UpdateFrame( Be::Time realTime, Be::Time simTime );
+	void EnsureVisualizerEffect();
+	void ResolveLightingOverrides();
+	void GatherDynamicLights( Tr2RenderContext & renderContext );
+	void PrepareLensflares();
+	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*> & allObjects, std::vector<ITr2Renderable*> & renderables, Tr2RenderContext & renderContext );
+	void GatherReflectionRenderables( std::vector<ITr2Renderable*> & renderables );
+	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+
 	void UpdateShLighting(
 		const std::vector<IEveSpaceObject2*>& objectsNotReceivingShadow );
 
@@ -625,9 +648,7 @@ protected:
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
 	float m_upscalingAmount;
-	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
-
-	void Jitter( Tr2RenderContext & renderContext );
+	float m_mipLodBias;
 
 	Tr2ImpostorManagerPtr m_impostorManager;
 
