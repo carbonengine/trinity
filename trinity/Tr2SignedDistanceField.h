@@ -42,6 +42,9 @@ public:
 	[[nodiscard]] float GetValue( size_t index ) const;
 	[[nodiscard]] float GetValue( int32_t x, int32_t y, int32_t z ) const;
 
+	bool Min( const Tr2SignedDistanceField& other );
+	bool Max( const Tr2SignedDistanceField& other );
+
 	[[nodiscard]] static bool IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type );
 
 private:

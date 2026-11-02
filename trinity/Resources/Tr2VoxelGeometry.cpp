@@ -21,8 +21,9 @@ public:
 class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	VoxelBuilder( Tr2VoxelData::PayloadSnapshot shape, float cellSize ) :
+	VoxelBuilder( Tr2VoxelData::PayloadSnapshot shape, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
 		m_sdf( std::move( shape ) ),
+		m_occupancy( std::move( occupancy ) ),
 		m_cellSize( cellSize ),
 		m_dimensions( m_sdf.m_voxelData->GetDimensions() )
 	{
@@ -71,19 +72,42 @@ public:
 
 protected:
 
+	bool HasOccupancyChannel() const
+	{
+		return m_occupancy.m_voxelData != nullptr && m_occupancy.m_type.type == Tr2VoxelDataType::Boolean && m_occupancy.m_type.elementCount == 1;
+	}
+
+	Tr2SignedDistanceField& GetSignedDistanceField( const std::atomic<bool>& cancel )
+	{
+		if( m_signedDistanceField )
+		{
+			return *m_signedDistanceField;
+		}
+		m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_sdf, Tr2SignedDistanceField::LinearTransform{}, cancel );
+
+		if ( HasOccupancyChannel() )
+		{
+			Tr2SignedDistanceField occupancySdf( m_occupancy, cancel );
+			m_signedDistanceField->Max( occupancySdf );
+		}
+		return *m_signedDistanceField;
+	}
+
 	// Returns vertex and index buffer views, and the bounds of the generated vertices in bounds
 	virtual std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) = 0;
 
 	const Tr2VoxelData::PayloadSnapshot m_sdf;
+	const Tr2VoxelData::PayloadSnapshot m_occupancy;
 	const float m_cellSize;
 	const Tr2VoxelData::Dimensions m_dimensions;
+	std::unique_ptr<Tr2SignedDistanceField> m_signedDistanceField;
 };
 
 class SimpleBuilder : public VoxelBuilder
 {
 public:
-	SimpleBuilder( Tr2VoxelData::PayloadSnapshot shape, float cellSize ) :
-		VoxelBuilder( std::move( shape ), cellSize )
+	SimpleBuilder( Tr2VoxelData::PayloadSnapshot shape, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize ) :
+		VoxelBuilder( std::move( shape ), std::move( occupancy ), cellSize )
 	{
 	}
 
@@ -134,7 +158,7 @@ protected:
 		const auto depth = Tr2VoxelData::CoordType( m_dimensions.depth );
 		const Vector3 origin = Vector3( float( width ), float( height ), float( depth ) ) * -0.5f;
 
-		auto sdf = Tr2SignedDistanceField( m_sdf, {}, cancel );
+		auto& sdf = GetSignedDistanceField( cancel );
 
 		auto isOccupied = [&]( const Tr2VoxelData::Coord& coord ) {
 			if( coord.x < 0 || coord.y < 0 || coord.z < 0 || coord.x >= width || coord.y >= height || coord.z >= depth )
@@ -225,8 +249,8 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision ) :
-		VoxelBuilder( std::move( sdf ), cellSize ),
+	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision ) :
+		VoxelBuilder( std::move( sdf ), std::move( occupancy ), cellSize ),
 		m_subdivision( subdivision )
 	{
 	}
@@ -555,8 +579,8 @@ private:
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
-		DualGridBuilder( std::move( sdf ), cellSize, subdivision ),
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision ),
 		m_relaxIterations( relaxIterations )
 	{
 	}
@@ -578,7 +602,7 @@ protected:
 		}
 		const int32_t scale = GetScale();
 
-		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
+		auto& field = GetSignedDistanceField( cancel );
 		if( cancel )
 		{
 			return {};
@@ -773,8 +797,8 @@ private:
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision ) :
-		DualGridBuilder( std::move( sdf ), cellSize, subdivision )
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision )
 	{
 	}
 
@@ -796,7 +820,7 @@ protected:
 		}
 		const int32_t scale = GetScale();
 
-		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
+		auto& field = GetSignedDistanceField( cancel );
 		if( cancel )
 		{
 			return {};
@@ -1210,6 +1234,21 @@ void Tr2VoxelGeometry::SetShapeChannelIndex( uint32_t channelIndex )
 	Rebuild();
 }
 
+uint32_t Tr2VoxelGeometry::GetOccupancyChannelIndex() const
+{
+	return m_occupancyChannelIndex;
+}
+
+void Tr2VoxelGeometry::SetOccupancyChannelIndex( uint32_t channelIndex )
+{
+	if( m_occupancyChannelIndex == channelIndex )
+	{
+		return;
+	}
+	m_occupancyChannelIndex = channelIndex;
+	Rebuild();
+}
+
 float Tr2VoxelGeometry::GetCellSize() const
 {
 	return m_cellSize;
@@ -1296,14 +1335,20 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 		return std::make_unique<EmptyBuilder>();
 	}
 
+	auto occupancySnapshot = m_voxelData->GetPayloadSnapshot( m_occupancyChannelIndex );
+	if( !occupancySnapshot.m_data )
+	{
+		return std::make_unique<EmptyBuilder>();
+	}
+
 	switch( m_method )
 	{
 	case Method::Simple:
-		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), m_cellSize );
+		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision );
+		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}

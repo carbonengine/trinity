@@ -70,6 +70,32 @@ float Tr2SignedDistanceField::GetValue( int32_t x, int32_t y, int32_t z ) const
 	return m_sdf[LinearIndex( m_dimensions, coord )];
 }
 
+bool Tr2SignedDistanceField::Min( const Tr2SignedDistanceField& other )
+{
+	if( m_sdf.size() != other.m_sdf.size() )
+	{
+		return false;
+	}
+	for( size_t i = 0; i < m_sdf.size(); ++i )
+	{
+		m_sdf[i] = std::min( m_sdf[i], other.m_sdf[i] );
+	}
+	return true;
+}
+
+bool Tr2SignedDistanceField::Max( const Tr2SignedDistanceField& other )
+{
+	if( m_sdf.size() != other.m_sdf.size() )
+	{
+		return false;
+	}
+	for( size_t i = 0; i < m_sdf.size(); ++i )
+	{
+		m_sdf[i] = std::max( m_sdf[i], other.m_sdf[i] );
+	}
+	return true;
+}
+
 bool Tr2SignedDistanceField::IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type )
 {
 	return type.elementCount == 1 && ( type.type == Tr2VoxelDataType::Float || ( type.type == Tr2VoxelDataType::Int8 && type.normalized ) );

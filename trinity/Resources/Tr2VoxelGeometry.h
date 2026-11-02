@@ -28,6 +28,9 @@ public:
 	uint32_t GetShapeChannelIndex() const;
 	void SetShapeChannelIndex( uint32_t channelIndex );
 
+	uint32_t GetOccupancyChannelIndex() const;
+	void SetOccupancyChannelIndex( uint32_t channelIndex );
+
 	float GetCellSize() const;
 	void SetCellSize( float cellSize );
 
@@ -50,6 +53,7 @@ private:
 
 	Tr2VoxelDataPtr m_voxelData;
 	uint32_t m_shapeChannelIndex = 0;
+	uint32_t m_occupancyChannelIndex = 0;
 	float m_cellSize = 1.f;
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
