@@ -46,6 +46,16 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing" )
 		MAP_ATTRIBUTE( "method", m_method, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "method", GetMethod, SetMethod, "Method used for generating the geometry (Simple or SurfaceNets)" )
+		MAP_ATTRIBUTE( "cutSeed", m_cutSeed, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "cutSeed", GetCutSeed, SetCutSeed, "Seed of the facet and cleave placement (SurfaceNets and DualContouring)" )
+		MAP_ATTRIBUTE( "facetSpacing", m_facetSpacing, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "facetSpacing", GetFacetSpacing, SetFacetSpacing, "Distance between facet seeds, in cells" )
+		MAP_ATTRIBUTE( "facetDepth", m_facetDepth, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "facetDepth", GetFacetDepth, SetFacetDepth, "How far below the surface facet planes sink, in cells; 0 disables facets" )
+		MAP_ATTRIBUTE( "facetMaxCut", m_facetMaxCut, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "facetMaxCut", GetFacetMaxCut, SetFacetMaxCut, "Deepest cut a facet makes, in cells" )
+		MAP_ATTRIBUTE( "cleaveDepth", m_cleaveDepth, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "cleaveDepth", GetCleaveDepth, SetCleaveDepth, "Deepest cleave cap, in cells; 0 disables cleaves" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"__init__",

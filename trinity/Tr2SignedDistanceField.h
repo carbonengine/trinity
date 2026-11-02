@@ -42,6 +42,23 @@ public:
 	[[nodiscard]] float GetValue( size_t index ) const;
 	[[nodiscard]] float GetValue( int32_t x, int32_t y, int32_t z ) const;
 
+	/**
+	 * @brief Minmod gradient at a grid sample: per axis the one-sided difference of smaller magnitude, zero where they
+	 * disagree in sign. Unlike a central difference it does not read across an edge, so it keeps sharp features.
+	 */
+	[[nodiscard]] Vector3 GetGradient( int32_t x, int32_t y, int32_t z ) const;
+
+	/**
+	 * @brief Trilinear interpolation of the field at a point in grid cell space (cell centres at integer coordinates).
+	 * Samples outside the grid read as deep empty.
+	 */
+	[[nodiscard]] float Sample( const Vector3& point ) const;
+
+	/**
+	 * @brief Trilinear interpolation of the sample gradients (GetGradient) at a point in grid cell space.
+	 */
+	[[nodiscard]] Vector3 SampleGradient( const Vector3& point ) const;
+
 	bool Min( const Tr2SignedDistanceField& other );
 	bool Max( const Tr2SignedDistanceField& other );
 
@@ -60,6 +77,7 @@ private:
 	static constexpr float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
 
 	Int3 GetGridSize() const;
+	static float GetCornerWeight( const Vector3& t, int32_t corner ); // trilinear weight of a cube corner (bits x, y, z)
 	std::vector<float> ComputeSdf( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
 	std::vector<float> CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
 };

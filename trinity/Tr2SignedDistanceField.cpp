@@ -70,6 +70,68 @@ float Tr2SignedDistanceField::GetValue( int32_t x, int32_t y, int32_t z ) const
 	return m_sdf[LinearIndex( m_dimensions, coord )];
 }
 
+Vector3 Tr2SignedDistanceField::GetGradient( int32_t x, int32_t y, int32_t z ) const
+{
+	const Int3 sample = { x, y, z };
+	const float value = GetValue( x, y, z );
+	Vector3 gradient;
+	for( int axis = 0; axis < 3; ++axis )
+	{
+		Int3 lo = sample;
+		Int3 hi = sample;
+		--lo[axis];
+		++hi[axis];
+		const float forward = GetValue( hi[0], hi[1], hi[2] ) - value;
+		const float backward = value - GetValue( lo[0], lo[1], lo[2] );
+		if( forward * backward <= 0 )
+		{
+			gradient[axis] = 0;
+		}
+		else
+		{
+			gradient[axis] = std::abs( forward ) < std::abs( backward ) ? forward : backward;
+		}
+	}
+	return gradient;
+}
+
+float Tr2SignedDistanceField::Sample( const Vector3& point ) const
+{
+	const Vector3 base( std::floor( point.x ), std::floor( point.y ), std::floor( point.z ) );
+	const Vector3 t = point - base;
+	float value = 0;
+	for( int32_t corner = 0; corner < 8; ++corner )
+	{
+		const float weight = GetCornerWeight( t, corner );
+		if( weight != 0 )
+		{
+			value += weight * GetValue( int32_t( base.x ) + ( corner & 1 ), int32_t( base.y ) + ( ( corner >> 1 ) & 1 ), int32_t( base.z ) + ( corner >> 2 ) );
+		}
+	}
+	return value;
+}
+
+Vector3 Tr2SignedDistanceField::SampleGradient( const Vector3& point ) const
+{
+	const Vector3 base( std::floor( point.x ), std::floor( point.y ), std::floor( point.z ) );
+	const Vector3 t = point - base;
+	Vector3 gradient( 0.f, 0.f, 0.f );
+	for( int32_t corner = 0; corner < 8; ++corner )
+	{
+		const float weight = GetCornerWeight( t, corner );
+		if( weight != 0 )
+		{
+			gradient += GetGradient( int32_t( base.x ) + ( corner & 1 ), int32_t( base.y ) + ( ( corner >> 1 ) & 1 ), int32_t( base.z ) + ( corner >> 2 ) ) * weight;
+		}
+	}
+	return gradient;
+}
+
+float Tr2SignedDistanceField::GetCornerWeight( const Vector3& t, int32_t corner )
+{
+	return ( corner & 1 ? t.x : 1 - t.x ) * ( ( corner >> 1 ) & 1 ? t.y : 1 - t.y ) * ( corner >> 2 ? t.z : 1 - t.z );
+}
+
 bool Tr2SignedDistanceField::Min( const Tr2SignedDistanceField& other )
 {
 	if( m_sdf.size() != other.m_sdf.size() )

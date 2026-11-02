@@ -43,6 +43,21 @@ public:
 	uint32_t GetMethod() const;
 	void SetMethod( Method method );
 
+	uint32_t GetCutSeed() const;
+	void SetCutSeed( uint32_t cutSeed );
+
+	float GetFacetSpacing() const;
+	void SetFacetSpacing( float facetSpacing );
+
+	float GetFacetDepth() const;
+	void SetFacetDepth( float facetDepth );
+
+	float GetFacetMaxCut() const;
+	void SetFacetMaxCut( float facetMaxCut );
+
+	float GetCleaveDepth() const;
+	void SetCleaveDepth( float cleaveDepth );
+
 	BlueStdResult TestBuildFile( const char* resPath );
 
 protected:
@@ -58,6 +73,11 @@ private:
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
 	Method m_method = Method::Simple;
+	uint32_t m_cutSeed = 0;
+	float m_facetSpacing = 3.f;
+	float m_facetDepth = 0.f;
+	float m_facetMaxCut = 0.3f;
+	float m_cleaveDepth = 0.f;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2VoxelGeometry );

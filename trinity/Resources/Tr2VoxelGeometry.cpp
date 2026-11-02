@@ -4,7 +4,9 @@
 #include "Tr2VoxelGeometry.h"
 #include "../Utilities/Vector3d.h"
 #include "../Tr2SignedDistanceField.h"
+#include "../Tr2SurfaceCuts.h"
 #include <cmf/writer.h>
+#include <queue>
 
 
 namespace
@@ -249,9 +251,10 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision ) :
+	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, const Tr2SurfaceCutParams& cutParams ) :
 		VoxelBuilder( std::move( sdf ), std::move( occupancy ), cellSize ),
-		m_subdivision( subdivision )
+		m_subdivision( subdivision ),
+		m_cutParams( cutParams )
 	{
 	}
 
@@ -426,9 +429,219 @@ protected:
 		return { vbView, ibView, decl };
 	}
 
+	// Render-only facet and cleave cuts (Tr2SurfaceCuts) of the finished dual vertices. Only smooth vertices are cut: a
+	// vertex whose quads spread wider than s_featureCos sits on a real edge and stays, and the cut ramps in from such
+	// vertices at s_cutRampSlope so no edge stands proud as a fin. A quad the cuts turn over has its most cut corner
+	// lowered a step down s_cutFractions, for up to s_unfoldRounds rounds, after which its corners go uncut.
+	void ApplySurfaceCuts( const Tr2SignedDistanceField& field, std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	{
+		if( !m_cutParams.IsEnabled() || quads.empty() )
+		{
+			return;
+		}
+		const size_t vertexCount = positions.size();
+		const size_t quadCount = quads.size() / 4;
+
+		std::vector<VectorT> quadNormals( quadCount );
+		for( size_t q = 0; q < quadCount; ++q )
+		{
+			quadNormals[q] = GetQuadNormal( positions, quads, q );
+		}
+
+		// Quads around each vertex, as corner indices into quads
+		std::vector<uint32_t> firstCorner( vertexCount + 1, 0 );
+		for( auto vertex : quads )
+		{
+			++firstCorner[vertex + 1];
+		}
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			firstCorner[v + 1] += firstCorner[v];
+		}
+		std::vector<uint32_t> vertexCorners( quads.size() );
+		{
+			auto next = firstCorner;
+			for( size_t corner = 0; corner < quads.size(); ++corner )
+			{
+				vertexCorners[next[quads[corner]]++] = uint32_t( corner );
+			}
+		}
+
+		// Facing is the area-weighted mean of the quad normals; a vertex is a feature where two of its quads part too far
+		std::vector<VectorT> facing( vertexCount, VectorT( 0.f, 0.f, 0.f ) );
+		std::vector<uint8_t> feature( vertexCount, 0 );
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			VectorT sum( 0.f, 0.f, 0.f );
+			Float spread = 1;
+			for( uint32_t i = firstCorner[v]; i < firstCorner[v + 1]; ++i )
+			{
+				const VectorT& a = quadNormals[vertexCorners[i] / 4];
+				sum += a;
+				for( uint32_t j = i + 1; j < firstCorner[v + 1]; ++j )
+				{
+					const VectorT& b = quadNormals[vertexCorners[j] / 4];
+					const Float lengths = Length( a ) * Length( b );
+					if( lengths > 1e-12 )
+					{
+						spread = std::min( spread, Dot( a, b ) / lengths );
+					}
+				}
+			}
+			const Float length = Length( sum );
+			feature[v] = spread < s_featureCos || length <= 1e-12 ? 1 : 0;
+			if( length > 1e-12 )
+			{
+				facing[v] = sum / length;
+			}
+		}
+
+		// Mesh distance to the nearest feature vertex, out to where the ramp no longer limits the deepest cut
+		const Float rampReach = m_cutParams.GetMaxCut() / s_cutRampSlope;
+		std::vector<Float> featureDistance( vertexCount, std::numeric_limits<Float>::infinity() );
+		using QueueEntry = std::pair<Float, uint32_t>;
+		std::priority_queue<QueueEntry, std::vector<QueueEntry>, std::greater<QueueEntry>> queue;
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			if( feature[v] )
+			{
+				featureDistance[v] = 0;
+				queue.push( { Float( 0 ), uint32_t( v ) } );
+			}
+		}
+		while( !queue.empty() )
+		{
+			const auto [distance, v] = queue.top();
+			queue.pop();
+			if( distance > featureDistance[v] )
+			{
+				continue;
+			}
+			for( uint32_t i = firstCorner[v]; i < firstCorner[v + 1]; ++i )
+			{
+				const uint32_t corner = vertexCorners[i];
+				const size_t base = corner & ~uint32_t( 3 );
+				for( uint32_t side : { 1u, 3u } )
+				{
+					const uint32_t neighbor = quads[base + ( ( corner + side ) & 3 )];
+					const Float d = distance + Length( positions[neighbor] - positions[v] );
+					if( d < featureDistance[neighbor] && d < rampReach )
+					{
+						featureDistance[neighbor] = d;
+						queue.push( { d, neighbor } );
+					}
+				}
+			}
+		}
+		if( cancel )
+		{
+			return;
+		}
+
+		Tr2SurfaceCuts surfaceCuts( field, m_dimensions, m_cutParams );
+		std::vector<VectorT> cuts( vertexCount, VectorT( 0.f, 0.f, 0.f ) );
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			if( feature[v] )
+			{
+				continue;
+			}
+			VectorT cut = surfaceCuts.GetCut( positions[v], facing[v] );
+			const Float length = Length( cut );
+			const Float limit = s_cutRampSlope * featureDistance[v];
+			if( length > limit )
+			{
+				cut *= limit / length;
+			}
+			cuts[v] = cut;
+		}
+		if( cancel )
+		{
+			return;
+		}
+
+		const auto uncut = positions;
+		std::vector<uint8_t> steps( vertexCount, 0 );
+		const uint8_t lastStep = uint8_t( s_cutFractions.size() - 1 );
+		auto place = [&]( size_t v ) {
+			positions[v] = uncut[v] + cuts[v] * s_cutFractions[steps[v]];
+		};
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			place( v );
+		}
+		std::vector<uint8_t> lower( vertexCount, 0 );
+		for( int round = 0; round <= s_unfoldRounds; ++round )
+		{
+			// Each round reads the previous round's placement only
+			bool changed = false;
+			for( size_t q = 0; q < quadCount; ++q )
+			{
+				const VectorT& before = quadNormals[q];
+				if( Dot( before, before ) <= 1e-24 || Dot( GetQuadNormal( positions, quads, q ), before ) > 0 )
+				{
+					continue;
+				}
+				// The corner keeping the largest fraction of its cut steps down; past the last round every corner goes uncut
+				int32_t pick = -1;
+				for( size_t i = 0; i < 4; ++i )
+				{
+					const uint32_t v = quads[q * 4 + i];
+					if( steps[v] == lastStep || Dot( cuts[v], cuts[v] ) == 0 )
+					{
+						continue;
+					}
+					if( round == s_unfoldRounds )
+					{
+						lower[v] = lastStep;
+						changed = true;
+					}
+					else if( pick < 0 || steps[v] < steps[pick] )
+					{
+						pick = int32_t( v );
+					}
+				}
+				if( pick >= 0 )
+				{
+					lower[pick] = uint8_t( steps[pick] + 1 );
+					changed = true;
+				}
+			}
+			if( !changed )
+			{
+				break;
+			}
+			for( size_t v = 0; v < vertexCount; ++v )
+			{
+				if( lower[v] > steps[v] )
+				{
+					steps[v] = lower[v];
+					place( v );
+				}
+				lower[v] = 0;
+			}
+		}
+	}
+
 	const uint32_t m_subdivision;
+	const Tr2SurfaceCutParams m_cutParams;
 
 private:
+	static constexpr Float s_featureCos = 0.70710678f; // cos 45 degrees: quads parting wider than this meet at a feature edge
+	static constexpr Float s_cutRampSlope = 0.6f; // a cut grows at most this much per cell of mesh distance from a feature
+	static constexpr int s_unfoldRounds = 3; // rounds of fold repair before a turned over quad's corners go uncut
+	static constexpr std::array<Float, 4> s_cutFractions = { 1.f, 0.5f, 0.25f, 0.f }; // the fractions of its cut a vertex steps down
+
+	// Area-weighted normal of a quad from its diagonals, outward by the emitted winding
+	static VectorT GetQuadNormal( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, size_t q )
+	{
+		const VectorT& p0 = positions[quads[q * 4]];
+		const VectorT& p1 = positions[quads[q * 4 + 1]];
+		const VectorT& p2 = positions[quads[q * 4 + 2]];
+		const VectorT& p3 = positions[quads[q * 4 + 3]];
+		return Cross( p2 - p0, p3 - p1 );
+	}
+
 	// Lattice equal to the grid: occupancy straight from the grid, field from the filtered SDF
 	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
 	{
@@ -579,8 +792,8 @@ private:
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision ),
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, cutParams ),
 		m_relaxIterations( relaxIterations )
 	{
 	}
@@ -621,6 +834,11 @@ protected:
 			return {};
 		}
 		Relax( positions, quads, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+		ApplySurfaceCuts( field, positions, quads, cancel );
 		if( cancel )
 		{
 			return {};
@@ -797,8 +1015,8 @@ private:
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision )
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, cutParams )
 	{
 	}
 
@@ -838,6 +1056,11 @@ protected:
 		{
 			return {};
 		}
+		ApplySurfaceCuts( field, positions, quads, cancel );
+		if( cancel )
+		{
+			return {};
+		}
 		auto indices = Triangulate( positions, quads );
 		auto normals = ComputeNormals( positions, indices );
 
@@ -850,71 +1073,15 @@ private:
 	static constexpr Float s_eigenTruncation = 0.01; // QEF eigenvalues below this fraction of the largest are dropped
 	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigendecomposition
 
-	// Minmod SDF gradient at a grid sample: per axis the one-sided difference of smaller magnitude, zero where they disagree
-	// in sign. A central difference half a cell from an edge reads both faces and tilts the normals, so the tangent planes
-	// meet inside convex edges and corners; the limited difference stays on one face.
-	static VectorT GetSampleGradient( const Tr2SignedDistanceField& field, const Int3& sample )
-	{
-		const Float value = field.GetValue( sample[0], sample[1], sample[2] );
-		VectorT gradient;
-		for( int axis = 0; axis < 3; ++axis )
-		{
-			Int3 lo = sample;
-			Int3 hi = sample;
-			--lo[axis];
-			++hi[axis];
-			const Float forward = field.GetValue( hi[0], hi[1], hi[2] ) - value;
-			const Float backward = value - field.GetValue( lo[0], lo[1], lo[2] );
-			if( forward * backward <= 0 )
-			{
-				gradient[axis] = 0;
-			}
-			else
-			{
-				gradient[axis] = std::abs( forward ) < std::abs( backward ) ? forward : backward;
-			}
-		}
-		return gradient;
-	}
-
-	// SDF gradient at a lattice cell: the trilinear interpolation of the sample gradients of the grid cube holding the cell,
-	// matching how the subdivided window interpolates the field
+	// SDF gradient at a lattice cell: the trilinear interpolation of the minmod sample gradients of the grid cube holding
+	// the cell, matching how the subdivided window interpolates the field
 	static VectorT GetGradient( const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
 	{
 		if( scale == 1 )
 		{
-			return GetSampleGradient( field, cell );
+			return field.GetGradient( cell[0], cell[1], cell[2] );
 		}
-		Int3 cube;
-		VectorT t;
-		for( int j = 0; j < 3; ++j )
-		{
-			// Floor division, the window ring sits at -1
-			cube[j] = cell[j] >= 0 ? cell[j] / scale : -( ( scale - 1 - cell[j] ) / scale );
-			t[j] = Float( cell[j] - cube[j] * scale ) / scale;
-		}
-		VectorT gradient = { 0.0, 0.0, 0.0 };
-		for( int32_t corner = 0; corner < 8; ++corner )
-		{
-			Float weight = 1;
-			Int3 sample = cube;
-			for( int j = 0; j < 3; ++j )
-			{
-				const bool high = ( corner >> j ) & 1;
-				weight *= high ? t[j] : 1 - t[j];
-				sample[j] += high ? 1 : 0;
-			}
-			if( weight == 0 )
-			{
-				continue;
-			}
-			const VectorT g = GetSampleGradient( field, sample );
-			for( int j = 0; j < 3; ++j )
-			{
-				gradient[j] += weight * g[j];
-			}
-		}
-		return gradient;
+		return field.SampleGradient( Vector3( float( cell[0] ), float( cell[1] ), float( cell[2] ) ) / float( scale ) );
 	}
 
 	// Cyclic Jacobi eigendecomposition of a symmetric 3x3 matrix: on return a is diagonal (the eigenvalues) and the
@@ -1321,6 +1488,81 @@ void Tr2VoxelGeometry::SetMethod( Method method )
 	Rebuild();
 }
 
+uint32_t Tr2VoxelGeometry::GetCutSeed() const
+{
+	return m_cutSeed;
+}
+
+void Tr2VoxelGeometry::SetCutSeed( uint32_t cutSeed )
+{
+	if( m_cutSeed == cutSeed )
+	{
+		return;
+	}
+	m_cutSeed = cutSeed;
+	Rebuild();
+}
+
+float Tr2VoxelGeometry::GetFacetSpacing() const
+{
+	return m_facetSpacing;
+}
+
+void Tr2VoxelGeometry::SetFacetSpacing( float facetSpacing )
+{
+	if( m_facetSpacing == facetSpacing )
+	{
+		return;
+	}
+	m_facetSpacing = facetSpacing;
+	Rebuild();
+}
+
+float Tr2VoxelGeometry::GetFacetDepth() const
+{
+	return m_facetDepth;
+}
+
+void Tr2VoxelGeometry::SetFacetDepth( float facetDepth )
+{
+	if( m_facetDepth == facetDepth )
+	{
+		return;
+	}
+	m_facetDepth = facetDepth;
+	Rebuild();
+}
+
+float Tr2VoxelGeometry::GetFacetMaxCut() const
+{
+	return m_facetMaxCut;
+}
+
+void Tr2VoxelGeometry::SetFacetMaxCut( float facetMaxCut )
+{
+	if( m_facetMaxCut == facetMaxCut )
+	{
+		return;
+	}
+	m_facetMaxCut = facetMaxCut;
+	Rebuild();
+}
+
+float Tr2VoxelGeometry::GetCleaveDepth() const
+{
+	return m_cleaveDepth;
+}
+
+void Tr2VoxelGeometry::SetCleaveDepth( float cleaveDepth )
+{
+	if( m_cleaveDepth == cleaveDepth )
+	{
+		return;
+	}
+	m_cleaveDepth = cleaveDepth;
+	Rebuild();
+}
+
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
@@ -1353,14 +1595,21 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 		return std::make_unique<EmptyBuilder>();
 	}
 
+	Tr2SurfaceCutParams cutParams;
+	cutParams.seed = m_cutSeed;
+	cutParams.facetSpacing = m_facetSpacing;
+	cutParams.facetDepth = m_facetDepth;
+	cutParams.facetMaxCut = m_facetMaxCut;
+	cutParams.cleaveDepth = m_cleaveDepth;
+
 	switch( m_method )
 	{
 	case Method::Simple:
 		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
+		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations, cutParams );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision );
+		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, cutParams );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
