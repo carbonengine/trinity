@@ -1346,6 +1346,9 @@ set(_SOURCES
     Sprite2d/Tr2Sprite2dContainer_Blue.cpp
     Sprite2d/Tr2Sprite2dDisplayList.cpp
     Sprite2d/Tr2Sprite2dDisplayList.h
+    Sprite2d/Tr2Sprite2dEffect.cpp
+    Sprite2d/Tr2Sprite2dEffect.h
+    Sprite2d/Tr2Sprite2dEffect_Blue.cpp
     Sprite2d/Tr2Sprite2dFrame.cpp
     Sprite2d/Tr2Sprite2dFrame.h
     Sprite2d/Tr2Sprite2dFrame_Blue.cpp

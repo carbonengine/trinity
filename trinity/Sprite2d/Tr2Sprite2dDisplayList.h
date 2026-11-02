@@ -33,6 +33,8 @@ struct Tr2Sprite2dDisplayList : public Tr2DeviceResource
 		Tr2AtlasTexturePtr texture0;
 		Tr2AtlasTexturePtr texture1;
 		uint32_t textureRegisters[2];
+		// Whether to bind texture0 and texture1. False only for an override effect.
+		bool bindTextures;
 		Tr2RenderContextEnum::ColorSpace colorSpace;
 		Tr2EffectPtr effect;
 		//hardcoded due to need for CB slot//Tr2EffectConstant transformsHandle;
