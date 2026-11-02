@@ -20,6 +20,7 @@
 // Forward declarations and smart pointer typedefs
 BLUE_DECLARE_INTERFACE( ITr2AudEmitter );
 BLUE_DECLARE_IVECTOR( ITr2AudEmitter );
+BLUE_DECLARE_INTERFACE( ITr2AudParentBall );
 BLUE_DECLARE( EveChildAudio );
 
 /**
@@ -85,6 +86,7 @@ private:
 	Matrix m_worldTransform; ///< Cached world transformation matrix.
 	bool m_mute; ///< Whether audio playback is muted.
 	ITr2AudEmitterPtr m_audioEmitter; ///< The audio emitter instance.
+	ITr2AudParentBall* m_parentBall;
 };
 
 /**

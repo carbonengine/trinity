@@ -8,6 +8,7 @@
 
 #include <ITriObserverLocal.h>
 
+BLUE_DECLARE_INTERFACE( ITr2AudParentBall );
 
 struct Vector3;
 struct Matrix;
@@ -23,7 +24,7 @@ public:
 
 	void Update( const Matrix& worldTransform );
 	/// Tells an audio emitter observer which ball it is mounted on. Does nothing for other observers.
-	void SetParentBall( IRoot * ball );
+	void SetParentBall( IRoot* ball );
 
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
@@ -49,6 +50,8 @@ private:
 	Vector3 m_front;
 	Vector3 m_position;
 	IBluePlacementObserverPtr m_observer;
+	IBluePlacementObserverPtr m_parentBallObserver;
+	ITr2AudParentBall* m_parentBall;
 };
 
 BLUE_DECLARE_VECTOR( TriObserverLocal );

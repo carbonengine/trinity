@@ -9,7 +9,8 @@
 
 EveChildAudio::EveChildAudio( IRoot* lockobj ) :
 	m_mute( false ),
-	m_worldTransform( IdentityMatrix() )
+	m_worldTransform( IdentityMatrix() ),
+	m_parentBall( nullptr )
 {
 	m_name = BlueSharedString( "EveChildAudio" );
 }
@@ -19,6 +20,7 @@ bool EveChildAudio::Initialize()
 	// Early exit if already initialized
 	if( m_audioEmitter )
 	{
+		m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_audioEmitter.p );
 		return true;
 	}
 
@@ -36,6 +38,7 @@ bool EveChildAudio::Initialize()
 			emitterName = m_name.c_str();
 		}
 		m_audioEmitter->Initialize( emitterName, L"", position );
+		m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_audioEmitter.p );
 
 		return true;
 	}
@@ -101,9 +104,9 @@ void EveChildAudio::UpdateSyncronous( const EveUpdateContext& updateContext, con
 
 	if( m_audioEmitter && !m_mute )
 	{
-		if( auto emitter = dynamic_cast<ITr2AudParentBall*>( m_audioEmitter.p ) )
+		if( m_parentBall )
 		{
-			emitter->SetParentBall( params.ballPosition );
+			m_parentBall->SetParentBall( params.ballPosition );
 		}
 
 		Vector3 position = m_worldTransform.GetTranslation();

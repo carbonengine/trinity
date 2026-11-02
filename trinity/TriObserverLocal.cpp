@@ -9,7 +9,8 @@
 TriObserverLocal::TriObserverLocal( IRoot* lockobj ) :
 	m_front( 0.0f, 0.0f, 1.0f ),
 	m_position( 0.0f, 0.0f, 0.0f ),
-	m_mute( false )
+	m_mute( false ),
+	m_parentBall( nullptr )
 {
 }
 
@@ -44,9 +45,14 @@ void TriObserverLocal::Update( const Matrix& worldTransform )
 
 void TriObserverLocal::SetParentBall( IRoot* ball )
 {
-	if( auto emitter = dynamic_cast<ITr2AudParentBall*>( m_observer.p ) )
+	if( m_observer.p != m_parentBallObserver.p )
 	{
-		emitter->SetParentBall( ball );
+		m_parentBallObserver = m_observer;
+		m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_observer.p );
+	}
+	if( m_parentBall )
+	{
+		m_parentBall->SetParentBall( ball );
 	}
 }
 
