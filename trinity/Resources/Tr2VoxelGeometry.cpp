@@ -850,9 +850,12 @@ private:
 	static constexpr Float s_eigenTruncation = 0.01; // QEF eigenvalues below this fraction of the largest are dropped
 	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigendecomposition
 
-	// Central difference SDF gradient at a grid sample
+	// Minmod SDF gradient at a grid sample: per axis the one-sided difference of smaller magnitude, zero where they disagree
+	// in sign. A central difference half a cell from an edge reads both faces and tilts the normals, so the tangent planes
+	// meet inside convex edges and corners; the limited difference stays on one face.
 	static VectorT GetSampleGradient( const Tr2SignedDistanceField& field, const Int3& sample )
 	{
+		const Float value = field.GetValue( sample[0], sample[1], sample[2] );
 		VectorT gradient;
 		for( int axis = 0; axis < 3; ++axis )
 		{
@@ -860,7 +863,16 @@ private:
 			Int3 hi = sample;
 			--lo[axis];
 			++hi[axis];
-			gradient[axis] = ( field.GetValue( hi[0], hi[1], hi[2] ) - field.GetValue( lo[0], lo[1], lo[2] ) ) * Float( 0.5 );
+			const Float forward = field.GetValue( hi[0], hi[1], hi[2] ) - value;
+			const Float backward = value - field.GetValue( lo[0], lo[1], lo[2] );
+			if( forward * backward <= 0 )
+			{
+				gradient[axis] = 0;
+			}
+			else
+			{
+				gradient[axis] = std::abs( forward ) < std::abs( backward ) ? forward : backward;
+			}
 		}
 		return gradient;
 	}
