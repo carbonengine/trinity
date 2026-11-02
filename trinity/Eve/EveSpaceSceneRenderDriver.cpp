@@ -345,12 +345,11 @@ bool EveSpaceSceneRenderDriver::Validate( const Span<const Tr2BitmapDimensions>&
 		}
 	}
 
+	static const char* const supportedOutputs[] = { "DepthMap", "VelocityMap", "NormalMap", "CustomStencilMap", "GBuffer0", "GBuffer1", "GBuffer2", "GBuffer3" };
 	for( auto& output : outputs )
 	{
-		if( strcmp( output.c_str(), "DepthMap" ) != 0 &&
-			strcmp( output.c_str(), "VelocityMap" ) != 0 &&
-			strcmp( output.c_str(), "NormalMap" ) != 0 &&
-			strcmp( output.c_str(), "CustomStencilMap" ) != 0 )
+		auto isOutput = [&]( const char* name ) { return strcmp( output.c_str(), name ) == 0; };
+		if( std::none_of( std::begin( supportedOutputs ), std::end( supportedOutputs ), isOutput ) )
 		{
 			CCP_LOGERR( "EveSpaceSceneRenderDriver does not support the output '%s'", output.c_str() );
 			return false;
@@ -538,6 +537,8 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
 		auto albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
 		auto materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
+		SetNamedOutput( outputs, "GBuffer0", albedoMap );
+		SetNamedOutput( outputs, "GBuffer2", materialMap );
 		TimeSection gBufferPassSection( m_timers.gBufferPass, "GBufferPass", rootTimer, renderContext );
 		m_scene->RenderGBufferPass( depthBuffer, albedoMap, normalMap, materialMap, velocityMap, renderContext );
 	}
@@ -678,15 +679,12 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetVelocityMapIfNeeded( c
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	auto upscalingInfo = renderContext.GetUpscalingInfo( m_upscalingContext ? m_upscalingContext->GetID() : Tr2UpscalingAL::INVALID_CONTEXT_ID );
 	bool needsVelocityMap = m_settings.antiAliasingQuality != AntiAliasingQuality::Disabled || ( upscalingInfo.technique != Tr2UpscalingAL::NONE && upscalingInfo.temporal );
-	auto namedOutput = FindNamedOutput( outputs, "VelocityMap" );
-	Tr2GpuResourcePool::Texture velocityMap;
-	if( needsVelocityMap || m_settings.forceVelocityMap || namedOutput )
+	bool requested = FindNamedOutput( outputs, "VelocityMap" ) || FindNamedOutput( outputs, "GBuffer3" );
+	if( needsVelocityMap || m_settings.forceVelocityMap || requested )
 	{
 		auto texture = m_gpuResourcePool.GetTempTexture( "velocityMap", size, ImageIO::PIXEL_FORMAT_R16G16_FLOAT, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
-		if( namedOutput )
-		{
-			namedOutput->texture = texture;
-		}
+		SetNamedOutput( outputs, "VelocityMap", texture );
+		SetNamedOutput( outputs, "GBuffer3", texture );
 		return texture;
 	}
 	return {};
@@ -696,6 +694,7 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMap( const Textu
 {
 	auto texture = m_gpuResourcePool.GetTempTexture( "normalMap", size, ImageIO::PIXEL_FORMAT_R10G10B10A2_UNORM, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 	SetNamedOutput( outputs, "NormalMap", texture );
+	SetNamedOutput( outputs, "GBuffer1", texture );
 	return texture;
 }
 
