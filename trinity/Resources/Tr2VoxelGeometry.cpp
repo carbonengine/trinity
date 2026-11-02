@@ -217,13 +217,17 @@ protected:
 };
 
 
-class SurfaceNetsBuilder : public VoxelBuilder
+// Common ground of the dual methods. Cell centres sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
+// block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad joining the four blocks sharing
+// it. Cells outside the grid read as empty, so the surface closes at the grid boundary. m_subdivision > 1 runs the
+// construction on a lattice subdivided k-fold whose field is the trilinear interpolation of the SDF. Derived builders
+// decide where the dual vertex goes.
+class DualGridBuilder : public VoxelBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision ) :
 		VoxelBuilder( std::move( sdf ), cellSize ),
-		m_subdivision( subdivision ),
-		m_relaxIterations( relaxIterations )
+		m_subdivision( subdivision )
 	{
 	}
 
@@ -235,115 +239,9 @@ protected:
 	};
 	using Float = float;
 	using VectorT = Vector3;
-
-	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
-	{
-		if( vertices.empty() )
-		{
-			return CcpMath::AxisAlignedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 0.f, 0.f, 0.f ) );
-		}
-		Vector3 minimum = vertices[0].position;
-		Vector3 maximum = vertices[0].position;
-		for( const auto& vertex : vertices )
-		{
-			minimum = Vector3( std::min( minimum.x, vertex.position.x ), std::min( minimum.y, vertex.position.y ), std::min( minimum.z, vertex.position.z ) );
-			maximum = Vector3( std::max( maximum.x, vertex.position.x ), std::max( maximum.y, vertex.position.y ), std::max( maximum.z, vertex.position.z ) );
-		}
-		return CcpMath::AxisAlignedBox( minimum, maximum );
-	}
-
-	// Surface Nets extraction. Cell centres sit at integer lattice coordinates, a dual
-	// vertex lives in every 2x2x2 block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad
-	// joining the four blocks sharing it. Cells outside the grid read as empty, so the surface closes at the grid boundary.
-	// m_subdivision > 1 runs the construction on a lattice subdivided k-fold whose field is the trilinear interpolation of
-	// the SDF. Quads are emitted as two triangles each.
-	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
-	{
-		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
-		ON_BLOCK_EXIT( [&]() {
-			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
-			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
-			CCP_LOG( "SurfaceNetsBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
-		} );
-		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
-		{
-			return {};
-		}
-		const int32_t scale = int32_t( std::max( m_subdivision, 1u ) );
-
-		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-		auto window = scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-
-		std::vector<VectorT> positions;
-		std::vector<uint32_t> quads;
-		Sweep( window, scale, cancel, positions, quads );
-		if( cancel || quads.empty() )
-		{
-			return {};
-		}
-		Relax( positions, quads, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-		auto normals = ComputeNormals( positions, quads );
-
-		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
-		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
-		std::vector<Vertex> vertices( positions.size() );
-		for( size_t i = 0; i < positions.size(); ++i )
-		{
-			const auto& p = positions[i];
-			const auto& n = normals[i];
-			vertices[i].position = ( origin + Vector3( float( p[0] + 0.5 ), float( p[1] + 0.5 ), float( p[2] + 0.5 ) ) ) * m_cellSize;
-			vertices[i].normal = Vector3( float( n[0] ), float( n[1] ), float( n[2] ) );
-		}
-
-		std::vector<uint32_t> indices;
-		indices.reserve( quads.size() / 4 * 6 );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			indices.insert( indices.end(), { quads[q], quads[q + 1], quads[q + 2], quads[q], quads[q + 2], quads[q + 3] } );
-		}
-
-		bounds = GetBounds( vertices );
-
-		// Allocate vertex buffer
-		const uint32_t vertexStride = sizeof( Vertex );
-		cmf::BufferView vbView = buffers.AllocateBuffer(
-			vertices.data(),
-			uint32_t( vertices.size() * vertexStride ),
-			vertexStride );
-
-		// Allocate index buffer
-		const uint32_t indexStride = sizeof( uint32_t );
-		cmf::BufferView ibView = buffers.AllocateBuffer(
-			indices.data(),
-			uint32_t( indices.size() * indexStride ),
-			indexStride );
-
-		cmf::Span<cmf::VertexElement> decl;
-		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
-		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
-
-		return { vbView, ibView, decl };
-	}
-
-private:
-	using Vec3d = std::array<Float, 3>;
 	using Int3 = std::array<int32_t, 3>;
 
-	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
 	static constexpr Float s_roamMargin = 0.015; // dual vertex clamp cube inset, keeps neighbouring vertices apart
-	static constexpr Float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// (u, v) per axis, right-handed: u x v = +axis
 	static constexpr std::array<std::array<int, 2>, 3> s_axisUV = { { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
@@ -370,11 +268,143 @@ private:
 		std::vector<Float> field; // NaN where the cell has no field value
 	};
 
+	static CcpMath::AxisAlignedBox GetBounds( const std::vector<Vertex>& vertices )
+	{
+		if( vertices.empty() )
+		{
+			return CcpMath::AxisAlignedBox( Vector3( 0.f, 0.f, 0.f ), Vector3( 0.f, 0.f, 0.f ) );
+		}
+		Vector3 minimum = vertices[0].position;
+		Vector3 maximum = vertices[0].position;
+		for( const auto& vertex : vertices )
+		{
+			minimum = Vector3( std::min( minimum.x, vertex.position.x ), std::min( minimum.y, vertex.position.y ), std::min( minimum.z, vertex.position.z ) );
+			maximum = Vector3( std::max( maximum.x, vertex.position.x ), std::max( maximum.y, vertex.position.y ), std::max( maximum.z, vertex.position.z ) );
+		}
+		return CcpMath::AxisAlignedBox( minimum, maximum );
+	}
+
+	int32_t GetScale() const
+	{
+		return int32_t( std::max( m_subdivision, 1u ) );
+	}
+
 	Int3 GetGridSize() const
 	{
 		return { Tr2VoxelData::CoordType( m_dimensions.width ), Tr2VoxelData::CoordType( m_dimensions.height ), Tr2VoxelData::CoordType( m_dimensions.depth ) };
 	}
 
+	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, const std::atomic<bool>& cancel ) const
+	{
+		const int32_t scale = GetScale();
+		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, cancel );
+	}
+
+	// Emits a quad for every occupancy sign change, as 4 indices into shared dual vertices (one per block, placed by
+	// getDualVertex), wound counter-clockwise seen from the empty side
+	template <typename GetDualVertex>
+	static void Sweep( const Window& window, const std::atomic<bool>& cancel, GetDualVertex getDualVertex, std::vector<VectorT>& positions, std::vector<uint32_t>& quads )
+	{
+		const Int3& lattice = window.lattice;
+		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
+		const std::array<size_t, 3> blockStrides = { 1, size_t( lattice[0] + 1 ), size_t( lattice[0] + 1 ) * size_t( lattice[1] + 1 ) };
+		std::vector<uint32_t> blockVertices( blockStrides[2] * size_t( lattice[2] + 1 ), std::numeric_limits<uint32_t>::max() );
+
+		auto getVertex = [&]( const Int3& block ) {
+			auto& vertex = blockVertices[size_t( block[0] + 1 ) + blockStrides[1] * size_t( block[1] + 1 ) + blockStrides[2] * size_t( block[2] + 1 )];
+			if( vertex == std::numeric_limits<uint32_t>::max() )
+			{
+				vertex = uint32_t( positions.size() );
+				positions.push_back( getDualVertex( block ) );
+			}
+			return vertex;
+		};
+
+		// Block fan around the edge, counter-clockwise seen from +axis
+		static const std::array<std::array<int32_t, 2>, 4> s_quadUV = { { { -1, -1 }, { 0, -1 }, { 0, 0 }, { -1, 0 } } };
+
+		for( int axis = 0; axis < 3; ++axis )
+		{
+			const int u = s_axisUV[axis][0];
+			const int v = s_axisUV[axis][1];
+			// Edges between a cell and its +axis neighbour; the axis coordinate runs -1..lattice-1 so boundary faces are emitted
+			Int3 lo = { 0, 0, 0 };
+			lo[axis] = -1;
+			for( int32_t z = lo[2]; z < lattice[2]; ++z )
+			{
+				if( cancel )
+				{
+					return;
+				}
+				for( int32_t y = lo[1]; y < lattice[1]; ++y )
+				{
+					for( int32_t x = lo[0]; x < lattice[0]; ++x )
+					{
+						const size_t index = window.Index( x, y, z );
+						if( window.occupancy[index] == window.occupancy[index + window.strides[axis]] )
+						{
+							continue;
+						}
+						std::array<uint32_t, 4> quad;
+						for( size_t i = 0; i < 4; ++i )
+						{
+							Int3 block = { x, y, z };
+							block[u] += s_quadUV[i][0];
+							block[v] += s_quadUV[i][1];
+							quad[i] = getVertex( block );
+						}
+						if( !window.occupancy[index] )
+						{
+							// Low cell is the empty side, so the normal points -axis
+							std::reverse( quad.begin(), quad.end() );
+						}
+						quads.insert( quads.end(), quad.begin(), quad.end() );
+					}
+				}
+			}
+		}
+	}
+
+	// Moves grid cell space positions into mesh space and allocates the vertex and index buffers
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<uint32_t>& indices, CcpMath::AxisAlignedBox& bounds ) const
+	{
+		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
+		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
+		std::vector<Vertex> vertices( positions.size() );
+		for( size_t i = 0; i < positions.size(); ++i )
+		{
+			const auto& p = positions[i];
+			const auto& n = normals[i];
+			vertices[i].position = ( origin + Vector3( float( p[0] + 0.5 ), float( p[1] + 0.5 ), float( p[2] + 0.5 ) ) ) * m_cellSize;
+			vertices[i].normal = Vector3( float( n[0] ), float( n[1] ), float( n[2] ) );
+		}
+
+		bounds = GetBounds( vertices );
+
+		// Allocate vertex buffer
+		const uint32_t vertexStride = sizeof( Vertex );
+		cmf::BufferView vbView = buffers.AllocateBuffer(
+			vertices.data(),
+			uint32_t( vertices.size() * vertexStride ),
+			vertexStride );
+
+		// Allocate index buffer
+		const uint32_t indexStride = sizeof( uint32_t );
+		cmf::BufferView ibView = buffers.AllocateBuffer(
+			indices.data(),
+			uint32_t( indices.size() * indexStride ),
+			indexStride );
+
+		cmf::Span<cmf::VertexElement> decl;
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
+
+		return { vbView, ibView, decl };
+	}
+
+	const uint32_t m_subdivision;
+
+private:
 	// Lattice equal to the grid: occupancy straight from the grid, field from the filtered SDF
 	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
 	{
@@ -519,6 +549,75 @@ private:
 		}
 		return window;
 	}
+};
+
+
+class SurfaceNetsBuilder : public DualGridBuilder
+{
+public:
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision, uint32_t relaxIterations ) :
+		DualGridBuilder( std::move( sdf ), cellSize, subdivision ),
+		m_relaxIterations( relaxIterations )
+	{
+	}
+
+protected:
+	// Surface Nets extraction: the dual vertex is the mean of the block's edge crossings, optionally relaxed afterwards.
+	// Quads are emitted as two triangles each.
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
+	{
+		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+		ON_BLOCK_EXIT( [&]() {
+			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
+			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
+			CCP_LOG( "SurfaceNetsBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
+		} );
+		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
+		{
+			return {};
+		}
+		const int32_t scale = GetScale();
+
+		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+		auto window = CreateLatticeWindow( field, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+
+		std::vector<VectorT> positions;
+		std::vector<uint32_t> quads;
+		Sweep( window, cancel, [&]( const Int3& block ) { return GetDualVertex( window, block, scale ); }, positions, quads );
+		if( cancel || quads.empty() )
+		{
+			return {};
+		}
+		Relax( positions, quads, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+		auto normals = ComputeNormals( positions, quads );
+
+		std::vector<uint32_t> indices;
+		indices.reserve( quads.size() / 4 * 6 );
+		for( size_t q = 0; q < quads.size(); q += 4 )
+		{
+			indices.insert( indices.end(), { quads[q], quads[q + 1], quads[q + 2], quads[q], quads[q + 2], quads[q + 3] } );
+		}
+
+		return AllocateBuffers( allocator, buffers, positions, normals, indices, bounds );
+	}
+
+private:
+	using Vec3d = std::array<Float, 3>;
+
+	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
+	static constexpr Float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// Mean of the sign crossings on the block's 12 edges, clamped to the block's inset unit cube and scaled back into
 	// grid cell space
@@ -572,70 +671,6 @@ private:
 			result[j] = std::min( std::max( position, block[j] + s_roamMargin ), block[j] + 1 - s_roamMargin ) / scale;
 		}
 		return result;
-	}
-
-	// Emits a quad for every occupancy sign change, as 4 indices into shared dual vertices (one per block), wound
-	// counter-clockwise seen from the empty side
-	static void Sweep( const Window& window, int32_t scale, const std::atomic<bool>& cancel, std::vector<VectorT>& positions, std::vector<uint32_t>& quads )
-	{
-		const Int3& lattice = window.lattice;
-		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
-		const std::array<size_t, 3> blockStrides = { 1, size_t( lattice[0] + 1 ), size_t( lattice[0] + 1 ) * size_t( lattice[1] + 1 ) };
-		std::vector<uint32_t> blockVertices( blockStrides[2] * size_t( lattice[2] + 1 ), std::numeric_limits<uint32_t>::max() );
-
-		auto getVertex = [&]( const Int3& block ) {
-			auto& vertex = blockVertices[size_t( block[0] + 1 ) + blockStrides[1] * size_t( block[1] + 1 ) + blockStrides[2] * size_t( block[2] + 1 )];
-			if( vertex == std::numeric_limits<uint32_t>::max() )
-			{
-				vertex = uint32_t( positions.size() );
-				positions.push_back( GetDualVertex( window, block, scale ) );
-			}
-			return vertex;
-		};
-
-		// Block fan around the edge, counter-clockwise seen from +axis
-		static const std::array<std::array<int32_t, 2>, 4> s_quadUV = { { { -1, -1 }, { 0, -1 }, { 0, 0 }, { -1, 0 } } };
-
-		for( int axis = 0; axis < 3; ++axis )
-		{
-			const int u = s_axisUV[axis][0];
-			const int v = s_axisUV[axis][1];
-			// Edges between a cell and its +axis neighbour; the axis coordinate runs -1..lattice-1 so boundary faces are emitted
-			Int3 lo = { 0, 0, 0 };
-			lo[axis] = -1;
-			for( int32_t z = lo[2]; z < lattice[2]; ++z )
-			{
-				if( cancel )
-				{
-					return;
-				}
-				for( int32_t y = lo[1]; y < lattice[1]; ++y )
-				{
-					for( int32_t x = lo[0]; x < lattice[0]; ++x )
-					{
-						const size_t index = window.Index( x, y, z );
-						if( window.occupancy[index] == window.occupancy[index + window.strides[axis]] )
-						{
-							continue;
-						}
-						std::array<uint32_t, 4> quad;
-						for( size_t i = 0; i < 4; ++i )
-						{
-							Int3 block = { x, y, z };
-							block[u] += s_quadUV[i][0];
-							block[v] += s_quadUV[i][1];
-							quad[i] = getVertex( block );
-						}
-						if( !window.occupancy[index] )
-						{
-							// Low cell is the empty side, so the normal points -axis
-							std::reverse( quad.begin(), quad.end() );
-						}
-						quads.insert( quads.end(), quad.begin(), quad.end() );
-					}
-				}
-			}
-		}
 	}
 
 	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
@@ -731,10 +766,365 @@ private:
 		return normals;
 	}
 
-	const uint32_t m_subdivision;
 	const uint32_t m_relaxIterations;
 };
 
+
+class DualContouringBuilder : public DualGridBuilder
+{
+public:
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, float cellSize, uint32_t subdivision ) :
+		DualGridBuilder( std::move( sdf ), cellSize, subdivision )
+	{
+	}
+
+protected:
+	// Dual Contouring extraction: the dual vertex minimises the quadric error of the tangent planes at the block's edge
+	// crossings (Hermite data from the SDF gradient), which keeps sharp edges and corners. Quads are split along the
+	// diagonal that folds less.
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, CcpMath::AxisAlignedBox& bounds ) override
+	{
+		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+		ON_BLOCK_EXIT( [&]() {
+			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
+			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
+			CCP_LOG( "DualContouringBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
+		} );
+		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
+		{
+			return {};
+		}
+		const int32_t scale = GetScale();
+
+		auto field = Tr2SignedDistanceField( m_sdf, {}, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+		auto window = CreateLatticeWindow( field, cancel );
+		if( cancel )
+		{
+			return {};
+		}
+
+		std::vector<VectorT> positions;
+		std::vector<uint32_t> quads;
+		Sweep( window, cancel, [&]( const Int3& block ) { return GetDualVertex( window, field, block, scale ); }, positions, quads );
+		if( cancel || quads.empty() )
+		{
+			return {};
+		}
+		auto indices = Triangulate( positions, quads );
+		auto normals = ComputeNormals( positions, indices );
+
+		return AllocateBuffers( allocator, buffers, positions, normals, indices, bounds );
+	}
+
+private:
+	using Mat3 = std::array<std::array<Float, 3>, 3>;
+
+	static constexpr Float s_eigenTruncation = 0.01; // QEF eigenvalues below this fraction of the largest are dropped
+	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigendecomposition
+
+	// Central difference SDF gradient at a grid sample
+	static VectorT GetSampleGradient( const Tr2SignedDistanceField& field, const Int3& sample )
+	{
+		VectorT gradient;
+		for( int axis = 0; axis < 3; ++axis )
+		{
+			Int3 lo = sample;
+			Int3 hi = sample;
+			--lo[axis];
+			++hi[axis];
+			gradient[axis] = ( field.GetValue( hi[0], hi[1], hi[2] ) - field.GetValue( lo[0], lo[1], lo[2] ) ) * Float( 0.5 );
+		}
+		return gradient;
+	}
+
+	// SDF gradient at a lattice cell: the trilinear interpolation of the sample gradients of the grid cube holding the cell,
+	// matching how the subdivided window interpolates the field
+	static VectorT GetGradient( const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
+	{
+		if( scale == 1 )
+		{
+			return GetSampleGradient( field, cell );
+		}
+		Int3 cube;
+		VectorT t;
+		for( int j = 0; j < 3; ++j )
+		{
+			// Floor division, the window ring sits at -1
+			cube[j] = cell[j] >= 0 ? cell[j] / scale : -( ( scale - 1 - cell[j] ) / scale );
+			t[j] = Float( cell[j] - cube[j] * scale ) / scale;
+		}
+		VectorT gradient = { 0.0, 0.0, 0.0 };
+		for( int32_t corner = 0; corner < 8; ++corner )
+		{
+			Float weight = 1;
+			Int3 sample = cube;
+			for( int j = 0; j < 3; ++j )
+			{
+				const bool high = ( corner >> j ) & 1;
+				weight *= high ? t[j] : 1 - t[j];
+				sample[j] += high ? 1 : 0;
+			}
+			if( weight == 0 )
+			{
+				continue;
+			}
+			const VectorT g = GetSampleGradient( field, sample );
+			for( int j = 0; j < 3; ++j )
+			{
+				gradient[j] += weight * g[j];
+			}
+		}
+		return gradient;
+	}
+
+	// Cyclic Jacobi eigendecomposition of a symmetric 3x3 matrix: on return a is diagonal (the eigenvalues) and the
+	// columns of v are the matching eigenvectors
+	static void Eigendecompose( Mat3& a, Mat3& v )
+	{
+		v = { { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } };
+		for( int sweep = 0; sweep < s_jacobiSweeps; ++sweep )
+		{
+			for( int p = 0; p < 2; ++p )
+			{
+				for( int q = p + 1; q < 3; ++q )
+				{
+					if( std::abs( a[p][q] ) < 1e-9 )
+					{
+						continue;
+					}
+					// Rotation in the (p, q) plane zeroing a[p][q]: a = J^T a J, v = v J
+					const Float theta = ( a[q][q] - a[p][p] ) / ( 2 * a[p][q] );
+					const Float t = ( theta >= 0 ? 1 : -1 ) / ( std::abs( theta ) + std::sqrt( theta * theta + 1 ) );
+					const Float c = 1 / std::sqrt( t * t + 1 );
+					const Float s = t * c;
+					for( int k = 0; k < 3; ++k )
+					{
+						const Float akp = a[k][p];
+						const Float akq = a[k][q];
+						a[k][p] = c * akp - s * akq;
+						a[k][q] = s * akp + c * akq;
+					}
+					for( int k = 0; k < 3; ++k )
+					{
+						const Float apk = a[p][k];
+						const Float aqk = a[q][k];
+						a[p][k] = c * apk - s * aqk;
+						a[q][k] = s * apk + c * aqk;
+					}
+					for( int k = 0; k < 3; ++k )
+					{
+						const Float vkp = v[k][p];
+						const Float vkq = v[k][q];
+						v[k][p] = c * vkp - s * vkq;
+						v[k][q] = s * vkp + c * vkq;
+					}
+				}
+			}
+		}
+	}
+
+	// Minimiser of the quadric error sum( ( n_i . ( x - p_i ) )^2 ) over the sign crossings p_i on the block's 12 edges with
+	// unit SDF gradients n_i. Solved about the crossings' mass point with a truncated pseudo-inverse, so flat and edge-like
+	// blocks fall back toward the mass point along their unconstrained directions, then clamped to the block's inset unit
+	// cube and scaled back into grid cell space
+	static VectorT GetDualVertex( const Window& window, const Tr2SignedDistanceField& field, const Int3& block, int32_t scale )
+	{
+		// Crossings are relative to the block's minimum cell to keep the solve well conditioned
+		const size_t base = window.Index( block[0], block[1], block[2] );
+		std::array<VectorT, 12> points;
+		std::array<VectorT, 12> normals;
+		int32_t count = 0;
+		for( int axis = 0; axis < 3; ++axis )
+		{
+			const int u = s_axisUV[axis][0];
+			const int v = s_axisUV[axis][1];
+			for( int32_t du = 0; du < 2; ++du )
+			{
+				for( int32_t dv = 0; dv < 2; ++dv )
+				{
+					Int3 lo = { 0, 0, 0 };
+					lo[u] = du;
+					lo[v] = dv;
+					Int3 hi = lo;
+					hi[axis] = 1;
+					const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
+					const size_t ib = ia + window.strides[axis];
+					if( window.occupancy[ia] == window.occupancy[ib] )
+					{
+						continue;
+					}
+					const Float da = window.field[ia];
+					const Float db = window.field[ib];
+					Float t = 0.5;
+					// NaN is a cell without a field value, so split the edge
+					if( !std::isnan( da ) && !std::isnan( db ) && da != db )
+					{
+						t = std::min( std::max( da / ( da - db ), Float( 0.0 ) ), Float( 1.0 ) );
+					}
+					const VectorT ga = GetGradient( field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
+					const VectorT gb = GetGradient( field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
+					VectorT& point = points[count];
+					VectorT& normal = normals[count];
+					for( int j = 0; j < 3; ++j )
+					{
+						point[j] = lo[j] + t * ( hi[j] - lo[j] );
+						normal[j] = ga[j] + t * ( gb[j] - ga[j] );
+					}
+					const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
+					if( length > 1e-6 )
+					{
+						normal = { normal[0] / length, normal[1] / length, normal[2] / length };
+					}
+					else
+					{
+						// Flat field, the crossing only contributes to the mass point
+						normal = { 0.0, 0.0, 0.0 };
+					}
+					++count;
+				}
+			}
+		}
+
+		VectorT massPoint = { 0.0, 0.0, 0.0 };
+		for( int32_t i = 0; i < count; ++i )
+		{
+			for( int j = 0; j < 3; ++j )
+			{
+				massPoint[j] += points[i][j] / count;
+			}
+		}
+
+		// Normal equations A^T A x = A^T b about the mass point, b_i = n_i . ( p_i - massPoint )
+		Mat3 ata = {};
+		VectorT atb = { 0.0, 0.0, 0.0 };
+		for( int32_t i = 0; i < count; ++i )
+		{
+			const auto& n = normals[i];
+			const Float b = n[0] * ( points[i][0] - massPoint[0] ) + n[1] * ( points[i][1] - massPoint[1] ) + n[2] * ( points[i][2] - massPoint[2] );
+			for( int r = 0; r < 3; ++r )
+			{
+				for( int c = 0; c < 3; ++c )
+				{
+					ata[r][c] += n[r] * n[c];
+				}
+				atb[r] += n[r] * b;
+			}
+		}
+
+		Mat3 eigenvectors;
+		Eigendecompose( ata, eigenvectors );
+		const Float largest = std::max( { ata[0][0], ata[1][1], ata[2][2] } );
+
+		// x = massPoint + V diag( 1 / lambda, truncated ) V^T A^T b
+		VectorT offset = { 0.0, 0.0, 0.0 };
+		for( int k = 0; k < 3; ++k )
+		{
+			const Float lambda = ata[k][k];
+			if( lambda <= s_eigenTruncation * largest || lambda <= 1e-6 )
+			{
+				continue;
+			}
+			const Float projection = ( eigenvectors[0][k] * atb[0] + eigenvectors[1][k] * atb[1] + eigenvectors[2][k] * atb[2] ) / lambda;
+			for( int j = 0; j < 3; ++j )
+			{
+				offset[j] += eigenvectors[j][k] * projection;
+			}
+		}
+
+		VectorT result;
+		for( int j = 0; j < 3; ++j )
+		{
+			const Float position = std::min( std::max( massPoint[j] + offset[j], s_roamMargin ), Float( 1.0 - s_roamMargin ) );
+			result[j] = ( block[j] + position ) / scale;
+		}
+		return result;
+	}
+
+	static VectorT GetTriangleNormal( const VectorT& p0, const VectorT& p1, const VectorT& p2 )
+	{
+		const VectorT a = { p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2] };
+		const VectorT b = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
+		return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+	}
+
+	// Cosine between the normals of a quad's two triangles, -2 when either is degenerate
+	static Float GetFoldCosine( const VectorT& n0, const VectorT& n1 )
+	{
+		const Float lengths = std::sqrt( ( n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2] ) * ( n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2] ) );
+		if( lengths <= 1e-12 )
+		{
+			return -2.0;
+		}
+		return ( n0[0] * n1[0] + n0[1] * n1[1] + n0[2] * n1[2] ) / lengths;
+	}
+
+	// Splits each quad along the diagonal whose two triangles are closer to coplanar. DC vertices sit on sharp features, so
+	// the fixed split Surface Nets uses would cut across creases and leave notches
+	static std::vector<uint32_t> Triangulate( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads )
+	{
+		std::vector<uint32_t> indices;
+		indices.reserve( quads.size() / 4 * 6 );
+		for( size_t q = 0; q < quads.size(); q += 4 )
+		{
+			const uint32_t i0 = quads[q];
+			const uint32_t i1 = quads[q + 1];
+			const uint32_t i2 = quads[q + 2];
+			const uint32_t i3 = quads[q + 3];
+			const auto& p0 = positions[i0];
+			const auto& p1 = positions[i1];
+			const auto& p2 = positions[i2];
+			const auto& p3 = positions[i3];
+			const Float fold02 = GetFoldCosine( GetTriangleNormal( p0, p1, p2 ), GetTriangleNormal( p0, p2, p3 ) );
+			const Float fold13 = GetFoldCosine( GetTriangleNormal( p0, p1, p3 ), GetTriangleNormal( p1, p2, p3 ) );
+			if( fold02 >= fold13 )
+			{
+				indices.insert( indices.end(), { i0, i1, i2, i0, i2, i3 } );
+			}
+			else
+			{
+				indices.insert( indices.end(), { i0, i1, i3, i1, i2, i3 } );
+			}
+		}
+		return indices;
+	}
+
+	// Area-weighted vertex normals: every triangle adds its cross product (outward by the emitted winding) to each of its
+	// corners, then each vertex normalises its sum
+	static std::vector<VectorT> ComputeNormals( const std::vector<VectorT>& positions, const std::vector<uint32_t>& indices )
+	{
+		std::vector<VectorT> normals( positions.size(), VectorT{ 0.0, 0.0, 0.0 } );
+		for( size_t t = 0; t < indices.size(); t += 3 )
+		{
+			const VectorT n = GetTriangleNormal( positions[indices[t]], positions[indices[t + 1]], positions[indices[t + 2]] );
+			for( size_t i = 0; i < 3; ++i )
+			{
+				auto& normal = normals[indices[t + i]];
+				for( int j = 0; j < 3; ++j )
+				{
+					normal[j] += n[j];
+				}
+			}
+		}
+		for( auto& normal : normals )
+		{
+			const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
+			if( length > 1e-12 )
+			{
+				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
+			}
+			else
+			{
+				// Degenerate 1-ring; arbitrary but deterministic
+				normal = { 0.0, 0.0, 1.0 };
+			}
+		}
+		return normals;
+	}
+};
 
 
 }
@@ -912,8 +1302,8 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), m_cellSize );
 	case Method::SurfaceNets:
 		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision, m_relaxIterations );
-	//case Method::DualContouring:
-	//	return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision, m_noiseStrength );
+	case Method::DualContouring:
+		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), m_cellSize, m_subdivision );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
