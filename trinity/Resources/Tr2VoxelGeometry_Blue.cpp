@@ -38,8 +38,6 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "shapeChannelIndex", GetShapeChannelIndex, SetShapeChannelIndex, "Index of the shape channel in the voxel data" )
 		MAP_ATTRIBUTE( "occupancyChannelIndex", m_occupancyChannelIndex, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "occupancyChannelIndex", GetOccupancyChannelIndex, SetOccupancyChannelIndex, "Index of the occupancy channel in the voxel data" )
-		MAP_ATTRIBUTE( "cellSize", m_cellSize, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "cellSize", GetCellSize, SetCellSize, "Size of each voxel cell" )
 		MAP_ATTRIBUTE( "subdivision", m_subdivision, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry" )
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
@@ -63,8 +61,8 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 			3,
 			"Initializes the voxel geometry\n\n"
 			":param voxelData: Tr2VoxelData object containing the voxel data\n"
-			":param occupancyChannelIndex: Index of the occupancy channel\n"
-			":param cellSize: Size of each voxel cell\n" )
+			":param sdfChannelIndex: Index of the SDF channel\n"
+			":param occupancyChannelIndex: Index of the occupancy channel\n" )
 		MAP_METHOD_AND_WRAP(
 			"TestBuildFile",
 			TestBuildFile,

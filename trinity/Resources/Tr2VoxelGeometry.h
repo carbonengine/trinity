@@ -18,7 +18,7 @@ public:
 		DualContouring,
 	};
 
-	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<float> cellSize );
+	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<uint32_t> occupancyChannelIndex );
 
 	bool Initialize() override;
 
@@ -30,9 +30,6 @@ public:
 
 	uint32_t GetOccupancyChannelIndex() const;
 	void SetOccupancyChannelIndex( uint32_t channelIndex );
-
-	float GetCellSize() const;
-	void SetCellSize( float cellSize );
 
 	uint32_t GetSubdivision() const;
 	void SetSubdivision( uint32_t subdivision );
@@ -69,7 +66,6 @@ private:
 	Tr2VoxelDataPtr m_voxelData;
 	uint32_t m_shapeChannelIndex = 0;
 	uint32_t m_occupancyChannelIndex = 0;
-	float m_cellSize = 1.f;
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
 	Method m_method = Method::Simple;

@@ -63,6 +63,7 @@ public:
 	bool Max( const Tr2SignedDistanceField& other );
 
 	[[nodiscard]] static bool IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type );
+	[[nodiscard]] static bool IsValidOccupancyChannelType( const Tr2VoxelData::PayloadType& type );
 
 private:
 	Tr2VoxelData::Dimensions m_dimensions;

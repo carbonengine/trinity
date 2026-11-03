@@ -163,6 +163,11 @@ bool Tr2SignedDistanceField::IsValidSdfChannelType( const Tr2VoxelData::PayloadT
 	return type.elementCount == 1 && ( type.type == Tr2VoxelDataType::Float || ( type.type == Tr2VoxelDataType::Int8 && type.normalized ) );
 }
 
+bool Tr2SignedDistanceField::IsValidOccupancyChannelType( const Tr2VoxelData::PayloadType& type )
+{
+	return type.elementCount == 1 && type.type == Tr2VoxelDataType::Boolean;
+}
+
 
 Tr2SignedDistanceField::Int3 Tr2SignedDistanceField::GetGridSize() const
 {
