@@ -273,6 +273,14 @@ protected:
 // it. Cells outside the grid read as empty, so the surface closes at the grid boundary. m_subdivision > 1 runs the
 // construction on a lattice subdivided k-fold whose field is the trilinear interpolation of the SDF. Derived builders
 // decide where the dual vertex goes.
+
+/**
+ * @brief Common ground of the dual methods. Cell centres sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
+ * block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad joining the four blocks sharing
+ * it. Cells outside the grid read as empty, so the surface closes at the grid boundary. m_subdivision > 1 runs the
+ * construction on a lattice subdivided k-fold whose field is the trilinear interpolation of the SDF. Derived builders
+ * decide where the dual vertex goes.
+ */
 class DualGridBuilder : public VoxelBuilder
 {
 public:
@@ -930,7 +938,12 @@ protected:
 		smoothedCurvature = CentreOnMedian( level );
 	}
 
-	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
+	/**
+	 * @brief Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
+	 * @param positions The positions of the vertices.
+	 * @param quads The indices of the quads.
+	 * @param cancel A flag to cancel the operation.
+	 */
 	void Relax( std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
 		if( m_relaxIterations == 0 || quads.empty() )
@@ -1262,8 +1275,6 @@ protected:
 	}
 
 private:
-	using Vec3d = std::array<float, 3>;
-
 	static constexpr float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// Mean of the sign crossings on the block's 12 edges, clamped to the block's inset unit cube and scaled back into
@@ -1420,7 +1431,7 @@ private:
 					}
 					// Rotation in the (p, q) plane zeroing a[p][q]: a = J^T a J, v = v J
 					const float theta = ( a[q][q] - a[p][p] ) / ( 2 * a[p][q] );
-					const float t = ( theta >= 0 ? 1 : -1 ) / ( std::abs( theta ) + std::sqrt( theta * theta + 1 ) );
+					const float t = ( theta >= 0 ? 1.f : -1.f ) / ( std::abs( theta ) + std::sqrt( theta * theta + 1 ) );
 					const float c = 1 / std::sqrt( t * t + 1 );
 					const float s = t * c;
 					for( int k = 0; k < 3; ++k )
