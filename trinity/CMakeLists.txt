@@ -1760,6 +1760,9 @@ set(_SOURCES
     Tr2VoxelData.cpp
     Tr2VoxelData.h
     Tr2VoxelData_Blue.cpp
+    Tr2VoxelTexture.cpp
+    Tr2VoxelTexture.h
+    Tr2VoxelTexture_Blue.cpp
     TriColor.cpp
     TriColor_Blue.cpp
     TriConstants.cpp

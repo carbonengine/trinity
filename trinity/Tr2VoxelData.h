@@ -21,6 +21,37 @@ enum class Tr2VoxelDataType : uint8_t
 	Int32
 };
 
+/**
+ * @brief Returns the name of the given Tr2VoxelDataType as a string.
+ * Useful for debugging and logging purposes.
+ */
+constexpr const char* Tr2VoxelDataTypeName( Tr2VoxelDataType type )
+{
+	switch( type )
+	{
+	case Tr2VoxelDataType::Boolean:
+		return "Boolean";
+	case Tr2VoxelDataType::Float:
+		return "Float";
+	case Tr2VoxelDataType::Float16:
+		return "Float16";
+	case Tr2VoxelDataType::UInt8:
+		return "UInt8";
+	case Tr2VoxelDataType::UInt16:
+		return "UInt16";
+	case Tr2VoxelDataType::UInt32:
+		return "UInt32";
+	case Tr2VoxelDataType::Int8:
+		return "Int8";
+	case Tr2VoxelDataType::Int16:
+		return "Int16";
+	case Tr2VoxelDataType::Int32:
+		return "Int32";
+	default:
+		return "Unknown";
+	}
+}
+
 
 BLUE_CLASS_IMPL( Tr2VoxelData );
 
@@ -145,6 +176,24 @@ public:
 	 * @return A snapshot of the specified payload channel.
 	 */
 	PayloadSnapshot GetPayloadSnapshot( size_t index );
+
+	/**
+	 * @brief Reads one element of a Boolean payload. Boolean payloads store one bit per element, least significant bit first:
+	 * element j of voxel i is bit ( i * elementCount + j ) of the payload data.
+	 * @param data The payload data.
+	 * @param bitIndex The index of the element's bit.
+	 * @return The value of the element.
+	 */
+	static bool GetPackedBit( const uint8_t* data, size_t bitIndex );
+
+	/**
+	 * @brief Writes one element of a Boolean payload (see GetPackedBit for the layout).
+	 * @param data The payload data.
+	 * @param bitIndex The index of the element's bit.
+	 * @param value The value to write.
+	 * @return True if the stored value changed.
+	 */
+	static bool SetPackedBit( uint8_t* data, size_t bitIndex, bool value );
 
 	// ICustomPersist interface for persisting m_payload as a custom binary block
 	void GetWriteBufferAndSize( const char* memberName, unsigned char** buffer, size_t* bufferSize ) override;
