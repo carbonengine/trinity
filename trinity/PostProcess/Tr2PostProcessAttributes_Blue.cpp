@@ -19,10 +19,7 @@ Be::VarChooser Tr2PostProcessPriorityChooser[] = {
 	  "Medium Priority" },
 	{ "Low",
 	  BeCast( Priority::LOW_PRIORITY ),
-	  "Low Priority" },
-	{ "SceneDefault",
-	  BeCast( Priority::SCENE_DEFAULT_PRIORITY ),
-	  "Scene Default (lowest) Priority" },
+	  "Low (lowest override) Priority" },
 	{ 0 }
 };
 BLUE_REGISTER_ENUM_EX( "Tr2PostProcessPriority", Priority, Tr2PostProcessPriorityChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
