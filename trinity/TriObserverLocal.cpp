@@ -10,7 +10,8 @@ TriObserverLocal::TriObserverLocal( IRoot* lockobj ) :
 	m_front( 0.0f, 0.0f, 1.0f ),
 	m_position( 0.0f, 0.0f, 0.0f ),
 	m_mute( false ),
-	m_parentBall( nullptr )
+	m_parentBall( nullptr ),
+	m_parentBallStale( true )
 {
 }
 
@@ -45,10 +46,10 @@ void TriObserverLocal::Update( const Matrix& worldTransform )
 
 void TriObserverLocal::SetParentBall( IRoot* ball )
 {
-	if( m_observer.p != m_parentBallObserver.p )
+	if( m_parentBallStale )
 	{
-		m_parentBallObserver = m_observer;
 		m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_observer.p );
+		m_parentBallStale = false;
 	}
 	if( m_parentBall )
 	{
@@ -64,6 +65,7 @@ IBluePlacementObserver* TriObserverLocal::GetObserver()
 void TriObserverLocal::SetObserver( IBluePlacementObserver* obs )
 {
 	m_observer = obs;
+	m_parentBallStale = true;
 }
 
 void TriObserverLocal::SetPosition( Vector3 pos )
@@ -105,6 +107,10 @@ void TriObserverLocal::SetMute( bool isMute )
 
 bool TriObserverLocal::OnModified( Be::Var* val )
 {
+	if( IsMatch( val, m_observer ) )
+	{
+		m_parentBallStale = true;
+	}
 	return true;
 }
 

@@ -14,7 +14,8 @@ struct Vector3;
 struct Matrix;
 
 BLUE_CLASS( TriObserverLocal ) :
-	public ITriObserverLocal
+	public ITriObserverLocal,
+	public INotify
 {
 public:
 	TriObserverLocal( IRoot* lockobj = NULL );
@@ -50,8 +51,8 @@ private:
 	Vector3 m_front;
 	Vector3 m_position;
 	IBluePlacementObserverPtr m_observer;
-	IBluePlacementObserverPtr m_parentBallObserver;
 	ITr2AudParentBall* m_parentBall;
+	bool m_parentBallStale;
 };
 
 BLUE_DECLARE_VECTOR( TriObserverLocal );
