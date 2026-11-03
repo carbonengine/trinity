@@ -251,9 +251,10 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, const Tr2SurfaceCutParams& cutParams ) :
+	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
 		VoxelBuilder( std::move( sdf ), std::move( occupancy ), cellSize ),
 		m_subdivision( subdivision ),
+		m_relaxIterations( relaxIterations ),
 		m_cutParams( cutParams )
 	{
 	}
@@ -623,14 +624,133 @@ protected:
 		}
 	}
 
+	// Splits each quad along the diagonal whose two triangles are closer to coplanar. DC vertices sit on sharp features, so
+	// the fixed split Surface Nets uses would cut across creases and leave notches
+	static std::vector<uint32_t> Triangulate( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads )
+	{
+		std::vector<uint32_t> indices;
+		indices.reserve( quads.size() / 4 * 6 );
+		for( size_t q = 0; q < quads.size(); q += 4 )
+		{
+			const uint32_t i0 = quads[q];
+			const uint32_t i1 = quads[q + 1];
+			const uint32_t i2 = quads[q + 2];
+			const uint32_t i3 = quads[q + 3];
+			const auto& p0 = positions[i0];
+			const auto& p1 = positions[i1];
+			const auto& p2 = positions[i2];
+			const auto& p3 = positions[i3];
+			const Float fold02 = GetFoldCosine( GetTriangleNormal( p0, p1, p2 ), GetTriangleNormal( p0, p2, p3 ) );
+			const Float fold13 = GetFoldCosine( GetTriangleNormal( p0, p1, p3 ), GetTriangleNormal( p1, p2, p3 ) );
+			if( fold02 >= fold13 )
+			{
+				indices.insert( indices.end(), { i0, i1, i2, i0, i2, i3 } );
+			}
+			else
+			{
+				indices.insert( indices.end(), { i0, i1, i3, i1, i2, i3 } );
+			}
+		}
+		return indices;
+	}
+
+	// Area-weighted vertex normals: every triangle adds its cross product (outward by the emitted winding) to each of its
+	// corners, then each vertex normalises its sum
+	static std::vector<VectorT> ComputeNormals( const std::vector<VectorT>& positions, const std::vector<uint32_t>& indices )
+	{
+		std::vector<VectorT> normals( positions.size(), VectorT{ 0.0, 0.0, 0.0 } );
+		for( size_t t = 0; t < indices.size(); t += 3 )
+		{
+			const VectorT n = GetTriangleNormal( positions[indices[t]], positions[indices[t + 1]], positions[indices[t + 2]] );
+			for( size_t i = 0; i < 3; ++i )
+			{
+				auto& normal = normals[indices[t + i]];
+				for( int j = 0; j < 3; ++j )
+				{
+					normal[j] += n[j];
+				}
+			}
+		}
+		for( auto& normal : normals )
+		{
+			const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
+			if( length > 1e-12 )
+			{
+				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
+			}
+			else
+			{
+				// Degenerate 1-ring; arbitrary but deterministic
+				normal = { 0.0, 0.0, 1.0 };
+			}
+		}
+		return normals;
+	}
+
+	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
+	void Relax( std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	{
+		if( m_relaxIterations == 0 || quads.empty() )
+		{
+			return;
+		}
+		std::vector<std::vector<uint32_t>> neighbors( positions.size() );
+		for( size_t q = 0; q < quads.size(); q += 4 )
+		{
+			for( size_t i = 0; i < 4; ++i )
+			{
+				const uint32_t a = quads[q + i];
+				const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
+				neighbors[a].push_back( b );
+				neighbors[b].push_back( a );
+			}
+		}
+		for( auto& list : neighbors )
+		{
+			std::sort( list.begin(), list.end() );
+			list.erase( std::unique( list.begin(), list.end() ), list.end() );
+		}
+
+		std::vector<VectorT> moved( positions.size() );
+		for( uint32_t iteration = 0; iteration < m_relaxIterations; ++iteration )
+		{
+			if( cancel )
+			{
+				return;
+			}
+			for( size_t i = 0; i < positions.size(); ++i )
+			{
+				const auto& p = positions[i];
+				if( neighbors[i].empty() )
+				{
+					moved[i] = p;
+					continue;
+				}
+				VectorT sum = { 0.0, 0.0, 0.0 };
+				for( auto neighbor : neighbors[i] )
+				{
+					sum += positions[neighbor];
+				}
+				const Float count = Float( neighbors[i].size() );
+				for( int j = 0; j < 3; ++j )
+				{
+					moved[i][j] = p[j] + s_relaxAlpha * ( sum[j] / count - p[j] );
+				}
+			}
+			positions.swap( moved );
+		}
+	}
+
 	const uint32_t m_subdivision;
 	const Tr2SurfaceCutParams m_cutParams;
+	const uint32_t m_relaxIterations;
 
 private:
 	static constexpr Float s_featureCos = 0.70710678f; // cos 45 degrees: quads parting wider than this meet at a feature edge
 	static constexpr Float s_cutRampSlope = 0.6f; // a cut grows at most this much per cell of mesh distance from a feature
 	static constexpr int s_unfoldRounds = 3; // rounds of fold repair before a turned over quad's corners go uncut
 	static constexpr std::array<Float, 4> s_cutFractions = { 1.f, 0.5f, 0.25f, 0.f }; // the fractions of its cut a vertex steps down
+	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
 
 	// Area-weighted normal of a quad from its diagonals, outward by the emitted winding
 	static VectorT GetQuadNormal( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, size_t q )
@@ -786,6 +906,24 @@ private:
 		}
 		return window;
 	}
+
+	static VectorT GetTriangleNormal( const VectorT& p0, const VectorT& p1, const VectorT& p2 )
+	{
+		const VectorT a = { p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2] };
+		const VectorT b = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
+		return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
+	}
+
+	// Cosine between the normals of a quad's two triangles, -2 when either is degenerate
+	static Float GetFoldCosine( const VectorT& n0, const VectorT& n1 )
+	{
+		const Float lengths = std::sqrt( ( n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2] ) * ( n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2] ) );
+		if( lengths <= 1e-12 )
+		{
+			return -2.0;
+		}
+		return ( n0[0] * n1[0] + n0[1] * n1[1] + n0[2] * n1[2] ) / lengths;
+	}
 };
 
 
@@ -793,8 +931,7 @@ class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
 	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, cutParams ),
-		m_relaxIterations( relaxIterations )
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -843,14 +980,8 @@ protected:
 		{
 			return {};
 		}
-		auto normals = ComputeNormals( positions, quads );
-
-		std::vector<uint32_t> indices;
-		indices.reserve( quads.size() / 4 * 6 );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			indices.insert( indices.end(), { quads[q], quads[q + 1], quads[q + 2], quads[q], quads[q + 2], quads[q + 3] } );
-		}
+		auto indices = Triangulate( positions, quads );
+		auto normals = ComputeNormals( positions, indices );
 
 		return AllocateBuffers( allocator, buffers, positions, normals, indices, bounds );
 	}
@@ -858,7 +989,6 @@ protected:
 private:
 	using Vec3d = std::array<Float, 3>;
 
-	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
 	static constexpr Float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
 	// Mean of the sign crossings on the block's 12 edges, clamped to the block's inset unit cube and scaled back into
@@ -914,109 +1044,14 @@ private:
 		}
 		return result;
 	}
-
-	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
-	void Relax( std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
-	{
-		if( m_relaxIterations == 0 || quads.empty() )
-		{
-			return;
-		}
-		std::vector<std::vector<uint32_t>> neighbors( positions.size() );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			for( size_t i = 0; i < 4; ++i )
-			{
-				const uint32_t a = quads[q + i];
-				const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
-				neighbors[a].push_back( b );
-				neighbors[b].push_back( a );
-			}
-		}
-		for( auto& list : neighbors )
-		{
-			std::sort( list.begin(), list.end() );
-			list.erase( std::unique( list.begin(), list.end() ), list.end() );
-		}
-
-		std::vector<VectorT> moved( positions.size() );
-		for( uint32_t iteration = 0; iteration < m_relaxIterations; ++iteration )
-		{
-			if( cancel )
-			{
-				return;
-			}
-			for( size_t i = 0; i < positions.size(); ++i )
-			{
-				const auto& p = positions[i];
-				if( neighbors[i].empty() )
-				{
-					moved[i] = p;
-					continue;
-				}
-				VectorT sum = { 0.0, 0.0, 0.0 };
-				for( auto neighbor : neighbors[i] )
-				{
-					sum += positions[neighbor];
-				}
-				const Float count = Float( neighbors[i].size() );
-				for( int j = 0; j < 3; ++j )
-				{
-					moved[i][j] = p[j] + s_relaxAlpha * ( sum[j] / count - p[j] );
-				}
-			}
-			positions.swap( moved );
-		}
-	}
-
-	// Area-weighted vertex normals: every quad adds its diagonal cross product (outward by the emitted winding) to each of
-	// its four corners, then each vertex normalises its sum
-	static std::vector<VectorT> ComputeNormals( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads )
-	{
-		std::vector<VectorT> normals( positions.size(), VectorT{ 0.0, 0.0, 0.0 } );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			const auto& p0 = positions[quads[q]];
-			const auto& p1 = positions[quads[q + 1]];
-			const auto& p2 = positions[quads[q + 2]];
-			const auto& p3 = positions[quads[q + 3]];
-			const VectorT a = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
-			const VectorT b = { p3[0] - p1[0], p3[1] - p1[1], p3[2] - p1[2] };
-			const VectorT n = { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
-			for( size_t i = 0; i < 4; ++i )
-			{
-				auto& normal = normals[quads[q + i]];
-				for( int j = 0; j < 3; ++j )
-				{
-					normal[j] += n[j];
-				}
-			}
-		}
-		for( auto& normal : normals )
-		{
-			const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
-			if( length > 1e-12 )
-			{
-				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
-			}
-			else
-			{
-				// Degenerate 1-ring; arbitrary but deterministic
-				normal = { 0.0, 0.0, 1.0 };
-			}
-		}
-		return normals;
-	}
-
-	const uint32_t m_relaxIterations;
 };
 
 
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, cutParams )
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, float cellSize, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), cellSize, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1053,6 +1088,11 @@ protected:
 		std::vector<uint32_t> quads;
 		Sweep( window, cancel, [&]( const Int3& block ) { return GetDualVertex( window, field, block, scale ); }, positions, quads );
 		if( cancel || quads.empty() )
+		{
+			return {};
+		}
+		Relax( positions, quads, cancel );
+		if( cancel )
 		{
 			return {};
 		}
@@ -1245,87 +1285,6 @@ private:
 			result[j] = ( block[j] + position ) / scale;
 		}
 		return result;
-	}
-
-	static VectorT GetTriangleNormal( const VectorT& p0, const VectorT& p1, const VectorT& p2 )
-	{
-		const VectorT a = { p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2] };
-		const VectorT b = { p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2] };
-		return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
-	}
-
-	// Cosine between the normals of a quad's two triangles, -2 when either is degenerate
-	static Float GetFoldCosine( const VectorT& n0, const VectorT& n1 )
-	{
-		const Float lengths = std::sqrt( ( n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2] ) * ( n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2] ) );
-		if( lengths <= 1e-12 )
-		{
-			return -2.0;
-		}
-		return ( n0[0] * n1[0] + n0[1] * n1[1] + n0[2] * n1[2] ) / lengths;
-	}
-
-	// Splits each quad along the diagonal whose two triangles are closer to coplanar. DC vertices sit on sharp features, so
-	// the fixed split Surface Nets uses would cut across creases and leave notches
-	static std::vector<uint32_t> Triangulate( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads )
-	{
-		std::vector<uint32_t> indices;
-		indices.reserve( quads.size() / 4 * 6 );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			const uint32_t i0 = quads[q];
-			const uint32_t i1 = quads[q + 1];
-			const uint32_t i2 = quads[q + 2];
-			const uint32_t i3 = quads[q + 3];
-			const auto& p0 = positions[i0];
-			const auto& p1 = positions[i1];
-			const auto& p2 = positions[i2];
-			const auto& p3 = positions[i3];
-			const Float fold02 = GetFoldCosine( GetTriangleNormal( p0, p1, p2 ), GetTriangleNormal( p0, p2, p3 ) );
-			const Float fold13 = GetFoldCosine( GetTriangleNormal( p0, p1, p3 ), GetTriangleNormal( p1, p2, p3 ) );
-			if( fold02 >= fold13 )
-			{
-				indices.insert( indices.end(), { i0, i1, i2, i0, i2, i3 } );
-			}
-			else
-			{
-				indices.insert( indices.end(), { i0, i1, i3, i1, i2, i3 } );
-			}
-		}
-		return indices;
-	}
-
-	// Area-weighted vertex normals: every triangle adds its cross product (outward by the emitted winding) to each of its
-	// corners, then each vertex normalises its sum
-	static std::vector<VectorT> ComputeNormals( const std::vector<VectorT>& positions, const std::vector<uint32_t>& indices )
-	{
-		std::vector<VectorT> normals( positions.size(), VectorT{ 0.0, 0.0, 0.0 } );
-		for( size_t t = 0; t < indices.size(); t += 3 )
-		{
-			const VectorT n = GetTriangleNormal( positions[indices[t]], positions[indices[t + 1]], positions[indices[t + 2]] );
-			for( size_t i = 0; i < 3; ++i )
-			{
-				auto& normal = normals[indices[t + i]];
-				for( int j = 0; j < 3; ++j )
-				{
-					normal[j] += n[j];
-				}
-			}
-		}
-		for( auto& normal : normals )
-		{
-			const Float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
-			if( length > 1e-12 )
-			{
-				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
-			}
-			else
-			{
-				// Degenerate 1-ring; arbitrary but deterministic
-				normal = { 0.0, 0.0, 1.0 };
-			}
-		}
-		return normals;
 	}
 };
 
@@ -1609,7 +1568,7 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	case Method::SurfaceNets:
 		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations, cutParams );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, cutParams );
+		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_cellSize, m_subdivision, m_relaxIterations, cutParams );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
