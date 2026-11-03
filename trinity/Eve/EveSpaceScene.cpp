@@ -1353,7 +1353,7 @@ void EveSpaceScene::BeginFrame( Tr2RenderContext& renderContext )
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
-	// Ensure that the camera attachment parent is updated to the current view transform, 
+	// Ensure that the camera attachment parent is updated to the current view transform,
 	// so that any attached objects are in the correct position for the frame.
 	m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
 	m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
