@@ -143,7 +143,7 @@ public:
 		Tr2RenderContext& renderContext );
 	void RunLensflareOcclusionQueries( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
-	void RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext );
+	void RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext );
 
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext );
 	void RenderReflectionPass( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext );

@@ -2388,9 +2388,10 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render the G-buffer batches into albedo, normal, material and velocity, on top of the
-//   depth the depth pass wrote.
+//   depth the depth pass wrote. Opaque batches also write their emissive colour into the
+//   scene colour map, which the lighting pass then adds to; decals leave it untouched.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2408,6 +2409,7 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 		Tr2PushPopRT normalTarget( normalMap, renderContext, 1 );
 		Tr2PushPopRT materialTarget( materialMap, renderContext, 2 );
 		Tr2PushPopRT velocityTarget( velocityMap, renderContext, 3 );
+		Tr2PushPopRT emissiveTarget( colorMap, renderContext, 4 );
 		renderContext.m_esm.SetDepthStencilBuffer( depthMap );
 
 		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 0 );
@@ -2421,6 +2423,7 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
+		renderContext.m_esm.SetRenderTarget( 4, Tr2TextureAL() );
 		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], GBufferTechnique() );

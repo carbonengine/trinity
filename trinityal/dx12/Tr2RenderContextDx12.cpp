@@ -829,12 +829,15 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 
 	auto& blend = m_psoDescription.m_blendDesc;
 	blend.IndependentBlendEnable = m_colorWriteMasks[0] != 0xf || m_colorWriteMasks[1] != 0xf || m_colorWriteMasks[2] != 0xf;
-	for( uint32_t i = 1; i < 4; ++i )
+	for( uint32_t i = 1; i < RENDER_TARGET_COUNT; ++i )
 	{
 		if( blend.IndependentBlendEnable )
 		{
 			blend.RenderTarget[i] = blend.RenderTarget[0];
-			blend.RenderTarget[i].RenderTargetWriteMask = blend.RenderTarget[0].RenderTargetWriteMask & m_colorWriteMasks[i - 1];
+			if( i <= std::size( m_colorWriteMasks ) )
+			{
+				blend.RenderTarget[i].RenderTargetWriteMask = blend.RenderTarget[0].RenderTargetWriteMask & m_colorWriteMasks[i - 1];
+			}
 		}
 		else
 		{

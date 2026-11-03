@@ -120,6 +120,11 @@ const Be::ClassInfo* EveSpaceSceneRenderDriver::ExposeToBlue()
 			"Effect used for distortion",
 			Be::READ )
 
+		MAP_PROPERTY_READONLY(
+			"deferredLightingEffect",
+			GetDeferredLightingEffect,
+			"Effect used by the lighting pass that shades the G-buffer" )
+
 		MAP_ATTRIBUTE(
 			"toolsScenes",
 			m_toolsScenes,

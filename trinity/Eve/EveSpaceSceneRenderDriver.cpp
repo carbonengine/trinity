@@ -145,6 +145,7 @@ ITr2RenderNode::TempOutput* FindNamedOutput( const ITr2RenderNode::Span<ITr2Rend
 EveSpaceSceneRenderDriver::EveSpaceSceneRenderDriver( IRoot* lockobj ) :
 	PARENTLOCK( m_toolsScenes ),
 	m_gpuResourcePool( &GetGlobalGpuResourcePool() ),
+	m_deferredLighting( "res:/graphics/effect/managed/space/system/deferredlighting.fx" ),
 	m_reflectionCorrectionEnabled( true )
 {
 	m_distortionEffect.CreateInstance();
@@ -533,14 +534,14 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique );
 	}
+	const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
+	auto albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
+	auto materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
+	SetNamedOutput( outputs, "GBuffer0", albedoMap );
+	SetNamedOutput( outputs, "GBuffer2", materialMap );
 	{
-		const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
-		auto albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
-		auto materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
-		SetNamedOutput( outputs, "GBuffer0", albedoMap );
-		SetNamedOutput( outputs, "GBuffer2", materialMap );
 		TimeSection gBufferPassSection( m_timers.gBufferPass, "GBufferPass", rootTimer, renderContext );
-		m_scene->RenderGBufferPass( depthBuffer, albedoMap, normalMap, materialMap, velocityMap, renderContext );
+		m_scene->RenderGBufferPass( depthBuffer, albedoMap, normalMap, materialMap, velocityMap, customBackBuffer, renderContext );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
 	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
@@ -572,6 +573,11 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		opaqueBackBuffer = GetOpaqueColorMapIfNeeded( renderSize, outputs );
 
 		RegisterWithVariableStore( shadowResources, m_gpuResourcePool );
+		{
+			TimeSection lightingPassSection( m_timers.lightingPass, "LightingPass", rootTimer, renderContext );
+			m_scene->ApplyPerFrameData( renderContext );
+			m_deferredLighting.Render( customBackBuffer, albedoMap, normalMap, materialMap, renderContext );
+		}
 		bool hasDistortionBatches = false;
 		distortionMap = GetDistortionMapIfNeeded( renderSize );
 		{
@@ -607,6 +613,8 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", Tr2TextureAL{} );
 	normalMap = {};
+	albedoMap = {};
+	materialMap = {};
 
 	BeginRenderPass( renderContext, { customBackBuffer }, depthBuffer );
 	{
@@ -769,6 +777,11 @@ bool EveSpaceSceneRenderDriver::GetDebugMode() const
 EveSpaceScene* EveSpaceSceneRenderDriver::GetScene() const
 {
 	return m_scene;
+}
+
+Tr2Effect* EveSpaceSceneRenderDriver::GetDeferredLightingEffect() const
+{
+	return m_deferredLighting.GetEffect();
 }
 
 void EveSpaceSceneRenderDriver::SetScene( EveSpaceScene* scene )

@@ -299,7 +299,7 @@ public:
 	bool m_dirtyPso;
 
 protected:
-	static const uint32_t RENDER_TARGET_COUNT = 4;
+	static const uint32_t RENDER_TARGET_COUNT = D3D12_SIMULTANEOUS_RENDER_TARGET_COUNT;
 
 	struct BoundRT
 	{

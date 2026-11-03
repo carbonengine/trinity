@@ -1496,6 +1496,8 @@ set(_SOURCES
     Tr2DebugRenderer.cpp
     Tr2DebugRenderer.h
     Tr2DebugRenderer_Blue.cpp
+    Tr2DeferredLighting.cpp
+    Tr2DeferredLighting.h
     Tr2Denoiser.cpp
     Tr2Denoiser.h
     Tr2Denoiser_Blue.cpp

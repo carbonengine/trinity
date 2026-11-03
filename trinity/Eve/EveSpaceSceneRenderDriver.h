@@ -8,6 +8,7 @@
 #include "../Tr2GpuResourcePool.h"
 #include "../ITr2RenderNode.h"
 #include "../Tr2ProfileTimer.h"
+#include "../Tr2DeferredLighting.h"
 
 
 BLUE_DECLARE( Tr2RenderTarget );
@@ -92,6 +93,8 @@ public:
 	EveSpaceScene* GetScene() const;
 	void SetScene( EveSpaceScene * scene );
 
+	Tr2Effect* GetDeferredLightingEffect() const;
+
 	EXPOSE_TO_BLUE();
 
 private:
@@ -130,6 +133,7 @@ private:
 	Settings m_settings;
 
 	Tr2EffectPtr m_distortionEffect;
+	Tr2DeferredLighting m_deferredLighting;
 
 	PITr2SceneVector m_toolsScenes;
 
@@ -163,6 +167,7 @@ private:
 		Tr2ProfileTimer background;
 		Tr2ProfileTimer depthPass;
 		Tr2ProfileTimer gBufferPass;
+		Tr2ProfileTimer lightingPass;
 		Tr2ProfileTimer mainPass;
 		Tr2ProfileTimer reflections;
 		Tr2ProfileTimer shadows;
