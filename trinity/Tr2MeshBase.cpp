@@ -537,6 +537,26 @@ void Tr2MeshBase::SetShaderOption( const BlueSharedString& name, const BlueShare
 	}
 }
 
+bool Tr2MeshBase::AllAreasHaveTechnique( std::initializer_list<TriBatchType> areaTypes, const BlueSharedString& techniqueName ) const
+{
+	bool hasAreas = false;
+	for( auto areaType : areaTypes )
+	{
+		for( const Tr2MeshArea* area : *GetAreas( areaType ) )
+		{
+			const auto material = area->GetMaterialInterface();
+			const auto shader = material ? material->GetShaderStateInterface() : nullptr;
+			uint32_t technique;
+			if( !shader || !shader->GetTechniqueIndex( techniqueName, technique ) )
+			{
+				return false;
+			}
+			hasAreas = true;
+		}
+	}
+	return hasAreas;
+}
+
 void Tr2MeshBase::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Mesh Bounds" );

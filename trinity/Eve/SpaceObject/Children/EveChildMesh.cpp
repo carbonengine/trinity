@@ -587,10 +587,12 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 
 					if( geometryRes )
 					{
+						const bool decalsInGBuffer = m_mesh->AllAreasHaveTechnique( { TRIBATCHTYPE_OPAQUE, TRIBATCHTYPE_DECAL }, GBufferTechnique() );
 						DecalMeshCache meshCache;
 						// run over every decal and update it
 						for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 						{
+							( *it )->SetGBufferOutput( decalsInGBuffer );
 							// now prep to get the renderables
 							( *it )->GetInstancedRenderables( renderables, meshCache, m_instancedMesh, m_currentInstanceScreenSize );
 						}
@@ -606,10 +608,12 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 			{
 				if( auto geometryRes = m_mesh->GetGeometryResource() )
 				{
+					const bool decalsInGBuffer = m_mesh->AllAreasHaveTechnique( { TRIBATCHTYPE_OPAQUE, TRIBATCHTYPE_DECAL }, GBufferTechnique() );
 					DecalMeshCache meshCache;
 					// run over every decal and update it
 					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 					{
+						( *it )->SetGBufferOutput( decalsInGBuffer );
 						// now prep to get the renderables
 						( *it )->GetRenderables( renderables, meshCache, geometryRes, m_currentScreenSize );
 					}

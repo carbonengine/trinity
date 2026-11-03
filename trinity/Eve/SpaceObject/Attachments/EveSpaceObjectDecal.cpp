@@ -29,9 +29,26 @@ static BlueStructureDefinition s_eveSpaceObjectDecalIndexDef[] = {
 	{ 0 }
 };
 
+namespace
+{
+const BlueSharedString& GBufferOption()
+{
+	static const BlueSharedString option( "DECAL_GBUFFER" );
+	return option;
+}
+
+const BlueSharedString& GBufferOptionValue( bool enabled )
+{
+	static const BlueSharedString enabledValue( "DG_ENABLED" );
+	static const BlueSharedString disabledValue( "DG_DISABLED" );
+	return enabled ? enabledValue : disabledValue;
+}
+}
+
 // ------------------------------------------------------------------------------------------------------
 EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_display( true ),
+	m_gBufferOutput( false ),
 	m_position( 0.f, 0.f, 0.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scaling( 1.f, 1.f, 1.f ),
@@ -94,6 +111,10 @@ bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 		{
 			m_decalGeometry = nullptr;
 		}
+	}
+	else if( IsMatch( value, m_decalEffect ) )
+	{
+		ReadGBufferOutput();
 	}
 	return true;
 }
@@ -396,6 +417,7 @@ void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal* object )
 	m_decalMatrix = object->m_decalMatrix;
 	m_inverseDecalMatrix = object->m_inverseDecalMatrix;
 	m_decalEffect = object->m_decalEffect;
+	m_gBufferOutput = object->m_gBufferOutput;
 	m_minScreenSize = object->m_minScreenSize;
 }
 
@@ -497,6 +519,7 @@ void EveSpaceObjectDecal::SetBoneMatrix( const Float4x3* bonesMatrices, int bone
 void EveSpaceObjectDecal::SetEffect( Tr2EffectPtr newEffect )
 {
 	m_decalEffect = newEffect;
+	ReadGBufferOutput();
 }
 
 void EveSpaceObjectDecal::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -505,6 +528,25 @@ void EveSpaceObjectDecal::SetShaderOption( const BlueSharedString& name, const B
 	{
 		m_decalEffect->SetOption( name, value );
 	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//  Selects the decal shader permutation that has a GBuffer technique. The parent enables it
+//  only when its own mesh is drawn into the G-buffer.
+// --------------------------------------------------------------------------------------
+void EveSpaceObjectDecal::SetGBufferOutput( bool enabled )
+{
+	if( m_decalEffect && enabled != m_gBufferOutput )
+	{
+		m_decalEffect->SetOption( GBufferOption(), GBufferOptionValue( enabled ) );
+		m_gBufferOutput = enabled;
+	}
+}
+
+void EveSpaceObjectDecal::ReadGBufferOutput()
+{
+	m_gBufferOutput = m_decalEffect && m_decalEffect->GetOption( GBufferOption() ) == GBufferOptionValue( true );
 }
 
 // --------------------------------------------------------------------------------------

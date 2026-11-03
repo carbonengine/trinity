@@ -43,6 +43,7 @@ public:
 
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
+	bool AllAreasHaveTechnique( std::initializer_list<TriBatchType> areaTypes, const BlueSharedString& techniqueName ) const;
 
 	int GetMeshIndex() const
 	{

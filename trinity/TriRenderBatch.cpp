@@ -300,3 +300,9 @@ void PartitionByTechnique( ITriRenderBatchAccumulator& source, const BlueSharedS
 	PartitionBatches( source.GetBatches(), techniqueName, withTechnique.GetBatches(), withoutTechnique.GetBatches() );
 	source.Clear();
 }
+
+const BlueSharedString& GBufferTechnique()
+{
+	static const BlueSharedString gBufferTechnique( "GBuffer" );
+	return gBufferTechnique;
+}

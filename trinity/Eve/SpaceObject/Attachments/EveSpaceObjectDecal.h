@@ -151,6 +151,7 @@ public:
 	void SetEffect( Tr2EffectPtr newEffect );
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
+	void SetGBufferOutput( bool enabled );
 
 	void SetHighDetailDecalState( bool isFrozen );
 
@@ -163,6 +164,7 @@ private:
 	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache & meshCache );
 	// update
 	void UpdateDecalMatrix();
+	void ReadGBufferOutput();
 	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
 
 	bool HasStaticIndexBuffers() const;
@@ -179,6 +181,7 @@ private:
 
 	// decal shader
 	Tr2EffectPtr m_decalEffect;
+	bool m_gBufferOutput;
 
 	// orientation data of the decal projection
 	Vector3 m_position;

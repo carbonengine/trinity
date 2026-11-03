@@ -1578,12 +1578,14 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 	if( m_mesh && m_isMeshVisible )
 	{
 		TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-		if( geometryRes )
+		if( geometryRes && !m_decals.empty() )
 		{
+			const bool decalsInGBuffer = m_mesh->AllAreasHaveTechnique( { TRIBATCHTYPE_OPAQUE, TRIBATCHTYPE_DECAL }, GBufferTechnique() );
 			DecalMeshCache meshCache;
 			// runn over every decal and update it
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
+				( *it )->SetGBufferOutput( decalsInGBuffer );
 				// now prep to get the renderables
 				( *it )->GetRenderables( renderables, meshCache, geometryRes, m_meshScreenSize );
 			}
