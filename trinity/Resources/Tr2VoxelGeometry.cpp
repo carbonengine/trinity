@@ -266,6 +266,8 @@ protected:
 		Vector3 position;
 		Vector3 normal; // smooth, for displacement
 		Vector3 shadingNormal; // split across hard edges
+		float curvature; // signed, > 0 on ridges and < 0 in crevices
+		float smoothedCurvature; // curvature averaged over a wider neighbourhood
 	};
 	using Float = float;
 	using VectorT = Vector3;
@@ -396,7 +398,7 @@ protected:
 	}
 
 	// Moves grid cell space positions into mesh space and allocates the vertex and index buffers
-	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<VectorT>& shadingNormals, const std::vector<uint32_t>& indices, CcpMath::AxisAlignedBox& bounds ) const
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<VectorT>& shadingNormals, const std::vector<Float>& curvature, const std::vector<Float>& smoothedCurvature, const std::vector<uint32_t>& indices, CcpMath::AxisAlignedBox& bounds ) const
 	{
 		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
 		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
@@ -409,6 +411,8 @@ protected:
 			vertices[i].position = ( origin + Vector3( float( p[0] + 0.5 ), float( p[1] + 0.5 ), float( p[2] + 0.5 ) ) ) * m_cellSize;
 			vertices[i].normal = Vector3( float( n[0] ), float( n[1] ), float( n[2] ) );
 			vertices[i].shadingNormal = Vector3( float( s[0] ), float( s[1] ), float( s[2] ) );
+			vertices[i].curvature = float( curvature[i] );
+			vertices[i].smoothedCurvature = float( smoothedCurvature[i] );
 		}
 
 		bounds = GetBounds( vertices );
@@ -431,6 +435,8 @@ protected:
 		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
 		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
 		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 1 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 6 ) );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::TexCoord, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 1 ), uint32_t( sizeof( float ) * 9 ) );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::TexCoord, uint8_t( 1 ), cmf::ElementType::Float32, uint8_t( 1 ), uint32_t( sizeof( float ) * 10 ) );
 
 		return { vbView, ibView, decl };
 	}
@@ -697,8 +703,8 @@ protected:
 	// fan's area-weighted normal; every copy keeps the smooth normal for displacement. Triangles under s_minShadingArea
 	// (grid cell units) have unreliable normals, so they never split: they join every fan they share an edge with, and a
 	// vertex they join into a single fan shades with its smooth normal. Returns the shading normals, with positions,
-	// normals and indices rewritten to the split vertices.
-	static std::vector<VectorT> SplitNormals( std::vector<VectorT>& positions, std::vector<VectorT>& normals, std::vector<uint32_t>& indices )
+	// normals, curvatures and indices rewritten to the split vertices.
+	static std::vector<VectorT> SplitNormals( std::vector<VectorT>& positions, std::vector<VectorT>& normals, std::vector<Float>& curvature, std::vector<Float>& smoothedCurvature, std::vector<uint32_t>& indices )
 	{
 		const size_t vertexCount = positions.size();
 		const size_t triangleCount = indices.size() / 3;
@@ -749,9 +755,13 @@ protected:
 		std::vector<VectorT> splitPositions;
 		std::vector<VectorT> splitNormals;
 		std::vector<VectorT> shadingNormals;
+		std::vector<Float> splitCurvature;
+		std::vector<Float> splitSmoothedCurvature;
 		splitPositions.reserve( vertexCount );
 		splitNormals.reserve( vertexCount );
 		shadingNormals.reserve( vertexCount );
+		splitCurvature.reserve( vertexCount );
+		splitSmoothedCurvature.reserve( vertexCount );
 		std::vector<uint32_t> splitIndices( indices.size() );
 		const auto shadingSplitCos = cosf( s_shadingSplitDegrees * 3.14159265358979323846 / 180.0 );
 
@@ -814,6 +824,8 @@ protected:
 					splitPositions.push_back( positions[v] );
 					splitNormals.push_back( normals[v] );
 					shadingNormals.push_back( shading );
+					splitCurvature.push_back( curvature[v] );
+					splitSmoothedCurvature.push_back( smoothedCurvature[v] );
 				}
 				splitIndices[vertexCorners[first + i]] = copies[root];
 			}
@@ -821,8 +833,70 @@ protected:
 
 		positions.swap( splitPositions );
 		normals.swap( splitNormals );
+		curvature.swap( splitCurvature );
+		smoothedCurvature.swap( splitSmoothedCurvature );
 		indices.swap( splitIndices );
 		return shadingNormals;
+	}
+
+	// Signed curvature per vertex: how far the vertex stands out of its quad-perimeter ring along its normal, over the ring's
+	// mean edge length, so positive on ridges and negative in crevices. Each output is that raw value after its own number
+	// of smoothing passes (half the vertex plus half its ring's mean), centred on the mesh's median so a gently convex
+	// body reads neutral.
+	static void ComputeCurvature( const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<uint32_t>& quads, std::vector<Float>& curvature, std::vector<Float>& smoothedCurvature )
+	{
+		const size_t vertexCount = positions.size();
+		const auto neighbors = GetQuadNeighbors( vertexCount, quads );
+
+		std::vector<Float> level( vertexCount, 0.f );
+		for( size_t i = 0; i < vertexCount; ++i )
+		{
+			const auto& ring = neighbors[i];
+			if( ring.empty() )
+			{
+				continue;
+			}
+			const VectorT& p = positions[i];
+			VectorT centroid = { 0.0, 0.0, 0.0 };
+			Float edge = 0;
+			for( auto neighbor : ring )
+			{
+				centroid += positions[neighbor];
+				edge += Length( positions[neighbor] - p );
+			}
+			const Float count = Float( ring.size() );
+			edge /= count;
+			if( edge > 1e-9f )
+			{
+				level[i] = Dot( p - centroid / count, normals[i] ) / edge;
+			}
+		}
+
+		std::vector<Float> below( vertexCount );
+		for( uint32_t pass = 1; pass <= s_smoothedCurvaturePasses; ++pass )
+		{
+			level.swap( below );
+			for( size_t i = 0; i < vertexCount; ++i )
+			{
+				const auto& ring = neighbors[i];
+				if( ring.empty() )
+				{
+					level[i] = below[i];
+					continue;
+				}
+				Float sum = 0;
+				for( auto neighbor : ring )
+				{
+					sum += below[neighbor];
+				}
+				level[i] = 0.5f * below[i] + 0.5f * sum / Float( ring.size() );
+			}
+			if( pass == s_curvaturePasses )
+			{
+				curvature = CentreOnMedian( level );
+			}
+		}
+		smoothedCurvature = CentreOnMedian( level );
 	}
 
 	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
@@ -832,22 +906,7 @@ protected:
 		{
 			return;
 		}
-		std::vector<std::vector<uint32_t>> neighbors( positions.size() );
-		for( size_t q = 0; q < quads.size(); q += 4 )
-		{
-			for( size_t i = 0; i < 4; ++i )
-			{
-				const uint32_t a = quads[q + i];
-				const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
-				neighbors[a].push_back( b );
-				neighbors[b].push_back( a );
-			}
-		}
-		for( auto& list : neighbors )
-		{
-			std::sort( list.begin(), list.end() );
-			list.erase( std::unique( list.begin(), list.end() ), list.end() );
-		}
+		const auto neighbors = GetQuadNeighbors( positions.size(), quads );
 
 		std::vector<VectorT> moved( positions.size() );
 		for( uint32_t iteration = 0; iteration < m_relaxIterations; ++iteration )
@@ -891,6 +950,47 @@ private:
 	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
 	static constexpr Float s_shadingSplitDegrees = 120.f; // adjacent triangles folding wider than this split the shading normal
 	static constexpr Float s_minShadingArea = 0.05f; // triangles smaller than this, in grid cell units, shade with the smooth normal
+	static constexpr uint32_t s_curvaturePasses = 2; // smoothing passes of the curvature element
+	static constexpr uint32_t s_smoothedCurvaturePasses = 8; // smoothing passes of the smoothed curvature element, wide enough to hide per-cell ripple
+
+	// The distinct vertices sharing a quad edge with each vertex
+	static std::vector<std::vector<uint32_t>> GetQuadNeighbors( size_t vertexCount, const std::vector<uint32_t>& quads )
+	{
+		std::vector<std::vector<uint32_t>> neighbors( vertexCount );
+		for( size_t q = 0; q < quads.size(); q += 4 )
+		{
+			for( size_t i = 0; i < 4; ++i )
+			{
+				const uint32_t a = quads[q + i];
+				const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
+				neighbors[a].push_back( b );
+				neighbors[b].push_back( a );
+			}
+		}
+		for( auto& list : neighbors )
+		{
+			std::sort( list.begin(), list.end() );
+			list.erase( std::unique( list.begin(), list.end() ), list.end() );
+		}
+		return neighbors;
+	}
+
+	// The values less their median
+	static std::vector<Float> CentreOnMedian( std::vector<Float> values )
+	{
+		if( values.empty() )
+		{
+			return values;
+		}
+		auto sorted = values;
+		std::nth_element( sorted.begin(), sorted.begin() + sorted.size() / 2, sorted.end() );
+		const Float median = sorted[sorted.size() / 2];
+		for( auto& value : values )
+		{
+			value -= median;
+		}
+		return values;
+	}
 
 	// Area-weighted normal of a quad from its diagonals, outward by the emitted winding
 	static VectorT GetQuadNormal( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, size_t q )
@@ -1122,9 +1222,12 @@ protected:
 		}
 		auto indices = Triangulate( positions, quads );
 		auto normals = ComputeNormals( positions, indices );
-		auto shadingNormals = SplitNormals( positions, normals, indices );
+		std::vector<Float> curvature;
+		std::vector<Float> smoothedCurvature;
+		ComputeCurvature( positions, normals, quads, curvature, smoothedCurvature );
+		auto shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, indices );
 
-		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, indices, bounds );
+		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, indices, bounds );
 	}
 
 private:
@@ -1244,9 +1347,12 @@ protected:
 		}
 		auto indices = Triangulate( positions, quads );
 		auto normals = ComputeNormals( positions, indices );
-		auto shadingNormals = SplitNormals( positions, normals, indices );
+		std::vector<Float> curvature;
+		std::vector<Float> smoothedCurvature;
+		ComputeCurvature( positions, normals, quads, curvature, smoothedCurvature );
+		auto shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, indices );
 
-		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, indices, bounds );
+		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, indices, bounds );
 	}
 
 private:
