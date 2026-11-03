@@ -6,6 +6,7 @@
 #include "../Tr2SignedDistanceField.h"
 #include "../Tr2SurfaceCuts.h"
 #include <cmf/writer.h>
+#include <numeric>
 #include <queue>
 
 
@@ -263,7 +264,8 @@ protected:
 	struct Vertex
 	{
 		Vector3 position;
-		Vector3 normal;
+		Vector3 normal; // smooth, for displacement
+		Vector3 shadingNormal; // split across hard edges
 	};
 	using Float = float;
 	using VectorT = Vector3;
@@ -394,7 +396,7 @@ protected:
 	}
 
 	// Moves grid cell space positions into mesh space and allocates the vertex and index buffers
-	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<uint32_t>& indices, CcpMath::AxisAlignedBox& bounds ) const
+	std::tuple<cmf::BufferView, cmf::BufferView, cmf::Span<cmf::VertexElement>> AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<VectorT>& positions, const std::vector<VectorT>& normals, const std::vector<VectorT>& shadingNormals, const std::vector<uint32_t>& indices, CcpMath::AxisAlignedBox& bounds ) const
 	{
 		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
 		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
@@ -403,8 +405,10 @@ protected:
 		{
 			const auto& p = positions[i];
 			const auto& n = normals[i];
+			const auto& s = shadingNormals[i];
 			vertices[i].position = ( origin + Vector3( float( p[0] + 0.5 ), float( p[1] + 0.5 ), float( p[2] + 0.5 ) ) ) * m_cellSize;
 			vertices[i].normal = Vector3( float( n[0] ), float( n[1] ), float( n[2] ) );
+			vertices[i].shadingNormal = Vector3( float( s[0] ), float( s[1] ), float( s[2] ) );
 		}
 
 		bounds = GetBounds( vertices );
@@ -426,6 +430,7 @@ protected:
 		cmf::Span<cmf::VertexElement> decl;
 		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
 		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
+		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 1 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 6 ) );
 
 		return { vbView, ibView, decl };
 	}
@@ -687,6 +692,139 @@ protected:
 		return normals;
 	}
 
+	// Shading normals with hard edges. The triangles around a vertex fall into fans, joined across the edges they share
+	// where the two fold less than s_shadingSplitDegrees, and every fan gets its own copy of the vertex shaded with the
+	// fan's area-weighted normal; every copy keeps the smooth normal for displacement. Triangles under s_minShadingArea
+	// (grid cell units) have unreliable normals, so they never split: they join every fan they share an edge with, and a
+	// vertex they join into a single fan shades with its smooth normal. Returns the shading normals, with positions,
+	// normals and indices rewritten to the split vertices.
+	static std::vector<VectorT> SplitNormals( std::vector<VectorT>& positions, std::vector<VectorT>& normals, std::vector<uint32_t>& indices )
+	{
+		const size_t vertexCount = positions.size();
+		const size_t triangleCount = indices.size() / 3;
+
+		std::vector<VectorT> triangleNormals( triangleCount );
+		std::vector<uint8_t> tiny( triangleCount, 0 );
+		for( size_t t = 0; t < triangleCount; ++t )
+		{
+			triangleNormals[t] = GetTriangleNormal( positions[indices[t * 3]], positions[indices[t * 3 + 1]], positions[indices[t * 3 + 2]] );
+			tiny[t] = Length( triangleNormals[t] ) * 0.5f < s_minShadingArea ? 1 : 0;
+		}
+
+		// Triangles around each vertex, as corner indices into indices
+		std::vector<uint32_t> firstCorner( vertexCount + 1, 0 );
+		for( auto vertex : indices )
+		{
+			++firstCorner[vertex + 1];
+		}
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			firstCorner[v + 1] += firstCorner[v];
+		}
+		std::vector<uint32_t> vertexCorners( indices.size() );
+		{
+			auto next = firstCorner;
+			for( size_t corner = 0; corner < indices.size(); ++corner )
+			{
+				vertexCorners[next[indices[corner]]++] = uint32_t( corner );
+			}
+		}
+
+		// Two corners on the same vertex share an edge when their triangles have another vertex in common
+		auto sharesEdge = [&]( uint32_t a, uint32_t b ) {
+			for( uint32_t i : { 1u, 2u } )
+			{
+				const uint32_t vertex = indices[a - a % 3 + ( a % 3 + i ) % 3];
+				for( uint32_t j : { 1u, 2u } )
+				{
+					if( vertex == indices[b - b % 3 + ( b % 3 + j ) % 3] )
+					{
+						return true;
+					}
+				}
+			}
+			return false;
+		};
+
+		std::vector<VectorT> splitPositions;
+		std::vector<VectorT> splitNormals;
+		std::vector<VectorT> shadingNormals;
+		splitPositions.reserve( vertexCount );
+		splitNormals.reserve( vertexCount );
+		shadingNormals.reserve( vertexCount );
+		std::vector<uint32_t> splitIndices( indices.size() );
+		const auto shadingSplitCos = cosf( s_shadingSplitDegrees * 3.14159265358979323846 / 180.0 );
+
+		// Union-find over the corners of one vertex
+		std::vector<uint32_t> parent;
+		std::vector<VectorT> sums;
+		std::vector<uint32_t> copies;
+		auto find = [&]( uint32_t i ) {
+			while( parent[i] != i )
+			{
+				parent[i] = parent[parent[i]];
+				i = parent[i];
+			}
+			return i;
+		};
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			const uint32_t first = firstCorner[v];
+			const uint32_t count = firstCorner[v + 1] - first;
+			parent.resize( count );
+			std::iota( parent.begin(), parent.end(), 0u );
+			for( uint32_t i = 0; i < count; ++i )
+			{
+				const uint32_t a = vertexCorners[first + i];
+				const VectorT& na = triangleNormals[a / 3];
+				for( uint32_t j = 0; j < i; ++j )
+				{
+					const uint32_t b = vertexCorners[first + j];
+					if( !sharesEdge( a, b ) )
+					{
+						continue;
+					}
+					const VectorT& nb = triangleNormals[b / 3];
+					if( tiny[a / 3] || tiny[b / 3] || Dot( na, nb ) >= shadingSplitCos * Length( na ) * Length( nb ) )
+					{
+						parent[find( i )] = find( j );
+					}
+				}
+			}
+
+			sums.assign( count, VectorT( 0.f, 0.f, 0.f ) );
+			for( uint32_t i = 0; i < count; ++i )
+			{
+				sums[find( i )] += triangleNormals[vertexCorners[first + i] / 3];
+			}
+			copies.assign( count, std::numeric_limits<uint32_t>::max() );
+			for( uint32_t i = 0; i < count; ++i )
+			{
+				const uint32_t root = find( i );
+				if( copies[root] == std::numeric_limits<uint32_t>::max() )
+				{
+					// A degenerate fan shades with the smooth normal
+					VectorT shading = normals[v];
+					const Float length = Length( sums[root] );
+					if( length > 1e-12 )
+					{
+						shading = sums[root] / length;
+					}
+					copies[root] = uint32_t( splitPositions.size() );
+					splitPositions.push_back( positions[v] );
+					splitNormals.push_back( normals[v] );
+					shadingNormals.push_back( shading );
+				}
+				splitIndices[vertexCorners[first + i]] = copies[root];
+			}
+		}
+
+		positions.swap( splitPositions );
+		normals.swap( splitNormals );
+		indices.swap( splitIndices );
+		return shadingNormals;
+	}
+
 	// Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
 	void Relax( std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
@@ -751,6 +889,8 @@ private:
 	static constexpr int s_unfoldRounds = 3; // rounds of fold repair before a turned over quad's corners go uncut
 	static constexpr std::array<Float, 4> s_cutFractions = { 1.f, 0.5f, 0.25f, 0.f }; // the fractions of its cut a vertex steps down
 	static constexpr Float s_relaxAlpha = 0.5; // Laplacian relaxation strength per iteration
+	static constexpr Float s_shadingSplitDegrees = 120.f; // adjacent triangles folding wider than this split the shading normal
+	static constexpr Float s_minShadingArea = 0.05f; // triangles smaller than this, in grid cell units, shade with the smooth normal
 
 	// Area-weighted normal of a quad from its diagonals, outward by the emitted winding
 	static VectorT GetQuadNormal( const std::vector<VectorT>& positions, const std::vector<uint32_t>& quads, size_t q )
@@ -982,8 +1122,9 @@ protected:
 		}
 		auto indices = Triangulate( positions, quads );
 		auto normals = ComputeNormals( positions, indices );
+		auto shadingNormals = SplitNormals( positions, normals, indices );
 
-		return AllocateBuffers( allocator, buffers, positions, normals, indices, bounds );
+		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, indices, bounds );
 	}
 
 private:
@@ -1103,8 +1244,9 @@ protected:
 		}
 		auto indices = Triangulate( positions, quads );
 		auto normals = ComputeNormals( positions, indices );
+		auto shadingNormals = SplitNormals( positions, normals, indices );
 
-		return AllocateBuffers( allocator, buffers, positions, normals, indices, bounds );
+		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, indices, bounds );
 	}
 
 private:
