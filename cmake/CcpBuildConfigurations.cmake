@@ -79,6 +79,9 @@ endfunction()
 create_new_build_config(Internal Release)
 create_new_build_config(TrinityDev Internal)
 
+set(CMAKE_MAP_IMPORTED_CONFIG_INTERNAL Internal Release "" Debug)
+set(CMAKE_MAP_IMPORTED_CONFIG_TRINITYDEV TrinityDev Release "" Debug)
+
 function(add_trinity_dev_debug_flags target)
     if (MSVC)
         # Set debug options
