@@ -35,15 +35,6 @@ public:
 class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	struct Vertex
-	{
-		Vector3 position;
-		Vector3 normal; // smooth, for displacement
-		Vector3 shadingNormal; // split across hard edges
-		float curvature = 0; // signed, > 0 on ridges and < 0 in crevices
-		float smoothedCurvature = 0; // curvature averaged over a wider neighbourhood
-	};
-
 	VoxelBuilder( Tr2VoxelData::PayloadSnapshot shape, Tr2VoxelData::PayloadSnapshot occupancy ) :
 		m_sdf( std::move( shape ) ),
 		m_occupancy( std::move( occupancy ) ),
@@ -171,6 +162,12 @@ public:
 	}
 
 protected:
+	struct Vertex
+	{
+		Vector3 position;
+		Vector3 normal;
+	};
+
 	GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
 	{
 		struct Face
@@ -212,7 +209,7 @@ protected:
 			if( inserted )
 			{
 				Vector3 position = ( origin + Vector3( float( corner.x ), float( corner.y ), float( corner.z ) ) );
-				vertices.push_back( { position, s_faces[faceIndex].normal, s_faces[faceIndex].normal } );
+				vertices.push_back( { position, s_faces[faceIndex].normal } );
 			}
 			return iter->second;
 		};
