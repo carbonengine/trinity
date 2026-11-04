@@ -8,12 +8,14 @@
 * @brief Texture composed from voxel data. Reacts to changes in data and updates the texture accordingly.
 */
 class Tr2VoxelTexture : public ITr2TextureProvider,
-						public INotify
+						public INotify,
+						public IInitialize
 {
 public:
 	EXPOSE_TO_BLUE();
 	Tr2VoxelTexture( IRoot* lockobj = nullptr );
 	bool OnModified( Be::Var* value ) override;
+	bool Initialize() override;
 
 	/**
 	*	@brief Gets the texture.
@@ -70,7 +72,20 @@ public:
 	*/
 	Tr2RenderContextEnum::TextureType GetType() const;
 
+	
+	/**
+	 * @brief Python constructor for Tr2VoxelTexture. Initializes the texture with the given voxel data and channel.
+	 * Both arguments are optional in Python. Fails with a ValueError if the channel does not exist on the voxel data.
+	 */
+	BlueStdResult Create( Tr2VoxelData* voxelData, size_t channel );
+
 private:
+	/**
+	* @brief Listens to changes in the current voxel data and rebuilds the texture from it.
+	* Called after loading and whenever the voxel data is replaced.
+	*/
+	void ConnectVoxelData();
+
 	/**
 	* @brief Rebuilds the texture from the voxel data. This function is called when the voxel data or the channel is set.
 	*/

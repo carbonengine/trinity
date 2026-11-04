@@ -47,9 +47,8 @@ constexpr const char* Tr2VoxelDataTypeName( Tr2VoxelDataType type )
 		return "Int16";
 	case Tr2VoxelDataType::Int32:
 		return "Int32";
-	default:
-		return "Unknown";
 	}
+	return "Unknown";
 }
 
 

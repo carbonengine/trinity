@@ -85,6 +85,12 @@ Tr2VoxelTexture::Tr2VoxelTexture( IRoot* )
 {
 }
 
+bool Tr2VoxelTexture::Initialize()
+{
+	ConnectVoxelData();
+	return true;
+}
+
 bool Tr2VoxelTexture::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_channel ) )
@@ -119,18 +125,21 @@ void Tr2VoxelTexture::SetVoxelData( Tr2VoxelData* voxelData )
 		m_voxelData->m_onDataChanged.UnregisterListener( this );
 	}
 	m_voxelData = voxelData;
-
-	if( m_voxelData )
-	{
-		m_voxelData->m_onDataChanged.RegisterListener<Tr2VoxelTexture, &Tr2VoxelTexture::OnVoxelDataChanged>( this );
-	}
-
-	RebuildTexture();
+	ConnectVoxelData();
 }
 
 Tr2VoxelData* Tr2VoxelTexture::GetVoxelData() const
 {
 	return m_voxelData;
+}
+
+void Tr2VoxelTexture::ConnectVoxelData()
+{
+	if( m_voxelData )
+	{
+		m_voxelData->m_onDataChanged.RegisterListener<Tr2VoxelTexture, &Tr2VoxelTexture::OnVoxelDataChanged>( this );
+	}
+	RebuildTexture();
 }
 
 void Tr2VoxelTexture::OnVoxelDataChanged( Tr2VoxelData::ModifiedChannels modifiedChannels )
@@ -268,4 +277,17 @@ Tr2RenderContextEnum::PixelFormat Tr2VoxelTexture::GetFormat() const
 Tr2RenderContextEnum::TextureType Tr2VoxelTexture::GetType() const
 {
 	return m_texture.GetType();
+}
+
+BlueStdResult Tr2VoxelTexture::Create( Tr2VoxelData* voxelData, size_t channel )
+{
+	// Omitted arguments arrive as nullptr and 0
+	if( voxelData && channel >= voxelData->GetPayloadChannelCount() )
+	{
+		std::string errorMessage = "Invalid channel index " + std::to_string( channel ) + " for voxel data with " + std::to_string( voxelData->GetPayloadChannelCount() ) + " channels";
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, errorMessage.c_str() );
+	}
+	m_channel = channel;
+	SetVoxelData( voxelData );
+	return BlueStdResult();
 }
