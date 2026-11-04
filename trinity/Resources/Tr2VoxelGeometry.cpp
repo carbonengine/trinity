@@ -921,11 +921,17 @@ protected:
 	 * @param positions The positions of the vertices.
 	 * @param normals The normals of the vertices.
 	 * @param quads The indices of the quads.
+	 * @param outputComponents The components to compute; curvature and/or smoothed curvature.
 	 * @param curvature The output vector of raw curvature values.
 	 * @param smoothedCurvature The output vector of smoothed curvature values.
 	 */
-	static void ComputeCurvature( const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<uint32_t>& quads, std::vector<float>& curvature, std::vector<float>& smoothedCurvature )
+	static void ComputeCurvature( const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<uint32_t>& quads, EnumFilter<Tr2VoxelGeometryComponents> outputComponents, std::vector<float>& curvature, std::vector<float>& smoothedCurvature )
 	{
+		if( !outputComponents.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !outputComponents.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
+		{
+			return;
+		}
+
 		const size_t vertexCount = positions.size();
 		const auto neighbors = GetQuadNeighbors( vertexCount, quads );
 
@@ -972,9 +978,13 @@ protected:
 				}
 				level[i] = 0.5f * below[i] + 0.5f * sum / float( ring.size() );
 			}
-			if( pass == s_curvaturePasses )
+			if( pass == s_curvaturePasses && outputComponents.HasBit( Tr2VoxelGeometryComponents::Curvature ) )
 			{
 				curvature = CentreOnMedian( level );
+				if( !outputComponents.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
+				{
+					return;
+				}
 			}
 		}
 		smoothedCurvature = CentreOnMedian( level );
@@ -1066,8 +1076,12 @@ protected:
 		auto normals = ComputeNormals( positions, indices );
 		std::vector<float> curvature;
 		std::vector<float> smoothedCurvature;
-		ComputeCurvature( positions, normals, quads, curvature, smoothedCurvature );
-		auto shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, indices );
+		ComputeCurvature( positions, normals, quads, m_components, curvature, smoothedCurvature );
+		std::vector<Vector3> shadingNormals;
+		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+		{
+			shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, indices );
+		}
 
 		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, indices );
 	}
