@@ -14,12 +14,26 @@ Be::VarChooser Tr2VoxelGeometryMethodChooser[] = {
 	{ "DualContouring", BeCast( Tr2VoxelGeometry::Method::DualContouring ), "" },
 	{ 0 }
 };
+
+Be::VarChooser Tr2VoxelGeometryComponentsChooser[] = {
+	{ "SmoothNormals", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::SmoothNormals ) ), "" },
+	{ "SplitNormals", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::SplitNormals ) ), "" },
+	{ "Curvature", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::Curvature ) ), "" },
+	{ "SmoothedCurvature", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::SmoothedCurvature ) ), "" },
+	{ 0 }
+};
 }
 
 BLUE_REGISTER_ENUM_EX(
 	"Tr2VoxelGeometryMethod",
 	Tr2VoxelGeometry::Method,
 	Tr2VoxelGeometryMethodChooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+BLUE_REGISTER_ENUM_EX(
+	"Tr2VoxelGeometryComponents",
+	Tr2VoxelGeometryComponents,
+	Tr2VoxelGeometryComponentsChooser,
 	ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
@@ -30,6 +44,7 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_INTERFACE( ICacheable )
 		MAP_INTERFACE( ITr2InstanceData )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
 		MAP_ICACHEABLE_METHODS()
 
 		MAP_ATTRIBUTE( "voxelData", m_voxelData, "", Be::PERSISTONLY )
@@ -42,8 +57,7 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry" )
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing" )
-		MAP_ATTRIBUTE( "method", m_method, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "method", GetMethod, SetMethod, "Method used for generating the geometry (Simple or SurfaceNets)" )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "method", m_method, "", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2VoxelGeometryMethodChooser )
 		MAP_ATTRIBUTE( "cutSeed", m_cutSeed, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "cutSeed", GetCutSeed, SetCutSeed, "Seed of the facet and cleave placement (SurfaceNets and DualContouring)" )
 		MAP_ATTRIBUTE( "facetSpacing", m_facetSpacing, "", Be::PERSISTONLY )
@@ -54,6 +68,7 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "facetMaxCut", GetFacetMaxCut, SetFacetMaxCut, "Deepest cut a facet makes, in cells" )
 		MAP_ATTRIBUTE( "cleaveDepth", m_cleaveDepth, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "cleaveDepth", GetCleaveDepth, SetCleaveDepth, "Deepest cleave cap, in cells; 0 disables cleaves" )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"__init__",

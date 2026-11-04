@@ -4,9 +4,19 @@
 
 #include "Tr2ProceduralGeometryProvider.h"
 #include "../Tr2VoxelData.h"
+#include "../EnumFilter.h"
+
+enum class Tr2VoxelGeometryComponents : int32_t
+{
+	SmoothNormals,
+	SplitNormals,
+	Curvature,
+	SmoothedCurvature,
+};
+
 
 BLUE_CLASS_IMPL( Tr2VoxelGeometry )
-class Tr2VoxelGeometry : public Tr2ProceduralGeometryProvider, public IInitialize
+class Tr2VoxelGeometry : public Tr2ProceduralGeometryProvider, public IInitialize, public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -21,6 +31,7 @@ public:
 	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<uint32_t> occupancyChannelIndex );
 
 	bool Initialize() override;
+	bool OnModified( Be::Var* value ) override;
 
 	IRootPtr GetVoxelData() const;
 	void SetVoxelData( Tr2VoxelData* voxelData );
@@ -74,6 +85,7 @@ private:
 	float m_facetDepth = 0.f;
 	float m_facetMaxCut = 0.3f;
 	float m_cleaveDepth = 0.f;
+	EnumFilter<Tr2VoxelGeometryComponents> m_components;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2VoxelGeometry );
