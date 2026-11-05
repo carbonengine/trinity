@@ -44,7 +44,7 @@ static float perlin_wrap_simple( float x )
 // --------------------------------------------------------------------------------------
 static float frandom( float a, float b )
 {
-	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+	return ( ( b - a ) * ( (float)rand() / float( RAND_MAX ) ) ) + a;
 }
 
 namespace

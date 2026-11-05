@@ -988,12 +988,12 @@ bool ParserState::InMacro() const
 	return m_fileStack.back().isMacro;
 }
 
-void ParserState::IncludeFile( const InlineString& fileName )
+void ParserState::IncludeFile( const InlineString& fileName, CachingIncludeHandler::IncludeType includeType )
 {
 	extern CachingIncludeHandler g_includeHandler;
 
 	std::string path( fileName.start + 1, fileName.end - 1 );
-	if( auto file = g_includeHandler.Open( path.c_str(), m_fileStack.back().code.start + 1 ) )
+	if( auto file = g_includeHandler.Open( path.c_str(), includeType, m_fileStack.back().code.start + 1 ) )
 	{
 		FileContents fileContents;
 

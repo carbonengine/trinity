@@ -3,7 +3,7 @@
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
-#include "Tr2UpscalingAlDx11.h"
+#include "Tr2UpscalingALDx11.h"
 #include "dx11/Tr2TextureALDx11.h"
 
 #include <sl.h>

@@ -61,6 +61,26 @@ std::optional<std::string> JoinPath( const char* path1, const char* path2 )
 #endif
 }
 
+std::optional<std::string> JoinPathAndCheckExists( const char* path1, const char* path2 )
+{
+	if( auto joined = JoinPath( path1, path2 ) )
+	{
+#if _WIN32
+		if( PathFileExists( joined->c_str() ) )
+		{
+			return joined;
+		}
+#else
+		struct stat buffer;
+		if( stat( joined->c_str(), &buffer ) == 0 )
+		{
+			return joined;
+		}
+#endif
+	}
+	return std::nullopt;
+}
+
 }
 
 
@@ -85,37 +105,62 @@ CachingIncludeHandler::~CachingIncludeHandler()
 //     used for resolving relative paths
 //   rootPath - Custom root path for resolving relative paths
 // --------------------------------------------------------------------------------------
-std::optional<CachingIncludeHandler::IncludedFile> CachingIncludeHandler::Open( const char* fileName, const char* parentData, const char* rootPath )
+std::optional<CachingIncludeHandler::IncludedFile> CachingIncludeHandler::Open( const char* fileName, IncludeType includeType, const char* parentData, const char* rootPath )
 {
 	std::lock_guard scope( m_cs );
 
 	std::string fullPath;
 	if( PathIsRelative( fileName ) )
 	{
-		std::string parentPath;
-		if( parentData == nullptr )
-		{
-			parentPath = rootPath ? rootPath : m_rootPath;
-		}
-		else
-		{
-			auto parent = m_pathFromFile.find( parentData - 1 );
-			if( parent != m_pathFromFile.end() )
+		auto FindLocalPath = [&]() -> bool {
+			std::string parentPath;
+			if( parentData == nullptr )
 			{
-				parentPath = parent->second;
+				parentPath = rootPath ? rootPath : m_rootPath;
 			}
 			else
 			{
-				parentPath = "";
+				auto parent = m_pathFromFile.find( parentData - 1 );
+				if( parent != m_pathFromFile.end() )
+				{
+					parentPath = parent->second;
+				}
+				else
+				{
+					parentPath = "";
+				}
 			}
-		}
-		if( auto joined = JoinPath( parentPath.c_str(), fileName ) )
+			if( auto joined = JoinPathAndCheckExists( parentPath.c_str(), fileName ) )
+			{
+				fullPath = *joined;
+				return true;
+			}
+			return false;
+		};
+		auto FindSystemPath = [&]() -> bool {
+			for( auto it = m_systemIncludePaths.begin(); it != m_systemIncludePaths.end(); ++it )
+			{
+				if( auto joined = JoinPathAndCheckExists( it->c_str(), fileName ) )
+				{
+					fullPath = *joined;
+					return true;
+				}
+			}
+			return false;
+		};
+		if( includeType == IncludeLocal )
 		{
-			fullPath = *joined;
+			if( !FindLocalPath() && !FindSystemPath() )
+			{
+				return std::nullopt;
+			}
 		}
 		else
 		{
-			return std::nullopt;
+			if( !FindSystemPath() && !FindLocalPath() )
+			{
+				return std::nullopt;
+			}
 		}
 	}
 	else
@@ -219,6 +264,12 @@ std::optional<CachingIncludeHandler::IncludedFile> CachingIncludeHandler::AddPre
 	info.data = static_cast<const char*>( data ) + 1;
 
 	return info;
+}
+
+void CachingIncludeHandler::AddSystemIncludePath( const char* path )
+{
+	std::lock_guard scope( m_cs );
+	m_systemIncludePaths.push_back( path );
 }
 
 // --------------------------------------------------------------------------------------

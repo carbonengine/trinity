@@ -34,41 +34,41 @@ else()
 endif()
 
 set(PUBLIC_HEADER_FILES
-    Include/ITr2AnimationUpdater.h
-    Include/ITr2BoundingBox.h
-    Include/ITr2DebugRenderer.h
-    Include/ITr2GpuBuffer.h
-    Include/ITr2InstanceData.h
-    Include/ITr2Interior.h
-    Include/ITr2MultiPassScene.h
-    Include/ITr2Scene.h
-    Include/ITr2Updateable.h
-    Include/ITr2ValueBinding.h
-    Include/ITriColor.h
-    Include/ITriDevice.h
-    Include/ITriDuration.h
-    Include/ITriEffectParameter.h
-    Include/ITriMatrix.h
-    Include/ITriQuaternion.h
-    Include/ITriTargetable.h
-    Include/ITriTextureRes.h
-    Include/ITriVector.h
-    Include/Point.h
-    Include/Rect.h
-    Include/Tr2Curve.h
-    Include/Tr2WindowHandle.h
-    Include/TriColor.h
-    Include/TriMath.h
-    Include/TriMath.h
-    Include/TriQuaternion.h
-    Include/TriVector.h
+    include/ITr2AnimationUpdater.h
+    include/ITr2BoundingBox.h
+    include/ITr2DebugRenderer.h
+    include/ITr2GpuBuffer.h
+    include/ITr2InstanceData.h
+    include/ITr2Interior.h
+    include/ITr2MultiPassScene.h
+    include/ITr2Scene.h
+    include/ITr2Updateable.h
+    include/ITr2ValueBinding.h
+    include/ITriColor.h
+    include/ITriDevice.h
+    include/ITriDuration.h
+    include/ITriEffectParameter.h
+    include/ITriMatrix.h
+    include/ITriQuaternion.h
+    include/ITriTargetable.h
+    include/ITriTextureRes.h
+    include/ITriVector.h
+    include/Point.h
+    include/Rect.h
+    include/Tr2Curve.h
+    include/Tr2WindowHandle.h
+    include/TriColor.h
+    include/TriMath.h
+    include/TriMath.h
+    include/TriQuaternion.h
+    include/TriVector.h
 )
 
 if(BUILD_FOR_PYTHON_2)
     # This is only needed for py2 as the file now belongs in blue.
     # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
     # The file version in the older blue versions had diverged from this one is incompatible.
-    list(APPEND PUBLIC_HEADER_FILES Include/ITr2DebugRenderer2.h)
+    list(APPEND PUBLIC_HEADER_FILES include/ITr2DebugRenderer2.h)
 endif()
 
 set(_SOURCES
@@ -789,6 +789,9 @@ set(_SOURCES
     Eve/EveTriggerVolume.cpp
     Eve/EveTriggerVolume.h
     Eve/EveTriggerVolume_Blue.cpp
+    Eve/EveVolumeObject.cpp
+    Eve/EveVolumeObject.h
+    Eve/EveVolumeObject_Blue.cpp
     Eve/EveEffectRoot2.cpp
     Eve/EveEffectRoot2.h
     Eve/EveEffectRoot2_Blue.cpp
@@ -855,35 +858,35 @@ set(_SOURCES
     Font/Tr2SBit.cpp
     Font/Tr2SBit.h
     Font/Tr2SBit_Blue.cpp
-    Include/ITr2AnimationUpdater.h
-    Include/ITr2BoundingBox.h
-    Include/ITr2DebugRenderer.h
-    Include/ITr2GpuBuffer.h
-    Include/ITr2InstanceData.h
-    Include/ITr2Interior.h
-    Include/ITr2MultiPassScene.h
-    Include/ITr2PoseModifier.h
-    Include/ITr2Scene.h
-    Include/ITr2Updateable.h
-    Include/ITr2ValueBinding.h
-    Include/ITriColor.h
-    Include/ITriDevice.h
-    Include/ITriDuration.h
-    Include/ITriEffectParameter.h
-    Include/ITriMatrix.h
-    Include/ITriQuaternion.h
-    Include/ITriTargetable.h
-    Include/ITriTextureRes.h
-    Include/ITriVector.h
-    Include/Point.h
-    Include/Rect.h
-    Include/Tr2Curve.h
-    Include/Tr2WindowHandle.h
-    Include/TriColor.h
-    Include/TriMath.h
-    Include/TriMath.h
-    Include/TriQuaternion.h
-    Include/TriVector.h
+    include/ITr2AnimationUpdater.h
+    include/ITr2BoundingBox.h
+    include/ITr2DebugRenderer.h
+    include/ITr2GpuBuffer.h
+    include/ITr2InstanceData.h
+    include/ITr2Interior.h
+    include/ITr2MultiPassScene.h
+    include/ITr2PoseModifier.h
+    include/ITr2Scene.h
+    include/ITr2Updateable.h
+    include/ITr2ValueBinding.h
+    include/ITriColor.h
+    include/ITriDevice.h
+    include/ITriDuration.h
+    include/ITriEffectParameter.h
+    include/ITriMatrix.h
+    include/ITriQuaternion.h
+    include/ITriTargetable.h
+    include/ITriTextureRes.h
+    include/ITriVector.h
+    include/Point.h
+    include/Rect.h
+    include/Tr2Curve.h
+    include/Tr2WindowHandle.h
+    include/TriColor.h
+    include/TriMath.h
+    include/TriMath.h
+    include/TriQuaternion.h
+    include/TriVector.h
     Interior/Tr2InteriorConstantBufferFormats.h
     Interior/Tr2InteriorLightSet.cpp
     Interior/Tr2InteriorLightSet.h
@@ -1343,6 +1346,9 @@ set(_SOURCES
     Sprite2d/Tr2Sprite2dContainer_Blue.cpp
     Sprite2d/Tr2Sprite2dDisplayList.cpp
     Sprite2d/Tr2Sprite2dDisplayList.h
+    Sprite2d/Tr2Sprite2dEffect.cpp
+    Sprite2d/Tr2Sprite2dEffect.h
+    Sprite2d/Tr2Sprite2dEffect_Blue.cpp
     Sprite2d/Tr2Sprite2dFrame.cpp
     Sprite2d/Tr2Sprite2dFrame.h
     Sprite2d/Tr2Sprite2dFrame_Blue.cpp
@@ -1815,7 +1821,7 @@ if(BUILD_FOR_PYTHON_2)
     # This is only needed for py2 as the file now belongs in blue.
     # Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
     # The file version in the older blue versions had diverged from this one is incompatible.
-    list(APPEND _SOURCES Include/ITr2DebugRenderer2.h)
+    list(APPEND _SOURCES include/ITr2DebugRenderer2.h)
 endif()
 
 set(GRANNY_RELATED_SOURCES
@@ -1986,7 +1992,7 @@ function(set_shared_trinity_properties target)
         )
 
     endif ()
-    
+
     ccp_enable_vs_analizers(${target})
 
     if(${MSVC})
@@ -2120,7 +2126,7 @@ if (NOT INSTALL_TO_MONOLITH)
 
     include(CMakePackageConfigHelpers)
 
-    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/carbon-trinityConfig.cmake.in 
+    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/carbon-trinityConfig.cmake.in
                                     ${CMAKE_CURRENT_BINARY_DIR}/carbon-trinityConfig.cmake
                                     INSTALL_DESTINATION share/carbon-trinity)
 

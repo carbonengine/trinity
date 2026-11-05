@@ -4,7 +4,7 @@
 #include "Tr2TimelineController.h"
 #include "Tr2ControllerFloatVariable.h"
 #include "Tr2ControllerEventHandler.h"
-#include "../Include/ITr2Updateable.h"
+#include "../include/ITr2Updateable.h"
 #include "../Tr2ExpressionTermInfo.h"
 #include <ScopedBlockTrap.h>
 

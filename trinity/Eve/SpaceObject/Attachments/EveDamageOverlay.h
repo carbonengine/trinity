@@ -5,7 +5,7 @@
 #define EveDamageOverlay_H
 
 #include "ITr2Renderable.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 
 #include <functional>
 

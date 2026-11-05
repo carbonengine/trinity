@@ -1,7 +1,7 @@
 // Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "TriGeometryRes.h"
 #include "TriGrannyRes.h"
 #include "Tr2PerObjectData.h"

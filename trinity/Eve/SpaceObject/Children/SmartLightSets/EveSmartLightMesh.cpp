@@ -4,7 +4,7 @@
 #include "EveSmartLightMesh.h"
 #include "Shader/Tr2Effect.h"
 #include "Tr2InstancedMesh.h"
-#include "trimath.h"
+#include "TriMath.h"
 
 EveSmartLightMesh::EveSmartLightMesh( IRoot* lockobj ) :
 	EveChildInstanceMeshRenderer( lockobj ),

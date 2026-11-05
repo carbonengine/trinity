@@ -6,7 +6,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "TriRenderBatch.h"
 #include "Shader/Tr2Effect.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 // consts
 static const size_t BULLETSTORM_MAX_TARGETBLOBS = 10;

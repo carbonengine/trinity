@@ -89,7 +89,7 @@ EveStretch2::EveStretch2( IRoot* lockObj ) :
 	m_destinationTransform( IdentityMatrix() ),
 	m_vb( BlueSharedString( "EveStretch2VB" ), &GetEveStretch2Quads )
 {
-	m_effectData[0] = Vector4( 0, 0, 0, float( rand() ) / RAND_MAX );
+	m_effectData[0] = Vector4( 0, 0, 0, float( rand() ) / float( RAND_MAX ) );
 	m_effectData[0] = Vector4( 1, 0, 0, 0 );
 }
 
@@ -136,7 +136,7 @@ float EveStretch2::GetCurveDuration()
 
 void EveStretch2::StartFiring( float delay )
 {
-	m_effectData[0].w = float( rand() ) / RAND_MAX;
+	m_effectData[0].w = float( rand() ) / float( RAND_MAX );
 	if( m_start )
 	{
 		m_start->PlayFrom( -delay );

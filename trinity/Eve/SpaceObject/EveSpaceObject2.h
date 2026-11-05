@@ -334,6 +334,10 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+	bool SupportsParallelPerObjectData() const override
+	{
+		return true;
+	}
 	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
