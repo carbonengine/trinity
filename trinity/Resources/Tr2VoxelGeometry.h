@@ -77,6 +77,9 @@ public:
 	float GetCleaveDepth() const;
 	void SetCleaveDepth( float cleaveDepth );
 
+	void LockBuild();
+	void UnlockBuild();
+
 	BlueStdResult TestBuildFile( const char* resPath );
 
 protected:
@@ -84,6 +87,7 @@ protected:
 
 private:
 	void DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels );
+	void TryRebuild();
 
 	Tr2VoxelDataPtr m_voxelData;
 	int32_t m_shapeChannelIndex = 0;
@@ -99,6 +103,8 @@ private:
 	float m_facetMaxCut = 0.3f;
 	float m_cleaveDepth = 0.f;
 	EnumFilter<Tr2VoxelGeometryComponents> m_components;
+	int32_t m_buildLock = 0;
+	bool m_rebuildPending = false;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2VoxelGeometry );

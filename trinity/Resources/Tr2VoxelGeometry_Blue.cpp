@@ -93,7 +93,19 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 			"Initializes the voxel geometry\n\n"
 			":param voxelData: Tr2VoxelData object containing the voxel data\n"
 			":param sdfChannelIndex: Index of the SDF channel\n"
-			":param occupancyChannelIndex: Index of the occupancy channel\n" )
+			":param occupancyChannelIndex: Index of the occupancy channel\n" 
+		)
+		MAP_METHOD_AND_WRAP( 
+			"LockBuild",
+			LockBuild,
+			"Locks the geometry build process. Use this to prevent automatic rebuilds when changing multiple properties.\n"
+			"It is possible to call LockBuild multiple times, but UnlockBuild must be called the same number of times to unlock the build process."
+		)
+		MAP_METHOD_AND_WRAP(
+			"UnlockBuild",
+			UnlockBuild,
+			"Unlocks the geometry build process. If a rebuild was pending while locked, it will be triggered now." 
+		)
 		MAP_METHOD_AND_WRAP(
 			"TestBuildFile",
 			TestBuildFile,
@@ -101,7 +113,8 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 			":param resPath: Path to save the CMF file\n"
 			":raises RuntimeError: If building the CMF file fails (no data, empty data, etc.)\n"
 			":raises OSError: If there is an OS-level error while writing the file\n"
-			":raises IOError: If the file cannot be written to the specified path\n" )
+			":raises IOError: If the file cannot be written to the specified path\n" 
+		)
 
 	EXPOSURE_CHAINTO( Tr2ProceduralGeometryProvider )
 }

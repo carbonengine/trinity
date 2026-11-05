@@ -1730,7 +1730,7 @@ BlueStdResult Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, B
 	{
 		m_voxelData->m_onDataChanged.RegisterListener<Tr2VoxelGeometry, &Tr2VoxelGeometry::DataModified>( this );
 	}
-	Rebuild();
+	TryRebuild();
 	return {};
 }
 
@@ -1742,7 +1742,7 @@ bool Tr2VoxelGeometry::Initialize()
 
 bool Tr2VoxelGeometry::OnModified( Be::Var* )
 {
-	Rebuild();
+	TryRebuild();
 	return true;
 }
 
@@ -1766,7 +1766,7 @@ void Tr2VoxelGeometry::SetVoxelData( Tr2VoxelData* voxelData )
 	{
 		m_voxelData->m_onDataChanged.RegisterListener<Tr2VoxelGeometry, &Tr2VoxelGeometry::DataModified>( this );
 	}
-	Rebuild();
+	TryRebuild();
 }
 
 int32_t Tr2VoxelGeometry::GetShapeChannelIndex() const
@@ -1782,7 +1782,7 @@ void Tr2VoxelGeometry::SetShapeChannelIndex( int32_t channelIndex )
 		return;
 	}
 	m_shapeChannelIndex = channelIndex;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetShapeChannelScale() const
@@ -1797,7 +1797,7 @@ void Tr2VoxelGeometry::SetShapeChannelScale( float scale )
 		return;
 	}
 	m_shapeTransform.scale = scale;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetShapeChannelOffset() const
@@ -1812,7 +1812,7 @@ void Tr2VoxelGeometry::SetShapeChannelOffset( float offset )
 		return;
 	}
 	m_shapeTransform.offset = offset;
-	Rebuild();
+	TryRebuild();
 }
 
 
@@ -1830,7 +1830,7 @@ void Tr2VoxelGeometry::SetOccupancyChannelIndex( int32_t channelIndex )
 		return;
 	}
 	m_occupancyChannelIndex = channelIndex;
-	Rebuild();
+	TryRebuild();
 }
 
 int32_t Tr2VoxelGeometry::GetDataTagChannelIndex() const
@@ -1846,7 +1846,7 @@ void Tr2VoxelGeometry::SetDataTagChannelIndex( int32_t channelIndex )
 		return;
 	}
 	m_dataTagChannelIndex = channelIndex;
-	Rebuild();
+	TryRebuild();
 }
 
 uint32_t Tr2VoxelGeometry::GetSubdivision() const
@@ -1861,7 +1861,7 @@ void Tr2VoxelGeometry::SetSubdivision( uint32_t subdivision )
 		return;
 	}
 	m_subdivision = subdivision;
-	Rebuild();
+	TryRebuild();
 }
 
 uint32_t Tr2VoxelGeometry::GetRelaxIterations() const
@@ -1876,7 +1876,7 @@ void Tr2VoxelGeometry::SetRelaxIterations( uint32_t relaxIterations )
 		return;
 	}
 	m_relaxIterations = relaxIterations;
-	Rebuild();
+	TryRebuild();
 }
 
 uint32_t Tr2VoxelGeometry::GetMethod() const
@@ -1891,7 +1891,7 @@ void Tr2VoxelGeometry::SetMethod( Method method )
 		return;
 	}
 	m_method = method;
-	Rebuild();
+	TryRebuild();
 }
 
 uint32_t Tr2VoxelGeometry::GetCutSeed() const
@@ -1906,7 +1906,7 @@ void Tr2VoxelGeometry::SetCutSeed( uint32_t cutSeed )
 		return;
 	}
 	m_cutSeed = cutSeed;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetFacetSpacing() const
@@ -1921,7 +1921,7 @@ void Tr2VoxelGeometry::SetFacetSpacing( float facetSpacing )
 		return;
 	}
 	m_facetSpacing = facetSpacing;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetFacetDepth() const
@@ -1936,7 +1936,7 @@ void Tr2VoxelGeometry::SetFacetDepth( float facetDepth )
 		return;
 	}
 	m_facetDepth = facetDepth;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetFacetMaxCut() const
@@ -1951,7 +1951,7 @@ void Tr2VoxelGeometry::SetFacetMaxCut( float facetMaxCut )
 		return;
 	}
 	m_facetMaxCut = facetMaxCut;
-	Rebuild();
+	TryRebuild();
 }
 
 float Tr2VoxelGeometry::GetCleaveDepth() const
@@ -1966,17 +1966,43 @@ void Tr2VoxelGeometry::SetCleaveDepth( float cleaveDepth )
 		return;
 	}
 	m_cleaveDepth = cleaveDepth;
-	Rebuild();
+	TryRebuild();
 }
 
+void Tr2VoxelGeometry::LockBuild()
+{
+	++m_buildLock;
+}
+
+void Tr2VoxelGeometry::UnlockBuild()
+{
+	CCP_ASSERT_M( m_buildLock > 0, "UnlockBuild called without matching LockBuild" );
+	--m_buildLock;
+	if( m_buildLock == 0 && m_rebuildPending )
+	{
+		m_rebuildPending = false;
+		Rebuild();
+	}
+}
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
 	const bool dataTagsModified = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && modifiedChannels.IsChannelModified( m_dataTagChannelIndex );
 	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) || modifiedChannels.IsChannelModified( m_occupancyChannelIndex ) || dataTagsModified )
 	{
-		Rebuild();
+		TryRebuild();
 	}
+}
+
+void Tr2VoxelGeometry::TryRebuild()
+{
+	if( m_buildLock > 0 )
+	{
+		m_rebuildPending = true;
+		return;
+	}
+	m_rebuildPending = false;
+	Rebuild();
 }
 
 std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() const
