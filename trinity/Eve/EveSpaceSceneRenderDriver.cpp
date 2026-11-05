@@ -336,7 +336,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Main()
 	features.velocityMap = true;
 	features.background = true;
 	features.overlay = true;
-	features.dynamicLights = true;
 	return features;
 }
 
@@ -351,7 +350,6 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	features.velocityMap = false;
 	features.background = false;
 	features.overlay = false;
-	features.dynamicLights = true;
 	return features;
 }
 
@@ -546,7 +544,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 
 	PrepareLightManager();
 
-	const RenderInfo mainView = {
+	RenderInfo mainView = {
 		GetMainCamera( renderSize, GetJitterMatrix( renderSize.width, renderSize.height, renderContext ), GetMipLodBias() ),
 		EveSceneView::ViewInfo::Main( m_settings.enableDistortion ),
 		Features::Main()
@@ -677,12 +675,12 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	const Tr2TextureAL& backBuffer = colorTarget;
 	ApplyCamera( view.camera );
 
-	// every view with lights makes its own view active, so it can't read another view's lights
-	if( view.features.dynamicLights )
+	// every view with lights binds its own light buffers, so it can't read another view's lights
+	if( view.scene.lightView )
 	{
 		if( auto lightManager = Tr2LightManager::GetInstance() )
 		{
-			lightManager->SetActiveView( view.lightView );
+			lightManager->BindViewBuffers( *view.scene.lightView );
 		}
 	}
 
@@ -755,12 +753,12 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 		GlobalStore().RegisterVariable( "SSAOMap", ssao );
 
 		auto lightManager = Tr2LightManager::GetInstance();
-		if( lightManager && view.features.dynamicLights )
+		if( lightManager && view.scene.lightView )
 		{
 			GPU_REGION( renderContext, "Lighting" );
 			TRINITY_STATS_SCOPED_TIME( updateDynamicLightLists );
 			renderContext.SetReadOnlyDepth( true );
-			lightManager->UpdateLists( depthBuffer, renderContext );
+			lightManager->UpdateLists( *view.scene.lightView, depthBuffer, renderContext );
 			renderContext.SetReadOnlyDepth( false );
 		}
 
@@ -853,10 +851,10 @@ EveSpaceSceneRenderDriver::ReflectionFaces EveSpaceSceneRenderDriver::PrepareRef
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Give the main view and every reflection face that has dynamic lights a view in the
-//   light manager, in that order. A view's lightView is its position in that list.
+//   Give the main view and every reflection face a view in the light manager. Without a
+//   light manager the views keep no lightView, so they render without dynamic lights.
 // --------------------------------------------------------------------------------------
-void EveSpaceSceneRenderDriver::SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext )
+void EveSpaceSceneRenderDriver::SetLightViews( RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext )
 {
 	auto lightManager = Tr2LightManager::GetInstance();
 	if( !lightManager )
@@ -864,17 +862,21 @@ void EveSpaceSceneRenderDriver::SetLightViews( const RenderInfo& mainView, Refle
 		return;
 	}
 
-	// the main view is first, matching its lightView of 0
+	// the main view must be first
 	std::vector<TriFrustum> frustums = { mainView.camera.frustum };
+	for( const RenderInfo& faceView : faces.views )
+	{
+		frustums.push_back( faceView.camera.frustum );
+	}
+
+	// the light manager returns the views in the order of frustums
+	const std::vector<Tr2LightManager::View*> lightViews = lightManager->SetViews( frustums, renderContext );
+	auto lightView = lightViews.begin();
+	mainView.scene.lightView = *lightView++;
 	for( RenderInfo& faceView : faces.views )
 	{
-		if( faceView.features.dynamicLights )
-		{
-			faceView.lightView = static_cast<uint32_t>( frustums.size() );
-			frustums.push_back( faceView.camera.frustum );
-		}
+		faceView.scene.lightView = *lightView++;
 	}
-	lightManager->SetViews( frustums, renderContext );
 }
 
 void EveSpaceSceneRenderDriver::RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext )

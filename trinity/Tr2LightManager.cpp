@@ -229,16 +229,6 @@ uint16_t Tr2LightManager::PackFlags( uint16_t flags, uint16_t profileIndex )
 	return ( flags & ( ( 1 << FLAG_BITS ) - 1 ) ) | ( profileIndex << FLAG_BITS );
 }
 
-Tr2LightManager::View& Tr2LightManager::GetActiveView()
-{
-	return m_views[m_activeView];
-}
-
-const Tr2LightManager::View& Tr2LightManager::GetActiveView() const
-{
-	return m_views[m_activeView];
-}
-
 void Tr2LightManager::CreateViewBuffers( View& view, Tr2RenderContext& renderContext )
 {
 	view.lightBuffer->Create( LIGHT_BUFFER_SIZE, sizeof( PerLightData ), Tr2GpuBuffer::CPU_WRITABLE );
@@ -249,12 +239,12 @@ void Tr2LightManager::CreateViewBuffers( View& view, Tr2RenderContext& renderCon
 	ClearLightIndices( view, renderContext );
 }
 
-void Tr2LightManager::SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext )
+std::vector<Tr2LightManager::View*> Tr2LightManager::SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext )
 {
 	if( frustums.empty() )
 	{
 		CCP_LOGERR( "Tr2LightManager: SetViews needs at least the main view" );
-		return;
+		return {};
 	}
 
 	if( m_views.size() > frustums.size() )
@@ -271,28 +261,18 @@ void Tr2LightManager::SetViews( const std::vector<TriFrustum>& frustums, Tr2Rend
 		}
 	}
 
+	std::vector<View*> views;
 	auto frustum = frustums.begin();
 	for( auto& view : m_views )
 	{
 		view.frustum = *frustum++;
+		views.push_back( &view );
 	}
-
-	if( m_activeView >= m_views.size() )
-	{
-		SetActiveView( MAIN_VIEW );
-	}
+	return views;
 }
 
-void Tr2LightManager::SetActiveView( uint32_t viewIndex )
+void Tr2LightManager::BindViewBuffers( const View& view )
 {
-	if( viewIndex >= m_views.size() )
-	{
-		CCP_LOGERR( "Tr2LightManager: invalid view index %u", viewIndex );
-		return;
-	}
-
-	m_activeView = viewIndex;
-	View& view = m_views[viewIndex];
 	m_lightBufferVariable = view.lightBuffer;
 	m_indexBufferVariable = view.indexBuffer;
 }
@@ -491,9 +471,8 @@ ALResult Tr2LightManager::ClearLightIndices( Tr2LightManager::View& view, Tr2Ren
 	return renderContext.ClearUav( *view.indexBuffer->GetGpuBuffer( 0 ), clear );
 }
 
-ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::UpdateLightBuffer( View& view, Tr2RenderContext& renderContext )
 {
-	View& view = GetActiveView();
 	if( view.lightBuffer->GetGpuBuffer( 0 )->GetDesc().count < uint32_t( view.lightData.size() ) )
 	{
 		CR_RETURN_HR( view.lightBuffer->Create(
@@ -513,17 +492,16 @@ ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
 	return S_OK;
 }
 
-ALResult Tr2LightManager::DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::DoUpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	View& view = GetActiveView();
 	if( !view.lightBuffer->IsValid() || !view.indexBuffer->IsValid() || !view.indexBufferCounter->IsValid() )
 	{
 		return E_INVALIDCALL;
 	}
 
-	CR_RETURN_HR( UpdateLightBuffer( renderContext ) );
+	CR_RETURN_HR( UpdateLightBuffer( view, renderContext ) );
 
-	// the effect is shared by all the views, so it has to be pointed at the buffers of the active one
+	// the effect is shared by all the views, so it has to be pointed at the buffers of this one
 	m_effect->SetParameter( BlueSharedString( "LightBuffer" ), view.lightBuffer );
 	m_effect->SetParameter( BlueSharedString( "LightIndices" ), view.indexBuffer );
 	m_effect->SetParameter( BlueSharedString( "LightIndexCount" ), view.indexBufferCounter );
@@ -750,15 +728,14 @@ void Tr2LightManager::ResolveView( View& view )
 	}
 }
 
-ALResult Tr2LightManager::UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
+ALResult Tr2LightManager::UpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext )
 {
-	View& view = GetActiveView();
 	if( view.lightData.empty() )
 	{
 		return ClearLightIndices( view, renderContext );
 	}
 
-	auto hr = DoUpdateLists( depthMap, renderContext );
+	auto hr = DoUpdateLists( view, depthMap, renderContext );
 	if( FAILED( hr ) )
 	{
 		ClearLightIndices( view, renderContext );
@@ -809,19 +786,19 @@ Tr2TextureArray& Tr2LightManager::GetLightProfileArray()
 	return lightProfiles;
 }
 
-const std::vector<uint32_t>& Tr2LightManager::GetShadowCastingLights() const
+const std::vector<uint32_t>& Tr2LightManager::View::GetShadowCastingLights() const
 {
-	return GetActiveView().shadowCastingLights;
+	return shadowCastingLights;
 }
 
-const std::vector<uint32_t>& Tr2LightManager::GetVolumetricLights() const
+const std::vector<uint32_t>& Tr2LightManager::View::GetVolumetricLights() const
 {
-	return GetActiveView().volumetricLights;
+	return volumetricLights;
 }
 
-const Tr2LightManager::PerLightData& Tr2LightManager::GetLightData( uint32_t index ) const
+const Tr2LightManager::PerLightData& Tr2LightManager::View::GetLightData( uint32_t index ) const
 {
-	return GetActiveView().lightData[index];
+	return lightData[index];
 }
 
 Tr2GpuResourcePool::Texture Tr2LightManager::GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool )
@@ -939,6 +916,7 @@ void Tr2LightManager::GetUnpackedShadowMapData( const PerLightData& lightData, u
 }
 
 Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
+	const View& view,
 	Tr2RaytracingGeometry* geometry,
 	const Tr2TextureAL& depth,
 	const Tr2TextureAL& normal,
@@ -951,7 +929,6 @@ Tr2GpuResourcePool::Texture Tr2LightManager::RenderRaytracedShadows(
 	GPU_REGION( renderContext, "Raytraced dynamic shadows" );
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
-	const View& view = GetActiveView();
 	if( view.shadowCastingLights.size() == 0 || !g_useDynamicLightsShadows )
 	{
 		return {};

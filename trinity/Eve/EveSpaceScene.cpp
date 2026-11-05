@@ -1419,7 +1419,7 @@ void EveSpaceScene::BeginView( const EveSceneView::ViewInfo& view, Tr2RenderCont
 	// reflection views use the reflection shadow map, which is not raytraced
 	if( !view.IsReflection() && m_shadowQuality == ShadowQuality::SHADOW_RAYTRACED && m_enableShadows )
 	{
-		PrepareRaytracedShadows( renderContext );
+		PrepareRaytracedShadows( view.lightView, renderContext );
 	}
 
 	UpdateVariableStore();
@@ -1664,7 +1664,7 @@ void EveSpaceScene::GatherReflectionRenderables( std::vector<ITr2Renderable*>& r
 		} );
 }
 
-void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
+void EveSpaceScene::PrepareRaytracedShadows( const Tr2LightManager::View* lightView, Tr2RenderContext& renderContext )
 {
 	if( m_objects.empty() )
 	{
@@ -1679,7 +1679,7 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 	TRINITY_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
 
-	ProcessOutdatedRTAnimations( renderContext );
+	ProcessOutdatedRTAnimations( lightView, renderContext );
 
 	auto& shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
 	{
@@ -2342,7 +2342,7 @@ void EveSpaceScene::RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, c
 	renderContext.m_esm.PopViewport();
 }
 
-std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderVolumetrics( const Tr2TextureAL& depthMap, const Tr2LightManager::View* lightView, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	if( !m_componentRegistry || !m_volumetricsRenderer || !depthMap.IsValid() )
 	{
@@ -2369,7 +2369,8 @@ std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScen
 		Tr2Renderer::GetViewTransform(),
 		Tr2Renderer::GetReversedDepthProjectionTransform(),
 		m_viewLast,
-		m_projectionLast );
+		m_projectionLast,
+		lightView );
 
 	auto clouds = m_volumetricsRenderer->RenderVolumetrics(
 		*m_componentRegistry,
@@ -2585,9 +2586,10 @@ EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL&
 				ApplyPerFrameData( renderContext );
 			}
 
-			if( auto lightManager = Tr2LightManager::GetInstance() )
+			auto lightManager = Tr2LightManager::GetInstance();
+			if( lightManager && view.lightView )
 			{
-				result.pointLightShadowMap = lightManager->RenderRaytracedShadows( &m_rtManager->GetGeometry(), depthMap, normalMap, planets, maxPlanets, gpuResourcePool, renderContext );
+				result.pointLightShadowMap = lightManager->RenderRaytracedShadows( *view.lightView, &m_rtManager->GetGeometry(), depthMap, normalMap, planets, maxPlanets, gpuResourcePool, renderContext );
 			}
 
 			renderContext.SetReadOnlyDepth( false );
@@ -2596,7 +2598,7 @@ EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL&
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_shadowQuality != ShadowQuality::SHADOW_RAYTRACED )
+		if( view.lightView && view.lightView->GetShadowCastingLights().size() > 0 && m_shadowQuality != ShadowQuality::SHADOW_DISABLED && m_shadowQuality != ShadowQuality::SHADOW_RAYTRACED )
 		{
 			GPU_REGION( renderContext, "PointLight/SpotLight Shadow Maps" );
 			auto shadowMap = lightManager->GetShadowMapAtlas( gpuResourcePool );
@@ -2604,9 +2606,9 @@ EveSpaceScene::ShadowResources EveSpaceScene::RenderShadows( const Tr2TextureAL&
 			{
 				PrepareShadowMapForLights( renderContext, shadowMap );
 				std::vector<IEveShadowCaster*> shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-				for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+				for( uint32_t lightIndex : view.lightView->GetShadowCastingLights() )
 				{
-					const Tr2LightManager::PerLightData& lightData = lightManager->GetLightData( lightIndex );
+					const Tr2LightManager::PerLightData& lightData = view.lightView->GetLightData( lightIndex );
 					RenderShadowMapForLight( renderContext, shadowCasters, lightData, shadowMap );
 				}
 				FinishRenderingShadowMapForLights( renderContext );
@@ -2698,13 +2700,10 @@ bool EveSpaceScene::RenderMainPass(
 	switch( view.reason )
 	{
 	case TR2RENDERREASON_NORMAL:
-		froxelFogTextures = RenderVolumetrics( depthMap, gpuResourcePool, renderContext );
+		froxelFogTextures = RenderVolumetrics( depthMap, view.lightView, gpuResourcePool, renderContext );
 		break;
 	case TR2RENDERREASON_REFLECTION:
-		froxelFogTextures = RenderReflectionVolumetrics( depthMap, gpuResourcePool, renderContext );
-		break;
-	case TR2RENDERREASON_VOLUMETRIC:
-		froxelFogTextures = { Tr2VolumetricsRenderer::GetEmptyFogTexture( gpuResourcePool ), Tr2VolumetricsRenderer::GetEmptyVolumetricTexture( gpuResourcePool ) };
+		froxelFogTextures = RenderReflectionVolumetrics( depthMap, view.lightView, gpuResourcePool, renderContext );
 		break;
 	}
 
@@ -2737,12 +2736,12 @@ bool EveSpaceScene::RenderMainPass(
 //   Reflection views use the reflection fog, so they don't disturb the main view's fog
 //   history.
 // --------------------------------------------------------------------------------------
-std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
+std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> EveSpaceScene::RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, const Tr2LightManager::View* lightView, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext )
 {
 	Tr2GpuResourcePool::Texture froxelFog;
 	if( m_volumetricsRenderer )
 	{
-		froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, depthMap.GetWidth(), depthMap.GetHeight(), m_sunData.DirWorld, m_currentSunColor, m_updateContext.GetOrigin(), Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform() );
+		froxelFog = m_volumetricsRenderer->RenderFogIntoReflectionMap( renderContext, gpuResourcePool, depthMap.GetWidth(), depthMap.GetHeight(), m_sunData.DirWorld, m_currentSunColor, m_updateContext.GetOrigin(), Tr2Renderer::GetViewTransform(), Tr2Renderer::GetReversedDepthProjectionTransform(), lightView );
 	}
 	else
 	{
@@ -4147,7 +4146,7 @@ void EveSpaceScene::GetLightMatrices( const Tr2LightManager::PerLightData& light
 	view = LookAtMatrix( lightData.position, lightData.position - lightData.direction, up );
 }
 
-void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext )
+void EveSpaceScene::ProcessOutdatedRTAnimations( const Tr2LightManager::View* lightView, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 	TriFrustumOrtho sunShadowFrustum;
@@ -4184,29 +4183,26 @@ void EveSpaceScene::ProcessOutdatedRTAnimations( Tr2RenderContext& renderContext
 	std::vector<TriFrustum> spotLightFrustums;
 
 	// Process other lights
-	if( auto lightManager = Tr2LightManager::GetInstance() )
+	if( lightView )
 	{
-		if( lightManager->GetShadowCastingLights().size() > 0 )
+		for( uint32_t lightIndex : lightView->GetShadowCastingLights() )
 		{
-			for( uint32_t lightIndex : lightManager->GetShadowCastingLights() )
+			const Tr2LightManager::PerLightData* lightData = &lightView->GetLightData( lightIndex );
+
+			// Point light
+			if( lightData->innerAngle <= 0.0f )
 			{
-				const Tr2LightManager::PerLightData* lightData = &lightManager->GetLightData( lightIndex );
+				pointsLightDatas.push_back( lightData );
+			}
+			else // Spot light
+			{
+				Matrix projection;
+				Matrix view;
+				GetLightMatrices( *lightData, projection, view );
 
-				// Point light
-				if( lightData->innerAngle <= 0.0f )
-				{
-					pointsLightDatas.push_back( lightData );
-				}
-				else // Spot light
-				{
-					Matrix projection;
-					Matrix view;
-					GetLightMatrices( *lightData, projection, view );
-
-					TriFrustum shadowFrustum;
-					shadowFrustum.DeriveFrustum( &view, &lightData->position, &projection, renderContext.m_esm.GetViewport() );
-					spotLightFrustums.push_back( shadowFrustum );
-				}
+				TriFrustum shadowFrustum;
+				shadowFrustum.DeriveFrustum( &view, &lightData->position, &projection, renderContext.m_esm.GetViewport() );
+				spotLightFrustums.push_back( shadowFrustum );
 			}
 		}
 	}

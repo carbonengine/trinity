@@ -154,7 +154,7 @@ public:
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
 	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
+	void PrepareRaytracedShadows( const Tr2LightManager::View* lightView, Tr2RenderContext& renderContext );
 
 	void SetCamera( const EveSceneView::Camera& camera );
 	Tr2ReflectionProbe* GetReflectionProbe() const;
@@ -399,7 +399,7 @@ public:
 
 	void GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view );
 
-	void ProcessOutdatedRTAnimations( Tr2RenderContext & renderContext );
+	void ProcessOutdatedRTAnimations( const Tr2LightManager::View* lightView, Tr2RenderContext& renderContext );
 
 protected:
 	bool m_display;
@@ -617,8 +617,8 @@ protected:
 	void GatherReflectionRenderables( std::vector<ITr2Renderable*> & renderables );
 	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
-	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
-	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, const Tr2LightManager::View* lightView, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderReflectionVolumetrics( const Tr2TextureAL& depthMap, const Tr2LightManager::View* lightView, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	void UpdateShLighting(
 		const std::vector<IEveSpaceObject2*>& objectsNotReceivingShadow );

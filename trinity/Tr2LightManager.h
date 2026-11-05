@@ -61,17 +61,17 @@ struct Tr2LightTags
 //   for every view (the main view and the reflection probe faces), and each view has its
 //   own lights and buffers. Normally the per-frame operations for the light manager would
 //   look like:
-//     lightManager.SetViews( frustums, renderContext ); // the main view first
+//     views = lightManager.SetViews( frustums, renderContext ); // the main view first
 //     lightManager.Clear( renderContext );
 //     for each in scene.lights
 //       lightManager.AddLight( each ); // this can be done in parallel
 //     lightManager.ResolveLightData();
-//     for each view
-//       lightManager.SetActiveView( position of the view in frustums );
-//       lightManager.UpdateLists( depthMap, renderContext );
+//     for each in views
+//       lightManager.BindViewBuffers( *each );
+//       lightManager.UpdateLists( *each, depthMap, renderContext );
 //       renderYourStuff();
-//  The active view's GPU buffers are accessed through variable store with names
-//  "LightBuffer" and "LightIndexBuffer".
+//  The GPU buffers of the view bound by BindViewBuffers are accessed through variable
+//  store with names "LightBuffer" and "LightIndexBuffer".
 // --------------------------------------------------------------------------------------
 class Tr2LightManager : public Tr2DeviceResource
 {
@@ -123,6 +123,36 @@ public:
 		uint32_t entryMaxSize;
 	};
 
+	// One view the lights are gathered for (the main view or a reflection probe face), with
+	// its lights and GPU buffers. Only the light manager changes it. The others read its
+	// lights and pass it back to the light manager's functions.
+	class View
+	{
+	public:
+		View( uint32_t maxVolumetricLights, uint32_t maxShadowCastingLights, uint32_t indexBufferSize, bool reflection );
+
+		const std::vector<uint32_t>& GetShadowCastingLights() const;
+		const std::vector<uint32_t>& GetVolumetricLights() const;
+		const PerLightData& GetLightData( uint32_t index ) const;
+
+	private:
+		friend class Tr2LightManager;
+
+		bool reflection = false; // face view: needs the reflection tag
+		TriFrustum frustum;
+		uint32_t maxVolumetricLights;
+		uint32_t maxShadowCastingLights;
+		uint32_t indexBufferSize;
+
+		ThreadLocalLightData tlsLightData;
+		std::vector<PerLightData> lightData;
+		std::vector<uint32_t> shadowCastingLights;
+		std::vector<uint32_t> volumetricLights;
+		Tr2GpuStructuredBufferPtr lightBuffer;
+		Tr2GpuStructuredBufferPtr indexBuffer;
+		Tr2GpuBufferPtr indexBufferCounter;
+	};
+
 	void GetUnpackedShadowMapData( const PerLightData& lightData, uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
@@ -139,16 +169,17 @@ public:
 	void Clear( Tr2RenderContext& renderContext );
 
 	// The views the lights are gathered for this frame, set before the gather. The first
-	// frustum is the main view's, the others are reflection probe faces. A view's index for
-	// SetActiveView is its position in frustums. Views are created when the list grows and
-	// released when it shrinks.
-	void SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext );
-	void SetActiveView( uint32_t viewIndex );
+	// frustum is the main view's, the others are reflection probe faces. Returns the views
+	// in the order of frustums, valid until the next SetViews. Views are created when the
+	// list grows and released when it shrinks.
+	std::vector<View*> SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext );
+	// Points the "LightBuffer" and "LightIndexBuffer" variables at the view's buffers
+	void BindViewBuffers( const View& view );
 
 	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
 	void AddLight( PerLightData& data, bool scaleBrightness = true, const Tr2LightTags& tags = Tr2LightTags() );
 	void ResolveLightData();
-	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
+	ALResult UpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void AdjustLightCutoff( float lodFactor );
 
 	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
@@ -169,15 +200,13 @@ public:
 
 	static Tr2TextureArray& GetLightProfileArray();
 
-	const std::vector<uint32_t>& GetShadowCastingLights() const;
-	const std::vector<uint32_t>& GetVolumetricLights() const;
-	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
 	Tr2GpuResourcePool::Texture GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool );
 	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
 
 	ShadowQuality GetCurrentSpaceSceneShadowQuality();
 
 	Tr2GpuResourcePool::Texture RenderRaytracedShadows(
+		const View& view,
 		Tr2RaytracingGeometry* geometry,
 		const Tr2TextureAL& depth,
 		const Tr2TextureAL& normal,
@@ -209,35 +238,14 @@ private:
 		float sizeAcross;
 	};
 
-	struct View
-	{
-		bool reflection = false; // face view: needs the reflection tag
-		TriFrustum frustum;
-		uint32_t maxVolumetricLights;
-		uint32_t maxShadowCastingLights;
-		uint32_t indexBufferSize;
-
-		ThreadLocalLightData tlsLightData;
-		std::vector<PerLightData> lightData;
-		std::vector<uint32_t> shadowCastingLights;
-		std::vector<uint32_t> volumetricLights;
-		Tr2GpuStructuredBufferPtr lightBuffer;
-		Tr2GpuStructuredBufferPtr indexBuffer;
-		Tr2GpuBufferPtr indexBufferCounter;
-
-		View( uint32_t maxVolumetricLights, uint32_t maxShadowCastingLights, uint32_t indexBufferSize, bool reflection );
-	};
-
 	virtual bool OnPrepareResources();
 
-	View& GetActiveView();
-	const View& GetActiveView() const;
 	void CreateViewBuffers( View& view, Tr2RenderContext& renderContext );
 	void ResolveView( View& view );
 
-	ALResult DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	ALResult ClearLightIndices( Tr2LightManager::View& view, Tr2RenderContext& renderContext );
-	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
+	ALResult DoUpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
+	ALResult ClearLightIndices( View& view, Tr2RenderContext& renderContext );
+	ALResult UpdateLightBuffer( View& view, Tr2RenderContext& renderContext );
 
 	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
@@ -246,7 +254,6 @@ private:
 
 	static const uint32_t MAIN_VIEW = 0; // the reflection probe faces follow it
 	std::vector<View> m_views;
-	uint32_t m_activeView = MAIN_VIEW;
 
 	Tr2ConstantBufferAL m_perFrameData;
 	Tr2EffectPtr m_effect;

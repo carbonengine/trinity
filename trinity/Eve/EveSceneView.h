@@ -5,6 +5,7 @@
 #include "TriFrustum.h"
 #include "ITr2Renderable.h"
 #include "Tr2GpuResourcePool.h"
+#include "Tr2LightManager.h"
 
 namespace EveSceneView
 {
@@ -42,6 +43,9 @@ struct ViewInfo
 	bool subsurfaceScattering = false;
 	bool gpuParticles = false;
 	bool lensflares = false;
+	// The view's lights in the Tr2LightManager, set by the render driver once the light
+	// manager has the frame's views. Without it the view has no dynamic lights.
+	Tr2LightManager::View* lightView = nullptr;
 
 	// Render the scene as a reflection probe sees it: damped reflection intensity,
 	// reflection background and the reflection shadow map

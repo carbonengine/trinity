@@ -36,6 +36,8 @@ ViewInfo ViewInfo::Main( bool distortion )
 	view.subsurfaceScattering = true;
 	view.gpuParticles = true;
 	view.lensflares = true;
+	// set by the render driver when it gives the view its lights
+	view.lightView = nullptr;
 	return view;
 }
 
@@ -53,6 +55,8 @@ ViewInfo ViewInfo::ReflectionFace( bool lensflares )
 	view.subsurfaceScattering = false;
 	view.gpuParticles = false;
 	view.lensflares = lensflares;
+	// set by the render driver when it gives the view its lights
+	view.lightView = nullptr;
 	return view;
 }
 }

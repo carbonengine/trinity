@@ -104,7 +104,6 @@ private:
 		bool background = false;
 		// special overlay rendering (f.ex texture overlay)
 		bool overlay = false;
-		bool dynamicLights = false;
 
 		static Features Main();
 		static Features ReflectionFace();
@@ -123,16 +122,13 @@ private:
 		Tr2ProfileTimer total;
 	};
 
-	// A view rendered by RenderView: its camera and what the scene renders from it, the
-	// driver's features, and its view in the Tr2LightManager
+	// A view rendered by RenderView: its camera and what the scene renders from it, and the
+	// driver's features
 	struct RenderInfo
 	{
 		EveSceneView::Camera camera;
 		EveSceneView::ViewInfo scene;
 		Features features;
-		// the view's index in the Tr2LightManager, set by SetLightViews: 0 is the main view,
-		// then the reflection faces that have dynamic lights
-		uint32_t lightView = 0;
 	};
 
 	// Targets rendered by RenderView
@@ -154,7 +150,7 @@ private:
 
 	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
 	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext & renderContext );
-	void SetLightViews( const RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
+	void SetLightViews( RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
