@@ -49,29 +49,42 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_ICACHEABLE_METHODS()
 
 		MAP_ATTRIBUTE( "voxelData", m_voxelData, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "voxelData", GetVoxelData, SetVoxelData, "Voxel data of the geometry" )
+		MAP_PROPERTY( "voxelData", GetVoxelData, SetVoxelData, "Voxel data of the geometry\n\n:jessica-group: Input" )
 		MAP_ATTRIBUTE( "shapeChannelIndex", m_shapeChannelIndex, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "shapeChannelIndex", GetShapeChannelIndex, SetShapeChannelIndex, "Index of the shape channel in the voxel data" )
+		MAP_PROPERTY( "shapeChannelIndex", GetShapeChannelIndex, SetShapeChannelIndex, "Index of the shape channel in the voxel data\n\n:jessica-group: Input" )
+
+		MAP_ATTRIBUTE( "shapeTransformScale", m_shapeTransform.scale, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "shapeTransformScale", GetShapeChannelScale, SetShapeChannelScale, "Shape channel data transform linear scale (useful for normalized data)\n\n:jessica-group: Input" )
+		MAP_ATTRIBUTE( "shapeTransformOffset", m_shapeTransform.offset, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "shapeTransformOffset", GetShapeChannelOffset, SetShapeChannelOffset, "Shape channel data transform linear offset (useful for normalized data)\n\n:jessica-group: Input" )
+
 		MAP_ATTRIBUTE( "occupancyChannelIndex", m_occupancyChannelIndex, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "occupancyChannelIndex", GetOccupancyChannelIndex, SetOccupancyChannelIndex, "Index of the occupancy channel in the voxel data" )
+		MAP_PROPERTY( "occupancyChannelIndex", GetOccupancyChannelIndex, SetOccupancyChannelIndex, "Index of the occupancy channel in the voxel data\n\n:jessica-group: Input" )
 		MAP_ATTRIBUTE( "dataTagChannelIndex", m_dataTagChannelIndex, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "dataTagChannelIndex", GetDataTagChannelIndex, SetDataTagChannelIndex, "Index of the data tag channel (one-component float) in the voxel data; the tags of the solid and empty cells either side of the surface go to the DataTags vertex component (SurfaceNets and DualContouring)" )
+		MAP_PROPERTY( 
+			"dataTagChannelIndex", 
+			GetDataTagChannelIndex, 
+			SetDataTagChannelIndex, 
+			"Index of the data tag channel in the voxel data; the tags of the solid and empty cells either side of the surface go to the DataTags vertex component (SurfaceNets and DualContouring)\n\n"
+			":jessica-group: Input"
+		)
+		MAP_ATTRIBUTE_WITH_CHOOSER( "method", m_method, "Triangulation method used to create the geometry (see trinity.Tr2VoxelGeometryMethod)\n\n:jessica-group: Shape", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2VoxelGeometryMethodChooser )
 		MAP_ATTRIBUTE( "subdivision", m_subdivision, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry" )
+		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry\n\n:jessica-group: Shape" )
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing" )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "method", m_method, "", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2VoxelGeometryMethodChooser )
+		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing\n\n:jessica-group: Shape" )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "Filter for vertex components (see trinity.Tr2VoxelGeometryComponents)\n\n:jessica-group: Shape", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
+
 		MAP_ATTRIBUTE( "cutSeed", m_cutSeed, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "cutSeed", GetCutSeed, SetCutSeed, "Seed of the facet and cleave placement (SurfaceNets and DualContouring)" )
+		MAP_PROPERTY( "cutSeed", GetCutSeed, SetCutSeed, "Seed of the facet and cleave placement (SurfaceNets and DualContouring)\n\n:jessica-group: Cuts" )
 		MAP_ATTRIBUTE( "facetSpacing", m_facetSpacing, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "facetSpacing", GetFacetSpacing, SetFacetSpacing, "Distance between facet seeds, in cells" )
+		MAP_PROPERTY( "facetSpacing", GetFacetSpacing, SetFacetSpacing, "Distance between facet seeds, in cells\n\n:jessica-group: Cuts" )
 		MAP_ATTRIBUTE( "facetDepth", m_facetDepth, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "facetDepth", GetFacetDepth, SetFacetDepth, "How far below the surface facet planes sink, in cells; 0 disables facets" )
+		MAP_PROPERTY( "facetDepth", GetFacetDepth, SetFacetDepth, "How far below the surface facet planes sink, in cells; 0 disables facets\n\n:jessica-group: Cuts" )
 		MAP_ATTRIBUTE( "facetMaxCut", m_facetMaxCut, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "facetMaxCut", GetFacetMaxCut, SetFacetMaxCut, "Deepest cut a facet makes, in cells" )
+		MAP_PROPERTY( "facetMaxCut", GetFacetMaxCut, SetFacetMaxCut, "Deepest cut a facet makes, in cells\n\n:jessica-group: Cuts" )
 		MAP_ATTRIBUTE( "cleaveDepth", m_cleaveDepth, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "cleaveDepth", GetCleaveDepth, SetCleaveDepth, "Deepest cleave cap, in cells; 0 disables cleaves" )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
+		MAP_PROPERTY( "cleaveDepth", GetCleaveDepth, SetCleaveDepth, "Deepest cleave cap, in cells; 0 disables cleaves\n\n:jessica-group: Cuts" )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS(
 			"__init__",

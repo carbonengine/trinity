@@ -4,6 +4,7 @@
 
 #include "Tr2ProceduralGeometryProvider.h"
 #include "../Tr2VoxelData.h"
+#include "../Tr2SignedDistanceField.h"
 #include "../EnumFilter.h"
 
 enum class Tr2VoxelGeometryComponents : int32_t
@@ -29,7 +30,7 @@ public:
 		DualContouring,
 	};
 
-	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<uint32_t> occupancyChannelIndex );
+	BlueStdResult Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<int32_t> shapeChannelIndex, Be::Optional<int32_t> occupancyChannelIndex );
 
 	bool Initialize() override;
 	bool OnModified( Be::Var* value ) override;
@@ -37,14 +38,20 @@ public:
 	IRootPtr GetVoxelData() const;
 	void SetVoxelData( Tr2VoxelData* voxelData );
 
-	uint32_t GetShapeChannelIndex() const;
-	void SetShapeChannelIndex( uint32_t channelIndex );
+	int32_t GetShapeChannelIndex() const;
+	void SetShapeChannelIndex( int32_t channelIndex );
 
-	uint32_t GetOccupancyChannelIndex() const;
-	void SetOccupancyChannelIndex( uint32_t channelIndex );
+	float GetShapeChannelScale() const;
+	void SetShapeChannelScale( float scale );
 
-	uint32_t GetDataTagChannelIndex() const;
-	void SetDataTagChannelIndex( uint32_t channelIndex );
+	float GetShapeChannelOffset() const;
+	void SetShapeChannelOffset( float offset );
+
+	int32_t GetOccupancyChannelIndex() const;
+	void SetOccupancyChannelIndex( int32_t channelIndex );
+
+	int32_t GetDataTagChannelIndex() const;
+	void SetDataTagChannelIndex( int32_t channelIndex );
 
 	uint32_t GetSubdivision() const;
 	void SetSubdivision( uint32_t subdivision );
@@ -79,9 +86,10 @@ private:
 	void DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels );
 
 	Tr2VoxelDataPtr m_voxelData;
-	uint32_t m_shapeChannelIndex = 0;
-	uint32_t m_occupancyChannelIndex = 0;
-	uint32_t m_dataTagChannelIndex = std::numeric_limits<uint32_t>::max(); // no data tag channel by default
+	int32_t m_shapeChannelIndex = 0;
+	Tr2SignedDistanceField::LinearTransform m_shapeTransform;
+	int32_t m_occupancyChannelIndex = -1;
+	int32_t m_dataTagChannelIndex = -1;
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
 	Method m_method = Method::Simple;

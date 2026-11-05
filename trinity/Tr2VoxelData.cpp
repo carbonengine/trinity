@@ -249,6 +249,10 @@ Tr2VoxelData::PayloadSnapshot& Tr2VoxelData::PayloadSnapshot::operator=( Payload
 
 bool Tr2VoxelData::ModifiedChannels::IsChannelModified( size_t channelIndex ) const
 {
+	if( channelIndex >= 64 )
+	{
+		return false;
+	}
 	return ( m_modifiedChannelsBitmask & ( 1ull << channelIndex ) ) != 0;
 }
 

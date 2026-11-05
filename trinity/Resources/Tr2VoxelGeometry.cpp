@@ -15,6 +15,10 @@
 namespace
 {
 
+bool SameChannelIndex( int32_t a, int32_t b )
+{
+	return a == b || ( a < 0 && b < 0 );
+}
 
 bool IsValidDataTagChannelType( const Tr2VoxelData::PayloadType& type )
 {
@@ -34,16 +38,32 @@ public:
 	}
 };
 
+struct VoxelInput
+{
+	Tr2VoxelData::PayloadSnapshot shape;
+	Tr2SignedDistanceField::LinearTransform shapeTransform;
+	Tr2VoxelData::PayloadSnapshot occupancy;
+
+	[[nodiscard]] bool HasShapeChannel() const
+	{
+		return shape.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( shape.m_type );
+	}
+
+	[[nodiscard]] bool HasOccupancyChannel() const
+	{
+		return occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( occupancy.m_type );
+	}
+};
+
 /**
  * @brief VoxelBuilder is a base class for procedural geometry builders that generates geometry from voxel data.
  */
 class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	VoxelBuilder( Tr2VoxelData::PayloadSnapshot shape, Tr2VoxelData::PayloadSnapshot occupancy ) :
-		m_sdf( std::move( shape ) ),
-		m_occupancy( std::move( occupancy ) ),
-		m_dimensions( m_sdf.m_voxelData->GetDimensions() )
+	VoxelBuilder( VoxelInput voxelInput ) :
+		m_voxelInput( std::move( voxelInput ) ),
+		m_dimensions( m_voxelInput.shape.m_data ? m_voxelInput.shape.m_voxelData->GetDimensions() : m_voxelInput.occupancy.m_data ? m_voxelInput.occupancy.m_voxelData->GetDimensions() : Tr2VoxelData::Dimensions{} )
 	{
 	}
 
@@ -89,16 +109,6 @@ public:
 	}
 
 protected:
-	[[nodiscard]] bool HasShapeChannel() const
-	{
-		return m_sdf.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( m_sdf.m_type );
-	}
-
-	[[nodiscard]] bool HasOccupancyChannel() const
-	{
-		return m_occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( m_occupancy.m_type );
-	}
-
 	/**
 	 * @brief Returns the cached signed distance field, creating it on first use from available shape and/or occupancy channels.
 	 * The signed distance field is created from the explicit shape channel, or from the occupancy channel, or from a combination of both, 
@@ -112,19 +122,19 @@ protected:
 		{
 			return *m_signedDistanceField;
 		}
-		if( HasShapeChannel() )
+		if( m_voxelInput.HasShapeChannel() )
 		{
-			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_sdf, Tr2SignedDistanceField::LinearTransform{}, cancel );
+			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_voxelInput.shape, m_voxelInput.shapeTransform, cancel );
 
-			if( HasOccupancyChannel() )
+			if( m_voxelInput.HasOccupancyChannel() )
 			{
-				Tr2SignedDistanceField occupancySdf( m_occupancy, cancel );
+				Tr2SignedDistanceField occupancySdf( m_voxelInput.occupancy, cancel );
 				m_signedDistanceField->Max( occupancySdf );
 			}
 		}
 		else
 		{
-			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_occupancy, cancel );
+			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_voxelInput.occupancy, cancel );
 		}
 		return *m_signedDistanceField;
 	}
@@ -148,8 +158,7 @@ protected:
 	 */
 	virtual GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) = 0;
 
-	const Tr2VoxelData::PayloadSnapshot m_sdf;
-	const Tr2VoxelData::PayloadSnapshot m_occupancy;
+	const VoxelInput m_voxelInput;
 	const Tr2VoxelData::Dimensions m_dimensions;
 	std::unique_ptr<Tr2SignedDistanceField> m_signedDistanceField;
 };
@@ -161,8 +170,8 @@ protected:
 class SimpleBuilder : public VoxelBuilder
 {
 public:
-	SimpleBuilder( Tr2VoxelData::PayloadSnapshot shape, Tr2VoxelData::PayloadSnapshot occupancy ) :
-		VoxelBuilder( std::move( shape ), std::move( occupancy ) )
+	SimpleBuilder( VoxelInput voxelInput ) :
+		VoxelBuilder( std::move( voxelInput ) )
 	{
 	}
 
@@ -290,8 +299,8 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		VoxelBuilder( std::move( sdf ), std::move( occupancy ) ),
+	DualGridBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		VoxelBuilder( std::move( voxelInput ) ),
 		m_dataTags( std::move( dataTags ) ),
 		m_subdivision( subdivision ),
 		m_cutParams( cutParams ),
@@ -1388,8 +1397,8 @@ private:
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
+	SurfaceNetsBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( voxelInput ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1469,8 +1478,8 @@ private:
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
+	DualContouringBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( voxelInput ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1674,28 +1683,44 @@ private:
 }
 
 
-BlueStdResult Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<uint32_t> shapeChannelIndex, Be::Optional<uint32_t> occupancyChannelIndex )
+BlueStdResult Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, Be::Optional<int32_t> shapeChannelIndex, Be::Optional<int32_t> occupancyChannelIndex )
 {
-	if( m_voxelData == voxelData && m_shapeChannelIndex == shapeChannelIndex && m_occupancyChannelIndex == occupancyChannelIndex )
+	auto shapeChannel = shapeChannelIndex.IsAssigned() ? shapeChannelIndex.GetValue() : -1;
+	auto occupancyChannel = occupancyChannelIndex.IsAssigned() ? occupancyChannelIndex.GetValue() : -1;
+	if( m_voxelData == voxelData && SameChannelIndex( m_shapeChannelIndex, shapeChannel ) && SameChannelIndex( m_occupancyChannelIndex, occupancyChannel ) )
 	{
 		return {};
 	}
 
 	if ( voxelData.GetValue() )
 	{
-		if( shapeChannelIndex >= voxelData.GetValue()->GetPayloadChannelCount() )
+		if( shapeChannel >= 0 )
 		{
-			return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Invalid shape channel index" );
+			if( shapeChannel >= voxelData.GetValue()->GetPayloadChannelCount() )
+			{
+				return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Invalid shape channel index" );
+			}
+			if( !Tr2SignedDistanceField::IsValidSdfChannelType( voxelData.GetValue()->GetPayloadType( shapeChannel ) ) )
+			{
+				return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Not supported shape channel type" );
+			}
 		}
-		auto& type = voxelData.GetValue()->GetPayloadType( shapeChannelIndex );
-		if( !Tr2SignedDistanceField::IsValidSdfChannelType( type ) )
+
+		if( occupancyChannel >= 0 )
 		{
-			return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Not supported shape channel type" );
+			if( occupancyChannel >= voxelData.GetValue()->GetPayloadChannelCount() )
+			{
+				return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Invalid occupancy channel index" );
+			}
+			if( !Tr2SignedDistanceField::IsValidOccupancyChannelType( voxelData.GetValue()->GetPayloadType( occupancyChannel ) ) )
+			{
+				return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, "Not supported occupancy channel type" );
+			}
 		}
 	}
 
-	m_shapeChannelIndex = shapeChannelIndex;
-	m_occupancyChannelIndex = occupancyChannelIndex;
+	m_shapeChannelIndex = shapeChannel;
+	m_occupancyChannelIndex = occupancyChannel;
 	if( m_voxelData )
 	{
 		m_voxelData->m_onDataChanged.UnregisterListener( this );
@@ -1715,7 +1740,7 @@ bool Tr2VoxelGeometry::Initialize()
 	return true;
 }
 
-bool Tr2VoxelGeometry::OnModified( Be::Var* value )
+bool Tr2VoxelGeometry::OnModified( Be::Var* )
 {
 	Rebuild();
 	return true;
@@ -1744,45 +1769,80 @@ void Tr2VoxelGeometry::SetVoxelData( Tr2VoxelData* voxelData )
 	Rebuild();
 }
 
-uint32_t Tr2VoxelGeometry::GetShapeChannelIndex() const
+int32_t Tr2VoxelGeometry::GetShapeChannelIndex() const
 {
 	return m_shapeChannelIndex;
 }
 
-void Tr2VoxelGeometry::SetShapeChannelIndex( uint32_t channelIndex )
+void Tr2VoxelGeometry::SetShapeChannelIndex( int32_t channelIndex )
 {
-	if( m_shapeChannelIndex == channelIndex )
+	if( SameChannelIndex( m_shapeChannelIndex, channelIndex ) )
 	{
+		m_shapeChannelIndex = channelIndex;
 		return;
 	}
 	m_shapeChannelIndex = channelIndex;
 	Rebuild();
 }
 
-uint32_t Tr2VoxelGeometry::GetOccupancyChannelIndex() const
+float Tr2VoxelGeometry::GetShapeChannelScale() const
+{
+	return m_shapeTransform.scale;
+}
+
+void Tr2VoxelGeometry::SetShapeChannelScale( float scale )
+{
+	if( m_shapeTransform.scale == scale )
+	{
+		return;
+	}
+	m_shapeTransform.scale = scale;
+	Rebuild();
+}
+
+float Tr2VoxelGeometry::GetShapeChannelOffset() const
+{
+	return m_shapeTransform.offset;
+}
+
+void Tr2VoxelGeometry::SetShapeChannelOffset( float offset )
+{
+	if( m_shapeTransform.offset == offset )
+	{
+		return;
+	}
+	m_shapeTransform.offset = offset;
+	Rebuild();
+}
+
+
+
+int32_t Tr2VoxelGeometry::GetOccupancyChannelIndex() const
 {
 	return m_occupancyChannelIndex;
 }
 
-void Tr2VoxelGeometry::SetOccupancyChannelIndex( uint32_t channelIndex )
+void Tr2VoxelGeometry::SetOccupancyChannelIndex( int32_t channelIndex )
 {
-	if( m_occupancyChannelIndex == channelIndex )
+	if( SameChannelIndex( m_occupancyChannelIndex, channelIndex ) )
 	{
+		m_occupancyChannelIndex = channelIndex;
 		return;
 	}
 	m_occupancyChannelIndex = channelIndex;
 	Rebuild();
 }
 
-uint32_t Tr2VoxelGeometry::GetDataTagChannelIndex() const
+int32_t Tr2VoxelGeometry::GetDataTagChannelIndex() const
 {
 	return m_dataTagChannelIndex;
 }
 
-void Tr2VoxelGeometry::SetDataTagChannelIndex( uint32_t channelIndex )
+void Tr2VoxelGeometry::SetDataTagChannelIndex( int32_t channelIndex )
 {
-	if( m_dataTagChannelIndex == channelIndex )
+	if( SameChannelIndex( m_dataTagChannelIndex, channelIndex ) )
 	{
+		m_dataTagChannelIndex = channelIndex;
 		return;
 	}
 	m_dataTagChannelIndex = channelIndex;
@@ -1912,8 +1972,8 @@ void Tr2VoxelGeometry::SetCleaveDepth( float cleaveDepth )
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
-	const bool dataTagsModified = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_dataTagChannelIndex < m_voxelData->GetPayloadChannelCount() && modifiedChannels.IsChannelModified( m_dataTagChannelIndex );
-	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) || dataTagsModified )
+	const bool dataTagsModified = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && modifiedChannels.IsChannelModified( m_dataTagChannelIndex );
+	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) || modifiedChannels.IsChannelModified( m_occupancyChannelIndex ) || dataTagsModified )
 	{
 		Rebuild();
 	}
@@ -1945,7 +2005,7 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	auto dataTagSnapshot = m_voxelData->GetPayloadSnapshot( m_dataTagChannelIndex );
 	if( dataTagSnapshot.m_data && !IsValidDataTagChannelType( dataTagSnapshot.m_type ) )
 	{
-		CCP_LOGWARN( "Tr2VoxelGeometry: data tag channel %u is not a one-component float channel", m_dataTagChannelIndex );
+		CCP_LOGWARN( "Tr2VoxelGeometry: data tag channel %d is not a one-component float channel", m_dataTagChannelIndex );
 	}
 
 	Tr2SurfaceCutParams cutParams;
@@ -1958,11 +2018,11 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	switch( m_method )
 	{
 	case Method::Simple:
-		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ) );
+		return std::make_unique<SimpleBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) } );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<SurfaceNetsBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) }, std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<DualContouringBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) }, std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
