@@ -134,6 +134,7 @@ protected:
 		float worldRadius = 0.0f;
 		uint32_t generation = 0;
 		Tr2ScreenSizeRequests requests;
+		std::atomic<bool> busy{ false };
 	};
 	mutable ScreenSizeCache m_screenSizeCache;
 

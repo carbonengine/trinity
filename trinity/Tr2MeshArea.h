@@ -13,7 +13,7 @@ BLUE_DECLARE( Tr2MeshBase );
 class Tr2RaytracingMeshArea;
 
 BLUE_CLASS( Tr2MeshArea ) :
-	public IRoot
+	public INotify
 {
 public:
 	Tr2MeshArea( IRoot* lockobj = 0 );
@@ -48,6 +48,8 @@ public:
 	bool GetUseSHLighting() const;
 
 	void SetMaterial( Tr2EffectPtr mat );
+
+	bool OnModified( Be::Var* value ) override;
 
 	Tr2Effect* GetMaterialInterface() const;
 

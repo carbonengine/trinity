@@ -51,7 +51,7 @@ struct Tr2ScreenSizeRequests
 
 	bool Covers( float screenSize ) const
 	{
-		return valid && screenSize >= minScreenSize && screenSize < maxScreenSize;
+		return valid && screenSize >= minScreenSize && ( screenSize < maxScreenSize || maxScreenSize == std::numeric_limits<float>::max() );
 	}
 
 	// Bumped whenever anything a cached request depends on changes (texture assigned/loaded/destroyed, LOD parameters).
