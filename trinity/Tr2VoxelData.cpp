@@ -106,8 +106,7 @@ BluePy WrapPayloadElement( const Tr2VoxelData::Dimensions& dimensions, const Tr2
 	{
 		if constexpr( std::is_same_v<T, bool> )
 		{
-			auto byte = reinterpret_cast<const uint8_t*>( payloadData + ( index * payloadType.elementCount + j ) / 8 );
-			p[j] = ( *byte & ( 1 << ( ( index * payloadType.elementCount + j ) % 8 ) ) ) != 0;
+			p[j] = Tr2VoxelData::GetPackedBit( payloadData, index * payloadType.elementCount + j );
 		}
 		else
 		{
@@ -332,6 +331,29 @@ Tr2VoxelData::PayloadSnapshot Tr2VoxelData::GetPayloadSnapshot( size_t index )
 }
 
 
+bool Tr2VoxelData::GetPackedBit( const uint8_t* data, size_t bitIndex )
+{
+	return ( data[bitIndex / 8] >> ( bitIndex % 8 ) ) & 1;
+}
+
+
+bool Tr2VoxelData::SetPackedBit( uint8_t* data, size_t bitIndex, bool value )
+{
+	uint8_t& byte = data[bitIndex / 8];
+	uint8_t oldByte = byte;
+	uint8_t mask = uint8_t( 1 << ( bitIndex % 8 ) );
+	if( value )
+	{
+		byte |= mask;
+	}
+	else
+	{
+		byte &= ~mask;
+	}
+	return byte != oldByte;
+}
+
+
 BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 {
 	auto setIter = BluePy( PyObject_GetIter( set ), true );
@@ -448,17 +470,7 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 	{
 		if constexpr( std::is_same_v<Dst, bool> )
 		{
-			auto& byte = *reinterpret_cast<uint8_t*>( dest.current.data.data() + ( coordIndex * payloadType.elementCount + j ) / 8 );
-			auto oldByte = byte;
-			if( p[j] )
-			{
-				byte |= 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 );
-			}
-			else
-			{
-				byte &= ~( 1 << ( ( coordIndex * payloadType.elementCount + j ) % 8 ) );
-			}
-			if( oldByte != byte )
+			if( SetPackedBit( dest.current.data.data(), coordIndex * payloadType.elementCount + j, p[j] ) )
 			{
 				modifiedChannels.MarkChannelModified( index );
 			}
