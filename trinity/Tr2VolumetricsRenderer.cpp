@@ -733,7 +733,14 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 					TRINITY_STATS_ZONE( "Create shader table" );
 					m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
 					m_shaderTableDesc.AddMissShader( missName.c_str(), material );
-					m_rtShadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+					if( !m_rtShadowShaderTable.IsValid() || FAILED( m_rtShadowShaderTable.Update( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() ) ) )
+					{
+						m_rtShadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+					}
+					if( !m_rtShadowShaderTable.IsValid() )
+					{
+						return {};
+					}
 				}
 
 				resources.rtCalculateFroxels->SetOption( GodRayNoiseOptionName, m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? GodRayNoiseEnabledOption : GodRayNoiseDisabledOption );
