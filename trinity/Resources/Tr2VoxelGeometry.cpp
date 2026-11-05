@@ -52,7 +52,7 @@ struct InputSettings
 
 	[[nodiscard]] bool HasOccupancyChannel() const
 	{
-		return occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( occupancy.m_type );
+		return occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidOccupancyChannelType( occupancy.m_type );
 	}
 
 	[[nodiscard]] bool HasDataTagChannel() const
@@ -144,7 +144,7 @@ protected:
 	/**
 	 * @brief Returns the cached signed distance field, creating it on first use from available shape and/or occupancy channels.
 	 * The signed distance field is created from the explicit shape channel, or from the occupancy channel, or from a combination of both, 
-	 * depending on which channels are available. If both channels are available, the resulting signed distance field is a union of the two.
+	 * depending on which channels are available. If both channels are available, the resulting signed distance field is an intersection of the two.
 	 * @param cancel A cancellation flag checked by signed-distance-field construction routines to allow early termination.
 	 * @return A reference to the internally stored `Tr2SignedDistanceField` instance.
 	 */
@@ -277,13 +277,14 @@ protected:
 		}
 		if( hasExtraData )
 		{
-			cmf::BufferElementStream<Vector4> curvatureStream( decl[extraElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( curvature.size() ); ++i )
+			cmf::BufferElementStream<Vector4> extraDataStream( decl[extraElement], vbView, buffers );
+			
+			for( uint32_t i = 0; i < extraDataStream.size(); ++i )
 			{
 				const float curvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !curvature.empty() ? curvature[i] : 0.0f;
 				const float smoothedCurvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) && !smoothedCurvature.empty() ? smoothedCurvature[i] : 0.0f;
 				const Vector2 dataTagValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !dataTags.empty() ? Vector2( dataTags[i].solid, dataTags[i].empty ) : Vector2( 0.0f, 0.0f );
-				curvatureStream.set( i, Vector4( curvatureValue, smoothedCurvatureValue, dataTagValue.x, dataTagValue.y ) );
+				extraDataStream.set( i, Vector4( curvatureValue, smoothedCurvatureValue, dataTagValue.x, dataTagValue.y ) );
 			}
 		}
 
