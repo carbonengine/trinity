@@ -73,7 +73,10 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry\n\n:jessica-group: Shape" )
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing\n\n:jessica-group: Shape" )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "Filter for vertex components (see trinity.Tr2VoxelGeometryComponents)\n\n:jessica-group: Shape", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "Filter for vertex components (see trinity.Tr2VoxelGeometryComponents)\n\n:jessica-group: Output", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
+		MAP_ATTRIBUTE( "packedTangents", m_packedTangents, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "packedTangents", GetPackedTangents, SetPackedTangents, "Whether to pack tangents\n\n:jessica-group: Output" )
+
 
 		MAP_ATTRIBUTE( "cutSeed", m_cutSeed, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "cutSeed", GetCutSeed, SetCutSeed, "Seed of the facet and cleave placement (SurfaceNets and DualContouring)\n\n:jessica-group: Cuts" )

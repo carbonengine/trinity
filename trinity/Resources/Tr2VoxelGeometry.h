@@ -77,6 +77,9 @@ public:
 	float GetCleaveDepth() const;
 	void SetCleaveDepth( float cleaveDepth );
 
+	bool GetPackedTangents() const;
+	void SetPackedTangents( bool packedTangents );
+
 	void LockBuild();
 	void UnlockBuild();
 
@@ -103,8 +106,9 @@ private:
 	float m_facetMaxCut = 0.3f;
 	float m_cleaveDepth = 0.f;
 	EnumFilter<Tr2VoxelGeometryComponents> m_components;
-	int32_t m_buildLock = 0;
+	bool m_packedTangents = false;
 	bool m_rebuildPending = false;
+	int32_t m_buildLock = 0;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2VoxelGeometry );

@@ -22,7 +22,7 @@ bool SameChannelIndex( int32_t a, int32_t b )
 
 bool IsValidDataTagChannelType( const Tr2VoxelData::PayloadType& type )
 {
-	return type.elementCount == 1 && type.type == Tr2VoxelDataType::Float;
+	return type.elementCount == 1 && ( type.type == Tr2VoxelDataType::Int8 || type.type == Tr2VoxelDataType::Boolean );
 }
 
 /**
@@ -38,11 +38,12 @@ public:
 	}
 };
 
-struct VoxelInput
+struct InputSettings
 {
 	Tr2VoxelData::PayloadSnapshot shape;
 	Tr2SignedDistanceField::LinearTransform shapeTransform;
 	Tr2VoxelData::PayloadSnapshot occupancy;
+	Tr2VoxelData::PayloadSnapshot tags;
 
 	[[nodiscard]] bool HasShapeChannel() const
 	{
@@ -53,6 +54,30 @@ struct VoxelInput
 	{
 		return occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( occupancy.m_type );
 	}
+
+	[[nodiscard]] bool HasDataTagChannel() const
+	{
+		return tags.m_voxelData != nullptr && IsValidDataTagChannelType( tags.m_type );
+	}
+
+	[[nodiscard]] Tr2VoxelData::Dimensions GetDimensions() const
+	{
+		if( HasShapeChannel() )
+		{
+			return shape.m_voxelData->GetDimensions();
+		}
+		if( HasOccupancyChannel() )
+		{
+			return occupancy.m_voxelData->GetDimensions();
+		}
+		return {};
+	}
+};
+
+struct OutputSettings
+{
+	EnumFilter<Tr2VoxelGeometryComponents> components;
+	bool packedTangents = false;
 };
 
 /**
@@ -61,9 +86,10 @@ struct VoxelInput
 class VoxelBuilder : public Tr2ProceduralGeometryBuilder
 {
 public:
-	VoxelBuilder( VoxelInput voxelInput ) :
-		m_voxelInput( std::move( voxelInput ) ),
-		m_dimensions( m_voxelInput.shape.m_data ? m_voxelInput.shape.m_voxelData->GetDimensions() : m_voxelInput.occupancy.m_data ? m_voxelInput.occupancy.m_voxelData->GetDimensions() : Tr2VoxelData::Dimensions{} )
+	VoxelBuilder( InputSettings inputSettings, OutputSettings outputSettings ) :
+		m_inputSettings( std::move( inputSettings ) ),
+		m_outputSettings( std::move( outputSettings ) ),
+		m_dimensions( m_inputSettings.GetDimensions() )
 	{
 	}
 
@@ -109,6 +135,12 @@ public:
 	}
 
 protected:
+	struct DataTag
+	{
+		float solid = {};
+		float empty = {};
+	};
+
 	/**
 	 * @brief Returns the cached signed distance field, creating it on first use from available shape and/or occupancy channels.
 	 * The signed distance field is created from the explicit shape channel, or from the occupancy channel, or from a combination of both, 
@@ -122,19 +154,19 @@ protected:
 		{
 			return *m_signedDistanceField;
 		}
-		if( m_voxelInput.HasShapeChannel() )
+		if( m_inputSettings.HasShapeChannel() )
 		{
-			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_voxelInput.shape, m_voxelInput.shapeTransform, cancel );
+			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_inputSettings.shape, m_inputSettings.shapeTransform, cancel );
 
-			if( m_voxelInput.HasOccupancyChannel() )
+			if( m_inputSettings.HasOccupancyChannel() )
 			{
-				Tr2SignedDistanceField occupancySdf( m_voxelInput.occupancy, cancel );
+				Tr2SignedDistanceField occupancySdf( m_inputSettings.occupancy, cancel );
 				m_signedDistanceField->Max( occupancySdf );
 			}
 		}
 		else
 		{
-			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_voxelInput.occupancy, cancel );
+			m_signedDistanceField = std::make_unique<Tr2SignedDistanceField>( m_inputSettings.occupancy, cancel );
 		}
 		return *m_signedDistanceField;
 	}
@@ -158,7 +190,115 @@ protected:
 	 */
 	virtual GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) = 0;
 
-	const VoxelInput m_voxelInput;
+	/**
+	 * @brief Helper function that assembles the generated mesh based on enabled output components and available inputs. 
+	 * @param allocator Allocator used to build and store the vertex declaration metadata.
+	 * @param buffers Buffer manager used to allocate and access vertex and index buffers.
+	 * @param positions Per-vertex position data used to populate the position stream (with origin/center offset applied).
+	 * @param normals Per-vertex smooth normals, written when smooth normals are enabled.
+	 * @param shadingNormals Per-vertex split/shading normals, written when split normals are enabled.
+	 * @param curvature Per-vertex curvature values, written to extra packed data when curvature output is enabled.
+	 * @param smoothedCurvature Per-vertex smoothed curvature values, written to extra packed data when enabled.
+	 * @param dataTags Per-vertex tag pair values (solid/empty), written to extra packed data when enabled.
+	 * @param indices Triangle index data copied into the allocated index buffer.
+	 * @return A GeneratedMesh containing the allocated vertex buffer view, index buffer view, and the constructed vertex declaration.
+	 */
+	GeneratedMesh AllocateBuffers(
+		cmf::MemoryAllocator& allocator,
+		cmf::BufferManager& buffers,
+		const std::vector<Vector3>& positions,
+		const std::vector<Vector3>& normals,
+		const std::vector<Vector3>& shadingNormals,
+		const std::vector<float>& curvature,
+		const std::vector<float>& smoothedCurvature,
+		const std::vector<DataTag>& dataTags,
+		const std::vector<uint32_t>& indices ) const
+	{
+		cmf::Span<cmf::VertexElement> decl;
+		uint32_t offset = 0;
+		// Appends a float element and returns its index in decl
+		auto addElement = [&]( cmf::Usage usage, uint8_t usageIndex, cmf::ElementType type, uint8_t componentCount ) {
+			cmf::Modify( decl, allocator ).emplace_back( usage, usageIndex, type, componentCount, offset );
+			offset += cmf::GetVertexElementSize( decl[decl.size() - 1] );
+			return decl.size() - 1;
+		};
+		const size_t positionElement = addElement( cmf::Usage::Position, 0, cmf::ElementType::Float32, 3 );
+		const size_t normalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 0, cmf::ElementType::Float16, 4 ) : 0;
+		const size_t shadingNormalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 1, cmf::ElementType::Float16, 4 ) : 0;
+
+		const auto hasExtraData = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) || m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) || m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags );
+		const size_t extraElement = hasExtraData ? addElement( cmf::Usage::TexCoord, 0, cmf::ElementType::Int8Norm, 4 ) : 0;
+		const uint32_t vertexStride = offset;
+
+		// Allocate vertex buffer
+		cmf::BufferView vbView = buffers.AllocateBuffer(
+			nullptr,
+			uint32_t( positions.size() * vertexStride ),
+			vertexStride );
+		cmf::BufferElementStream<Vector3> positionStream( decl[positionElement], vbView, buffers );
+		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
+		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
+		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
+		{
+			positionStream.set( i, origin + positions[i] + Vector3( 0.5f, 0.5f, 0.5f ) );
+		}
+
+		auto PopulateNormals = [&]( const std::vector<Vector3>& normalsToPopulate, size_t elementIndex ) {
+			if( m_outputSettings.packedTangents )
+			{
+				cmf::BufferElementStream<Vector4> normalStream( decl[elementIndex], vbView, buffers );
+				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
+				{
+					const Vector3& n = normalsToPopulate[i];
+					auto tangent = std::abs( n.x ) < 0.999f ? Vector3( 1.0f, 0.0f, 0.0f ) : Vector3( 0.0f, 1.0f, 0.0f );
+					const auto bitangent = Normalize( Cross( tangent, n ) );
+					tangent = Normalize( Cross( n, bitangent ) );
+					const Vector4 packedTangent = cmf::PackTangents( cmf::TangentCompression::PackedTangent, n, tangent, bitangent );
+					normalStream.set( i, packedTangent );
+				}
+			}
+			else
+			{
+				cmf::BufferElementStream<Vector3> normalStream( decl[elementIndex], vbView, buffers );
+				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
+				{
+					normalStream.set( i, normalsToPopulate[i] );
+				}
+			}
+		};
+
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
+		{
+			PopulateNormals( normals, normalElement );
+		}
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+		{
+			PopulateNormals( shadingNormals, shadingNormalElement );
+		}
+		if( hasExtraData )
+		{
+			cmf::BufferElementStream<Vector4> curvatureStream( decl[extraElement], vbView, buffers );
+			for( uint32_t i = 0; i < uint32_t( curvature.size() ); ++i )
+			{
+				const float curvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !curvature.empty() ? curvature[i] : 0.0f;
+				const float smoothedCurvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) && !smoothedCurvature.empty() ? smoothedCurvature[i] : 0.0f;
+				const Vector2 dataTagValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !dataTags.empty() ? Vector2( dataTags[i].solid, dataTags[i].empty ) : Vector2( 0.0f, 0.0f );
+				curvatureStream.set( i, Vector4( curvatureValue, smoothedCurvatureValue, dataTagValue.x, dataTagValue.y ) );
+			}
+		}
+
+		// Allocate index buffer
+		const uint32_t indexStride = sizeof( uint32_t );
+		cmf::BufferView ibView = buffers.AllocateBuffer(
+			indices.data(),
+			uint32_t( indices.size() * indexStride ),
+			indexStride );
+
+		return { vbView, ibView, decl };
+	}
+
+	const InputSettings m_inputSettings;
+	const OutputSettings m_outputSettings;
 	const Tr2VoxelData::Dimensions m_dimensions;
 	std::unique_ptr<Tr2SignedDistanceField> m_signedDistanceField;
 };
@@ -170,18 +310,12 @@ protected:
 class SimpleBuilder : public VoxelBuilder
 {
 public:
-	SimpleBuilder( VoxelInput voxelInput ) :
-		VoxelBuilder( std::move( voxelInput ) )
+	SimpleBuilder( InputSettings inputSettings, OutputSettings outputSettings ) :
+		VoxelBuilder( std::move( inputSettings ), outputSettings )
 	{
 	}
 
 protected:
-	struct Vertex
-	{
-		Vector3 position;
-		Vector3 normal;
-	};
-
 	GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
 	{
 		struct Face
@@ -215,7 +349,8 @@ protected:
 		// Vertices are shared between faces only if they have the same grid corner and the same normal (hard edges)
 		std::unordered_map<uint64_t, uint32_t> indicesMap;
 		std::vector<uint32_t> indices;
-		std::vector<Vertex> vertices;
+		std::vector<Vector3> vertices;
+		std::vector<Vector3> normals;
 
 		auto addVertex = [&]( const Tr2VoxelData::Coord& corner, size_t faceIndex ) {
 			uint64_t cornerIndex = uint64_t( corner.x ) + uint64_t( width + 1 ) * ( uint64_t( corner.y ) + uint64_t( height + 1 ) * uint64_t( corner.z ) );
@@ -223,7 +358,8 @@ protected:
 			if( inserted )
 			{
 				Vector3 position = ( origin + Vector3( float( corner.x ), float( corner.y ), float( corner.z ) ) );
-				vertices.push_back( { position, s_faces[faceIndex].normal } );
+				vertices.push_back( position );
+				normals.push_back( s_faces[faceIndex].normal );
 			}
 			return iter->second;
 		};
@@ -260,34 +396,10 @@ protected:
 			}
 		}
 
-		// Allocate vertex buffer
-		const uint32_t vertexStride = sizeof( Vertex );
-		cmf::BufferView vbView = buffers.AllocateBuffer(
-			vertices.data(),
-			uint32_t( vertices.size() * vertexStride ),
-			vertexStride );
-
-		// Allocate index buffer
-		const uint32_t indexStride = sizeof( uint32_t );
-		cmf::BufferView ibView = buffers.AllocateBuffer(
-			indices.data(),
-			uint32_t( indices.size() * indexStride ),
-			indexStride );
-
-		cmf::Span<cmf::VertexElement> decl;
-		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
-		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), uint32_t( sizeof( float ) * 3 ) );
-
-		return { vbView, ibView, decl };
+		return AllocateBuffers( allocator, buffers, vertices, normals, normals, {}, {}, {}, indices );
 	}
 };
 
-
-// Common ground of the dual methods. Cell centres sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
-// block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad joining the four blocks sharing
-// it. Cells outside the grid read as empty, so the surface closes at the grid boundary. m_subdivision > 1 runs the
-// construction on a lattice subdivided k-fold whose field is the trilinear interpolation of the SDF. Derived builders
-// decide where the dual vertex goes.
 
 /**
  * @brief Common ground of the dual methods. Cell centres sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
@@ -299,13 +411,11 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		VoxelBuilder( std::move( voxelInput ) ),
-		m_dataTags( std::move( dataTags ) ),
+	DualGridBuilder( InputSettings inputSettings, OutputSettings outputSettings, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		VoxelBuilder( std::move( inputSettings ), outputSettings ),
 		m_subdivision( subdivision ),
 		m_cutParams( cutParams ),
-		m_relaxIterations( relaxIterations ),
-		m_components( components )
+		m_relaxIterations( relaxIterations )
 	{
 	}
 
@@ -435,88 +545,6 @@ protected:
 				}
 			}
 		}
-	}
-
-	GeneratedMesh AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<Vector3>& shadingNormals, const std::vector<float>& curvature, const std::vector<float>& smoothedCurvature, const std::vector<Vector2>& dataTags, const std::vector<uint32_t>& indices ) const
-	{
-		cmf::Span<cmf::VertexElement> decl;
-		uint32_t offset = 0;
-		// Appends a float element and returns its index in decl
-		auto addElement = [&]( cmf::Usage usage, uint8_t usageIndex, uint8_t componentCount ) {
-			cmf::Modify( decl, allocator ).emplace_back( usage, usageIndex, cmf::ElementType::Float32, componentCount, offset );
-			offset += uint32_t( sizeof( float ) * componentCount );
-			return decl.size() - 1;
-		};
-		const size_t positionElement = addElement( cmf::Usage::Position, 0, 3 );
-		const size_t normalElement = m_components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) ? addElement( cmf::Usage::Normal, 0, 3 ) : 0;
-		const size_t shadingNormalElement = m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) ? addElement( cmf::Usage::Normal, 1, 3 ) : 0;
-		const size_t curvatureElement = m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) ? addElement( cmf::Usage::TexCoord, 0, 1 ) : 0;
-		const size_t smoothedCurvatureElement = m_components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) ? addElement( cmf::Usage::TexCoord, 1, 1 ) : 0;
-		// Data tags of the solid (x) and empty (y) cells the vertex was created between
-		const size_t dataTagElement = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) ? addElement( cmf::Usage::TexCoord, 2, 2 ) : 0;
-		const uint32_t vertexStride = offset;
-
-		// Allocate vertex buffer
-		cmf::BufferView vbView = buffers.AllocateBuffer(
-			nullptr,
-			uint32_t( positions.size() * vertexStride ),
-			vertexStride );
-		cmf::BufferElementStream<Vector3> positionStream( decl[positionElement], vbView, buffers );
-		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
-		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
-		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
-		{
-			positionStream.set( i, origin + positions[i] + Vector3( 0.5f, 0.5f, 0.5f ) );
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
-		{
-			cmf::BufferElementStream<Vector3> normalStream( decl[normalElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( normals.size() ); ++i )
-			{
-				normalStream.set( i, normals[i] );
-			}
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
-		{
-			cmf::BufferElementStream<Vector3> shadingNormalStream( decl[shadingNormalElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( shadingNormals.size() ); ++i )
-			{
-				shadingNormalStream.set( i, shadingNormals[i] );
-			}
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) )
-		{
-			cmf::BufferElementStream<float> curvatureStream( decl[curvatureElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( curvature.size() ); ++i )
-			{
-				curvatureStream.set( i, curvature[i] );
-			}
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
-		{
-			cmf::BufferElementStream<float> smoothedCurvatureStream( decl[smoothedCurvatureElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( smoothedCurvature.size() ); ++i )
-			{
-				smoothedCurvatureStream.set( i, smoothedCurvature[i] );
-			}
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) )
-		{
-			cmf::BufferElementStream<Vector2> dataTagStream( decl[dataTagElement], vbView, buffers );
-			for( uint32_t i = 0; i < uint32_t( dataTags.size() ); ++i )
-			{
-				dataTagStream.set( i, dataTags[i] );
-			}
-		}
-
-		// Allocate index buffer
-		const uint32_t indexStride = sizeof( uint32_t );
-		cmf::BufferView ibView = buffers.AllocateBuffer(
-			indices.data(),
-			uint32_t( indices.size() * indexStride ),
-			indexStride );
-
-		return { vbView, ibView, decl };
 	}
 
 	/**
@@ -799,7 +827,7 @@ protected:
 	 * normals, curvatures, data tags and indices rewritten to the split vertices. Curvatures and data tags that were not
 	 * computed are empty and stay so.
 	 */
-	static std::vector<Vector3> SplitNormals( std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<float>& curvature, std::vector<float>& smoothedCurvature, std::vector<Vector2>& dataTags, std::vector<uint32_t>& indices )
+	static std::vector<Vector3> SplitNormals( std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<float>& curvature, std::vector<float>& smoothedCurvature, std::vector<DataTag>& dataTags, std::vector<uint32_t>& indices )
 	{
 		const size_t vertexCount = positions.size();
 		const size_t triangleCount = indices.size() / 3;
@@ -852,7 +880,7 @@ protected:
 		std::vector<Vector3> shadingNormals;
 		std::vector<float> splitCurvature;
 		std::vector<float> splitSmoothedCurvature;
-		std::vector<Vector2> splitDataTags;
+		std::vector<DataTag> splitDataTags;
 		splitPositions.reserve( vertexCount );
 		splitNormals.reserve( vertexCount );
 		shadingNormals.reserve( vertexCount );
@@ -1090,10 +1118,10 @@ protected:
 		}
 
 		std::vector<Vector3> positions;
-		std::vector<Vector2> dataTags;
+		std::vector<DataTag> dataTags;
 		std::vector<uint32_t> quads;
 		// Without a data tag channel the requested element reads zero
-		const bool sampleDataTags = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && HasDataTagChannel();
+		const bool sampleDataTags = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_inputSettings.HasDataTagChannel();
 		Sweep(
 			window,
 			cancel,
@@ -1106,9 +1134,9 @@ protected:
 			},
 			positions,
 			quads );
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !sampleDataTags )
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !sampleDataTags )
 		{
-			dataTags.assign( positions.size(), Vector2( 0.f, 0.f ) );
+			dataTags.assign( positions.size(), {} );
 		}
 		if( cancel || quads.empty() )
 		{
@@ -1128,19 +1156,14 @@ protected:
 		auto normals = ComputeNormals( positions, indices );
 		std::vector<float> curvature;
 		std::vector<float> smoothedCurvature;
-		ComputeCurvature( positions, normals, quads, m_components, curvature, smoothedCurvature );
+		ComputeCurvature( positions, normals, quads, m_outputSettings.components, curvature, smoothedCurvature );
 		std::vector<Vector3> shadingNormals;
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
 		{
 			shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, dataTags, indices );
 		}
 
 		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, dataTags, indices );
-	}
-
-	[[nodiscard]] bool HasDataTagChannel() const
-	{
-		return m_dataTags.m_voxelData != nullptr && IsValidDataTagChannelType( m_dataTags.m_type );
 	}
 
 	/**
@@ -1160,14 +1183,17 @@ protected:
 			voxel[j] = std::clamp( ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
 		}
 		const size_t index = size_t( voxel[0] ) + size_t( dims[0] ) * ( size_t( voxel[1] ) + size_t( dims[1] ) * size_t( voxel[2] ) );
-		return reinterpret_cast<const float*>( m_dataTags.m_data )[index];
+		if( m_inputSettings.tags.m_type.type == Tr2VoxelDataType::Boolean )
+		{
+			return ( m_inputSettings.tags.m_data[index / 8] & ( 1 << ( index % 8 ) ) ) != 0 ? 1.0f : 0.0f;
+		}
+		const auto value = reinterpret_cast<const int8_t*>( m_inputSettings.tags.m_data )[index];
+		return float( std::max( float( value ) / float( std::numeric_limits<int8_t>::max() ), -1.0f ) );
 	}
 
-	const Tr2VoxelData::PayloadSnapshot m_dataTags;
 	const uint32_t m_subdivision;
 	const Tr2SurfaceCutParams m_cutParams;
 	const uint32_t m_relaxIterations;
-	const EnumFilter<Tr2VoxelGeometryComponents> m_components;
 
 private:
 	static constexpr float s_featureCos = 0.70710678f; // cos 45 degrees: quads parting wider than this meet at a feature edge
@@ -1397,8 +1423,8 @@ private:
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
-	SurfaceNetsBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( voxelInput ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
+	SurfaceNetsBuilder( InputSettings inputSettings, OutputSettings outputSettings, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( inputSettings ), outputSettings, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1478,8 +1504,8 @@ private:
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( VoxelInput voxelInput, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( voxelInput ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
+	DualContouringBuilder( InputSettings inputSettings, OutputSettings outputSettings, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( inputSettings ), outputSettings, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1816,7 +1842,6 @@ void Tr2VoxelGeometry::SetShapeChannelOffset( float offset )
 }
 
 
-
 int32_t Tr2VoxelGeometry::GetOccupancyChannelIndex() const
 {
 	return m_occupancyChannelIndex;
@@ -1969,6 +1994,21 @@ void Tr2VoxelGeometry::SetCleaveDepth( float cleaveDepth )
 	TryRebuild();
 }
 
+bool Tr2VoxelGeometry::GetPackedTangents() const
+{
+	return m_packedTangents;
+}
+
+void Tr2VoxelGeometry::SetPackedTangents( bool packedTangents )
+{
+	if( m_packedTangents == packedTangents )
+	{
+		return;
+	}
+	m_packedTangents = packedTangents;
+	TryRebuild();
+}
+
 void Tr2VoxelGeometry::LockBuild()
 {
 	++m_buildLock;
@@ -2041,14 +2081,21 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	cutParams.facetMaxCut = m_facetMaxCut;
 	cutParams.cleaveDepth = m_cleaveDepth;
 
+	auto inputSettings = InputSettings{
+		std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ), std::move( dataTagSnapshot )
+	};
+	auto outputSettings = OutputSettings{
+		m_components, m_packedTangents
+	};
+
 	switch( m_method )
 	{
 	case Method::Simple:
-		return std::make_unique<SimpleBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) } );
+		return std::make_unique<SimpleBuilder>( std::move( inputSettings ), outputSettings );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) }, std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<SurfaceNetsBuilder>( std::move( inputSettings ), outputSettings, m_subdivision, m_relaxIterations, cutParams );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( VoxelInput{ std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ) }, std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<DualContouringBuilder>( std::move( inputSettings ), outputSettings, m_subdivision, m_relaxIterations, cutParams );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
