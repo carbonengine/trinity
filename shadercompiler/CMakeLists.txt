@@ -1,6 +1,6 @@
-# Copyright © 2023 CCP ehf.
 
-cmake_minimum_required(VERSION 3.16)
+
+cmake_minimum_required(VERSION 3.21)
 
 project(ShaderCompiler VERSION 1.2.6)
 
