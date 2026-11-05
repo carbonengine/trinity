@@ -55,3 +55,18 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertTrue(granny.LoadForTools("res:/voxels.cmf"))
             self.assertEqual(granny.GetMeshCount(), 1)
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
+
+    def test_canCreateSurfaceNetsGeometryWithDataTags(self):
+        floatChannel = {"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}
+        data = trinity.Tr2VoxelData((2, 2, 2), [floatChannel, floatChannel])
+        data.SetVoxels([((0, 0, 0), 0.0, 3.0), ((1, 0, 0), 1.0, 5.0), ((1, 1, 1), math.sqrt(3.0), 7.0)])
+        geometry = trinity.Tr2VoxelGeometry()
+        geometry.voxelData = data
+        geometry.dataTagChannelIndex = 1
+        geometry.method = trinity.Tr2VoxelGeometryMethod.SurfaceNets
+        geometry.components = trinity.Tr2VoxelGeometryComponents.SmoothNormals | trinity.Tr2VoxelGeometryComponents.DataTags
+        with TempRes():
+            geometry.TestBuildFile( "res:/voxels.cmf")
+            granny = trinity.TriGrannyRes()
+            self.assertTrue(granny.LoadForTools("res:/voxels.cmf"))
+            self.assertEqual(granny.GetMeshCount(), 1)

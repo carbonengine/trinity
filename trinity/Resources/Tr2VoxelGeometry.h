@@ -12,6 +12,7 @@ enum class Tr2VoxelGeometryComponents : int32_t
 	SplitNormals,
 	Curvature,
 	SmoothedCurvature,
+	DataTags,
 };
 
 
@@ -41,6 +42,9 @@ public:
 
 	uint32_t GetOccupancyChannelIndex() const;
 	void SetOccupancyChannelIndex( uint32_t channelIndex );
+
+	uint32_t GetDataTagChannelIndex() const;
+	void SetDataTagChannelIndex( uint32_t channelIndex );
 
 	uint32_t GetSubdivision() const;
 	void SetSubdivision( uint32_t subdivision );
@@ -77,6 +81,7 @@ private:
 	Tr2VoxelDataPtr m_voxelData;
 	uint32_t m_shapeChannelIndex = 0;
 	uint32_t m_occupancyChannelIndex = 0;
+	uint32_t m_dataTagChannelIndex = std::numeric_limits<uint32_t>::max(); // no data tag channel by default
 	uint32_t m_subdivision = 1;
 	uint32_t m_relaxIterations = 0;
 	Method m_method = Method::Simple;

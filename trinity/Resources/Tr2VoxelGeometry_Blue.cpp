@@ -20,6 +20,7 @@ Be::VarChooser Tr2VoxelGeometryComponentsChooser[] = {
 	{ "SplitNormals", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::SplitNormals ) ), "" },
 	{ "Curvature", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::Curvature ) ), "" },
 	{ "SmoothedCurvature", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::SmoothedCurvature ) ), "" },
+	{ "DataTags", BeCast( 1 << static_cast<uint32_t>( Tr2VoxelGeometryComponents::DataTags ) ), "" },
 	{ 0 }
 };
 }
@@ -53,6 +54,8 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_PROPERTY( "shapeChannelIndex", GetShapeChannelIndex, SetShapeChannelIndex, "Index of the shape channel in the voxel data" )
 		MAP_ATTRIBUTE( "occupancyChannelIndex", m_occupancyChannelIndex, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "occupancyChannelIndex", GetOccupancyChannelIndex, SetOccupancyChannelIndex, "Index of the occupancy channel in the voxel data" )
+		MAP_ATTRIBUTE( "dataTagChannelIndex", m_dataTagChannelIndex, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "dataTagChannelIndex", GetDataTagChannelIndex, SetDataTagChannelIndex, "Index of the data tag channel (one-component float) in the voxel data; the tags of the solid and empty cells either side of the surface go to the DataTags vertex component (SurfaceNets and DualContouring)" )
 		MAP_ATTRIBUTE( "subdivision", m_subdivision, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry" )
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )

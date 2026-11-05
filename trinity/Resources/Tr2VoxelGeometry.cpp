@@ -16,6 +16,11 @@ namespace
 {
 
 
+bool IsValidDataTagChannelType( const Tr2VoxelData::PayloadType& type )
+{
+	return type.elementCount == 1 && type.type == Tr2VoxelDataType::Float;
+}
+
 /**
  * @brief EmptyBuilder is a procedural geometry builder that produces no geometry. It needs to be used when the voxel data is invalid or missing, 
  * as the Tr2ProceduralGeometryProvider needs to always provide a builder, even if it produces no geometry. 
@@ -285,8 +290,9 @@ protected:
 class DualGridBuilder : public VoxelBuilder
 {
 public:
-	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+	DualGridBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
 		VoxelBuilder( std::move( sdf ), std::move( occupancy ) ),
+		m_dataTags( std::move( dataTags ) ),
 		m_subdivision( subdivision ),
 		m_cutParams( cutParams ),
 		m_relaxIterations( relaxIterations ),
@@ -344,26 +350,29 @@ protected:
 	 * @brief Emits a quad for every occupancy sign change, as 4 indices into shared dual vertices (one per block, placed by
 	 * getDualVertex), wound counter-clockwise seen from the empty side.
 	 * @tparam GetDualVertex The callable type used to compute a vertex position from a block coordinate.
+	 * @tparam AddVertexData The callable type used to record per-vertex data of a newly created vertex.
 	 * @param window The sampling window containing lattice dimensions, occupancy data, indexing, and strides used to detect surface crossings.
 	 * @param cancel An atomic cancellation flag; if set during processing, the function stops early and returns.
 	 * @param getDualVertex A callable that takes a block coordinate and returns the corresponding dual vertex position.
+	 * @param addVertexData A callable invoked once per new dual vertex with the solid and empty lattice cells of the sign change edge that created it.
 	 * @param positions Output vertex-position array. New dual vertices are appended as needed and indexed by generated quads.
 	 * @param quads Output index array for quads. For each emitted face, four vertex indices are appended in winding order.
 	 */
-	template <typename GetDualVertex>
-	static void Sweep( const Window& window, const std::atomic<bool>& cancel, GetDualVertex getDualVertex, std::vector<Vector3>& positions, std::vector<uint32_t>& quads )
+	template <typename GetDualVertex, typename AddVertexData>
+	static void Sweep( const Window& window, const std::atomic<bool>& cancel, GetDualVertex getDualVertex, AddVertexData addVertexData, std::vector<Vector3>& positions, std::vector<uint32_t>& quads )
 	{
 		const Int3& lattice = window.lattice;
 		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
 		const std::array<size_t, 3> blockStrides = { 1, size_t( lattice[0] + 1 ), size_t( lattice[0] + 1 ) * size_t( lattice[1] + 1 ) };
 		std::vector<uint32_t> blockVertices( blockStrides[2] * size_t( lattice[2] + 1 ), std::numeric_limits<uint32_t>::max() );
 
-		auto getVertex = [&]( const Int3& block ) {
+		auto getVertex = [&]( const Int3& block, const Int3& solidCell, const Int3& emptyCell ) {
 			auto& vertex = blockVertices[size_t( block[0] + 1 ) + blockStrides[1] * size_t( block[1] + 1 ) + blockStrides[2] * size_t( block[2] + 1 )];
 			if( vertex == std::numeric_limits<uint32_t>::max() )
 			{
 				vertex = uint32_t( positions.size() );
 				positions.push_back( getDualVertex( block ) );
+				addVertexData( solidCell, emptyCell );
 			}
 			return vertex;
 		};
@@ -393,15 +402,21 @@ protected:
 						{
 							continue;
 						}
+						const Int3 lowCell = { x, y, z };
+						Int3 highCell = lowCell;
+						++highCell[axis];
+						const bool lowSolid = window.occupancy[index] != 0;
+						const Int3& solidCell = lowSolid ? lowCell : highCell;
+						const Int3& emptyCell = lowSolid ? highCell : lowCell;
 						std::array<uint32_t, 4> quad;
 						for( size_t i = 0; i < 4; ++i )
 						{
-							Int3 block = { x, y, z };
+							Int3 block = lowCell;
 							block[u] += s_quadUV[i][0];
 							block[v] += s_quadUV[i][1];
-							quad[i] = getVertex( block );
+							quad[i] = getVertex( block, solidCell, emptyCell );
 						}
-						if( !window.occupancy[index] )
+						if( !lowSolid )
 						{
 							// Low cell is the empty side, so the normal points -axis
 							std::reverse( quad.begin(), quad.end() );
@@ -413,32 +428,23 @@ protected:
 		}
 	}
 
-	GeneratedMesh AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<Vector3>& shadingNormals, const std::vector<float>& curvature, const std::vector<float>& smoothedCurvature, const std::vector<uint32_t>& indices ) const
+	GeneratedMesh AllocateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<Vector3>& shadingNormals, const std::vector<float>& curvature, const std::vector<float>& smoothedCurvature, const std::vector<Vector2>& dataTags, const std::vector<uint32_t>& indices ) const
 	{
 		cmf::Span<cmf::VertexElement> decl;
 		uint32_t offset = 0;
-		cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Position, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), 0u );
-		offset += uint32_t( sizeof( float ) * 3 );
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
-		{
-			cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 3 ), offset );
-			offset += uint32_t( sizeof( float ) * 3 );
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
-		{
-			cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::Normal, uint8_t( 1 ), cmf::ElementType::Float32, uint8_t( 3 ), offset );
-			offset += uint32_t( sizeof( float ) * 3 );
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) )
-		{
-			cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::TexCoord, uint8_t( 0 ), cmf::ElementType::Float32, uint8_t( 1 ), offset );
-			offset += uint32_t( sizeof( float ) * 1 );
-		}
-		if( m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) )
-		{
-			cmf::Modify( decl, allocator ).emplace_back( cmf::Usage::TexCoord, uint8_t( 1 ), cmf::ElementType::Float32, uint8_t( 1 ), offset );
-			offset += uint32_t( sizeof( float ) * 1 );
-		}
+		// Appends a float element and returns its index in decl
+		auto addElement = [&]( cmf::Usage usage, uint8_t usageIndex, uint8_t componentCount ) {
+			cmf::Modify( decl, allocator ).emplace_back( usage, usageIndex, cmf::ElementType::Float32, componentCount, offset );
+			offset += uint32_t( sizeof( float ) * componentCount );
+			return decl.size() - 1;
+		};
+		const size_t positionElement = addElement( cmf::Usage::Position, 0, 3 );
+		const size_t normalElement = m_components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) ? addElement( cmf::Usage::Normal, 0, 3 ) : 0;
+		const size_t shadingNormalElement = m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) ? addElement( cmf::Usage::Normal, 1, 3 ) : 0;
+		const size_t curvatureElement = m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) ? addElement( cmf::Usage::TexCoord, 0, 1 ) : 0;
+		const size_t smoothedCurvatureElement = m_components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) ? addElement( cmf::Usage::TexCoord, 1, 1 ) : 0;
+		// Data tags of the solid (x) and empty (y) cells the vertex was created between
+		const size_t dataTagElement = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) ? addElement( cmf::Usage::TexCoord, 2, 2 ) : 0;
 		const uint32_t vertexStride = offset;
 
 		// Allocate vertex buffer
@@ -446,7 +452,7 @@ protected:
 			nullptr,
 			uint32_t( positions.size() * vertexStride ),
 			vertexStride );
-		cmf::BufferElementStream<Vector3> positionStream( decl[0], vbView, buffers );
+		cmf::BufferElementStream<Vector3> positionStream( decl[positionElement], vbView, buffers );
 		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
 		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
 		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
@@ -455,7 +461,7 @@ protected:
 		}
 		if( m_components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
 		{
-			cmf::BufferElementStream<Vector3> normalStream( decl[1], vbView, buffers );
+			cmf::BufferElementStream<Vector3> normalStream( decl[normalElement], vbView, buffers );
 			for( uint32_t i = 0; i < uint32_t( normals.size() ); ++i )
 			{
 				normalStream.set( i, normals[i] );
@@ -463,7 +469,7 @@ protected:
 		}
 		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
 		{
-			cmf::BufferElementStream<Vector3> shadingNormalStream( decl[2], vbView, buffers );
+			cmf::BufferElementStream<Vector3> shadingNormalStream( decl[shadingNormalElement], vbView, buffers );
 			for( uint32_t i = 0; i < uint32_t( shadingNormals.size() ); ++i )
 			{
 				shadingNormalStream.set( i, shadingNormals[i] );
@@ -471,7 +477,7 @@ protected:
 		}
 		if( m_components.HasBit( Tr2VoxelGeometryComponents::Curvature ) )
 		{
-			cmf::BufferElementStream<float> curvatureStream( decl[3], vbView, buffers );
+			cmf::BufferElementStream<float> curvatureStream( decl[curvatureElement], vbView, buffers );
 			for( uint32_t i = 0; i < uint32_t( curvature.size() ); ++i )
 			{
 				curvatureStream.set( i, curvature[i] );
@@ -479,10 +485,18 @@ protected:
 		}
 		if( m_components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
 		{
-			cmf::BufferElementStream<float> smoothedCurvatureStream( decl[4], vbView, buffers );
+			cmf::BufferElementStream<float> smoothedCurvatureStream( decl[smoothedCurvatureElement], vbView, buffers );
 			for( uint32_t i = 0; i < uint32_t( smoothedCurvature.size() ); ++i )
 			{
 				smoothedCurvatureStream.set( i, smoothedCurvature[i] );
+			}
+		}
+		if( m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) )
+		{
+			cmf::BufferElementStream<Vector2> dataTagStream( decl[dataTagElement], vbView, buffers );
+			for( uint32_t i = 0; i < uint32_t( dataTags.size() ); ++i )
+			{
+				dataTagStream.set( i, dataTags[i] );
 			}
 		}
 
@@ -773,9 +787,10 @@ protected:
 	 * fan's area-weighted normal; every copy keeps the smooth normal for displacement. Triangles under s_minShadingArea
 	 * (grid cell units) have unreliable normals, so they never split: they join every fan they share an edge with, and a
 	 * vertex they join into a single fan shades with its smooth normal. Returns the shading normals, with positions,
-	 * normals, curvatures and indices rewritten to the split vertices.
+	 * normals, curvatures, data tags and indices rewritten to the split vertices. Curvatures and data tags that were not
+	 * computed are empty and stay so.
 	 */
-	static std::vector<Vector3> SplitNormals( std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<float>& curvature, std::vector<float>& smoothedCurvature, std::vector<uint32_t>& indices )
+	static std::vector<Vector3> SplitNormals( std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<float>& curvature, std::vector<float>& smoothedCurvature, std::vector<Vector2>& dataTags, std::vector<uint32_t>& indices )
 	{
 		const size_t vertexCount = positions.size();
 		const size_t triangleCount = indices.size() / 3;
@@ -828,11 +843,13 @@ protected:
 		std::vector<Vector3> shadingNormals;
 		std::vector<float> splitCurvature;
 		std::vector<float> splitSmoothedCurvature;
+		std::vector<Vector2> splitDataTags;
 		splitPositions.reserve( vertexCount );
 		splitNormals.reserve( vertexCount );
 		shadingNormals.reserve( vertexCount );
-		splitCurvature.reserve( vertexCount );
-		splitSmoothedCurvature.reserve( vertexCount );
+		splitCurvature.reserve( curvature.size() );
+		splitSmoothedCurvature.reserve( smoothedCurvature.size() );
+		splitDataTags.reserve( dataTags.size() );
 		std::vector<uint32_t> splitIndices( indices.size() );
 		const auto shadingSplitCos = cosf( s_shadingSplitDegrees * 3.14159265358979323846 / 180.0 );
 
@@ -895,8 +912,18 @@ protected:
 					splitPositions.push_back( positions[v] );
 					splitNormals.push_back( normals[v] );
 					shadingNormals.push_back( shading );
-					splitCurvature.push_back( curvature[v] );
-					splitSmoothedCurvature.push_back( smoothedCurvature[v] );
+					if( !curvature.empty() )
+					{
+						splitCurvature.push_back( curvature[v] );
+					}
+					if( !smoothedCurvature.empty() )
+					{
+						splitSmoothedCurvature.push_back( smoothedCurvature[v] );
+					}
+					if( !dataTags.empty() )
+					{
+						splitDataTags.push_back( dataTags[v] );
+					}
 				}
 				splitIndices[vertexCorners[first + i]] = copies[root];
 			}
@@ -906,6 +933,7 @@ protected:
 		normals.swap( splitNormals );
 		curvature.swap( splitCurvature );
 		smoothedCurvature.swap( splitSmoothedCurvature );
+		dataTags.swap( splitDataTags );
 		indices.swap( splitIndices );
 		return shadingNormals;
 	}
@@ -1053,8 +1081,26 @@ protected:
 		}
 
 		std::vector<Vector3> positions;
+		std::vector<Vector2> dataTags;
 		std::vector<uint32_t> quads;
-		Sweep( window, cancel, [&]( const Int3& block ) { return getDualVertex( window, field, block, scale ); }, positions, quads );
+		// Without a data tag channel the requested element reads zero
+		const bool sampleDataTags = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && HasDataTagChannel();
+		Sweep(
+			window,
+			cancel,
+			[&]( const Int3& block ) { return getDualVertex( window, field, block, scale ); },
+			[&]( const Int3& solidCell, const Int3& emptyCell ) {
+				if( sampleDataTags )
+				{
+					dataTags.push_back( { GetDataTag( solidCell, scale ), GetDataTag( emptyCell, scale ) } );
+				}
+			},
+			positions,
+			quads );
+		if( m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !sampleDataTags )
+		{
+			dataTags.assign( positions.size(), Vector2( 0.f, 0.f ) );
+		}
 		if( cancel || quads.empty() )
 		{
 			return {};
@@ -1077,12 +1123,38 @@ protected:
 		std::vector<Vector3> shadingNormals;
 		if( m_components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
 		{
-			shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, indices );
+			shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, dataTags, indices );
 		}
 
-		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, indices );
+		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, dataTags, indices );
 	}
 
+	[[nodiscard]] bool HasDataTagChannel() const
+	{
+		return m_dataTags.m_voxelData != nullptr && IsValidDataTagChannelType( m_dataTags.m_type );
+	}
+
+	/**
+	 * @brief Data tag of the grid voxel nearest to a lattice cell. Cells of the empty ring around the lattice read the
+	 * nearest voxel inside the grid.
+	 * @param cell The lattice cell, -1..lattice per axis.
+	 * @param scale The lattice subdivision.
+	 * @return The data tag channel value of the voxel.
+	 */
+	float GetDataTag( const Int3& cell, int32_t scale ) const
+	{
+		const Int3 dims = GetGridSize();
+		Int3 voxel;
+		for( int j = 0; j < 3; ++j )
+		{
+			// Lattice cell c sits at c / scale in grid space; rounded to the nearest voxel
+			voxel[j] = std::clamp( ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
+		}
+		const size_t index = size_t( voxel[0] ) + size_t( dims[0] ) * ( size_t( voxel[1] ) + size_t( dims[1] ) * size_t( voxel[2] ) );
+		return reinterpret_cast<const float*>( m_dataTags.m_data )[index];
+	}
+
+	const Tr2VoxelData::PayloadSnapshot m_dataTags;
 	const uint32_t m_subdivision;
 	const Tr2SurfaceCutParams m_cutParams;
 	const uint32_t m_relaxIterations;
@@ -1316,8 +1388,8 @@ private:
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
-	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), components, subdivision, relaxIterations, cutParams )
+	SurfaceNetsBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1397,8 +1469,8 @@ private:
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
-	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
-		DualGridBuilder( std::move( sdf ), std::move( occupancy ), components, subdivision, relaxIterations, cutParams )
+	DualContouringBuilder( Tr2VoxelData::PayloadSnapshot sdf, Tr2VoxelData::PayloadSnapshot occupancy, Tr2VoxelData::PayloadSnapshot dataTags, EnumFilter<Tr2VoxelGeometryComponents> components, uint32_t subdivision, uint32_t relaxIterations, const Tr2SurfaceCutParams& cutParams ) :
+		DualGridBuilder( std::move( sdf ), std::move( occupancy ), std::move( dataTags ), components, subdivision, relaxIterations, cutParams )
 	{
 	}
 
@@ -1702,6 +1774,21 @@ void Tr2VoxelGeometry::SetOccupancyChannelIndex( uint32_t channelIndex )
 	Rebuild();
 }
 
+uint32_t Tr2VoxelGeometry::GetDataTagChannelIndex() const
+{
+	return m_dataTagChannelIndex;
+}
+
+void Tr2VoxelGeometry::SetDataTagChannelIndex( uint32_t channelIndex )
+{
+	if( m_dataTagChannelIndex == channelIndex )
+	{
+		return;
+	}
+	m_dataTagChannelIndex = channelIndex;
+	Rebuild();
+}
+
 uint32_t Tr2VoxelGeometry::GetSubdivision() const
 {
 	return m_subdivision;
@@ -1825,7 +1912,8 @@ void Tr2VoxelGeometry::SetCleaveDepth( float cleaveDepth )
 
 void Tr2VoxelGeometry::DataModified( Tr2VoxelData::ModifiedChannels modifiedChannels )
 {
-	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) )
+	const bool dataTagsModified = m_components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_dataTagChannelIndex < m_voxelData->GetPayloadChannelCount() && modifiedChannels.IsChannelModified( m_dataTagChannelIndex );
+	if( modifiedChannels.IsChannelModified( m_shapeChannelIndex ) || dataTagsModified )
 	{
 		Rebuild();
 	}
@@ -1853,6 +1941,12 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	{
 		return std::make_unique<EmptyBuilder>();
 	}
+	// An unusable data tag channel leaves the tags zero rather than failing the build
+	auto dataTagSnapshot = m_voxelData->GetPayloadSnapshot( m_dataTagChannelIndex );
+	if( dataTagSnapshot.m_data && !IsValidDataTagChannelType( dataTagSnapshot.m_type ) )
+	{
+		CCP_LOGWARN( "Tr2VoxelGeometry: data tag channel %u is not a one-component float channel", m_dataTagChannelIndex );
+	}
 
 	Tr2SurfaceCutParams cutParams;
 	cutParams.seed = m_cutSeed;
@@ -1866,9 +1960,9 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 	case Method::Simple:
 		return std::make_unique<SimpleBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ) );
 	case Method::SurfaceNets:
-		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<SurfaceNetsBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
 	case Method::DualContouring:
-		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
+		return std::make_unique<DualContouringBuilder>( std::move( shapeSnapshot ), std::move( occupancySnapshot ), std::move( dataTagSnapshot ), m_components, m_subdivision, m_relaxIterations, cutParams );
 	default:
 		return std::make_unique<EmptyBuilder>();
 	}
