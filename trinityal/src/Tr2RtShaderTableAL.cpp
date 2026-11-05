@@ -37,10 +37,6 @@ ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, 
 
 ALResult Tr2RtShaderTableAL::Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
 {
-	if( m_shaderTable == NullRtShaderTable() )
-	{
-		return E_INVALIDCALL;
-	}
 	return m_shaderTable->Update( desc, pipeline, renderContext );
 }
 
