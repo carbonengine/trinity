@@ -1009,7 +1009,7 @@ ITr2AudEmitterPtr EveEffectRoot2::FindSoundEmitter( const char* name )
 
 void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( static_cast<ITriObserverLocal*>( observer ) );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 void EveEffectRoot2::SetMute( bool isMute )

@@ -3395,7 +3395,7 @@ void EveSpaceObject2::AddController( ITr2Controller* controller )
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( static_cast<ITriObserverLocal*>( observer ) );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 // --------------------------------------------------------------------------------

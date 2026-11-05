@@ -1062,7 +1062,7 @@ ITr2AudEmitterPtr EveChildContainer::FindSoundEmitter( const char* name )
 
 void EveChildContainer::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( static_cast<ITriObserverLocal*>( observer ) );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 float EveChildContainer::GetOwnerMaxSpeed() const
