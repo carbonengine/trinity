@@ -16,6 +16,7 @@
         "greenlet",
         "ccp-debug-info",
         "crashpad",
+	"directx-dxc",
         "zlib",
         "re2c",
         "amd-fidelityfx",
