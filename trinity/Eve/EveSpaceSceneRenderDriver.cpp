@@ -534,12 +534,17 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique );
 	}
-	const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
-	auto albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
-	auto materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
-	SetNamedOutput( outputs, "GBuffer0", albedoMap );
-	SetNamedOutput( outputs, "GBuffer2", materialMap );
+	const bool renderMainPass = m_scene->m_display && m_mainPassRenderingEnabled;
+	Tr2GpuResourcePool::Texture albedoMap;
+	Tr2GpuResourcePool::Texture materialMap;
+	if( renderMainPass )
 	{
+		const auto gBufferUsage = Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE;
+		albedoMap = m_gpuResourcePool.GetTempTexture( "gbufferAlbedo", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB, gBufferUsage, Tr2ClearValue() );
+		materialMap = m_gpuResourcePool.GetTempTexture( "gbufferMaterial", renderSize, ImageIO::PIXEL_FORMAT_R8G8B8A8_UNORM, gBufferUsage, Tr2ClearValue() );
+		SetNamedOutput( outputs, "GBuffer0", albedoMap );
+		SetNamedOutput( outputs, "GBuffer2", materialMap );
+
 		TimeSection gBufferPassSection( m_timers.gBufferPass, "GBufferPass", rootTimer, renderContext );
 		m_scene->RenderGBufferPass( depthBuffer, albedoMap, normalMap, materialMap, velocityMap, customBackBuffer, renderContext );
 	}
@@ -549,7 +554,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 
 	Tr2GpuResourcePool::Texture opaqueBackBuffer;
 	EveSpaceScene::ShadowResources shadowResources;
-	if( m_scene->m_display && m_mainPassRenderingEnabled )
+	if( renderMainPass )
 	{
 		{
 			TimeSection shadowsSection( m_timers.shadows, "Shadows", rootTimer, renderContext );

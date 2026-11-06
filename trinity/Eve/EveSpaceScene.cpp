@@ -2415,9 +2415,9 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 
 		ApplyPerFrameData( renderContext );
 
+		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
-		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], GBufferTechnique() );
 		renderContext.SetReadOnlyDepth( false );
