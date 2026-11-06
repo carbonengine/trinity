@@ -7,6 +7,8 @@
 #include "../TbbStub.h"
 #include "./Tr2RingBuffer.h"
 
+class Tr2Shader;
+
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
@@ -161,11 +163,33 @@ private:
 	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void TransformMeshes( Tr2RenderContext & renderContext );
 	void BuildAccelerationStructures( Tr2RenderContext & renderContext );
+	void NoteDeformedGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area );
 
 	VtxOffsets FindOffsets( unsigned declHandle );
 
+	struct RtLibraryState
+	{
+		uint32_t handle = 0;
+		const Tr2EffectLibrary* lib = nullptr;
+		uint32_t hitGroupNamesOffset = 0;
+		uint32_t materialIndex = 0;
+		bool seen = false;
+		bool addsRecords = false;
+	};
+
+	struct RtShaderState
+	{
+		const Tr2Shader* shader = nullptr;
+		uint32_t techniqueIndex = 0;
+		uint32_t libIndex = INVALID_MATERIAL;
+	};
+
 	std::vector<GeometryData> m_geometryData;
 	Tr2EnumerableThreadSpecific<std::vector<GeometryData>> m_threadLocalGeometryData;
+	std::vector<RtShaderState> m_rtShaderStates;
+	std::vector<RtLibraryState> m_rtLibraryStates;
+	std::vector<BlueSharedStringW> m_rtLibraryHitGroupNames;
+	std::atomic<bool> m_hasDeformedGeometry{ false };
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;
