@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2CurveScalar.h"
+#include "Tr2CurveSegmentSearch.h"
 
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
@@ -31,6 +32,9 @@ public:
 	virtual float Length();
 
 	Quaternion GetValue( double time ) const;
+	// The value at time, like GetValue, but looking each channel's keys up from
+	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
+	Quaternion SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,
