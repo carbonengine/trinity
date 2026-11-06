@@ -14,7 +14,7 @@ Tr2DeferredLighting::Tr2DeferredLighting( const char* effectFilePath )
 
 Tr2DeferredLighting::~Tr2DeferredLighting() = default;
 
-void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, Tr2RenderContext& renderContext )
+void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -28,11 +28,13 @@ void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2Texture
 	m_effect->SetParameter( materialName, materialMap );
 
 	renderContext.m_esm.PushRenderTarget( colorMap );
-	renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
+	renderContext.m_esm.PushDepthStencilBuffer( depthMap );
+	renderContext.SetReadOnlyDepth( true );
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	Tr2Renderer::DrawFullScreenWithShader( renderContext, m_effect );
 
+	renderContext.SetReadOnlyDepth( false );
 	renderContext.m_esm.PopDepthStencilBuffer();
 	renderContext.m_esm.PopRenderTarget();
 

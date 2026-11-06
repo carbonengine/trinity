@@ -581,7 +581,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		{
 			TimeSection lightingPassSection( m_timers.lightingPass, "LightingPass", rootTimer, renderContext );
 			m_scene->ApplyPerFrameData( renderContext );
-			m_deferredLighting.Render( customBackBuffer, albedoMap, normalMap, materialMap, renderContext );
+			m_deferredLighting.Render( customBackBuffer, depthBuffer, albedoMap, normalMap, materialMap, renderContext );
 		}
 		bool hasDistortionBatches = false;
 		distortionMap = GetDistortionMapIfNeeded( renderSize );
