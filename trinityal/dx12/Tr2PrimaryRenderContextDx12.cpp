@@ -1585,20 +1585,11 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			continue;
 		}
 
-		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
-		if( tech )
+		uint32_t allSettings = 0;
+		bool frameGeneration = false;
+		if( TrinityALImpl::GetUpscalingTechniqueSupport( *this, technique, adapter, allSettings, frameGeneration ) )
 		{
-			uint32_t allSettings = 0;
-
-			for( auto& setting : tech->GetAvailableSettings() )
-			{
-				allSettings |= setting;
-			}
-
-			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
-
-			delete tech;
-			tech = nullptr;
+			supportedTechniques.push_back( { technique, allSettings, frameGeneration } );
 		}
 	}
 	return supportedTechniques;
