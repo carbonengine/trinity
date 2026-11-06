@@ -18,6 +18,8 @@ public:
 
 	IRoot* GetBoundObject() const;
 
+	static const char* MatchPath( const char* path );
+
 	std::string m_path;
 	IRootPtr m_object;
 	std::string m_attribute;
