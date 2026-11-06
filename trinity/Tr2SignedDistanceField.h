@@ -12,10 +12,14 @@
 class Tr2SignedDistanceField
 {
 public:
+	/**
+	 * @brief Linear transform applied to the SDF values during construction. This allows scaling and offsetting the SDF values.
+	 */
 	struct LinearTransform
 	{
 		float scale = 1.f;
 		float offset = 0.f;
+
 		[[nodiscard]] float Apply( float value ) const
 		{
 			return value * scale + offset;
@@ -38,8 +42,26 @@ public:
 	 */
 	Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnapshot& occupancy, const std::atomic<bool>& cancel );
 
+	/**
+	 * @brief Indicates whether the current object is in a valid state. The SDF may be invalid if the input channels were not of the expected type.
+	 * @return true if the object is valid; otherwise, false.
+	 */
 	[[nodiscard]] bool IsValid() const;
+
+	/**
+	 * @brief Gets the value at the specified linear index.
+	 * @param index The zero-based position of the value to retrieve.
+	 * @return The value at the specified index as a float.
+	 */
 	[[nodiscard]] float GetValue( size_t index ) const;
+
+	/**
+	 * @brief Gets the value at the specified 3D grid coordinates.
+	 * @param x The x-coordinate of the value to retrieve.
+	 * @param y The y-coordinate of the value to retrieve.
+	 * @param z The z-coordinate of the value to retrieve.
+	 * @return The value at the specified coordinates as a float.
+	 */
 	[[nodiscard]] float GetValue( int32_t x, int32_t y, int32_t z ) const;
 
 	/**
@@ -51,18 +73,44 @@ public:
 	/**
 	 * @brief Trilinear interpolation of the field at a point in grid cell space (cell centres at integer coordinates).
 	 * Samples outside the grid read as deep empty.
+	 * @param point The point in grid cell space to sample.
+	 * @return The interpolated value at the specified point.
 	 */
 	[[nodiscard]] float Sample( const Vector3& point ) const;
 
 	/**
 	 * @brief Trilinear interpolation of the sample gradients (GetGradient) at a point in grid cell space.
+	 * @param point The point in grid cell space to sample.
+	 * @return The interpolated gradient at the specified point.
 	 */
 	[[nodiscard]] Vector3 SampleGradient( const Vector3& point ) const;
 
+	/**
+	 * @brief Updates the current field to be the minimum of itself and another field. The other field must have the same dimensions as the current field.
+	 * @param other The other signed distance field to compare with.
+	 * @return true if the field was modified; otherwise, false.
+	 */
 	bool Min( const Tr2SignedDistanceField& other );
+
+	/**
+	 * @brief Updates the current field to be the maximum of itself and another field. The other field must have the same dimensions as the current field.
+	 * @param other The other signed distance field to compare with.
+	 * @return true if the field was modified; otherwise, false.
+	 */
 	bool Max( const Tr2SignedDistanceField& other );
 
+	/**
+	 * @brief Checks whether a voxel payload type is a valid SDF channel type.
+	 * @param type The payload type value to validate.
+	 * @return true if the payload type is valid for an SDF channel; otherwise, false.
+	 */
 	[[nodiscard]] static bool IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type );
+
+	/**
+	 * @brief Checks whether a payload type is a valid occupancy channel type.
+	 * @param type The payload type to validate.
+	 * @return true if the payload type is a valid occupancy channel type; otherwise, false.
+	 */
 	[[nodiscard]] static bool IsValidOccupancyChannelType( const Tr2VoxelData::PayloadType& type );
 
 private:

@@ -343,9 +343,6 @@ std::vector<float> Tr2SignedDistanceField::ComputeSdf( const Tr2VoxelData::Paylo
 	return sdf;
 }
 
-// Decoded field at the grid cell centres, low-passed and clamped back to the occupancy sign so no solid cell can
-// vanish from the mesh and no empty cell can seal over. Uses the supplied SDF if available, otherwise computes one
-// from occupancy.
 std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const
 {
 	const Int3 dims = GetGridSize();

@@ -246,6 +246,11 @@ Tr2VoxelData::PayloadSnapshot& Tr2VoxelData::PayloadSnapshot::operator=( Payload
 	return *this;
 }
 
+Tr2VoxelData::PayloadSnapshot::operator bool() const
+{
+	return m_voxelData != nullptr;
+}
+
 
 bool Tr2VoxelData::ModifiedChannels::IsChannelModified( size_t channelIndex ) const
 {

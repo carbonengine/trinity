@@ -83,7 +83,7 @@ Vector3 Tilted( const Vector3& normal, float angle, float spin )
 Tr2SurfaceCuts::Tr2SurfaceCuts( const Tr2SignedDistanceField& field, const Tr2VoxelData::Dimensions& dimensions, const Tr2SurfaceCutParams& params ) :
 	m_field( field ),
 	m_params( params ),
-	m_centre( ( float( dimensions.width ) - 1.f ) * 0.5f, ( float( dimensions.height ) - 1.f ) * 0.5f, ( float( dimensions.depth ) - 1.f ) * 0.5f ),
+	m_center( ( float( dimensions.width ) - 1.f ) * 0.5f, ( float( dimensions.height ) - 1.f ) * 0.5f, ( float( dimensions.depth ) - 1.f ) * 0.5f ),
 	m_searchRadius( 0.5f * Length( Vector3( float( dimensions.width ), float( dimensions.height ), float( dimensions.depth ) ) ) ),
 	m_seedMin( { 0, 0, 0 } ),
 	m_seedCount( { 0, 0, 0 } )
@@ -300,7 +300,7 @@ std::vector<Tr2SurfaceCuts::Cleave> Tr2SurfaceCuts::CreateCleaves() const
 		const Vector3 normal = Tilted( *surfaceNormal, tilt, 2.f * s_pi * hash( i, 3 ) );
 		const float cap = m_params.cleaveDepth * ( s_cleaveDepthMin + ( 1.f - s_cleaveDepthMin ) * hash( i, 4 ) );
 		float reach = s_cleaveReachMin + ( s_cleaveReachMax - s_cleaveReachMin ) * hash( i, 5 );
-		reach = std::min( reach, s_cleaveReachRadius * Length( *anchor - m_centre ) );
+		reach = std::min( reach, s_cleaveReachRadius * Length( *anchor - m_center ) );
 		cleaves.push_back( { *anchor, normal, Dot( normal, *anchor ) - cap, reach } );
 	}
 	return cleaves;
@@ -308,11 +308,11 @@ std::vector<Tr2SurfaceCuts::Cleave> Tr2SurfaceCuts::CreateCleaves() const
 
 std::optional<Vector3> Tr2SurfaceCuts::FindAnchor( const Vector3& direction ) const
 {
-	// The outermost solid to empty crossing on the ray from the grid centre
+	// The outermost solid to empty crossing on the ray from the grid center
 	std::optional<float> lastSolid;
 	for( float t = 0.f; t <= m_searchRadius; t += s_supportStep )
 	{
-		if( m_field.Sample( m_centre + direction * t ) <= 0.f )
+		if( m_field.Sample( m_center + direction * t ) <= 0.f )
 		{
 			lastSolid = t;
 		}
@@ -326,7 +326,7 @@ std::optional<Vector3> Tr2SurfaceCuts::FindAnchor( const Vector3& direction ) co
 	for( int i = 0; i < s_supportBisect; ++i )
 	{
 		const float mid = 0.5f * ( lo + hi );
-		if( m_field.Sample( m_centre + direction * mid ) <= 0.f )
+		if( m_field.Sample( m_center + direction * mid ) <= 0.f )
 		{
 			lo = mid;
 		}
@@ -335,7 +335,7 @@ std::optional<Vector3> Tr2SurfaceCuts::FindAnchor( const Vector3& direction ) co
 			hi = mid;
 		}
 	}
-	return m_centre + direction * ( 0.5f * ( lo + hi ) );
+	return m_center + direction * ( 0.5f * ( lo + hi ) );
 }
 
 std::optional<Vector3> Tr2SurfaceCuts::GetSurfaceNormal( const Vector3& point ) const

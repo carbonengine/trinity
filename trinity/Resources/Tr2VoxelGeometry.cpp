@@ -38,6 +38,9 @@ public:
 	}
 };
 
+/**
+ * @brief Input settings for geometry builders.
+ */
 struct InputSettings
 {
 	Tr2VoxelData::PayloadSnapshot shape;
@@ -47,17 +50,17 @@ struct InputSettings
 
 	[[nodiscard]] bool HasShapeChannel() const
 	{
-		return shape.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidSdfChannelType( shape.m_type );
+		return shape && Tr2SignedDistanceField::IsValidSdfChannelType( shape.m_type );
 	}
 
 	[[nodiscard]] bool HasOccupancyChannel() const
 	{
-		return occupancy.m_voxelData != nullptr && Tr2SignedDistanceField::IsValidOccupancyChannelType( occupancy.m_type );
+		return occupancy && Tr2SignedDistanceField::IsValidOccupancyChannelType( occupancy.m_type );
 	}
 
 	[[nodiscard]] bool HasDataTagChannel() const
 	{
-		return tags.m_voxelData != nullptr && IsValidDataTagChannelType( tags.m_type );
+		return tags && IsValidDataTagChannelType( tags.m_type );
 	}
 
 	[[nodiscard]] Tr2VoxelData::Dimensions GetDimensions() const
@@ -74,6 +77,9 @@ struct InputSettings
 	}
 };
 
+/**
+ * @brief Represents output configuration options for voxel geometry export.
+ */
 struct OutputSettings
 {
 	EnumFilter<Tr2VoxelGeometryComponents> components;
@@ -135,6 +141,9 @@ public:
 	}
 
 protected:
+	/**
+	 * @brief Data extracted from the tag voxel channel, containing voxel values for solid and empty neighboring voxels.
+	 */
 	struct DataTag
 	{
 		float solid = {};
@@ -226,7 +235,9 @@ protected:
 		const size_t normalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 0, cmf::ElementType::Float16, 4 ) : 0;
 		const size_t shadingNormalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 1, cmf::ElementType::Float16, 4 ) : 0;
 
-		const auto hasExtraData = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) || m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) || m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags );
+		const auto hasExtraData = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) ||
+			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) ||
+			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags );
 		const size_t extraElement = hasExtraData ? addElement( cmf::Usage::TexCoord, 0, cmf::ElementType::Int8Norm, 4 ) : 0;
 		const uint32_t vertexStride = offset;
 
@@ -236,7 +247,7 @@ protected:
 			uint32_t( positions.size() * vertexStride ),
 			vertexStride );
 		cmf::BufferElementStream<Vector3> positionStream( decl[positionElement], vbView, buffers );
-		// Lattice coordinates put cell centres at integers; the grid spans [-0.5, dim - 0.5] and is centred on the origin
+		// Lattice coordinates put cell centers at integers; the grid spans [-0.5, dim - 0.5] and is centered on the origin
 		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
 		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
 		{
@@ -278,7 +289,7 @@ protected:
 		if( hasExtraData )
 		{
 			cmf::BufferElementStream<Vector4> extraDataStream( decl[extraElement], vbView, buffers );
-			
+
 			for( uint32_t i = 0; i < extraDataStream.size(); ++i )
 			{
 				const float curvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !curvature.empty() ? curvature[i] : 0.0f;
@@ -402,7 +413,7 @@ protected:
 
 
 /**
- * @brief Common ground of the dual methods. Cell centres sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
+ * @brief Common ground of the dual methods. Cell centers sit at integer lattice coordinates, a dual vertex lives in every 2x2x2
  * block of cells with mixed occupancy, and every occupancy sign-change edge emits the quad joining the four blocks sharing
  * it. Cells outside the grid read as empty, so the surface closes at the grid boundary. m_subdivision > 1 runs the
  * construction on a lattice subdivided k-fold whose field is the trilinear interpolation of the SDF. Derived builders
@@ -422,12 +433,14 @@ public:
 protected:
 	using Int3 = std::array<int32_t, 3>;
 
-	static constexpr float s_roamMargin = 0.015; // dual vertex clamp cube inset, keeps neighbouring vertices apart
+	static constexpr float s_roamMargin = 0.015; // dual vertex clamp cube inset, keeps neighboring vertices apart
 
 	// (u, v) per axis, right-handed: u x v = +axis
 	static constexpr std::array<std::array<int, 2>, 3> s_axisUV = { { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
 
-	// Occupancy and field over the lattice plus a one cell ring of empty cells (lattice coordinates -1..lattice)
+	/**
+	 * @brief Occupancy and field over the lattice plus a one cell ring of empty cells (lattice coordinates -1..lattice)
+	 */
 	struct Window
 	{
 		explicit Window( const Int3& lattice_ ) :
@@ -503,7 +516,7 @@ protected:
 		{
 			const int u = s_axisUV[axis][0];
 			const int v = s_axisUV[axis][1];
-			// Edges between a cell and its +axis neighbour; the axis coordinate runs -1..lattice-1 so boundary faces are emitted
+			// Edges between a cell and its +axis neighbor; the axis coordinate runs -1..lattice-1 so boundary faces are emitted
 			Int3 lo = { 0, 0, 0 };
 			lo[axis] = -1;
 			for( int32_t z = lo[2]; z < lattice[2]; ++z )
@@ -978,7 +991,7 @@ protected:
 	/**
 	 * @brief Computes signed curvature per vertex: how far the vertex stands out of its quad-perimeter ring along its normal, over the ring's
 	 * mean edge length, so positive on ridges and negative in crevices. Each output is that raw value after its own number
-	 * of smoothing passes (half the vertex plus half its ring's mean), centred on the mesh's median so a gently convex
+	 * of smoothing passes (half the vertex plus half its ring's mean), centered on the mesh's median so a gently convex
 	 * body reads neutral.
 	 * @param positions The positions of the vertices.
 	 * @param normals The normals of the vertices.
@@ -1206,7 +1219,12 @@ private:
 	static constexpr uint32_t s_curvaturePasses = 2; // smoothing passes of the curvature element
 	static constexpr uint32_t s_smoothedCurvaturePasses = 8; // smoothing passes of the smoothed curvature element, wide enough to hide per-cell ripple
 
-	// The distinct vertices sharing a quad edge with each vertex
+	/**
+	 * @brief Builds a per-vertex adjacency list from a quad index buffer.
+	 * @param vertexCount The total number of vertices; determines the size of the returned neighbor list.
+	 * @param quads A flat array of vertex indices where each consecutive group of 4 indices defines one quad.
+	 * @return A vector of neighbor lists, one per vertex, containing unique adjacent vertex indices sorted in ascending order.
+	 */
 	static std::vector<std::vector<uint32_t>> GetQuadNeighbors( size_t vertexCount, const std::vector<uint32_t>& quads )
 	{
 		std::vector<std::vector<uint32_t>> neighbors( vertexCount );
@@ -1228,7 +1246,11 @@ private:
 		return neighbors;
 	}
 
-	// The values less their median
+	/**
+	 * @brief Returns a copy of the input values shifted so their median becomes 0.
+	 * @param values The input vector of float values to center on the median.
+	 * @return A vector where each element is the original value minus the median; returns the input unchanged if the vector is empty.
+	 */
 	static std::vector<float> CentreOnMedian( std::vector<float> values )
 	{
 		if( values.empty() )
@@ -1245,7 +1267,13 @@ private:
 		return values;
 	}
 
-	// Area-weighted normal of a quad from its diagonals, outward by the emitted winding
+	/**
+	 * @brief Computes the area-weighted normal of a quad from its diagonals, outward by the emitted winding.
+	 * @param positions A vector of vertex positions.
+	 * @param quads A flat array of vertex indices where each consecutive group of 4 indices defines one quad.
+	 * @param q The index of the quad to compute the normal for.
+	 * @return The area-weighted normal vector of the specified quad.
+	 */
 	static Vector3 GetQuadNormal( const std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, size_t q )
 	{
 		const Vector3& p0 = positions[quads[q * 4]];
@@ -1255,7 +1283,11 @@ private:
 		return Cross( p2 - p0, p3 - p1 );
 	}
 
-	// Lattice equal to the grid: occupancy straight from the grid, field from the filtered SDF
+	/**
+	 * @brief Creates a window over the grid with occupancy straight from the grid and field from the filtered SDF.
+	 * @param field The signed distance field to use for creating the window.
+	 * @return A Window object representing the grid with occupancy and field values.
+	 */
 	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
 	{
 		const Int3 dims = GetGridSize();
@@ -1268,17 +1300,21 @@ private:
 				for( int32_t x = 0; x < dims[0]; ++x, ++i )
 				{
 					const size_t index = window.Index( x, y, z );
-					window.occupancy[index] = field.GetValue(i) <= 0.0 ? 1 : 0;
-					window.field[index] = field.GetValue(i);
+					window.occupancy[index] = field.GetValue( i ) <= 0.0 ? 1 : 0;
+					window.field[index] = field.GetValue( i );
 				}
 			}
 		}
 		return window;
 	}
 
-	// Lattice of dim * scale cells per axis, each the trilinear interpolation of the 8 grid samples of its cube (samples outside
-	// the grid read deep empty). Only cubes straddling a sign change, plus one cube of dilation, get the real per-cell trilinear;
-	// the rest take the cube's uniform sign and have no field value.
+	/**
+	 * @brief Creates a subdivided window over the grid with trilinear interpolation of the signed distance field.
+	 * @param field The signed distance field to use for creating the window.
+	 * @param scale The subdivision scale factor; each grid cell is subdivided into scale^3 cells.
+	 * @param cancel An atomic boolean flag that can be used to cancel the operation.
+	 * @return A Window object representing the subdivided grid with occupancy and field values.
+	 */
 	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
 		const Int3 dims = GetGridSize();
@@ -1400,6 +1436,13 @@ private:
 		return window;
 	}
 
+	/**
+	 * @brief Computes the normal of a triangle defined by three points.
+	 * @param p0 The first vertex of the triangle.
+	 * @param p1 The second vertex of the triangle.
+	 * @param p2 The third vertex of the triangle.
+	 * @return The normal vector of the triangle.
+	 */
 	static Vector3 GetTriangleNormal( const Vector3& p0, const Vector3& p1, const Vector3& p2 )
 	{
 		const Vector3 a = { p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2] };
@@ -1407,7 +1450,12 @@ private:
 		return { a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0] };
 	}
 
-	// Cosine between the normals of a quad's two triangles, -2 when either is degenerate
+	/**
+	 * @brief Computes the cosine of the angle between the normals of a quad's two triangles.
+	 * @param n0 The normal vector of the first triangle.
+	 * @param n1 The normal vector of the second triangle.
+	 * @return The cosine of the angle between the two normals, or -2 if either normal is degenerate.
+	 */
 	static float GetFoldCosine( const Vector3& n0, const Vector3& n1 )
 	{
 		const float lengths = std::sqrt( ( n0[0] * n0[0] + n0[1] * n0[1] + n0[2] * n0[2] ) * ( n1[0] * n1[0] + n1[1] * n1[1] + n1[2] * n1[2] ) );
@@ -1420,6 +1468,9 @@ private:
 };
 
 
+/**
+ * @brief Builds mesh buffers using the Surface Nets dual-vertex algorithm.
+ */
 class SurfaceNetsBuilder : public DualGridBuilder
 {
 public:
@@ -1429,24 +1480,24 @@ public:
 	}
 
 protected:
-	// Surface Nets extraction: the dual vertex is the mean of the block's edge crossings, optionally relaxed afterwards.
-	// Quads are emitted as two triangles each.
 	GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
 	{
-		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
-		ON_BLOCK_EXIT( [&]() {
-			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
-			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
-			CCP_LOG( "SurfaceNetsBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
-		} );
+		TRINITY_STATS_ZONE( __FUNCTION__ );
+
 		return CreateBuffersImpl( GetDualVertex, allocator, buffers, cancel );
 	}
 
 private:
 	static constexpr float s_tMin = 0.10; // bound of the edge crossing interpolant off 0/1
 
-	// Mean of the sign crossings on the block's 12 edges, clamped to the block's inset unit cube and scaled back into
-	// grid cell space
+	/**
+	 * @brief Calculates the position of a new vertex based on the dual contouring algorithm, which places the vertex at the average of the edge crossings of a block in a signed distance field.
+	 * @param window The window containing the field and occupancy data.
+	 * @param sdf The signed distance field.
+	 * @param block The coordinates of the block.
+	 * @param scale The scale factor.
+	 * @return The position of the new vertex.
+	 */
 	static Vector3 GetDualVertex( const Window& window, const Tr2SignedDistanceField&, const Int3& block, int32_t scale )
 	{
 		const size_t base = window.Index( block[0], block[1], block[2] );
@@ -1501,6 +1552,9 @@ private:
 };
 
 
+/**
+ * @brief Builds mesh buffers using the Dual Contouring dual-vertex algorithm.
+ */
 class DualContouringBuilder : public DualGridBuilder
 {
 public:
@@ -1510,17 +1564,10 @@ public:
 	}
 
 protected:
-	// Dual Contouring extraction: the dual vertex minimises the quadric error of the tangent planes at the block's edge
-	// crossings (Hermite data from the SDF gradient), which keeps sharp edges and corners. Quads are split along the
-	// diagonal that folds less.
 	GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) override
 	{
-		std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
-		ON_BLOCK_EXIT( [&]() {
-			std::chrono::time_point<std::chrono::steady_clock> endTime = std::chrono::steady_clock::now();
-			std::chrono::duration<double> elapsedSeconds = endTime - startTime;
-			CCP_LOG( "DualContouringBuilder: elapsed time %.3f ms\n", elapsedSeconds.count() * 1000.0 );
-		} );
+		TRINITY_STATS_ZONE( __FUNCTION__ );
+
 		return CreateBuffersImpl( GetDualVertex, allocator, buffers, cancel );
 	}
 
@@ -1528,10 +1575,15 @@ private:
 	using Mat3 = std::array<std::array<float, 3>, 3>;
 
 	static constexpr float s_eigenTruncation = 0.01; // QEF eigenvalues below this fraction of the largest are dropped
-	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigendecomposition
+	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigen decomposition
 
-	// SDF gradient at a lattice cell: the trilinear interpolation of the minmod sample gradients of the grid cube holding
-	// the cell, matching how the subdivided window interpolates the field
+	/**
+	 * @brief Computes a gradient vector from a signed distance field at a given cell, using direct lookup at scale 1 or sampled lookup for other scales.
+	 * @param field The signed distance field to query.
+	 * @param cell The integer cell coordinates used as the gradient sample position.
+	 * @param scale The sampling scale factor. A value of 1 uses direct cell gradient lookup; other values use scaled sampling.
+	 * @return The gradient vector at the requested position, obtained either directly or via scaled sampling.
+	 */
 	static Vector3 GetGradient( const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
 	{
 		if( scale == 1 )
@@ -1541,8 +1593,11 @@ private:
 		return field.SampleGradient( Vector3( float( cell[0] ), float( cell[1] ), float( cell[2] ) ) / float( scale ) );
 	}
 
-	// Cyclic Jacobi eigendecomposition of a symmetric 3x3 matrix: on return a is diagonal (the eigenvalues) and the
-	// columns of v are the matching eigenvectors
+	/**
+	 * @brief Cyclic Jacobi eigen decomposition of a symmetric 3x3 matrix.
+	 * @param a The symmetric 3x3 matrix to decompose. On return, a is diagonal (the eigenvalues).
+	 * @param v The matrix to store the eigenvectors. On return, the columns of v are the matching eigenvectors.
+	 */
 	static void Eigendecompose( Mat3& a, Mat3& v )
 	{
 		v = { { { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0, 1 } } };
@@ -1587,12 +1642,22 @@ private:
 		}
 	}
 
-	// Minimiser of the quadric error sum( ( n_i . ( x - p_i ) )^2 ) over the sign crossings p_i on the block's 12 edges with
-	// unit SDF gradients n_i. Solved about the crossings' mass point with a truncated pseudo-inverse, so flat and edge-like
-	// blocks fall back toward the mass point along their unconstrained directions, then clamped to the block's inset unit
-	// cube and scaled back into grid cell space
+	/**
+	 * @brief Computes a dual-contouring vertex for a voxel block by finding sign-change edge crossings, fitting a local QEF with normal-equation/eigendecomposition 
+	 * stabilization, and clamping the result inside the block before converting to scaled space.
+	 * @param window Precomputed local sampling window containing occupancy, field values, indexing, and axis strides for the block neighborhood.
+	 * @param field Signed-distance field used to evaluate gradients at crossing endpoints.
+	 * @param block Integer block coordinate (minimum cell corner) where the dual vertex is generated.
+	 * @param scale Grid-to-output scale factor used to map block-local coordinates to final position.
+	 * @return A Vector3 position of the block's dual vertex in scaled coordinates, constrained to remain within the block interior margin.
+	 */
 	static Vector3 GetDualVertex( const Window& window, const Tr2SignedDistanceField& field, const Int3& block, int32_t scale )
 	{
+		// Minimiser of the quadric error sum( ( n_i . ( x - p_i ) )^2 ) over the sign crossings p_i on the block's 12 edges with
+		// unit SDF gradients n_i. Solved about the crossings' mass point with a truncated pseudo-inverse, so flat and edge-like
+		// blocks fall back toward the mass point along their unconstrained directions, then clamped to the block's inset unit
+		// cube and scaled back into grid cell space
+
 		// Crossings are relative to the block's minimum cell to keep the solve well conditioned
 		const size_t base = window.Index( block[0], block[1], block[2] );
 		std::array<Vector3, 12> points;
@@ -1718,7 +1783,7 @@ BlueStdResult Tr2VoxelGeometry::Create( Be::Optional<Tr2VoxelData*> voxelData, B
 		return {};
 	}
 
-	if ( voxelData.GetValue() )
+	if( voxelData.GetValue() )
 	{
 		if( shapeChannel >= 0 )
 		{

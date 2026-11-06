@@ -6,7 +6,7 @@
 
 
 /**
- * @brief Parameters of the render-only surface cuts (Tr2SurfaceCuts). Lengths are in grid cells.
+ * @brief Parameters of the surface cuts (Tr2SurfaceCuts). Lengths are in grid cells.
  */
 struct Tr2SurfaceCutParams
 {
@@ -40,7 +40,8 @@ struct Tr2SurfaceCutParams
 
 
 /**
- * @brief Render-only planar cuts of a signed distance field's surface, which break a smooth shape into flats.
+ * @brief Planar cuts of a signed distance field's surface, which break a smooth shape into flats. Used by Tr2VoxelGeometry
+ * to add detail to the mesh.
  *
  * Facets are near-tangent planes on a jittered seed lattice, each through its seed's nearest surface point, slightly
  * tilted and sunk inside. They flatten the surface in patches a few cells across but follow its curve. Cleaves are
@@ -75,15 +76,15 @@ private:
 	{
 		Vector3 seed;
 		Vector3 normal;
-		float offset;
+		float offset = 0;
 	};
 
 	struct Cleave
 	{
 		Vector3 anchor;
 		Vector3 normal;
-		float offset;
-		float reach;
+		float offset = 0;
+		float reach = 0;
 	};
 
 	float GetFacetCut( const Vector3& point, const Vector3& facing, Vector3& normal ) const;
@@ -96,7 +97,7 @@ private:
 
 	const Tr2SignedDistanceField& m_field;
 	const Tr2SurfaceCutParams m_params;
-	Vector3 m_centre; // grid centre, where the cleave anchor search starts
+	Vector3 m_center; // grid center, where the cleave anchor search starts
 	float m_searchRadius; // grid half diagonal, how far the cleave anchor search runs
 
 	// Facet seed cells covering the grid; each is unbuilt, empty or holds a facet

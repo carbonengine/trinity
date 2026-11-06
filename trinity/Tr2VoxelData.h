@@ -83,6 +83,7 @@ public:
 		PayloadSnapshot( PayloadSnapshot&& other ) noexcept;
 		~PayloadSnapshot();
 		PayloadSnapshot& operator=( PayloadSnapshot&& other ) noexcept;
+		operator bool() const;
 
 		Tr2VoxelDataPtr m_voxelData;
 		PayloadType m_type;

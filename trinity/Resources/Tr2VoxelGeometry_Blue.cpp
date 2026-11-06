@@ -61,13 +61,12 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_ATTRIBUTE( "occupancyChannelIndex", m_occupancyChannelIndex, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "occupancyChannelIndex", GetOccupancyChannelIndex, SetOccupancyChannelIndex, "Index of the occupancy channel in the voxel data\n\n:jessica-group: Input" )
 		MAP_ATTRIBUTE( "dataTagChannelIndex", m_dataTagChannelIndex, "", Be::PERSISTONLY )
-		MAP_PROPERTY( 
-			"dataTagChannelIndex", 
-			GetDataTagChannelIndex, 
-			SetDataTagChannelIndex, 
+		MAP_PROPERTY(
+			"dataTagChannelIndex",
+			GetDataTagChannelIndex,
+			SetDataTagChannelIndex,
 			"Index of the data tag channel in the voxel data; the tags of the solid and empty cells either side of the surface go to the DataTags vertex component (SurfaceNets and DualContouring)\n\n"
-			":jessica-group: Input"
-		)
+			":jessica-group: Input" )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "method", m_method, "Triangulation method used to create the geometry (see trinity.Tr2VoxelGeometryMethod)\n\n:jessica-group: Shape", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2VoxelGeometryMethodChooser )
 		MAP_ATTRIBUTE( "subdivision", m_subdivision, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "subdivision", GetSubdivision, SetSubdivision, "Subdivision level for the geometry\n\n:jessica-group: Shape" )
@@ -96,19 +95,16 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 			"Initializes the voxel geometry\n\n"
 			":param voxelData: Tr2VoxelData object containing the voxel data\n"
 			":param sdfChannelIndex: Index of the SDF channel\n"
-			":param occupancyChannelIndex: Index of the occupancy channel\n" 
-		)
-		MAP_METHOD_AND_WRAP( 
+			":param occupancyChannelIndex: Index of the occupancy channel\n" )
+		MAP_METHOD_AND_WRAP(
 			"LockBuild",
 			LockBuild,
-			"Locks the geometry build process. Use this to prevent automatic rebuilds when changing multiple properties.\n"
-			"It is possible to call LockBuild multiple times, but UnlockBuild must be called the same number of times to unlock the build process."
-		)
+			"Pauses rebuilds on property changes until UnlockBuild is called. This is useful when multiple properties are being changed at once, to avoid unnecessary rebuilds.\n"
+			"It is possible to call LockBuild multiple times, but UnlockBuild must be called the same number of times to unlock the build process." )
 		MAP_METHOD_AND_WRAP(
 			"UnlockBuild",
 			UnlockBuild,
-			"Unlocks the geometry build process. If a rebuild was pending while locked, it will be triggered now." 
-		)
+			"Unpauses geometry builds. If a rebuild was pending while locked, it will be triggered now." )
 		MAP_METHOD_AND_WRAP(
 			"TestBuildFile",
 			TestBuildFile,
@@ -116,8 +112,7 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 			":param resPath: Path to save the CMF file\n"
 			":raises RuntimeError: If building the CMF file fails (no data, empty data, etc.)\n"
 			":raises OSError: If there is an OS-level error while writing the file\n"
-			":raises IOError: If the file cannot be written to the specified path\n" 
-		)
+			":raises IOError: If the file cannot be written to the specified path\n" )
 
 	EXPOSURE_CHAINTO( Tr2ProceduralGeometryProvider )
 }
