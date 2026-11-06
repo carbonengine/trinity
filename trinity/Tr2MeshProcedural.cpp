@@ -17,6 +17,19 @@ Tr2MeshProcedural::~Tr2MeshProcedural()
 	}
 }
 
+bool Tr2MeshProcedural::Initialize()
+{
+	if( m_geometryResource )
+	{
+		m_geometryResource->AddNotifyTarget( this );
+		if( !m_geometryResource->IsLoading() && !m_geometryResource->IsPrepared() )
+		{
+			m_geometryResource->Rebuild();
+		}
+	}
+	return true;
+}
+
 Tr2ProceduralGeometryProvider* Tr2MeshProcedural::GetGeometry()
 {
 	return m_geometryResource;
