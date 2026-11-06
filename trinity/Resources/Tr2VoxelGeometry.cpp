@@ -339,7 +339,6 @@ protected:
 		const auto width = Tr2VoxelData::CoordType( m_dimensions.width );
 		const auto height = Tr2VoxelData::CoordType( m_dimensions.height );
 		const auto depth = Tr2VoxelData::CoordType( m_dimensions.depth );
-		const Vector3 origin = Vector3( float( width ), float( height ), float( depth ) ) * -0.5f;
 
 		auto& sdf = GetSignedDistanceField( cancel );
 
@@ -358,7 +357,7 @@ protected:
 			auto [iter, inserted] = indicesMap.try_emplace( cornerIndex * s_faces.size() + faceIndex, uint32_t( vertices.size() ) );
 			if( inserted )
 			{
-				Vector3 position = ( origin + Vector3( float( corner.x ), float( corner.y ), float( corner.z ) ) );
+				Vector3 position = Vector3( float( corner.x ), float( corner.y ), float( corner.z ) );
 				vertices.push_back( position );
 				normals.push_back( s_faces[faceIndex].normal );
 			}
