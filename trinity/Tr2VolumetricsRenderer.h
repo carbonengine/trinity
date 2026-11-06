@@ -95,7 +95,8 @@ public:
 		const Matrix& view,
 		const Matrix& projection,
 		const Matrix& viewLast,
-		const Matrix& projectionLast );
+		const Matrix& projectionLast,
+		const Tr2LightManager::View* lightView );
 	Tr2GpuResourcePool::Texture RenderFogIntoReflectionMap(
 		Tr2RenderContext & renderContext,
 		Tr2GpuResourcePool & gpuResourcePool,
@@ -105,7 +106,8 @@ public:
 		const Color& sunColor,
 		const Vector3d origin,
 		const Matrix& view,
-		const Matrix& projection );
+		const Matrix& projection,
+		const Tr2LightManager::View* lightView );
 	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool & gpuResourcePool );
 	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
 
@@ -184,7 +186,8 @@ private:
 		const Matrix& view,
 		const Matrix& projection,
 		const Matrix& viewLast,
-		const Matrix& projectionLast );
+		const Matrix& projectionLast,
+		const Tr2LightManager::View* lightView );
 
 	Tr2EffectPtr m_volumeBlit;
 	Tr2EffectPtr m_downsampleDepth;
@@ -298,7 +301,8 @@ private:
 		uint32_t height,
 		uint32_t depth,
 		const Vector3& jitter,
-		const Tr2ShadowMap* cascadedShadowMap );
+		const Tr2ShadowMap* cascadedShadowMap,
+		const Tr2LightManager::View* lightView );
 
 	Tr2ConstantBufferAL m_fogConstantBuffer;
 
