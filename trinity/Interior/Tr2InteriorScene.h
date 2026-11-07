@@ -12,9 +12,9 @@
 #include "include/ITr2MultiPassScene.h"
 #include "ITr2VisualizationModeRenderer.h"
 #include "Tr2InteriorLightSet.h"
-#include "Include/ITr2Scene.h"
+#include "include/ITr2Scene.h"
 #include "Tr2InteriorRenderBatch.h"
-#include "Include/ITr2Interior.h"
+#include "include/ITr2Interior.h"
 #include "Tr2DebugRenderer.h"
 
 // Forward declarations
@@ -155,6 +155,7 @@ private:
 private:
 	// A shared depth stencil texture for light shadow maps
 	Tr2DepthStencilPtr m_lightDepthStencil;
+	bool m_shadowMapsDirty;
 
 	// Holds the main render batch list for opaques, decals, and transparent batches
 	ITriRenderBatchAccumulator* m_primaryRenderBatches;

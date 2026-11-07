@@ -7,7 +7,7 @@
 #include "ParserState.h"
 #include "SymbolTable.h"
 #include "CompileMessageQueue.h"
-#include "FxAnalyzer.h"
+#include "FXAnalyzer.h"
 #include "HLSLParser.h"
 #include "ParserUtils.h"
 #include "ASTNode.h"

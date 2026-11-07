@@ -5,7 +5,7 @@
 #include "Tr2DebugRenderer.h"
 
 #include "Tr2LightManager.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 Tr2SpotLight::Tr2SpotLight( IRoot* lockobj ) :
 	Tr2Light( lockobj )

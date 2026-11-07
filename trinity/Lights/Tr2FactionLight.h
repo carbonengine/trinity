@@ -2,7 +2,7 @@
 
 #pragma once
 #include "Tr2Light.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Eve/SpaceObjectFactory/EveSOFData.h"
 
 class Tr2LightManager;

@@ -4,7 +4,7 @@
 #ifndef EveTurretTarget_H
 #define EveTurretTarget_H
 
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 
 // maximum time offset for turret firing; godma reads it back through GetShotTimeVariance
 // as the window for grouping shots that belong to one damage message

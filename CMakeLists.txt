@@ -103,6 +103,7 @@ endif ()
 
 add_subdirectory(trinityal)
 add_subdirectory(trinity)
+add_subdirectory(shaders)
 
 if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
     # Determine if/when to generate/build documentation. The rules are as follows:
@@ -139,3 +140,4 @@ if(CMAKE_PROJECT_NAME STREQUAL carbon-trinity AND NOT BUILD_FOR_PYTHON_2)
         )
     endif()
 endif()
+

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Include/ITr2Updateable.h"
+#include "include/ITr2Updateable.h"
 #include "ITr2ControllerAction.h"
 #include "Controllers/Tr2BindingPoint.h"
 #include "Controllers/Tr2ControllerExpression.h"
