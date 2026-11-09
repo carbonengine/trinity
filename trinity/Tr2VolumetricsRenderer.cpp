@@ -713,30 +713,42 @@ Tr2GpuResourcePool::Texture Tr2VolumetricsRenderer::RenderFog(
 				Tr2RtLocalMaterialDescriptionAL material;
 				material.SetConstants( Tr2Renderer::GetPerObjectVSStartRegister(), m_fogConstantBuffer );
 
-				TRINITY_STATS_ZONE( "Create shader table" );
-				m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
-				m_shaderTableDesc.AddMissShader( missName.c_str(), material );
-
+				TRINITY_STATS_ZONE( "Raytraced froxel shadows" );
 				Tr2RtShaderTableAL shadowShaderTable;
-				shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+				{
+					TRINITY_STATS_ZONE( "Create shader table" );
+					m_shaderTableDesc.AddRayGenShader( rayGenName.c_str(), material );
+					m_shaderTableDesc.AddMissShader( missName.c_str(), material );
+					shadowShaderTable.Create( m_shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+				}
 
-				resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
-				resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
+				{
+					TRINITY_STATS_ZONE( "Set options and parameters" );
+					resources.rtCalculateFroxels->SetOption( BlueSharedString( "GOD_RAY_NOISE" ), BlueSharedString( m_froxelFogSettings.godRayNoiseIntensity.value > 0.0f ? "GOD_RAY_NOISE_ENABLED" : "GOD_RAY_NOISE_DISABLED" ) );
+					resources.rtCalculateFroxels->SetOption( BlueSharedString( "FOG_NOISE" ), BlueSharedString( m_froxelFogSettings.fogNoiseIntensity.value > 0.0f ? "FOG_NOISE_ENABLED" : "FOG_NOISE_DISABLED" ) );
 
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
+					resources.rtCalculateFroxels->SetParameter( BlueSharedString( "Noise3DTexture" ), m_froxel3DNoise );
+					resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtFroxelOutputTexture" ), fogFroxels );
 
-				resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
-				renderContext.SetRtPipelineState( pipelineState, rayGenName.c_str() );
-				resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
-				renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+					resources.rtCalculateFroxels->SetParameter( BlueSharedString( "RtShadowScene" ), raytracingGeometry );
+				}
+
+				{
+					TRINITY_STATS_ZONE( "Apply material data" );
+					renderContext.SetRtPipelineState( pipelineState, rayGenName.c_str() );
+					resources.rtCalculateFroxels->ApplyMaterialDataForRtState( techniqueIndex, renderContext );
+					renderContext.UseAccelerationStructure( raytracingGeometry->GetTLAS() );
+				}
 
 				{
 					TRINITY_STATS_ZONE( "renderContext.UseResources" );
 					renderContext.UseResources( Tr2UseResourceDestination::COMPUTE, Tr2GpuUsage::SHADER_RESOURCE, raytracingGeometry->GetBindlessResources() );
 				}
 
-				renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+				{
+					TRINITY_STATS_ZONE( "DispatchRays" );
+					renderContext.DispatchRays( pipelineState, shadowShaderTable, rayGenName.c_str(), width, height, depth );
+				}
 			}
 			else
 			{
