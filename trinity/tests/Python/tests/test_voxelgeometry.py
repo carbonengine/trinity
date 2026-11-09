@@ -80,7 +80,7 @@ class TestVoxelGeometry(unittest.TestCase):
                 geometry.TestBuildFile("res:/voxels.cmf")
 
     def test_canCreateSimpleGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
         data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.shapeChannelIndex = 0
@@ -92,7 +92,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
 
     def test_canPersistGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
         data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         with TempRes():
@@ -106,7 +106,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(f1, f2)
 
     def test_canCreateSurfaceNetsGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}])
+        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
         data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.method = trinity.Tr2VoxelGeometryMethod.SurfaceNets
@@ -120,7 +120,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
 
     def test_canCreateSurfaceNetsGeometryWithDataTags(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [{"type": trinity.Tr2VoxelDataType.Float, "elementCount": 1, "normalized": False}, {"type": trinity.Tr2VoxelDataType.Int8, "elementCount": 1, "normalized": True}])
+        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT, {"type": trinity.Tr2VoxelDataType.Int8, "elementCount": 1, "normalized": True}])
         data.SetVoxels([((0, 0, 0), 0.0, 0.4), ((1, 0, 0), 1.0, 5.0), ((1, 1, 1), math.sqrt(3.0), 0.7)])
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.dataTagChannelIndex = 1

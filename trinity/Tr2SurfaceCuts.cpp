@@ -27,8 +27,8 @@ constexpr int s_snapIterations = 8;
 constexpr float s_snapTolerance = 0.02f; // |field| at which a projected seed counts as on the surface
 constexpr float s_snapMinGradient = 0.2f; // weaker gradients have no reliable tangent plane
 
-// Cleaves. A bite's cap depth is the cleave depth scaled into [s_cleaveDepthMin, 1], its plane leans s_cleaveTiltMin..
-// s_cleaveTiltMax off the surface normal at its anchor, and it cuts within s_cleaveReachMin..s_cleaveReachMax of the
+// Cleaves. A bite's cap depth is the cleave depth scaled into [s_cleaveDepthMin, 1], its plane leans [s_cleaveTiltMin,
+// s_cleaveTiltMax] off the surface normal at its anchor, and it cuts within [s_cleaveReachMin,  s_cleaveReachMax] of the
 // anchor, at most s_cleaveReachRadius of the anchor's distance from the grid centre, so a small shape takes small bites
 constexpr uint32_t s_cleaveCountMin = 14;
 constexpr uint32_t s_cleaveCountMax = 24;
