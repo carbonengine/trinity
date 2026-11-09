@@ -301,6 +301,8 @@ private:
 		const Tr2ShadowMap* cascadedShadowMap );
 
 	Tr2ConstantBufferAL m_fogConstantBuffer;
+	// Rebuilt in place every frame; its upload buffers persist so a frame costs no allocation
+	Tr2RtShaderTableAL m_fogShadowShaderTable;
 
 
 	std::unique_ptr<ITriRenderBatchAccumulator> m_batches;
