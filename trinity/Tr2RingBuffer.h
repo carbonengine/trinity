@@ -32,6 +32,7 @@ BLUE_CLASS( Tr2RingBuffer ) :
 public:
 	EXPOSE_TO_BLUE();
 
+	// The templates are defined in Tr2RingBufferImpl.h.
 	template <typename T>
 	uint32_t UploadTransforms( const T* data, uint32_t matrixCount );
 	void PrepareBuffer( Tr2RenderContext & renderContext );
@@ -45,6 +46,9 @@ public:
 	void SetName( const std::string& name );
 
 private:
+	// Initial number of elements, see GetInstance.
+	static constexpr uint32_t INITIAL_SIZE = 16 * 1024;
+
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;
 

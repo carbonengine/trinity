@@ -88,6 +88,27 @@ static const uint DT_UNKNOWN_TYPE = 0xffFFffFFu;
 // "attribAddress must be a multiple of the size in bytes of the size of the format"
 
 
+// Unpacking of 16-bit values from the 32-bit words that hold them, for the readers below and for readers of other buffer
+// types.
+
+// The two 16-bit values in a 32-bit word.
+uint2 UnpackUInt16_2( uint packed )
+{
+    return uint2( packed & 0xFFFF, packed >> 16 );
+}
+
+// Three 16-bit values at a byte address that is a multiple of 2, from the 32-bit word that holds the address
+// (packed0) and the next one (packed1).
+uint3 UnpackUInt16_3( uint packed0, uint packed1, uint address )
+{
+    if( ( address & 3 ) == 0 )
+    {
+        return uint3( packed0 & 0xFFFF, packed0 >> 16, packed1 & 0xFFFF );
+    }
+    return uint3( packed0 >> 16, packed1 & 0xFFFF, packed1 >> 16 );
+}
+
+
 // Read Write Buffers
 
 uint ReadUInt32( RWBuffer<uint> buffer, uint address )
@@ -170,31 +191,14 @@ uint ReadUInt16( Buffer<uint> buffer, uint address )
 
 uint2 ReadUInt16_2( Buffer<uint> buffer, uint address )
 {
-    uint2 result;
-    uint packed = buffer.Load( ( address + 0 ) >> 2 );
-    result.x = packed & 0xFFFF;
-    result.y = packed >> 16;
-    return result;
+    return UnpackUInt16_2( buffer.Load( ( address + 0 ) >> 2 ) );
 }
 
 uint3 ReadUInt16_3( Buffer<uint> buffer, uint address )
 {
-    uint3 result;
     uint packed0 = buffer.Load( ( address + 0 ) >> 2 );
     uint packed1 = buffer.Load( ( address + 4 ) >> 2 );
-    if( ( address & 3 ) == 0 )
-    {
-        result.x = packed0 & 0xFFFF;
-        result.y = packed0 >> 16;
-        result.z = packed1 & 0xFFFF;
-    }
-    else
-    {
-        result.x = packed0 >> 16;
-        result.y = packed1 & 0xFFFF;
-        result.z = packed1 >> 16;
-    }
-    return result;
+    return UnpackUInt16_3( packed0, packed1, address );
 }
 
 uint4 ReadUInt16_4( Buffer<uint> buffer, uint address )

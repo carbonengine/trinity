@@ -1,57 +1,13 @@
 // Copyright © 2026 CCP ehf.
 
 #include "StdAfx.h"
-#include "Tr2RingBuffer.h"
-
-namespace
-{
-constexpr uint32_t INITIAL_SIZE = 16 * 1024;
-}
+#include "Tr2RingBufferImpl.h"
 
 
 Tr2MorphTargetAnimationData::Tr2MorphTargetAnimationData( uint32_t index, float weight )
 {
 	m_index = index;
 	m_weight = weight;
-}
-
-template <typename T>
-uint32_t Tr2RingBuffer::UploadTransforms( const T* data, uint32_t dataCount )
-{
-	CCP_ASSERT_M( sizeof( T ) == m_stride, "Stride has to match size of datatype!" );
-
-	std::unique_lock lock( m_mutex );
-	if( m_head >= m_tail )
-	{
-		if( m_head + dataCount > m_size )
-		{
-			m_head = 0;
-		}
-	}
-	if( m_head < m_tail && m_head + dataCount >= m_tail )
-	{
-		CCP_LOG( "Resizing Tr2RingBuffer %s to %uKB", m_name.c_str(), uint32_t( m_size * 2 * m_stride ) / 1024 );
-		Resize( m_size * 2 );
-	}
-
-	memcpy( m_mirror.data() + m_head * m_stride, data, dataCount * m_stride );
-
-	if( m_dirtyRegions[0].offset + m_dirtyRegions[0].size == m_head )
-	{
-		m_dirtyRegions[0].size += dataCount;
-	}
-	else if( m_dirtyRegions[1].offset + m_dirtyRegions[1].size == m_head )
-	{
-		m_dirtyRegions[1].size += dataCount;
-	}
-	else
-	{
-		CCP_ASSERT( false );
-	}
-
-	auto result = m_head;
-	m_head += dataCount;
-	return result;
 }
 
 void Tr2RingBuffer::PrepareBuffer( Tr2RenderContext& renderContext )
@@ -106,25 +62,6 @@ void Tr2RingBuffer::Resize( uint32_t size )
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	m_buffer.Create( m_stride, size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
 	m_buffer.SetName( m_name.c_str() );
-}
-
-template <typename T>
-Tr2RingBuffer& Tr2RingBuffer::GetInstance()
-{
-	static Tr2RingBuffer* self = nullptr;
-	if( !self )
-	{
-		self = new CTr2RingBuffer();
-
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		self->m_stride = sizeof( T );
-		self->SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
-		self->Resize( INITIAL_SIZE );
-	}
-
-	CCP_ASSERT_M( sizeof( T ) == self->m_stride, "Stride has to match size of datatype!" );
-
-	return *self;
 }
 
 void Tr2RingBuffer::SetName( const std::string& name )
