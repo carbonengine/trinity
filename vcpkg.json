@@ -55,7 +55,7 @@
     },
     {
       "name": "carbon-blue",
-      "version>=": "6.2.0"
+      "version>=": "6.3.1"
     },
     {
       "name": "carbon-math",
@@ -104,7 +104,7 @@
         },
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2",
+          "version>=": "2026-05-27",
           "platform": "windows & x64"
         }
       ]
@@ -115,7 +115,7 @@
       "dependencies": [
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2"
+          "version>=": "2026-05-27"
         },
         {
           "name": "fxc",
@@ -142,7 +142,7 @@
       "dependencies": [
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2"
+          "version>=": "2026-05-27"
         },
         {
           "name": "fxc",
