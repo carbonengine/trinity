@@ -368,7 +368,7 @@ protected:
 			auto [iter, inserted] = indicesMap.try_emplace( cornerIndex * s_faces.size() + faceIndex, uint32_t( vertices.size() ) );
 			if( inserted )
 			{
-				Vector3 position = Vector3( float( corner.x ), float( corner.y ), float( corner.z ) );
+				Vector3 position = Vector3( float( corner.x ), float( corner.y ), float( corner.z ) ) - Vector3( 0.5f, 0.5f, 0.5f );
 				vertices.push_back( position );
 				normals.push_back( s_faces[faceIndex].normal );
 			}
