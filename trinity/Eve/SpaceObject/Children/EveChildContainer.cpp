@@ -505,11 +505,6 @@ void EveChildContainer::UpdateSyncronous( const EveUpdateContext& updateContext,
 	{
 		( *it )->UpdateSyncronous( updateContext, newParams );
 	}
-	for( auto it = m_observers.begin(); it != m_observers.end(); it++ )
-	{
-		( *it )->SetParentBall( params.ballPosition );
-		( *it )->Update( m_worldTransform );
-	}
 }
 
 void EveChildContainer::UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -632,6 +627,13 @@ void EveChildContainer::DoUpdateAsyncronous( const EveUpdateContext& updateConte
 	{
 		attachment->UpdateLights( m_worldTransform, bones, boneCount, m_activationStrength, 0.0 );
 	}
+
+	for( auto observer : m_observers )
+	{
+		observer->SetParentBall( params.ballPosition );
+		observer->Update( m_worldTransform );
+	}
+
 	m_hasUpdated = true;
 }
 

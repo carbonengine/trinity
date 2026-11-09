@@ -15,7 +15,7 @@ struct Matrix;
 
 BLUE_CLASS( TriObserverLocal ) :
 	public ITriObserverLocal,
-	public INotify
+	public IInitialize
 {
 public:
 	TriObserverLocal( IRoot* lockobj = NULL );
@@ -36,8 +36,8 @@ public:
 	bool GetMute();
 	void SetMute( bool isMute );
 
-	// INotify
-	virtual bool OnModified( Be::Var * val );
+	// IInitialize
+	bool Initialize() override;
 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions & options );
@@ -52,7 +52,6 @@ private:
 	Vector3 m_position;
 	IBluePlacementObserverPtr m_observer;
 	ITr2AudParentBall* m_parentBall;
-	bool m_parentBallStale;
 };
 
 BLUE_DECLARE_VECTOR( TriObserverLocal );
