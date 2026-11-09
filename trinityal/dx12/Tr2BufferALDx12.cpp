@@ -13,7 +13,8 @@ namespace TrinityALImpl
 {
 Tr2BufferAL::Tr2BufferAL() :
 	m_owner( nullptr ),
-	m_defaultState( D3D12_RESOURCE_STATE_COMMON )
+	m_defaultState( D3D12_RESOURCE_STATE_COMMON ),
+	m_needsTransitionAfterUpload( false )
 {
 	memset( &m_srvDesc, 0, sizeof( m_srvDesc ) );
 	memset( &m_uavDesc, 0, sizeof( m_uavDesc ) );
@@ -32,6 +33,40 @@ ALResult Tr2BufferAL::Create(
 {
 	Destroy();
 
+	FORWARD_HR( CreateResource( desc, initialData, renderContext, nullptr ) );
+	return CreateViews( renderContext );
+}
+
+ALResult Tr2BufferAL::CreateAsyncDx12(
+	const Tr2BufferDescriptionAL& desc,
+	const void* initialData,
+	Tr2PrimaryRenderContextAL& renderContext,
+	Tr2AsyncUploadDx12& upload )
+{
+	return CreateResource( desc, initialData, renderContext, &upload );
+}
+
+ALResult Tr2BufferAL::FinishCreateAsyncDx12( Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( m_needsTransitionAfterUpload )
+	{
+		m_needsTransitionAfterUpload = false;
+		auto resource = m_buffer.GetResource();
+		renderContext.ResourceBarrierDx12( Transition( resource, D3D12_RESOURCE_STATE_COMMON, m_defaultState ) );
+		if( RequiresImmediateBarriers( m_desc.gpuUsage ) )
+		{
+			renderContext.FlushBarriersDx12( resource );
+		}
+	}
+	return CreateViews( renderContext );
+}
+
+ALResult Tr2BufferAL::CreateResource(
+	const Tr2BufferDescriptionAL& desc,
+	const void* initialData,
+	Tr2PrimaryRenderContextAL& renderContext,
+	Tr2AsyncUploadDx12* upload )
+{
 	if( desc.count == 0 )
 	{
 		return E_INVALIDARG;
@@ -124,7 +159,8 @@ ALResult Tr2BufferAL::Create(
 		strategy = Tr2ResourceHelper::DYNAMIC;
 		defaultState = D3D12_RESOURCE_STATE_GENERIC_READ;
 	}
-	FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, RequiresImmediateBarriers( desc.gpuUsage ), initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
+	FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, RequiresImmediateBarriers( desc.gpuUsage ), initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext, upload ) );
+	m_needsTransitionAfterUpload = upload && upload->isCopyQueue && initialData && strategy != Tr2ResourceHelper::DYNAMIC && defaultState != D3D12_RESOURCE_STATE_COMMON;
 
 	if( renderContext.m_device1 )
 	{
@@ -150,8 +186,21 @@ ALResult Tr2BufferAL::Create(
 	}
 
 	m_desc = desc;
-	m_owner = &renderContext;
 	m_defaultState = defaultState;
+	return S_OK;
+}
+
+ALResult Tr2BufferAL::CreateViews( Tr2PrimaryRenderContextAL& renderContext )
+{
+	const auto& desc = m_desc;
+	auto stride = desc.stride;
+	if( desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
+	{
+		stride = GetBytesPerPixel( desc.format );
+	}
+	auto size = desc.count * stride;
+
+	m_owner = &renderContext;
 
 	if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 	{
@@ -257,6 +306,7 @@ void Tr2BufferAL::Destroy()
 	m_desc.count = 0;
 	m_owner = nullptr;
 	m_defaultState = D3D12_RESOURCE_STATE_COMMON;
+	m_needsTransitionAfterUpload = false;
 }
 
 bool Tr2BufferAL::IsValid() const

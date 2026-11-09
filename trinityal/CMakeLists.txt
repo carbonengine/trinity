@@ -25,6 +25,7 @@ set(PUBLIC_AL_HEADER_FILES
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
     include/Tr2FenceAL.h
+    include/Tr2FutureAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
     include/Tr2PipelineStatsQueryAL.h
@@ -53,6 +54,8 @@ set(_SOURCES
     StdAfx.cpp
     StdAfx.h
     Tr2AdapterStructures.h
+    Tr2AsyncCreationAL.cpp
+    Tr2AsyncCreationAL.h
     Tr2DeviceResourceAL.cpp
     Tr2DeviceResourceAL.h
     Tr2DrawUPHelper.cpp
@@ -70,6 +73,8 @@ set(_SOURCES
     Tr2RenderContextEnum.h
     Tr2VertexDefinition.cpp
     Tr2VertexDefinition.h
+    dx11/Tr2AsyncCreatorDx11.cpp
+    dx11/Tr2AsyncCreatorDx11.h
     dx11/Tr2BufferALDx11.cpp
     dx11/Tr2BufferALDx11.h
     dx11/Tr2CapsALDx11.cpp
@@ -110,6 +115,8 @@ set(_SOURCES
     dx11/upscaling/Tr2DlssUpscaling.h
     dx11/upscaling/Tr2UpscalingALDx11.cpp
     dx11/upscaling/Tr2UpscalingALDx11.h
+    dx12/Tr2AsyncCreatorDx12.cpp
+    dx12/Tr2AsyncCreatorDx12.h
     dx12/Tr2BufferALDx12.cpp
     dx12/Tr2BufferALDx12.h
     dx12/Tr2CapsALDx12.h
@@ -185,6 +192,7 @@ set(_SOURCES
     include/Tr2CapsAL.h
     include/Tr2ConstantBufferAL.h
     include/Tr2FenceAL.h
+    include/Tr2FutureAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
     include/Tr2RtBottomLevelAccelerationStructureAL.h
@@ -221,6 +229,8 @@ set(_SOURCES
     metal/MetalUtils.mm
     metal/MetalWorkQueue.h
     metal/MetalWorkQueue.mm
+    metal/Tr2AsyncCreatorMetal.h
+    metal/Tr2AsyncCreatorMetal.mm
     metal/Tr2BufferALMetal.h
     metal/Tr2BufferALMetal.mm
     metal/Tr2CapsALMetal.h
@@ -273,6 +283,7 @@ set(_SOURCES
     src/Tr2GpuTimerAl.cpp
     src/Tr2OcclusionQueryAL.cpp
     src/Tr2PipelineStatsQueryAL.cpp
+    src/Tr2PrimaryRenderContextAsyncAL.cpp
     src/Tr2RegisterMapAL.cpp
     src/Tr2RtBottomLevelAccelerationStructureAL.cpp
     src/Tr2RtPipelineStateAL.cpp
@@ -287,6 +298,8 @@ set(_SOURCES
     src/Tr2VertexLayoutAL.cpp
     src/upscaling/Tr2Fsr1Upscaling.cpp
     src/upscaling/Tr2UpscalingAL.cpp
+    stub/Tr2AsyncCreatorStub.cpp
+    stub/Tr2AsyncCreatorStub.h
     stub/Tr2BufferALStub.cpp
     stub/Tr2BufferALStub.h
     stub/Tr2CapsALStub.cpp

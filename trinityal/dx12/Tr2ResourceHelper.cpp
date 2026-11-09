@@ -21,8 +21,11 @@ Tr2ResourceHelper::Tr2ResourceHelper() :
 {
 }
 
-ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12* upload )
 {
+	// Asynchronous creation doesn't touch the frame state; resources it creates are not in use
+	// by the GPU by the time the creation is finished on the main thread.
+	uint64_t frameIndex = upload ? 0 : renderContext.GetRecordingFrameNumber();
 	if( strategy != DYNAMIC )
 	{
 		CComPtr<ID3D12Resource> buffer, scratch;
@@ -48,7 +51,7 @@ ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOUR
 				nullptr,
 				IID_PPV_ARGS( &scratch ) ) );
 			if( !UpdateSubresources(
-					renderContext.m_commandList,
+					upload ? upload->commandList : renderContext.m_commandList.p,
 					buffer,
 					scratch,
 					0,
@@ -60,19 +63,34 @@ ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOUR
 			}
 			if( state != initialState )
 			{
-				renderContext.ResourceBarrierDx12( Transition( buffer, initialState, state ) );
-				if( requiresImmediateBarriers )
+				if( !upload )
 				{
-					renderContext.FlushBarriersDx12( buffer );
+					renderContext.ResourceBarrierDx12( Transition( buffer, initialState, state ) );
+					if( requiresImmediateBarriers )
+					{
+						renderContext.FlushBarriersDx12( buffer );
+					}
+				}
+				else if( !upload->isCopyQueue )
+				{
+					auto barrier = Transition( buffer, initialState, state );
+					ResourceBarrier( upload->commandList, 1, &barrier );
 				}
 			}
 			if( strategy == STATIC )
 			{
-				RELEASE_LATER( &renderContext, scratch );
+				if( upload )
+				{
+					upload->scratches.push_back( scratch );
+				}
+				else
+				{
+					RELEASE_LATER( &renderContext, scratch );
+				}
 			}
 			else
 			{
-				Resource r = { scratch, renderContext.GetRecordingFrameNumber(), nullptr, 0 };
+				Resource r = { scratch, frameIndex, nullptr, 0 };
 				D3D12_RANGE readRange = { 0, 0 };
 				CR_RETURN_HR( scratch->Map( 0, &readRange, &r.cpuAddress ) );
 
@@ -80,7 +98,7 @@ ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOUR
 			}
 		}
 		m_gpuResource.resource = buffer;
-		m_gpuResource.frameIndex = renderContext.GetRecordingFrameNumber();
+		m_gpuResource.frameIndex = frameIndex;
 		m_gpuResource.cpuAddress = nullptr;
 		m_gpuResource.gpuAddress = buffer->GetGPUVirtualAddress();
 	}
@@ -96,7 +114,7 @@ ALResult Tr2ResourceHelper::Create( Strategy strategy, size_t size, D3D12_RESOUR
 			state,
 			nullptr,
 			IID_PPV_ARGS( &buffer ) ) );
-		Resource r = { buffer, renderContext.GetRecordingFrameNumber(), nullptr, buffer->GetGPUVirtualAddress() };
+		Resource r = { buffer, frameIndex, nullptr, buffer->GetGPUVirtualAddress() };
 		D3D12_RANGE readRange = { 0, 0 };
 		CR_RETURN_HR( buffer->Map( 0, &readRange, &r.cpuAddress ) );
 		if( initialDataCount )

@@ -37,6 +37,8 @@ private:
 	uint64_t m_frameNumber;
 };
 
+class Tr2AsyncUploadMetal;
+
 class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 {
 public:
@@ -44,6 +46,12 @@ public:
 	~Tr2TextureAL();
 
 	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+
+	// Asynchronous creation (see Tr2AsyncCreatorMetal). CreateAsyncMetal runs on a worker thread: it creates
+	// the texture and encodes the initial data upload into upload. FinishCreateAsyncMetal runs on the main
+	// thread once the upload has completed.
+	ALResult CreateAsyncMetal( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadMetal& upload );
+	ALResult FinishCreateAsyncMetal( Tr2PrimaryRenderContextAL& renderContext );
 	ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext );
 	void Destroy();
 
@@ -83,6 +91,30 @@ public:
 	uint32_t GetUavIndexInHeap( uint32_t mip ) const;
 
 private:
+	// Output of the resource creation phase
+	struct CreatedResourceMetal
+	{
+		id<MTLTexture> texture = nil;
+		Tr2BitmapDimensions realDesc;
+	};
+
+	// State kept between CreateAsyncMetal and FinishCreateAsyncMetal
+	struct AsyncCreationMetal
+	{
+		Tr2BitmapDimensions desc;
+		Tr2MsaaDesc msaa;
+		Tr2GpuUsage::Type gpuUsage = Tr2GpuUsage::NONE;
+		Tr2CpuUsage::Type cpuUsage = Tr2CpuUsage::NONE;
+		bool hasDataLayout = false;
+		Tr2SubresourceData dataLayout = { nullptr, 0, 0 };
+		CreatedResourceMetal created;
+	};
+
+	ALResult CreateResource( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadMetal* upload, CreatedResourceMetal& created );
+	ALResult CreateViews( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, const Tr2SubresourceData* initialData, const CreatedResourceMetal& created, Tr2PrimaryRenderContextAL& renderContext );
+
+	std::unique_ptr<AsyncCreationMetal> m_asyncCreation;
+
 	Tr2BitmapDimensions m_desc;
 	Tr2MsaaDesc m_msaa;
 	Tr2GpuUsage::Type m_gpuUsage;

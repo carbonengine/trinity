@@ -4,6 +4,7 @@ project(TrinityALTest VERSION 1.0.0)
 
 set(_SOURCES 
     ALResultTest.cpp
+    AsyncCreation.cpp
     BitmapDimensions.cpp
     Buffer.cpp
     Compute.cpp

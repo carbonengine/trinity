@@ -13,6 +13,7 @@
 #endif
 
 #include "./util/DescriptorHeapViewDx12.h"
+#include "Tr2ResourceHelper.h"
 
 
 namespace TrinityALImpl
@@ -60,6 +61,12 @@ public:
 	~Tr2TextureAL();
 
 	ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+
+	// Asynchronous creation (see Tr2AsyncCreatorDx12). CreateAsyncDx12 runs on a worker thread: it creates
+	// the resource and records the initial data upload into upload.commandList. FinishCreateAsyncDx12 runs
+	// on the main thread once the upload has completed.
+	ALResult CreateAsyncDx12( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12& upload );
+	ALResult FinishCreateAsyncDx12( Tr2PrimaryRenderContextAL& renderContext );
 	ALResult OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 	{
 		return E_NOTIMPL;
@@ -108,6 +115,33 @@ public:
 
 private:
 	void GetRegionSize( const Tr2TextureSubresource& region, uint32_t& pitch, uint64_t& size );
+
+	// Output of the resource creation phase
+	struct CreatedResourceDx12
+	{
+		CComPtr<ID3D12Resource> texture;
+		CComPtr<ID3D12Resource> scratch;
+		uint64_t scratchSize = 0;
+		D3D12_RESOURCE_STATES defaultState = D3D12_RESOURCE_STATE_COMMON;
+		// Initial data was uploaded on a copy queue and the texture needs a transition from COMMON
+		// to the default state before use
+		bool needsTransitionAfterUpload = false;
+	};
+
+	// State kept between CreateAsyncDx12 and FinishCreateAsyncDx12
+	struct AsyncCreationDx12
+	{
+		Tr2BitmapDimensions desc;
+		Tr2MsaaDesc msaa;
+		Tr2GpuUsage::Type gpuUsage = Tr2GpuUsage::NONE;
+		Tr2CpuUsage::Type cpuUsage = Tr2CpuUsage::NONE;
+		CreatedResourceDx12 created;
+	};
+
+	ALResult CreateResource( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12* upload, CreatedResourceDx12& created );
+	ALResult CreateViews( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, const CreatedResourceDx12& created, Tr2PrimaryRenderContextAL& renderContext );
+
+	std::unique_ptr<AsyncCreationDx12> m_asyncCreation;
 
 	Tr2BitmapDimensions m_desc;
 	Tr2MsaaDesc m_msaa;

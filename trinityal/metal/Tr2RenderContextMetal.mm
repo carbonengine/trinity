@@ -18,6 +18,7 @@
 #include "Tr2SwapChainALMetal.h"
 #include "Tr2RtPipelineStateALMetal.h"
 #include "Tr2RtShaderTableALMetal.h"
+#include "Tr2AsyncCreatorMetal.h"
 #include "Tr2RtTopLevelAccelerationStructureALMetal.h"
 #include "upscaling/Tr2UpscalingALMetal.h"
 
@@ -84,6 +85,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() :
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
+	StopAsyncCreation();
 
 	if( m_upscalingTechnique )
 	{
@@ -146,6 +148,8 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 
 void Tr2RenderContextAL::Destroy()
 {
+	StopAsyncCreation();
+
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
 		m_boundRenderTargets[i] = {};
@@ -785,6 +789,8 @@ ALResult Tr2RenderContextAL::CreateDevice( uint32_t Adapter,
 										   Tr2WindowHandle hFocusWindow,
 										   const Tr2PresentParametersAL& presentationParameters )
 {
+	StopAsyncCreation();
+
 	m_isValid = true;
 	m_workQueue = m_metalContext->GetPrimaryWorkQueue();
 #if 0
@@ -795,6 +801,8 @@ ALResult Tr2RenderContextAL::CreateDevice( uint32_t Adapter,
 	m_caMetalLayer = (CAMetalLayer*)view.layer;
 	METAL_LOG( @"Creating device" );
 	SetPresentParameters( Adapter, presentationParameters );
+
+	StartAsyncCreation();
 
 	if( m_events )
 	{
@@ -895,6 +903,7 @@ ALResult Tr2RenderContextAL::Present()
 
 	ResetRenderTargets();
 
+	DispatchAsyncCallbacks();
 	return S_OK;
 }
 

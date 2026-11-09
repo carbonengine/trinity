@@ -12,6 +12,23 @@ class Tr2RenderContextAL;
 
 namespace TrinityALImpl
 {
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Where asynchronous resource creation records uploads of initial data. Uploads are
+//   recorded on a worker thread into a command list separate from the main one; the list
+//   executes on a copy queue when available, otherwise on the direct queue.
+// --------------------------------------------------------------------------------------
+struct Tr2AsyncUploadDx12
+{
+	ID3D12GraphicsCommandList* commandList = nullptr;
+	// When the command list executes on a copy queue it can't transition resources to non-copy
+	// states; resources it writes decay to COMMON state once the upload completes.
+	bool isCopyQueue = false;
+	// Upload heaps that need to stay alive until the upload completes
+	std::vector<CComPtr<ID3D12Resource>> scratches;
+};
+
 class Tr2ResourceHelper
 {
 public:
@@ -24,7 +41,9 @@ public:
 
 	Tr2ResourceHelper();
 
-	ALResult Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext );
+	// When upload is not null, the call is part of asynchronous creation: it may run on a worker thread
+	// and records initial data uploads into upload->commandList instead of the main command list.
+	ALResult Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12* upload = nullptr );
 	void Destroy( Tr2PrimaryRenderContextAL& renderContext );
 
 	ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2PrimaryRenderContextAL& renderContext );

@@ -714,6 +714,44 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 {
 	Destroy();
 
+	CreatedResourceDx12 created;
+	FORWARD_HR( CreateResource( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext, nullptr, created ) );
+	return CreateViews( desc, msaa, gpuUsage, cpuUsage, created, renderContext );
+}
+
+ALResult Tr2TextureAL::CreateAsyncDx12( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12& upload )
+{
+	auto creation = std::make_unique<AsyncCreationDx12>();
+	FORWARD_HR( CreateResource( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext, &upload, creation->created ) );
+	creation->desc = desc;
+	creation->msaa = msaa;
+	creation->gpuUsage = gpuUsage;
+	creation->cpuUsage = cpuUsage;
+	m_asyncCreation = std::move( creation );
+	return S_OK;
+}
+
+ALResult Tr2TextureAL::FinishCreateAsyncDx12( Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( !m_asyncCreation )
+	{
+		return E_INVALIDCALL;
+	}
+	auto creation = std::move( m_asyncCreation );
+	const auto& created = creation->created;
+	if( created.needsTransitionAfterUpload )
+	{
+		renderContext.ResourceBarrierDx12( Transition( created.texture, D3D12_RESOURCE_STATE_COMMON, created.defaultState ) );
+		if( RequiresImmediateBarriers( creation->gpuUsage ) )
+		{
+			renderContext.FlushBarriersDx12( created.texture );
+		}
+	}
+	return CreateViews( creation->desc, creation->msaa, creation->gpuUsage, creation->cpuUsage, created, renderContext );
+}
+
+ALResult Tr2TextureAL::CreateResource( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext, Tr2AsyncUploadDx12* upload, CreatedResourceDx12& created )
+{
 	if( !renderContext.IsValid() )
 	{
 		return E_INVALIDARG;
@@ -784,7 +822,8 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 	D3D12_RESOURCE_STATES creationState = defaultState;
 	if( initialData )
 	{
-		creationState = D3D12_RESOURCE_STATE_COPY_DEST;
+		// Textures used on a copy queue must be in COMMON state; the copy queue promotes them to COPY_DEST
+		creationState = upload && upload->isCopyQueue ? D3D12_RESOURCE_STATE_COMMON : D3D12_RESOURCE_STATE_COPY_DEST;
 	}
 
 	CComPtr<ID3D12Resource> texture;
@@ -843,7 +882,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 
 
 		if( !UpdateSubresources(
-				renderContext.m_commandList,
+				upload ? upload->commandList : renderContext.m_commandList.p,
 				texture,
 				scratch,
 				0,
@@ -853,16 +892,45 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 		{
 			return E_FAIL;
 		}
-		if( defaultState != creationState )
+		if( !upload )
 		{
-			renderContext.ResourceBarrierDx12( Transition( texture, creationState, defaultState ) );
-			if( RequiresImmediateBarriers( gpuUsage ) )
+			if( defaultState != creationState )
 			{
-				renderContext.FlushBarriersDx12( texture );
+				renderContext.ResourceBarrierDx12( Transition( texture, creationState, defaultState ) );
+				if( RequiresImmediateBarriers( gpuUsage ) )
+				{
+					renderContext.FlushBarriersDx12( texture );
+				}
 			}
+			RELEASE_LATER( &renderContext, scratch );
 		}
-		RELEASE_LATER( &renderContext, scratch );
+		else
+		{
+			if( upload->isCopyQueue )
+			{
+				// The texture decays to COMMON state after the copy queue upload
+				created.needsTransitionAfterUpload = defaultState != D3D12_RESOURCE_STATE_COMMON;
+			}
+			else if( defaultState != creationState )
+			{
+				auto barrier = Transition( texture, creationState, defaultState );
+				ResourceBarrier( upload->commandList, 1, &barrier );
+			}
+			upload->scratches.push_back( scratch );
+		}
 	}
+
+	created.texture = texture;
+	created.scratch = scratch;
+	created.scratchSize = writeScratchSize;
+	created.defaultState = defaultState;
+	return S_OK;
+}
+
+ALResult Tr2TextureAL::CreateViews( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, const CreatedResourceDx12& created, Tr2PrimaryRenderContextAL& renderContext )
+{
+	auto resourceDesc = TextureDesc( desc, msaa );
+	ID3D12Resource* texture = created.texture;
 
 	if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 	{
@@ -1125,16 +1193,16 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 		renderContext.CreateDepthStencilView( texture, dsv, m_dsv );
 	}
 
-	m_textures.push_back( texture );
+	m_textures.push_back( created.texture );
 	m_desc = desc;
 	m_msaa = msaa;
 	m_owner = &renderContext;
-	m_defaultState = defaultState;
+	m_defaultState = created.defaultState;
 	m_gpuUsage = gpuUsage;
 	m_cpuUsage = cpuUsage;
-	if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && scratch )
+	if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && created.scratch )
 	{
-		WriteScratch s = { scratch, writeScratchSize, renderContext.GetRecordingFrameNumber() };
+		WriteScratch s = { created.scratch, created.scratchSize, renderContext.GetRecordingFrameNumber() };
 		m_writeScratches.push_back( s );
 	}
 
@@ -1144,6 +1212,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 void Tr2TextureAL::Destroy()
 {
 	m_mipMapGenerator.reset();
+	m_asyncCreation.reset();
 
 	for( auto it = begin( m_textures ); it != end( m_textures ); ++it )
 	{

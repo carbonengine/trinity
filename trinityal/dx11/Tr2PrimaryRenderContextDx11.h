@@ -11,10 +11,17 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "../include/Tr2BufferAL.h"
+#include "../include/Tr2FutureAL.h"
 #include "upscaling/Tr2UpscalingAL.h"
 
 
 struct Tr2PresentParametersAL;
+
+namespace TrinityALImpl
+{
+class Tr2AsyncCreatorAL;
+}
 
 
 #if ( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
@@ -56,6 +63,34 @@ public:
 
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
 
+	// Non-blocking versions of Tr2BufferAL::Create and Tr2TextureAL::Create; see Tr2FutureAL for how
+	// to get the created object. Thread-safe. Initial data must stay alive until the future completes.
+	Tr2FutureAL<Tr2BufferAL> CreateBufferAsync(
+		const Tr2BufferDescriptionAL& desc,
+		const void* initialData );
+	Tr2FutureAL<Tr2BufferAL> CreateBufferAsync(
+		Tr2RenderContextEnum::PixelFormat format,
+		uint32_t count,
+		Tr2GpuUsage::Type gpuUsage,
+		Tr2CpuUsage::Type cpuUsage,
+		const void* initialData );
+	Tr2FutureAL<Tr2BufferAL> CreateBufferAsync(
+		uint32_t stride,
+		uint32_t count,
+		Tr2GpuUsage::Type gpuUsage,
+		Tr2CpuUsage::Type cpuUsage,
+		const void* initialData );
+
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage );
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage );
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2SubresourceData* initialData );
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage );
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData );
+	Tr2FutureAL<Tr2TextureAL> CreateTextureAsync( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData );
+
+	// Returns true if called on the thread that owns the immediate context
+	bool IsMainThreadDx11() const;
+
 public:
 	bool m_usingEXDevice;
 
@@ -70,6 +105,15 @@ public:
 
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
+
+	void StartAsyncCreation();
+	void StopAsyncCreation();
+	void DispatchAsyncCallbacks();
+	std::shared_ptr<TrinityALImpl::Tr2AsyncCreatorAL> GetAsyncCreator();
+
+	std::shared_ptr<TrinityALImpl::Tr2AsyncDispatcherAL> m_asyncDispatcher = std::make_shared<TrinityALImpl::Tr2AsyncDispatcherAL>();
+	std::shared_ptr<TrinityALImpl::Tr2AsyncCreatorAL> m_asyncCreator;
+	std::mutex m_asyncCreatorMutex;
 
 	uint64_t m_recodingFrame;
 	uint64_t m_renderedFrame;

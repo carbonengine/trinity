@@ -119,7 +119,8 @@ ALResult Tr2BufferAL::Create(
 	}
 
 	auto hr = renderContext.m_d3dDevice11->CreateBuffer( &bd, initialData ? &initialData11 : nullptr, &m_buffer );
-	if( hr == E_OUTOFMEMORY )
+	// The immediate context can only be flushed from the main thread (asynchronous creation may run elsewhere)
+	if( hr == E_OUTOFMEMORY && renderContext.IsMainThreadDx11() )
 	{
 		int retries = 10;
 		while( hr == E_OUTOFMEMORY && retries )

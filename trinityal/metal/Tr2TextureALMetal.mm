@@ -8,6 +8,7 @@
 #include "MetalContext.h"
 #include "ALLog.h"
 #include "../BcDecompress.h"
+#include "Tr2AsyncCreatorMetal.h"
 
 
 namespace TrinityALImpl
@@ -101,6 +102,59 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 {
 	Destroy();
 
+	CreatedResourceMetal created;
+	FORWARD_HR( CreateResource( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext, nullptr, created ) );
+	return CreateViews( desc, msaa, gpuUsage, cpuUsage, initialData, created, renderContext );
+}
+
+ALResult Tr2TextureAL::CreateAsyncMetal( const Tr2BitmapDimensions& desc,
+										 const Tr2MsaaDesc& msaa,
+										 Tr2GpuUsage::Type gpuUsage,
+										 Tr2CpuUsage::Type cpuUsage,
+										 Tr2SubresourceData* initialData,
+										 Tr2PrimaryRenderContextAL& renderContext,
+										 Tr2AsyncUploadMetal& upload )
+{
+	auto creation = std::make_unique<AsyncCreationMetal>();
+	FORWARD_HR( CreateResource( desc, msaa, gpuUsage, cpuUsage, initialData, renderContext, &upload, creation->created ) );
+	creation->desc = desc;
+	creation->msaa = msaa;
+	creation->gpuUsage = gpuUsage;
+	creation->cpuUsage = cpuUsage;
+	if( initialData )
+	{
+		creation->hasDataLayout = true;
+		creation->dataLayout = *initialData;
+	}
+	m_asyncCreation = std::move( creation );
+	return S_OK;
+}
+
+ALResult Tr2TextureAL::FinishCreateAsyncMetal( Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( !m_asyncCreation )
+	{
+		return E_INVALIDCALL;
+	}
+	auto creation = std::move( m_asyncCreation );
+	return CreateViews( creation->desc,
+						creation->msaa,
+						creation->gpuUsage,
+						creation->cpuUsage,
+						creation->hasDataLayout ? &creation->dataLayout : nullptr,
+						creation->created,
+						renderContext );
+}
+
+ALResult Tr2TextureAL::CreateResource( const Tr2BitmapDimensions& desc,
+									   const Tr2MsaaDesc& msaa,
+									   Tr2GpuUsage::Type gpuUsage,
+									   Tr2CpuUsage::Type cpuUsage,
+									   Tr2SubresourceData* initialData,
+									   Tr2PrimaryRenderContextAL& renderContext,
+									   Tr2AsyncUploadMetal* upload,
+									   CreatedResourceMetal& created )
+{
 	if( HasBufferFlags( gpuUsage ) )
 	{
 		return E_INVALIDARG;
@@ -247,7 +301,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 	{
 		uint32_t mipMapCount = desc.GetTrueMipCount();
 
-		m_mtlTexture = metalContext->CreateMetalTexture(
+		id<MTLTexture> texture = metalContext->CreateMetalTexture(
 			metalTextureType,
 			metalPixelFormat,
 			desc.GetWidth(),
@@ -258,6 +312,28 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 			metalTextureUsage,
 			msaa.samples,
 			desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE ? 1 : desc.GetArraySize() );
+
+		// Asynchronous creation encodes uploads into its own command buffer instead of the work queue
+		auto uploadTexture = [&]( const void* data, uint32_t slice, uint32_t mip, uint32_t bytesPerRow, uint32_t bytesPerSlice, uint32_t srcOffset, bool syncOnBuffer ) {
+			if( !upload )
+			{
+				workQueue->UploadTexture( texture, data, slice, mip, bytesPerRow, bytesPerSlice, srcOffset, syncOnBuffer );
+				return;
+			}
+			size_t bytesPerTexture = MAX( texture.depth >> mip, 1 ) * bytesPerSlice;
+			id<MTLBuffer> staging = upload->CreateStagingBuffer( data, bytesPerTexture );
+			MTLSize dimensions =
+				MTLSizeMake( MAX( texture.width >> mip, 1 ), MAX( texture.height >> mip, 1 ), MAX( texture.depth >> mip, 1 ) );
+			[upload->GetBlitEncoder() copyFromBuffer:staging
+										sourceOffset:srcOffset
+								   sourceBytesPerRow:bytesPerRow
+								 sourceBytesPerImage:bytesPerSlice
+										  sourceSize:dimensions
+										   toTexture:texture
+									destinationSlice:slice
+									destinationLevel:mip
+								   destinationOrigin:MTLOriginMake( 0, 0, 0 )];
+		};
 
 		if( initialData )
 		{
@@ -282,7 +358,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 						{
 							return E_FAIL;
 						}
-						workQueue->UploadTexture( m_mtlTexture,
+						uploadTexture(
 												  decompressed.get(),
 												  slice,
 												  mip,
@@ -293,7 +369,7 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 					}
 					else
 					{
-						workQueue->UploadTexture( m_mtlTexture,
+						uploadTexture(
 												  initialData[index].m_sysMem,
 												  slice,
 												  mip,
@@ -307,8 +383,25 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc,
 			}
 		}
 
-		m_wrappedTexture = false;
+		created.texture = texture;
 	}
+	created.realDesc = realDesc;
+	return S_OK;
+}
+
+ALResult Tr2TextureAL::CreateViews( const Tr2BitmapDimensions& desc,
+									const Tr2MsaaDesc& msaa,
+									Tr2GpuUsage::Type gpuUsage,
+									Tr2CpuUsage::Type cpuUsage,
+									const Tr2SubresourceData* initialData,
+									const CreatedResourceMetal& created,
+									Tr2PrimaryRenderContextAL& renderContext )
+{
+	MetalContext* metalContext = renderContext.GetMetalContext();
+	const auto& realDesc = created.realDesc;
+	m_mtlTexture = created.texture;
+	m_wrappedTexture = false;
+
 	m_mtlTextureSRGBView = metalContext->CreateSRGBViewOfMetalTexture( m_mtlTexture );
 	if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 	{
@@ -369,6 +462,7 @@ ALResult
 
 void Tr2TextureAL::Destroy()
 {
+	m_asyncCreation.reset();
 	m_usedInEncoder = 0;
 	if( m_mtlTexture )
 	{

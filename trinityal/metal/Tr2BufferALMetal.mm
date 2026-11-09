@@ -7,6 +7,7 @@
 #include "Tr2BufferALMetal.h"
 #include "Tr2RenderContextMetal.h"
 #include "MetalContext.h"
+#include "Tr2AsyncCreatorMetal.h"
 
 namespace
 {
@@ -14,26 +15,9 @@ template <typename T> bool HasFlag( T value, T flag )
 {
 	return ( value & flag ) == flag;
 }
-}
 
-namespace TrinityALImpl
+ALResult CheckCreationArguments( const Tr2BufferDescriptionAL& desc, const void* initialData, Tr2PrimaryRenderContextAL& renderContext )
 {
-Tr2BufferAL::Tr2BufferAL() :
-	m_owner( nullptr ), m_metalContext( nullptr ), m_heapIndex( 0xffffffff ), m_usedInEncoder( 0 )
-{
-}
-
-Tr2BufferAL::~Tr2BufferAL()
-{
-	Destroy();
-}
-
-ALResult Tr2BufferAL::Create( const Tr2BufferDescriptionAL& desc,
-							  const void* initialData,
-							  Tr2PrimaryRenderContextAL& renderContext )
-{
-	Destroy();
-
 	if( desc.count == 0 )
 	{
 		return E_INVALIDARG;
@@ -55,26 +39,56 @@ ALResult Tr2BufferAL::Create( const Tr2BufferDescriptionAL& desc,
 	{
 		return E_INVALIDARG;
 	}
+	return S_OK;
+}
 
-	auto stride = desc.stride;
+uint32_t GetStride( const Tr2BufferDescriptionAL& desc )
+{
 	if( desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
 	{
-		stride = GetBytesPerPixel( desc.format );
+		return GetBytesPerPixel( desc.format );
 	}
+	return desc.stride;
+}
 
-	m_metalContext = renderContext.GetMetalContext();
-	auto bufferSizeInBytes = desc.count * stride;
-
-	// Default to managed storage.
-	m_resourceMode = MTLResourceStorageModeManaged;
-
+MTLResourceOptions GetResourceMode( const Tr2BufferDescriptionAL& desc )
+{
 	if( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) &&
 		!HasFlag( desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 	{
 		// No point keeping a copy on the CPU side if they'll never be modified.
-		// JM - this needs support in the API to do a blit upload of the data so disabling for now
-		m_resourceMode = MTLResourceStorageModePrivate;
+		return MTLResourceStorageModePrivate;
 	}
+	return MTLResourceStorageModeManaged;
+}
+}
+
+namespace TrinityALImpl
+{
+Tr2BufferAL::Tr2BufferAL() :
+	m_owner( nullptr ), m_metalContext( nullptr ), m_heapIndex( 0xffffffff ), m_usedInEncoder( 0 ), m_asyncBuffer( nil )
+{
+}
+
+Tr2BufferAL::~Tr2BufferAL()
+{
+	Destroy();
+}
+
+ALResult Tr2BufferAL::Create( const Tr2BufferDescriptionAL& desc,
+							  const void* initialData,
+							  Tr2PrimaryRenderContextAL& renderContext )
+{
+	Destroy();
+
+	FORWARD_HR( CheckCreationArguments( desc, initialData, renderContext ) );
+
+	auto stride = GetStride( desc );
+
+	m_metalContext = renderContext.GetMetalContext();
+	auto bufferSizeInBytes = desc.count * stride;
+
+	m_resourceMode = GetResourceMode( desc );
 
 	m_owner = &renderContext;
 	m_mtlBuffer = m_metalContext->CreateMetalBuffer(
@@ -88,6 +102,66 @@ ALResult Tr2BufferAL::Create( const Tr2BufferDescriptionAL& desc,
 	m_memory.Set( Tr2MemoryCounterAL::BUFFER, bufferSizeInBytes );
 
 	return m_mtlBuffer ? S_OK : E_FAIL;
+}
+
+ALResult Tr2BufferAL::CreateAsyncMetal( const Tr2BufferDescriptionAL& desc,
+										const void* initialData,
+										Tr2PrimaryRenderContextAL& renderContext,
+										Tr2AsyncUploadMetal& upload )
+{
+	FORWARD_HR( CheckCreationArguments( desc, initialData, renderContext ) );
+
+	auto bufferSizeInBytes = desc.count * GetStride( desc );
+	auto resourceMode = GetResourceMode( desc );
+	id<MTLDevice> device = upload.GetDevice();
+
+	id<MTLBuffer> buffer = nil;
+	if( initialData && ( resourceMode & MTLResourceStorageModeMask ) == MTLResourceStorageModePrivate )
+	{
+		buffer = [device newBufferWithLength:bufferSizeInBytes options:resourceMode];
+		id<MTLBuffer> staging = upload.CreateStagingBuffer( initialData, bufferSizeInBytes );
+		if( !buffer || !staging )
+		{
+			return E_OUTOFMEMORY;
+		}
+		[upload.GetBlitEncoder() copyFromBuffer:staging sourceOffset:0 toBuffer:buffer destinationOffset:0 size:bufferSizeInBytes];
+	}
+	else if( initialData )
+	{
+		buffer = [device newBufferWithBytes:initialData length:bufferSizeInBytes options:resourceMode];
+	}
+	else
+	{
+		buffer = [device newBufferWithLength:bufferSizeInBytes options:resourceMode];
+	}
+	if( !buffer )
+	{
+		return E_OUTOFMEMORY;
+	}
+
+	m_asyncBuffer = buffer;
+	m_desc = desc;
+	m_resourceMode = resourceMode;
+	return S_OK;
+}
+
+ALResult Tr2BufferAL::FinishCreateAsyncMetal( Tr2PrimaryRenderContextAL& renderContext )
+{
+	if( !m_asyncBuffer )
+	{
+		return E_INVALIDCALL;
+	}
+	m_metalContext = renderContext.GetMetalContext();
+	m_owner = &renderContext;
+	m_mtlBuffer = m_asyncBuffer;
+	m_asyncBuffer = nil;
+	if( HasFlag( m_desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) ||
+		HasFlag( m_desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+	{
+		m_heapIndex = m_metalContext->AllocateHeapIndex( m_mtlBuffer );
+	}
+	m_memory.Set( Tr2MemoryCounterAL::BUFFER, m_desc.count * GetStride( m_desc ) );
+	return S_OK;
 }
 
 void Tr2BufferAL::Destroy()
@@ -105,6 +179,7 @@ void Tr2BufferAL::Destroy()
 	m_stagingBuffers.clear();
 	m_mtlBuffer = nil;
 	m_mappedBuffer = nil;
+	m_asyncBuffer = nil;
 	m_metalContext = nil;
 	m_desc.count = 0;
 	m_heapIndex = 0xffffffff;

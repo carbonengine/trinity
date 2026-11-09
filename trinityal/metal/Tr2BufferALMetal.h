@@ -10,6 +10,8 @@
 
 namespace TrinityALImpl
 {
+class Tr2AsyncUploadMetal;
+
 class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 {
 public:
@@ -20,6 +22,17 @@ public:
 		const Tr2BufferDescriptionAL& desc,
 		const void* initialData,
 		Tr2PrimaryRenderContextAL& renderContext );
+
+	// Asynchronous creation (see Tr2AsyncCreatorMetal). CreateAsyncMetal runs on a worker thread: it creates
+	// the buffer and encodes the initial data upload into upload. FinishCreateAsyncMetal runs on the main
+	// thread once the upload has completed.
+	ALResult CreateAsyncMetal(
+		const Tr2BufferDescriptionAL& desc,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL& renderContext,
+		Tr2AsyncUploadMetal& upload );
+	ALResult FinishCreateAsyncMetal( Tr2PrimaryRenderContextAL& renderContext );
+
 	void Destroy();
 
 	bool IsValid() const;
@@ -69,6 +82,8 @@ private:
 	std::vector<StagingBuffer> m_stagingBuffers;
 	id<MTLBuffer> m_mappedBuffer;
 	std::string m_name;
+	// Buffer created by CreateAsyncMetal, waiting for FinishCreateAsyncMetal
+	id<MTLBuffer> m_asyncBuffer;
 
 	friend class ::Tr2RenderContextAL;
 	friend class Tr2PrimaryRenderContextAL;

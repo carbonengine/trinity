@@ -10,6 +10,7 @@
 #include "Tr2VideoAdapterInfoALDx11.h"
 #include "Tr2BufferALDx11.h"
 #include "Tr2TextureALDx11.h"
+#include "Tr2AsyncCreatorDx11.h"
 
 #include "ALLog.h"
 
@@ -63,6 +64,8 @@ Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
+	StopAsyncCreation();
+
 	if( m_upscalingTechnique )
 	{
 		m_upscalingTechnique->ReleaseResources();
@@ -443,12 +446,19 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice( uint32_t adapter,
 
 	m_frameTimer.Create( *this );
 
+	StartAsyncCreation();
+
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
 	}
 
 	return S_OK;
+}
+
+bool Tr2PrimaryRenderContextAL::IsMainThreadDx11() const
+{
+	return m_asyncDispatcher->IsMainThread();
 }
 
 ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
@@ -703,6 +713,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_frameTimer.Begin( *this );
 	SetRenderTarget( m_defaultBackBuffer );
 
+	DispatchAsyncCallbacks();
 	return S_OK;
 }
 

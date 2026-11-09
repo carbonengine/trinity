@@ -119,6 +119,9 @@ void Tr2RenderContextAL::Destroy() throw()
 
 	ResetDx12();
 
+	// Pending barriers refer to resources of the device being destroyed
+	m_barriers.clear();
+
 	m_descriptorCache.clear();
 
 

@@ -25,6 +25,16 @@ public:
 		const void* initialData,
 		Tr2PrimaryRenderContextAL& renderContext );
 
+	// Asynchronous creation (see Tr2AsyncCreatorDx12). CreateAsyncDx12 runs on a worker thread: it creates
+	// the resource and records the initial data upload into upload.commandList. FinishCreateAsyncDx12 runs
+	// on the main thread once the upload has completed.
+	ALResult CreateAsyncDx12(
+		const Tr2BufferDescriptionAL& desc,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL& renderContext,
+		Tr2AsyncUploadDx12& upload );
+	ALResult FinishCreateAsyncDx12( Tr2PrimaryRenderContextAL& renderContext );
+
 	void Destroy();
 	bool IsValid() const;
 
@@ -51,12 +61,22 @@ public:
 	uint32_t GetUavIndexInHeap() const;
 
 private:
+	ALResult CreateResource(
+		const Tr2BufferDescriptionAL& desc,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL& renderContext,
+		Tr2AsyncUploadDx12* upload );
+	ALResult CreateViews( Tr2PrimaryRenderContextAL& renderContext );
+
 	Tr2BufferDescriptionAL m_desc;
 	Tr2ResourceHelper m_buffer;
 
 	Tr2PrimaryRenderContextAL* m_owner;
 	D3D12_RESOURCE_STATES m_defaultState;
 	CComPtr<ID3D12Resource> m_lockedScratch;
+	// Set when the initial data was uploaded on a copy queue and the resource needs a transition from
+	// COMMON to the default state before use
+	bool m_needsTransitionAfterUpload;
 
 	D3D12_SHADER_RESOURCE_VIEW_DESC m_srvDesc;
 	D3D12_UNORDERED_ACCESS_VIEW_DESC m_uavDesc;

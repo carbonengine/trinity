@@ -8,6 +8,7 @@
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
 #include "Tr2AdapterStructures.h"
+#include "Tr2AsyncCreatorStub.h"
 
 
 CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
@@ -41,6 +42,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() :
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
+	StopAsyncCreation();
 }
 
 void Tr2RenderContextAL::SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* renderContext )
@@ -61,6 +63,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 
 void Tr2RenderContextAL::Destroy()
 {
+	StopAsyncCreation();
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
 		m_boundRenderTarget[i] = Tr2TextureAL();
@@ -232,8 +235,10 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	Tr2WindowHandle,
 	const Tr2PresentParametersAL& presentationParameters )
 {
+	StopAsyncCreation();
 	m_isValid = true;
 	SetPresentParameters( Adapter, presentationParameters );
+	StartAsyncCreation();
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
@@ -277,6 +282,7 @@ ALResult Tr2RenderContextAL::EndScene()
 ALResult Tr2RenderContextAL::Present()
 {
 	++m_frameNumber;
+	DispatchAsyncCallbacks();
 	return S_OK;
 }
 

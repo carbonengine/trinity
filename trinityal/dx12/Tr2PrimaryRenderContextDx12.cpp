@@ -12,6 +12,7 @@
 #include "Tr2SwapChainALDx12.h"
 #include "Tr2TextureALDx12.h"
 #include "util/AmdExtDevice.h"
+#include "Tr2AsyncCreatorDx12.h"
 
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
@@ -664,12 +665,16 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_memoryWatchdog = std::make_unique<MemoryWatchdog>( device, dxgiAdapter );
 
+	StartAsyncCreation();
+
 	return S_OK;
 }
 
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
+	StopAsyncCreation();
+
 	if( IsValid() )
 	{
 		uint64_t value;
@@ -712,7 +717,12 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_drawIndexedInstancedIndirect = nullptr;
 	m_dispatchIndirect = nullptr;
 
-	m_pipelineStates.clear();
+	{
+		// Destroying a cached PSO may release the last reference to its shader program, which calls
+		// OnShaderProgramDestroyedDx12 that iterates m_pipelineStates; so don't clear the map in place.
+		PipelineStateMap pipelineStates;
+		pipelineStates.swap( m_pipelineStates );
+	}
 	m_defaultBackBuffer.m_texture->Destroy();
 
 	m_presentFence = nullptr;
@@ -1042,6 +1052,8 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	SetRenderTarget( m_defaultBackBuffer );
+
+	DispatchAsyncCallbacks();
 	return S_OK;
 }
 
