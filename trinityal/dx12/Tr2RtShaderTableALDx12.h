@@ -17,6 +17,7 @@ public:
 	~Tr2RtShaderTableAL();
 
 	ALResult Create( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Update( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	void Destroy();
 	bool IsValid() const;
 
@@ -31,8 +32,23 @@ public:
 	uint64_t GetHitGroupTableSize() const;
 
 private:
-	Tr2RtShaderTableDescriptionAL m_desc;
-	CComPtr<ID3D12Resource> m_table;
+	struct TableBuffer
+	{
+		CComPtr<ID3D12Resource> resource;
+		uint8_t* mapped = nullptr;
+		size_t capacity = 0;
+		size_t used = 0;
+		uint64_t frame = 0;
+	};
+	ALResult Write( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	void ReleaseBuffer( TableBuffer& buffer );
+
+	D3D12_GPU_VIRTUAL_ADDRESS m_tableAddress = 0;
+	std::vector<TableBuffer> m_buffers;
+	std::vector<uint8_t> m_staging;
+	std::vector<const wchar_t*> m_rayGenNames;
+	size_t m_missCount = 0;
+	size_t m_hitGroupCount = 0;
 	Tr2PrimaryRenderContextAL* m_owner;
 	uint64_t m_entrySize;
 };

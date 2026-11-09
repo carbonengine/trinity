@@ -581,6 +581,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	Matrix observerTransform = GetObserverTransform();
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
 	{
+		( *it )->SetParentBall( m_ballPosition );
 		( *it )->Update( observerTransform );
 	}
 
@@ -595,6 +596,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 		params.ownerMaxSpeed = m_maxSpeed;
 		params.activationStrength = m_activationStrength;
 		params.localToWorldTransform = worldTransform;
+		params.ballPosition = m_ballPosition;
 
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, params.bones, params.boneCount );
 
@@ -721,6 +723,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.activationStrength = m_activationStrength;
 		params.localToWorldTransform = worldTransform;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, params.bones, params.boneCount );
 
@@ -3393,7 +3396,7 @@ void EveSpaceObject2::AddController( ITr2Controller* controller )
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( observer );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 // --------------------------------------------------------------------------------
