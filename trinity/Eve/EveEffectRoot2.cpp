@@ -270,6 +270,7 @@ void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
