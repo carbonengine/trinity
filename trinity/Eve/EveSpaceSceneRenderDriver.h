@@ -83,7 +83,7 @@ public:
 	std::vector<Tr2TextureReferencePtr> GetAllTempTextures() const;
 
 	EveSpaceScene* GetScene() const;
-	void SetScene( EveSpaceScene * scene );
+	void SetScene( EveSpaceScene* scene );
 
 	EXPOSE_TO_BLUE();
 
@@ -149,14 +149,14 @@ private:
 	};
 
 	ViewTargets RenderView( const RenderInfo& view, const Tr2TextureAL& colorTarget, const Span<TempOutput>& outputs, ViewTimers& timers, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext, const uint32_t colorTargetSlice = 0 );
-	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext & renderContext );
-	void SetLightViews( RenderInfo & mainView, ReflectionFaces & faces, Tr2RenderContext & renderContext );
+	ReflectionFaces PrepareReflectionFaces( Tr2RenderContext& renderContext );
+	void SetLightViews( RenderInfo& mainView, ReflectionFaces& faces, Tr2RenderContext& renderContext );
 	void RenderReflectionFaces( const ReflectionFaces& faces, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
 	void SetupUpscaling( const TextureSize2D& displaySize );
 	void PropagateSettings();
 	void ApplyCamera( const EveSceneView::Camera& camera ) const;
 	void UpdateSceneFrame( const EveSceneView::Camera& mainCamera, Be::Time realTime, Be::Time simTime, const Tr2ProfileTimer& rootTimer, Tr2RenderContext& renderContext );
-	void SetCameraToRenderer( Tr2RenderContext & renderContext ) const;
+	void SetCameraToRenderer( Tr2RenderContext& renderContext ) const;
 	TextureSize2D GetRenderSize( const TextureSize2D& displaySize ) const;
 	EveSceneView::Camera GetMainCamera( const TextureSize2D& renderSize, const Matrix& jitterMatrix, float mipLodBias ) const;
 
@@ -169,7 +169,7 @@ private:
 	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
 	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 
-	void UpdateGpuParticleSystem( Tr2RenderContext & renderContext );
+	void UpdateGpuParticleSystem( Tr2RenderContext& renderContext );
 	void PrepareLightManager();
 
 	Tr2GpuResourcePool::Texture RenderSSAO( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, Tr2RenderContext& renderContext );

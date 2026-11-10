@@ -116,8 +116,8 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Scene
 	virtual void Update( Be::Time realTime, Be::Time simTime );
-	virtual void Render( Tr2RenderContext & renderContext );
-	virtual void RenderDebugInfo( Tr2RenderContext & renderContext );
+	virtual void Render( Tr2RenderContext& renderContext );
+	virtual void RenderDebugInfo( Tr2RenderContext& renderContext );
 
 
 	struct ShadowResources
@@ -146,11 +146,11 @@ public:
 	void RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName = BlueSharedString( "Depth" ) );
 
 	bool RenderBackgroundPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& distortionMap, const Tr2TextureAL& velocityMap, const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void BeginFrame( Tr2RenderContext & renderContext );
+	void BeginFrame( Tr2RenderContext& renderContext );
 	void BeginView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
 	void EndView( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
-	void Render3DUI( Tr2RenderContext & renderContext );
-	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
+	void Render3DUI( Tr2RenderContext& renderContext );
+	void PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext );
 	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext );
 
 	void GatherBatches( const EveSceneView::ViewInfo& view, Tr2RenderContext& renderContext );
@@ -165,7 +165,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var * val );
+	bool OnModified( Be::Var* val );
 
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -208,7 +208,7 @@ public:
 	typedef std::map<TriBatchType, Tr2EnumerableThreadSpecific<PerThreadAccumulator>> PerThreadBatchMap;
 
 	Tr2ShLightingManagerPtr GetShLightingManager() const;
-	void SetShLightingManager( Tr2ShLightingManager * manager );
+	void SetShLightingManager( Tr2ShLightingManager* manager );
 
 	IEveSpaceObject2Vector& Objects()
 	{
@@ -350,38 +350,38 @@ public:
 	EvePlanetPerObjData m_planetPerObjData;
 	Tr2ShaderBufferPtr m_planetPerObjBuffer;
 
-	void PopulatePerFrameVSData( PerFrameVSData & data, Tr2RenderContext & renderContext );
-	void PopulatePerFramePSData( PerFramePSData & data, Tr2RenderContext & renderContext );
-	void PopulatePerFramePSData( PerFramePSData & data, Tr2ShadowMap * shadowMap, Tr2RenderContext & renderContext );
+	void PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderContext& renderContext );
+	void PopulatePerFramePSData( PerFramePSData& data, Tr2RenderContext& renderContext );
+	void PopulatePerFramePSData( PerFramePSData& data, Tr2ShadowMap* shadowMap, Tr2RenderContext& renderContext );
 
-	void ApplyPerFrameData( Tr2RenderContext & renderContext );
+	void ApplyPerFrameData( Tr2RenderContext& renderContext );
 
 	void UpdatePlanets( const EveUpdateContext& updateContext );
-	void RenderPlanets( Tr2RenderContext & renderContext );
+	void RenderPlanets( Tr2RenderContext& renderContext );
 
-	void RenderDistortion( Tr2RenderContext & renderContext );
+	void RenderDistortion( Tr2RenderContext& renderContext );
 
 	Matrix CreatePlanetViewMatrix( const Matrix& original );
-	void SetupPlanetsAsShadowCaster( CcpMath::Sphere * planets, size_t maxPlanets );
-	void SetupPlanetsAsShadowCaster( Tr2RenderContext & renderContext );
+	void SetupPlanetsAsShadowCaster( CcpMath::Sphere* planets, size_t maxPlanets );
+	void SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext );
 
 	// Batch gathering and preparation
-	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void PrepareTransparentBatch( Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, bool includeDistortions, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	// Batch rendering
-	void RenderOpaqueBatches( BatchMap & batches, Tr2RenderContext & renderContext );
-	void RenderTransparentBatches( BatchMap & batches, Tr2RenderContext & renderContext );
-	void RenderTransparentBatches2( BatchMap & batches, Tr2RenderContext & renderContext, bool pass );
-	bool RenderDistortionBatches( BatchMap & batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
+	void RenderOpaqueBatches( BatchMap& batches, Tr2RenderContext& renderContext );
+	void RenderTransparentBatches( BatchMap& batches, Tr2RenderContext& renderContext );
+	void RenderTransparentBatches2( BatchMap& batches, Tr2RenderContext& renderContext, bool pass );
+	bool RenderDistortionBatches( BatchMap& batches, const Tr2TextureAL& distortionMap, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 
 	// Utility rendering functions
-	void RenderBatch( ITriRenderBatchAccumulator * batch,
+	void RenderBatch( ITriRenderBatchAccumulator* batch,
 					  Tr2EffectStateManager::RenderingMode rm,
-					  Tr2RenderContext & renderContext );
+					  Tr2RenderContext& renderContext );
 
 	void RenderRenderables( const std::vector<ITr2Renderable*>& renderables,
 							ITriRenderBatchAccumulator* batch,
@@ -534,7 +534,7 @@ protected:
 	{
 		return m_updateContext.GetGpuParticleSystem();
 	}
-	void SetGpuParticleSystem( Tr2GpuParticleSystem * ps )
+	void SetGpuParticleSystem( Tr2GpuParticleSystem* ps )
 	{
 		m_updateContext.SetGpuParticleSystem( ps );
 	}
@@ -549,7 +549,7 @@ protected:
 	Tr2ConstantBufferAL m_shadowPerFrameVSBuffer;
 
 	// Cascaded shadows
-	ShadowResources SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap & shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
+	ShadowResources SetupCascadedShadows( Tr2RenderReason renderReason, Tr2ShadowMap& shadowMap, const TriFrustum& viewFrustum, const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 
 	// Picking
@@ -560,7 +560,7 @@ protected:
 	ITriRenderBatchAccumulator* m_pickingBatches;
 
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2RenderContext& renderContext );
-	void GetPickingObjectsToRender( std::vector<ITr2Renderable*> & pickableRenderObjects );
+	void GetPickingObjectsToRender( std::vector<ITr2Renderable*>& pickableRenderObjects );
 
 
 
@@ -569,10 +569,10 @@ public:
 	BluePy PickObjectAndAreaID( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
 	BluePy PickObjectAndExtraData( int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
 
-	IRootPtr PickAsyncObject( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
-	BluePy PickAsyncObjectAndExtraData( EvePickingContext * listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
+	IRootPtr PickAsyncObject( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> filter ); // for use by python, uses default immediate context
+	BluePy PickAsyncObjectAndExtraData( EvePickingContext* listener, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Be::OptionalWithDefaultValue<Tr2PickTypes, PICK_TYPE_PICKING | PICK_TYPE_OPAQUE> pickTypes );
 
-	std::tuple<IRootPtr, uint32_t, uint32_t> PerformPicking( EvePickingContext * listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
+	std::tuple<IRootPtr, uint32_t, uint32_t> PerformPicking( EvePickingContext* listener, bool immediate, int x, int y, TriProjection* proj, TriView* view, TriViewport* viewport, Tr2PickTypes pickTypes, Tr2PrimaryRenderContext& renderContext );
 
 
 
@@ -602,8 +602,8 @@ protected:
 	void UpdateVariableStore();
 	void ClearVariableStore();
 
-	void ClearBatches( BatchMap & batches );
-	void FinalizeBatches( BatchMap & batches );
+	void ClearBatches( BatchMap& batches );
+	void FinalizeBatches( BatchMap& batches );
 
 	virtual void ReleaseResources( TriStorage s );
 	virtual bool OnPrepareResources();
@@ -611,10 +611,10 @@ protected:
 	void UpdateFrame( Be::Time realTime, Be::Time simTime );
 	void EnsureVisualizerEffect();
 	void ResolveLightingOverrides();
-	void GatherDynamicLights( Tr2RenderContext & renderContext );
+	void GatherDynamicLights( Tr2RenderContext& renderContext );
 	void PrepareLensflares();
-	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*> & allObjects, std::vector<ITr2Renderable*> & renderables, Tr2RenderContext & renderContext );
-	void GatherReflectionRenderables( std::vector<ITr2Renderable*> & renderables );
+	void GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>& allObjects, std::vector<ITr2Renderable*>& renderables, Tr2RenderContext& renderContext );
+	void GatherReflectionRenderables( std::vector<ITr2Renderable*>& renderables );
 	ShadowResources RenderReflectionShadows( const Tr2TextureAL& depthMap, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
 	std::pair<Tr2GpuResourcePool::Texture, Tr2GpuResourcePool::Texture> RenderVolumetrics( const Tr2TextureAL& depthMap, const Tr2LightManager::View* lightView, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
@@ -635,7 +635,7 @@ protected:
 
 	Tr2QuadRenderer* GetQuadRenderer() const;
 
-	void UpdateImpostors( Tr2RenderContext & renderContext );
+	void UpdateImpostors( Tr2RenderContext& renderContext );
 
 	enum BackgroundRenderingReason
 	{
@@ -677,9 +677,9 @@ public:
 	BlueSharedString m_name;
 
 	// Dynamic light shadow maps
-	bool PrepareShadowMapForLights( Tr2RenderContext & renderContext, const Tr2TextureAL& shadowMap );
+	bool PrepareShadowMapForLights( Tr2RenderContext& renderContext, const Tr2TextureAL& shadowMap );
 	void RenderShadowMapForSpotLight(
-		Tr2RenderContext & renderContext,
+		Tr2RenderContext& renderContext,
 		const std::vector<IEveShadowCaster*>& shadowCasters,
 		uint32_t shadowMapScale,
 		uint32_t shadowMapOffsetX,
@@ -688,8 +688,8 @@ public:
 		const Matrix& view,
 		const Matrix& projection,
 		const Tr2TextureAL& shadowMap );
-	void RenderShadowMapForLight( Tr2RenderContext & renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap );
-	void FinishRenderingShadowMapForLights( Tr2RenderContext & renderContext );
+	void RenderShadowMapForLight( Tr2RenderContext& renderContext, const std::vector<IEveShadowCaster*>& shadowCasters, const Tr2LightManager::PerLightData& lightData, const Tr2TextureAL& shadowMap );
+	void FinishRenderingShadowMapForLights( Tr2RenderContext& renderContext );
 
 	// Object to gather all components
 	EveComponentRegistryPtr m_componentRegistry;
@@ -709,8 +709,8 @@ public:
 	BlueSharedString m_shadowRaytracedValue;
 	bool m_usingRaytracedShadows;
 
-	void RenderVolumetricShadowMap( Tr2RenderContext & renderContext );
-	void RenderIntoCloudShadowMap( Tr2RenderContext & renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters );
+	void RenderVolumetricShadowMap( Tr2RenderContext& renderContext );
+	void RenderIntoCloudShadowMap( Tr2RenderContext& renderContext, const ITr2VolumetricRenderable::ShadowInfo* cloudShadowInformation, std::vector<IEveShadowCaster*> shadowCasters );
 
 	// Frame index when Update was last called
 	uint64_t m_lastUpdateFrame = std::numeric_limits<uint64_t>::max();

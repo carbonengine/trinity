@@ -39,7 +39,7 @@ public:
 	void SetIntensity( float intensity );
 	void SetBackLightContrast( float contrast );
 
-	bool OnModified( Be::Var * value );
+	bool OnModified( Be::Var* value );
 
 	bool IsHollyWoodModeOn() const;
 	bool ReadyForDynamicObjectReflections() const;
@@ -57,7 +57,7 @@ public:
 private:
 	void RunFilter();
 	void Filter( const Vector3& viewDirection, Tr2RenderContext& renderContext );
-	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext & renderContext );
+	bool DoPrepareResources( ImageIO::PixelFormat targetFormat, Tr2PrimaryRenderContext& renderContext );
 	void DestroyRenderTargets();
 
 	bool m_initialized;

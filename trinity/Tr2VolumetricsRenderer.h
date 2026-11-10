@@ -75,14 +75,14 @@ public:
 		bool raytracingEnabled,
 		Tr2GpuResourcePool& gpuResourcePool,
 		Tr2RenderContext& renderContext );
-	static Tr2GpuResourcePool::Texture GetEmptyVolumetricTexture( Tr2GpuResourcePool & gpuResourcePool );
+	static Tr2GpuResourcePool::Texture GetEmptyVolumetricTexture( Tr2GpuResourcePool& gpuResourcePool );
 
 	void UpdateFogSettings( const EveComponentRegistry& registry, const EveUpdateContext& updateContext );
 	bool HasFog() const;
 
 	Tr2GpuResourcePool::Texture RenderFog(
-		Tr2RenderContext & renderContext,
-		Tr2GpuResourcePool & gpuResourcePool,
+		Tr2RenderContext& renderContext,
+		Tr2GpuResourcePool& gpuResourcePool,
 		uint32_t width,
 		uint32_t height,
 		Tr2ShadowMap* cascadedShadowMap,
@@ -98,8 +98,8 @@ public:
 		const Matrix& projectionLast,
 		const Tr2LightManager::View* lightView );
 	Tr2GpuResourcePool::Texture RenderFogIntoReflectionMap(
-		Tr2RenderContext & renderContext,
-		Tr2GpuResourcePool & gpuResourcePool,
+		Tr2RenderContext& renderContext,
+		Tr2GpuResourcePool& gpuResourcePool,
 		uint32_t width,
 		uint32_t height,
 		const Vector3& sunDirection,
@@ -108,8 +108,8 @@ public:
 		const Matrix& view,
 		const Matrix& projection,
 		const Tr2LightManager::View* lightView );
-	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool & gpuResourcePool );
-	void UpdateFogEnvironmentMap( Tr2RenderContext & renderContext );
+	static Tr2GpuResourcePool::Texture GetEmptyFogTexture( Tr2GpuResourcePool& gpuResourcePool );
+	void UpdateFogEnvironmentMap( Tr2RenderContext& renderContext );
 
 	void SetIsReflectionProbe( bool isReflectionProbe )
 	{
@@ -143,7 +143,7 @@ public:
 		CcpMath::Sphere planets[2];
 	};
 
-	void PopulatePerFrameData( FroxelPerFrameData & data );
+	void PopulatePerFrameData( FroxelPerFrameData& data );
 
 	void SetQuality( Tr2VolumerticQuality quality );
 
@@ -171,9 +171,9 @@ private:
 
 
 	Tr2GpuResourcePool::Texture RenderFog(
-		FogViewDependentResources & resources,
-		Tr2RenderContext & renderContext,
-		Tr2GpuResourcePool & gpuResourcePool,
+		FogViewDependentResources& resources,
+		Tr2RenderContext& renderContext,
+		Tr2GpuResourcePool& gpuResourcePool,
 		uint32_t originalWidth,
 		uint32_t originalHeight,
 		Tr2ShadowMap* cascadedShadowMap,
@@ -288,7 +288,7 @@ private:
 	};
 
 	void UpdatePerObjectData(
-		FogPerObjectData * data,
+		FogPerObjectData* data,
 		const Matrix& view,
 		const Matrix& projection,
 		const Matrix& viewLast,
