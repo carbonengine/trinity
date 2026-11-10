@@ -19,7 +19,8 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ) :
 	m_alphaCutout( false ),
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL ),
-	m_minLod( TR2_LOD_UNSPECIFIED )
+	m_minLod( TR2_LOD_UNSPECIFIED ),
+	m_updateCustomRtDisplacement( false )
 {
 }
 
@@ -46,6 +47,7 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_useSHLighting = other.m_useSHLighting;
 	m_generateDepthArea = other.m_generateDepthArea;
 	m_alphaCutout = other.m_alphaCutout;
+	m_updateCustomRtDisplacement = other.m_updateCustomRtDisplacement;
 
 	return *this;
 }
@@ -239,11 +241,26 @@ void Tr2MeshArea::SetMinLod( Tr2Lod lod )
 	m_minLod = lod;
 }
 
+bool Tr2MeshArea::GetUpdateCustomRtDisplacement() const
+{
+	return m_updateCustomRtDisplacement;
+}
+
+void Tr2MeshArea::SetUpdateCustomRtDisplacement( bool update )
+{
+	m_updateCustomRtDisplacement = update;
+	if( m_rtMeshArea )
+	{
+		m_rtMeshArea->SetUpdateCustomRtDisplacement( m_updateCustomRtDisplacement );
+	}
+}
+
 Tr2RaytracingMeshArea* Tr2MeshArea::GetOrCreateRtMeshArea()
 {
 	if( !m_rtMeshArea )
 	{
 		m_rtMeshArea.reset( new Tr2RaytracingMeshArea( m_index ) );
+		m_rtMeshArea->SetUpdateCustomRtDisplacement( m_updateCustomRtDisplacement );
 	}
 	return m_rtMeshArea.get();
 }

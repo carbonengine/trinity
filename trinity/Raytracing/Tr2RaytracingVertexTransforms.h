@@ -82,13 +82,14 @@ struct Tr2RaytracingVertexTransformInput
 
 // Writes the vertex positions that the BLASes of skinned, morphed and displaced mesh areas are built from.
 //
-// An area's vertices are written by the TransformVertices or TransformVerticesAnimated technique of its material, if it
-// has one (see TransformVertices.fxh), or otherwise, if the area is skinned or morphed, by SkinVertices.fx. Other areas
-// use the LOD's shared static BLAS.
+// An area's vertices are written by the TransformVertices technique of its material, if it has one (see
+// TransformVertices.fxh), or otherwise, if the area is skinned or morphed, by SkinVertices.fx. Other areas use the
+// LOD's shared static BLAS.
 //
 // An area's vertices are written again when its mesh is dirty (bones, morph targets or LOD changed), when its BLAS is
 // outdated (e.g. the owner called MarkBlasOutdated() after changing a displacement parameter), when its shader changes,
-// or every frame for a TransformVerticesAnimated technique. Areas that need the same mesh transformed by the same shader
+// or, with a TransformVertices technique, every frame while the area's update flag is set
+// (Tr2RaytracingMeshArea::SetUpdateCustomRtDisplacement). Areas that need the same mesh transformed by the same shader
 // share one job, so all skinned areas of a mesh share the SkinVertices.fx output.
 //
 // The jobs are batched into as few dispatches as possible: jobs whose shader and material data are the same share a
@@ -137,8 +138,7 @@ private:
 
 	VtxOffsets FindOffsets( unsigned declHandle );
 
-	const BlueSharedString m_techniqueName = BlueSharedString( "TransformVertices" );
-	const BlueSharedString m_animatedTechniqueName = BlueSharedString( "TransformVerticesAnimated" );
+	const BlueSharedString m_customTransformTechniqueName = BlueSharedString( "TransformVertices" );
 
 	// SkinVertices.fx: the shader for skinned and morphed areas whose material has no transform technique.
 	Tr2EffectPtr m_fallbackEffect;

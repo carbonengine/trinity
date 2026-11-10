@@ -45,6 +45,9 @@ public:
 	bool GetGenerateDepthArea() const;
 	void SetGenerateDepthArea( bool generate );
 
+	bool GetUpdateCustomRtDisplacement() const;
+	void SetUpdateCustomRtDisplacement( bool update );
+
 	bool GetUseSHLighting() const;
 
 	void SetMaterial( Tr2EffectPtr mat );
@@ -97,6 +100,8 @@ private:
 	bool m_castShadows;
 	// is this an alpha cutout object
 	bool m_alphaCutout;
+	// Is this area dynamically displaced, and so its BLAS is built from transformed vertices every frame
+	bool m_updateCustomRtDisplacement;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

@@ -135,8 +135,7 @@ struct Tr2RaytracingVertexTransforms::TransformShader
 	uint32_t techniqueIndex = 0;
 	// The technique's compute pass. Null while the fallback is loading.
 	const Tr2Pass* pass = nullptr;
-	// The technique is TransformVerticesAnimated: its output changes every frame.
-	bool isAnimated = false;
+	bool isCustom = false; // true if the shader is not m_fallbackEffect
 };
 
 // An area whose vertices are written this frame.
@@ -253,19 +252,15 @@ void Tr2RaytracingVertexTransforms::Update( const std::vector<Tr2RaytracingVerte
 
 Tr2RaytracingVertexTransforms::TransformShader Tr2RaytracingVertexTransforms::ResolveShader( const Tr2RaytracingVertexTransformInput& input, const TriGeometryResLodData& lod ) const
 {
-	// The material's own technique, once it has loaded. TransformVertices re-runs when its inputs change,
-	// TransformVerticesAnimated every frame. TransformVertices wins if a material has both.
+	// The material's own technique, once it has loaded.
 	if( auto shader = input.material ? input.material->GetShaderStateInterface() : nullptr )
 	{
-		for( bool isAnimated : { false, true } )
+		uint32_t techniqueIndex;
+		if( shader->GetTechniqueIndex( m_customTransformTechniqueName, techniqueIndex ) )
 		{
-			uint32_t techniqueIndex;
-			if( shader->GetTechniqueIndex( isAnimated ? m_animatedTechniqueName : m_techniqueName, techniqueIndex ) )
+			if( auto pass = FindComputePass( *input.material, techniqueIndex ) )
 			{
-				if( auto pass = FindComputePass( *input.material, techniqueIndex ) )
-				{
-					return { input.material, techniqueIndex, pass, isAnimated };
-				}
+				return { input.material, techniqueIndex, pass, true };
 			}
 		}
 	}
@@ -298,7 +293,9 @@ std::vector<Tr2RaytracingVertexTransforms::TransformRequest> Tr2RaytracingVertex
 		{
 			continue; // a static area
 		}
-		if( !input.mesh->m_isDirty && !input.area->IsBlasOutdated() && !shader.isAnimated )
+		// the owner asked for the material's technique to run every frame, e.g. while the displacement is animated
+		const bool updateEveryFrame = shader.isCustom && input.area->GetUpdateCustomRtDisplacement();
+		if( !input.mesh->m_isDirty && !input.area->IsBlasOutdated() && !updateEveryFrame )
 		{
 			continue; // the area's BLAS is up to date
 		}

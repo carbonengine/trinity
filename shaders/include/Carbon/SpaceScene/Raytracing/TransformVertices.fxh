@@ -31,9 +31,10 @@
 //  }
 //
 // A TransformVertices technique runs again when the mesh's bones, morph targets or LOD change, or when the owner calls
-// MarkBlasOutdated() on the area's Tr2RaytracingMeshArea (e.g. after changing a displacement parameter). If the result
-// changes every frame, for example because it depends on time, name the technique TransformVerticesAnimated instead,
-// and it runs every frame. If a material has both, TransformVertices is used.
+// MarkBlasOutdated() on the area's Tr2RaytracingMeshArea (e.g. after changing a displacement parameter). Whether the
+// result changes over time depends on how the material is used, not on the shader, so the mesh area decides: while
+// Tr2MeshArea.updateCustomRtDisplacement is set, the technique runs every frame (e.g. while the displacement is
+// animated). Only areas owned by a Tr2MeshArea have the flag; EveChildInstancedMeshes and EveTurretSet don't yet.
 //
 // One dispatch processes several jobs. A job transforms the vertices of one mesh LOD with one shader, and the mesh's
 // areas that use that shader share it. Each job owns whole thread groups, so all threads of a thread group work on the

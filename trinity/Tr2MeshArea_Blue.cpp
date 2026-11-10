@@ -21,7 +21,10 @@ const Be::ClassInfo* Tr2MeshArea::ExposeToBlue()
 		MAP_ATTRIBUTE( "reversed", m_reversed, "Render mesh triangles in reverse order and with reversed culling order", Be::PERSISTONLY )
 		MAP_PROPERTY( "reversed", IsReversed, SetReversed, "Render mesh triangles in reverse order and with reversed culling order" )
 		MAP_ATTRIBUTE( "useSHLighting", m_useSHLighting, "Use SH lighting instead of full-forward lighting", Be::READWRITE | Be::PERSIST )
-
+		MAP_ATTRIBUTE( "updateCustomRtDisplacement", m_updateCustomRtDisplacement, "If the effect has a TransformVertices technique, run it and refit the ray tracing geometry every frame.\n"
+						"This costs a dispatch and a BLAS refit per frame while toggled, so only set it while the displacement changes", Be::PERSISTONLY )
+		MAP_PROPERTY( "updateCustomRtDisplacement", GetUpdateCustomRtDisplacement, SetUpdateCustomRtDisplacement, "If the effect has a TransformVertices technique, run it and refit the ray tracing geometry every frame.\n"
+						"This costs a dispatch and a BLAS refit per frame while toggled, so only set it while the displacement changes" )
 		MAP_ATTRIBUTE( "effect", m_material, "Shader or Material effect", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
 	EXPOSURE_END()

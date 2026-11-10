@@ -97,6 +97,18 @@ public:
 		return m_blasOutdated || !m_blas.IsValid();
 	}
 
+	// While set, and the area's material has a TransformVertices technique, Tr2RaytracingVertexTransforms runs the
+	// technique and refits the BLAS every frame, e.g. while the displacement is animated. Set by the owner
+	// (Tr2MeshArea::SetUpdateCustomRtDisplacement).
+	void SetUpdateCustomRtDisplacement( bool update )
+	{
+		m_updateCustomRtDisplacement = update;
+	}
+	bool GetUpdateCustomRtDisplacement() const
+	{
+		return m_updateCustomRtDisplacement;
+	}
+
 	// Sets the shader that writes the area's transformed vertices: a material and technique, or no material for an area
 	// that uses the LOD's shared static BLAS. A change marks the BLAS outdated. Called by Tr2RaytracingVertexTransforms
 	// every frame.
@@ -120,6 +132,8 @@ private:
 	uint32_t m_transformTechniqueIndex;
 	const Tr2BufferAL* m_transformedVertices;
 	uint32_t m_transformedVertexOffset;
+	// See SetUpdateCustomRtDisplacement.
+	bool m_updateCustomRtDisplacement = false;
 };
 
 BLUE_CLASS( Tr2RaytracingGeometry ) :
