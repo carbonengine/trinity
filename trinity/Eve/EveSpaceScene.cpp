@@ -2218,7 +2218,7 @@ bool EveSpaceScene::RenderBackgroundPassObjects( const Tr2TextureAL& depthMap, c
 // Description:
 //   Render opaque objects to populate a readable depth stencil.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName )
+void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext, const BlueSharedString& techniqueName, bool includeGBufferBatches )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2296,12 +2296,18 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 		ApplyPerFrameData( renderContext );
 
-		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+		if( includeGBufferBatches )
+		{
+			renderContext.m_esm.ApplyStandardStates( renderingMode );
+			renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
+		}
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_forwardBatches[TRIBATCHTYPE_OPAQUE], techniqueName );
-		renderContext.m_esm.ApplyStandardStates( renderingMode );
-		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		if( includeGBufferBatches )
+		{
+			renderContext.m_esm.ApplyStandardStates( renderingMode );
+			renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], techniqueName );
+		}
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
 		renderContext.RenderBatches( m_forwardBatches[TRIBATCHTYPE_DECAL], techniqueName );
 		renderContext.m_esm.ApplyStandardStates( renderingMode );
@@ -2381,9 +2387,10 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Render the G-buffer batches into albedo, normal, material and velocity, on top of the
-//   depth the depth pass wrote. Batches also write their emissive colour into the scene
-//   colour map, which the lighting pass then adds to; decals blend over it by their alpha.
+//   Render the G-buffer batches into depth, albedo, normal, material and velocity, over
+//   what the depth pass wrote for the forward batches. Batches also write their emissive
+//   colour into the scene colour map, which the lighting pass then adds to; decals blend
+//   over it by their alpha.
 // --------------------------------------------------------------------------------------
 void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext )
 {
@@ -2415,9 +2422,9 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 
 		ApplyPerFrameData( renderContext );
 
-		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
+		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], GBufferTechnique() );
 		renderContext.SetReadOnlyDepth( false );
