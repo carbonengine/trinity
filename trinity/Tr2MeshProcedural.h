@@ -9,6 +9,7 @@
 
 BLUE_CLASS_IMPL( Tr2MeshProcedural )
 class Tr2MeshProcedural : public Tr2MeshBase,
+						  public IInitialize,
 						  public IBlueAsyncResNotifyTarget
 {
 public:
@@ -16,6 +17,8 @@ public:
 
 	Tr2MeshProcedural( IRoot* lockobj = NULL );
 	~Tr2MeshProcedural();
+
+	bool Initialize() override;
 
 	Tr2GeometryProvider* GetGeometryResource() const override;
 	Tr2ProceduralGeometryProvider* GetGeometry();

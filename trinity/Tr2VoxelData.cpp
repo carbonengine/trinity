@@ -245,9 +245,18 @@ Tr2VoxelData::PayloadSnapshot& Tr2VoxelData::PayloadSnapshot::operator=( Payload
 	return *this;
 }
 
+Tr2VoxelData::PayloadSnapshot::operator bool() const
+{
+	return m_voxelData != nullptr;
+}
+
 
 bool Tr2VoxelData::ModifiedChannels::IsChannelModified( size_t channelIndex ) const
 {
+	if( channelIndex >= 64 )
+	{
+		return false;
+	}
 	return ( m_modifiedChannelsBitmask & ( 1ull << channelIndex ) ) != 0;
 }
 
@@ -634,6 +643,17 @@ void Tr2VoxelData::SetBufferAndSize( const char*, unsigned char* buffer, size_t 
 	delete[] initialBuffer;
 }
 
+
+bool IsInside( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord )
+{
+	return coord.x >= 0 && coord.y >= 0 && coord.z >= 0 &&
+		uint32_t( coord.x ) < dims.width && uint32_t( coord.y ) < dims.height && uint32_t( coord.z ) < dims.depth;
+}
+
+int32_t LinearIndex( const Tr2VoxelData::Dimensions& dims, const Tr2VoxelData::Coord& coord )
+{
+	return coord.x + int32_t( dims.width ) * ( coord.y + int32_t( dims.height ) * coord.z );
+}
 
 bool BlueExtractArgument( BlueScriptValue argument, Tr2VoxelData::Dimensions& resultRef, unsigned int argID )
 {

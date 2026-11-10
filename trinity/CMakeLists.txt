@@ -1277,6 +1277,9 @@ set(_SOURCES
     Resources/Tr2TextureLodManager.cpp
     Resources/Tr2TextureLodManager.h
     Resources/Tr2TextureLodManager_Blue.cpp
+    Resources/Tr2VoxelGeometry.cpp
+    Resources/Tr2VoxelGeometry.h
+    Resources/Tr2VoxelGeometry_Blue.cpp
     Resources/TriGeometryRes.cpp
     Resources/TriGeometryRes.h
     Resources/TriGeometryRes_Blue.cpp
@@ -1686,6 +1689,10 @@ set(_SOURCES
     Tr2ShadowMap.cpp
     Tr2ShadowMap.h
     Tr2ShadowMap_Blue.cpp
+    Tr2SignedDistanceField.cpp
+    Tr2SignedDistanceField.h
+    Tr2SurfaceCuts.cpp
+    Tr2SurfaceCuts.h
     Tr2ShLightingManager.cpp
     Tr2ShLightingManager.h
     Tr2ShLightingManager_Blue.cpp
