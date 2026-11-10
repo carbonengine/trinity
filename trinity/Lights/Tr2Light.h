@@ -50,6 +50,8 @@ struct LightData
 	EnumFilter<ShadowQuality> castsShadows;
 	bool isVolumetric;
 
+	Tr2LightTags tags;
+
 	Be::Time startTime;
 };
 
@@ -75,13 +77,13 @@ public:
 
 	EXPOSE_TO_BLUE();
 	Tr2Light( IRoot* lockobj = nullptr );
-	void AddLight( Tr2LightManager & lightManager, CXMMATRIX transform, float scale, const Float4x3* bones = nullptr, size_t boneCount = 0 );
-	void GetLight( Vector3 & position, float& radius, Color& color );
+	void AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, float scale, const Float4x3* bones = nullptr, size_t boneCount = 0 );
+	void GetLight( Vector3& position, float& radius, Color& color );
 	void ChangeLightColor( Color c );
 
 	virtual void Update();
-	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldMatrix, const Float4x3* bones = nullptr, size_t boneCount = 0 );
-	virtual void SetLightData( LightData & baseData );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones = nullptr, size_t boneCount = 0 );
+	virtual void SetLightData( LightData& baseData );
 
 	void SetBoneMatrix( const Float4x3* bones, size_t boneCount );
 	void SetBrightnessMultiplier( float multi );
@@ -89,7 +91,7 @@ public:
 	bool Initialize() override;
 
 	// INotify
-	virtual bool OnModified( Be::Var * value );
+	virtual bool OnModified( Be::Var* value );
 
 	const LightData& GetLightData() const;
 	float GetBrightnessMultiplier() const;
@@ -114,3 +116,4 @@ TYPEDEF_BLUECLASS( Tr2Light );
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
 extern const Be::VarChooser LightingQualityFilterChooser[];
+extern const Be::VarChooser ReflectionQualityFilterChooser[];

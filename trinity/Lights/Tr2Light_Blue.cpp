@@ -21,6 +21,15 @@ const Be::VarChooser LightingQualityFilterChooser[] = {
 };
 BLUE_REGISTER_ENUM_EX( "LightingQualityFilter", uint8_t, LightingQualityFilterChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
+const Be::VarChooser ReflectionQualityFilterChooser[] = {
+	{ "Low", BeCast( 1u << static_cast<uint32_t>( ReflectionQuality::LOW ) ), "Active when reflection quality is Low." },
+	{ "Medium", BeCast( 1u << static_cast<uint32_t>( ReflectionQuality::MEDIUM ) ), "Active when reflection quality is Medium." },
+	{ "High", BeCast( 1u << static_cast<uint32_t>( ReflectionQuality::HIGH ) ), "Active when reflection quality is High." },
+	{ "Ultra", BeCast( 1u << static_cast<uint32_t>( ReflectionQuality::ULTRA ) ), "Active when reflection quality is Ultra." },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "ReflectionQualityFilter", uint8_t, ReflectionQualityFilterChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
 
 const Be::VarChooser Tr2LightFlagChooser[] = {
 	{ "AFFECTS_SURFACES", BeCast( Tr2LightManager::FLAG_AFFECTS_SURFACES ), "Affects surfaces" },
