@@ -336,7 +336,7 @@ Vector3 ClosestPointOnSegment( const Vector3& p, const Vector3& a, const Vector3
 }
 }
 
-void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, std::vector<uint32_t>& out ) const
+void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, const Vector3& projectionAxis, float minFacing, std::vector<uint32_t>& out ) const
 {
 	if( lodIndex >= lods.size() )
 	{
@@ -347,6 +347,15 @@ void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const V
 		const Vector3* v0 = &lod.positions[tri[0]];
 		const Vector3* v1 = &lod.positions[tri[1]];
 		const Vector3* v2 = &lod.positions[tri[2]];
+		if( minFacing > 0.f )
+		{
+			Vector3 faceNormal = Cross( *v1 - *v0, *v2 - *v0 );
+			float length = Length( faceNormal );
+			if( length < 1e-12f || std::abs( Dot( faceNormal, projectionAxis ) ) < minFacing * length )
+			{
+				return;
+			}
+		}
 		if( IntersectTriangleAABB( v0, v1, v2, aabbMin, aabbMax ) && IntersectTriangleOrientedBox( v0, v1, v2, inverseDecalMatrix ) )
 		{
 			out.insert( out.end(), tri, tri + 3 );

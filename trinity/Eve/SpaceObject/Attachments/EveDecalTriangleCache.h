@@ -55,8 +55,12 @@ struct DecalTriangleCache
 	 * @brief Appends the indices of the triangles of LOD lodIndex that intersect the decal volume.
 	 * @param aabbMin, aabbMax Bounds of the decal volume in the mesh's vertex space.
 	 * @param inverseDecalMatrix Maps the mesh's vertex space into decal space (the volume is [-1, 1]^3).
+	 * @param projectionAxis Unit direction the decal projects along, in the mesh's vertex space.
+	 * @param minFacing Triangles whose face normal is closer to perpendicular to projectionAxis than
+	 *   this (|cos| of the angle between them) are left out: the decal's texture would smear along
+	 *   them. Either winding counts. Pass a value <= 0 to keep every triangle.
 	 */
-	void Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, std::vector<uint32_t>& out ) const;
+	void Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, const Vector3& projectionAxis, float minFacing, std::vector<uint32_t>& out ) const;
 
 	/**
 	 * @brief Finds the point on a hull edge of LOD lodIndex nearest to point, within radius.

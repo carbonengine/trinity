@@ -972,12 +972,19 @@ std::shared_ptr<MeshDecalData> EveSpaceObjectDecal::BuildDecalGeometryCached( Tr
 		return nullptr;
 	}
 
+	// faces more than ~66 degrees off the projection axis would smear the decal's texture across
+	// them; leaving them out still lets a decal on an edge (45 degrees to each face) wrap it
+	constexpr float MIN_FACING = 0.4f;
+	Vector3 projectionAxis( decalMatrix._11, decalMatrix._12, decalMatrix._13 );
+	float axisLength = Length( projectionAxis );
+	projectionAxis = axisLength > 0.f ? projectionAxis / axisLength : Vector3( 1.f, 0.f, 0.f );
+
 	std::vector<uint32_t> allIndices;
 	for( size_t i = 0; i < meshData->m_lods.size(); ++i )
 	{
 		MeshDecalLodData lod;
 		lod.m_startIndex = uint32_t( allIndices.size() );
-		cache->Query( i, aabbMin, aabbMax, inverseDecalMatrix, allIndices );
+		cache->Query( i, aabbMin, aabbMax, inverseDecalMatrix, projectionAxis, MIN_FACING, allIndices );
 		lod.m_primitiveCount = ( uint32_t( allIndices.size() ) - lod.m_startIndex ) / 3;
 		newDecal->m_lods.push_back( lod );
 	}
