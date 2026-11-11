@@ -39,6 +39,7 @@ public:
 	void GetLocalToWorldTransform( Matrix & transform ) const override;
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
+	bool IsAlwaysOn() const override;
 
 
 	//////////////////////////////////////////////////////////////////////////////////////
