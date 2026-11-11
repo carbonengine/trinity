@@ -1579,35 +1579,43 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 	}
 
 	// are decals visible?
-	if( m_mesh && m_isMeshVisible )
+	if( !m_isMeshVisible || m_decals.empty() )
 	{
-		TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-		if( geometryRes )
+		return;
+	}
+
+	TriGeometryResPtr geometryRes = m_mesh ? m_mesh->GetGeometryResource() : nullptr;
+	// geometry the object draws through its children (a modular object's parts, or the
+	// instanced meshes of level geometry that has only a placeholder mesh of its own)
+	std::vector<EveChildGeometry> parts;
+	std::vector<EveChildGeometryArea> areas;
+	for( auto& child : m_effectChildren )
+	{
+		child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), parts, areas );
+	}
+	if( !parts.empty() && geometryRes )
+	{
+		// a runtime decal goes onto everything the object draws, its own mesh included
+		EveChildGeometry own;
+		own.geometry = geometryRes;
+		own.childToObject = IdentityMatrix();
+		parts.insert( parts.begin(), own );
+	}
+
+	DecalMeshCache meshCache;
+	for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
+	{
+		// a baked decal, or one built by the buildDecalBuffers setting, belongs to the object's own mesh
+		if( parts.empty() || ( geometryRes && !( *it )->HasDynamicIndexBuffers() ) )
 		{
-			DecalMeshCache meshCache;
-			// runn over every decal and update it
-			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+			if( geometryRes )
 			{
-				// now prep to get the renderables
 				( *it )->GetRenderables( renderables, meshCache, geometryRes, m_meshScreenSize );
 			}
 		}
-	}
-	else if( !m_mesh && m_isMeshVisible && !m_decals.empty() )
-	{
-		// modular objects have no mesh of their own: project the decals onto the parts' geometry
-		std::vector<EveChildGeometry> parts;
-		std::vector<EveChildGeometryArea> areas;
-		for( auto& child : m_effectChildren )
+		else
 		{
-			child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), parts, areas );
-		}
-		if( !parts.empty() )
-		{
-			for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
-			{
-				( *it )->GetModularRenderables( renderables, parts, m_meshScreenSize, m_boundingSphereRadius );
-			}
+			( *it )->GetModularRenderables( renderables, parts, m_meshScreenSize, m_boundingSphereRadius );
 		}
 	}
 }

@@ -142,6 +142,12 @@ public:
 	 */
 	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius );
 
+	// true if this decal builds its own geometry at runtime (dynamicIndexBuffers)
+	bool HasDynamicIndexBuffers() const
+	{
+		return m_dynamicIndexBuffers;
+	}
+
 	// access position etc.
 	const Vector3& GetPosition() const;
 	void SetPosition( const Vector3& pos );
