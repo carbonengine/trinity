@@ -35,6 +35,7 @@
 #include "Controllers/ITr2Controller.h"
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
 #include "Eve/SpaceObject/Children/EveChildMesh.h"
+#include "Eve/SpaceObject/Attachments/EveDecalTriangleCache.h"
 #include "Shader/Tr2Shader.h"
 
 #include "../../Tr2RingBuffer.h"
@@ -2824,6 +2825,82 @@ bool EveSpaceObject2::GetDamageLocatorBindPosition( int index, Vector3& out ) co
 
 	out = ( *damageLocators )[index].position;
 	return true;
+}
+
+std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge( const Vector3& position, float radius )
+{
+	// cosine of the fold, between two faces' normals, that counts as an edge
+	constexpr float SHARP_EDGE_COS = 0.866f;
+
+	std::vector<EveChildGeometry> parts;
+	std::vector<EveChildGeometryArea> areas;
+	if( m_mesh && m_mesh->GetGeometryResource() )
+	{
+		EveChildGeometry own;
+		own.geometry = m_mesh->GetGeometryResource();
+		own.childToObject = IdentityMatrix();
+		parts.push_back( own );
+	}
+	for( auto& child : m_effectChildren )
+	{
+		child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), parts, areas );
+	}
+
+	bool found = false;
+	float bestDistance = radius;
+	Vector3 bestPosition = position;
+	Vector3 bestNormal( 0.f, 0.f, 0.f );
+	for( const auto& part : parts )
+	{
+		TriGeometryRes* geometry = part.geometry;
+		if( !geometry || !geometry->IsGood() || !geometry->GetMeshCount() )
+		{
+			continue;
+		}
+		TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
+		if( !meshData )
+		{
+			continue;
+		}
+		const Matrix& m = part.childToObject;
+		float scale = std::max( { Length( Vector3( m._11, m._12, m._13 ) ), Length( Vector3( m._21, m._22, m._23 ) ), Length( Vector3( m._31, m._32, m._33 ) ) } );
+		if( scale <= 0.f )
+		{
+			continue;
+		}
+		Matrix objectToPart = Inverse( m );
+		Vector3 local = XMVector3TransformCoord( position, objectToPart );
+		float localRadius = bestDistance / scale;
+		// cheap reject: the part's bounds are further away than the best edge so far
+		if( local.x + localRadius < meshData->m_minBounds.x || local.x - localRadius > meshData->m_maxBounds.x ||
+			local.y + localRadius < meshData->m_minBounds.y || local.y - localRadius > meshData->m_maxBounds.y ||
+			local.z + localRadius < meshData->m_minBounds.z || local.z - localRadius > meshData->m_maxBounds.z )
+		{
+			continue;
+		}
+		const DecalTriangleCache* cache = DecalTriangleCache::Get( meshData );
+		if( !cache )
+		{
+			continue;
+		}
+		Vector3 edgePosition, edgeNormal;
+		float localDistance;
+		if( !cache->FindNearestEdge( 0, local, localRadius, SHARP_EDGE_COS, edgePosition, edgeNormal, localDistance ) )
+		{
+			continue;
+		}
+		Vector3 objectPosition = XMVector3TransformCoord( edgePosition, m );
+		float distance = Length( objectPosition - position );
+		if( distance <= bestDistance )
+		{
+			found = true;
+			bestDistance = distance;
+			bestPosition = objectPosition;
+			// normals take the inverse transpose of the part transform
+			bestNormal = Normalize( Vector3( XMVector3TransformNormal( edgeNormal, Transpose( objectToPart ) ) ) );
+		}
+	}
+	return std::make_pair( found, std::make_pair( bestPosition, bestNormal ) );
 }
 
 Vector3 EveSpaceObject2::GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName )

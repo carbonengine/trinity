@@ -549,6 +549,15 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param position: position of target\n"
 			":param locatorSetName: name of locator set \n" )
 		MAP_METHOD_AND_WRAP(
+			"GetNearestHullEdge",
+			GetNearestHullEdge,
+			"( position, radius ) -> ( found, ( position, normal ) )\n"
+			"Nearest point on an edge of the object's geometry (a fold sharper than 30 degrees, or an open edge), "
+			"in object space, with the normal a decal there should project along to wrap over the edge. "
+			"Not found while the geometry's triangle cache is still being built.\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
 			"GetLocatorPositionFromSet",
 			GetLocatorPositionFromSet,
 			"locator position from a set Specified by name\n"

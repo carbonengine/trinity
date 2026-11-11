@@ -5,6 +5,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Shader/Tr2EffectStateManager.h"
 #include <thread>
+#include <unordered_map>
 
 namespace
 {
@@ -234,14 +235,12 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	return nullptr;
 }
 
-void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, std::vector<uint32_t>& out ) const
+namespace
 {
-	if( lodIndex >= lods.size() )
-	{
-		return;
-	}
-	const Lod& lod = lods[lodIndex];
-
+// Calls fn( triangle ) for each triangle of lod whose bounds touch [aabbMin, aabbMax].
+template<typename Fn>
+void ForEachTriangleNear( const DecalTriangleCache::Lod& lod, const Vector3& aabbMin, const Vector3& aabbMax, Fn&& fn )
+{
 	for( const auto& level : lod.levels )
 	{
 		// a triangle stored here is no larger than a cell, so its centre is within half a cell of the box
@@ -263,24 +262,182 @@ void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const V
 				for( uint32_t t = lod.cellStart[row + x0]; t < lod.cellStart[row + x1 + 1]; ++t )
 				{
 					const uint32_t* tri = &lod.indices[size_t( t ) * 3];
-					const Vector3* v0 = &lod.positions[tri[0]];
-					const Vector3* v1 = &lod.positions[tri[1]];
-					const Vector3* v2 = &lod.positions[tri[2]];
-					// cheap bounds reject before the exact tests
-					if( std::max( { v0->x, v1->x, v2->x } ) < aabbMin.x || std::min( { v0->x, v1->x, v2->x } ) > aabbMax.x ||
-						std::max( { v0->y, v1->y, v2->y } ) < aabbMin.y || std::min( { v0->y, v1->y, v2->y } ) > aabbMax.y ||
-						std::max( { v0->z, v1->z, v2->z } ) < aabbMin.z || std::min( { v0->z, v1->z, v2->z } ) > aabbMax.z )
+					const Vector3& v0 = lod.positions[tri[0]];
+					const Vector3& v1 = lod.positions[tri[1]];
+					const Vector3& v2 = lod.positions[tri[2]];
+					// cheap bounds reject before any exact test
+					if( std::max( { v0.x, v1.x, v2.x } ) < aabbMin.x || std::min( { v0.x, v1.x, v2.x } ) > aabbMax.x ||
+						std::max( { v0.y, v1.y, v2.y } ) < aabbMin.y || std::min( { v0.y, v1.y, v2.y } ) > aabbMax.y ||
+						std::max( { v0.z, v1.z, v2.z } ) < aabbMin.z || std::min( { v0.z, v1.z, v2.z } ) > aabbMax.z )
 					{
 						continue;
 					}
-					if( IntersectTriangleAABB( v0, v1, v2, aabbMin, aabbMax ) && IntersectTriangleOrientedBox( v0, v1, v2, inverseDecalMatrix ) )
-					{
-						out.insert( out.end(), tri, tri + 3 );
-					}
+					fn( tri );
 				}
 			}
 		}
 	}
+}
+
+// A vertex position rounded to a tenth of a millimetre, so split vertices compare equal
+struct VertexKey
+{
+	int64_t x, y, z;
+	bool operator==( const VertexKey& other ) const
+	{
+		return x == other.x && y == other.y && z == other.z;
+	}
+	bool operator<( const VertexKey& other ) const
+	{
+		return x != other.x ? x < other.x : y != other.y ? y < other.y : z < other.z;
+	}
+};
+
+VertexKey MakeKey( const Vector3& p )
+{
+	return { int64_t( std::llround( p.x * 1e4f ) ), int64_t( std::llround( p.y * 1e4f ) ), int64_t( std::llround( p.z * 1e4f ) ) };
+}
+
+struct EdgeKey
+{
+	VertexKey a, b;
+	bool operator==( const EdgeKey& other ) const
+	{
+		return a == other.a && b == other.b;
+	}
+};
+
+struct EdgeKeyHash
+{
+	size_t operator()( const EdgeKey& key ) const
+	{
+		size_t h = 1469598103934665603ull;
+		for( int64_t v : { key.a.x, key.a.y, key.a.z, key.b.x, key.b.y, key.b.z } )
+		{
+			h = ( h ^ size_t( v ) ) * 1099511628211ull;
+		}
+		return h;
+	}
+};
+
+struct EdgeFaces
+{
+	Vector3 p0, p1;
+	Vector3 normals[2];
+	uint32_t count = 0;
+};
+
+Vector3 ClosestPointOnSegment( const Vector3& p, const Vector3& a, const Vector3& b )
+{
+	Vector3 ab = b - a;
+	float lengthSq = Dot( ab, ab );
+	float t = lengthSq > 0.f ? std::clamp( Dot( p - a, ab ) / lengthSq, 0.f, 1.f ) : 0.f;
+	return a + ab * t;
+}
+}
+
+void DecalTriangleCache::Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, std::vector<uint32_t>& out ) const
+{
+	if( lodIndex >= lods.size() )
+	{
+		return;
+	}
+	const Lod& lod = lods[lodIndex];
+	ForEachTriangleNear( lod, aabbMin, aabbMax, [&]( const uint32_t* tri ) {
+		const Vector3* v0 = &lod.positions[tri[0]];
+		const Vector3* v1 = &lod.positions[tri[1]];
+		const Vector3* v2 = &lod.positions[tri[2]];
+		if( IntersectTriangleAABB( v0, v1, v2, aabbMin, aabbMax ) && IntersectTriangleOrientedBox( v0, v1, v2, inverseDecalMatrix ) )
+		{
+			out.insert( out.end(), tri, tri + 3 );
+		}
+	} );
+}
+
+bool DecalTriangleCache::FindNearestEdge( size_t lodIndex, const Vector3& point, float radius, float sharpCos, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const
+{
+	if( lodIndex >= lods.size() || radius <= 0.f )
+	{
+		return false;
+	}
+	const Lod& lod = lods[lodIndex];
+	const Vector3 extent( radius, radius, radius );
+
+	// Every edge that comes within radius of point lies in this box, and so does every
+	// triangle on either side of it: an edge's faces are all gathered, so a fold is never
+	// mistaken for an open edge because its other face was out of the query.
+	std::unordered_map<EdgeKey, EdgeFaces, EdgeKeyHash> edges;
+	ForEachTriangleNear( lod, point - extent, point + extent, [&]( const uint32_t* tri ) {
+		const Vector3& v0 = lod.positions[tri[0]];
+		const Vector3& v1 = lod.positions[tri[1]];
+		const Vector3& v2 = lod.positions[tri[2]];
+		Vector3 faceNormal = Cross( v1 - v0, v2 - v0 );
+		float area = Length( faceNormal );
+		if( area < 1e-8f )
+		{
+			return;
+		}
+		faceNormal = faceNormal / area;
+		const Vector3* corners[3] = { &v0, &v1, &v2 };
+		for( int i = 0; i < 3; ++i )
+		{
+			const Vector3& a = *corners[i];
+			const Vector3& b = *corners[( i + 1 ) % 3];
+			VertexKey ka = MakeKey( a );
+			VertexKey kb = MakeKey( b );
+			if( ka == kb )
+			{
+				continue;
+			}
+			EdgeKey key = kb < ka ? EdgeKey{ kb, ka } : EdgeKey{ ka, kb };
+			EdgeFaces& faces = edges[key];
+			if( faces.count == 0 )
+			{
+				faces.p0 = a;
+				faces.p1 = b;
+			}
+			if( faces.count < 2 )
+			{
+				faces.normals[faces.count] = faceNormal;
+			}
+			++faces.count;
+		}
+	} );
+
+	bool found = false;
+	float bestDistance = radius;
+	for( const auto& entry : edges )
+	{
+		const EdgeFaces& faces = entry.second;
+		Vector3 normal;
+		if( faces.count == 1 )
+		{
+			normal = faces.normals[0];
+		}
+		else if( faces.count == 2 && Dot( faces.normals[0], faces.normals[1] ) < sharpCos )
+		{
+			normal = faces.normals[0] + faces.normals[1];
+			float length = Length( normal );
+			// two faces folded flat onto each other (a thin fin): either face will do
+			normal = length > 1e-4f ? normal / length : faces.normals[0];
+		}
+		else
+		{
+			// a smooth fold, or a non-manifold edge shared by more than two triangles
+			continue;
+		}
+		Vector3 closest = ClosestPointOnSegment( point, faces.p0, faces.p1 );
+		float distance = Length( closest - point );
+		if( distance <= bestDistance )
+		{
+			found = true;
+			bestDistance = distance;
+			outPosition = closest;
+			outNormal = normal;
+		}
+	}
+	outDistance = bestDistance;
+	return found;
 }
 
 size_t DecalTriangleCache::GetMemoryUsage() const

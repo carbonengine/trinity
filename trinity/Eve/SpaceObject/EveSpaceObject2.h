@@ -511,6 +511,16 @@ public:
 	int GetClosestLocatorIndex( const Vector3* position, BlueSharedString locatorSetName );
 	unsigned int GetLocatorCount( BlueSharedString locatorSetName ) const;
 	Vector3 GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
+
+	/**
+	 * @brief The point on an edge of the object's own geometry (its mesh, or a modular object's
+	 * parts) nearest to position, and the normal to project a decal along so it wraps the edge.
+	 * @see DecalTriangleCache::FindNearestEdge
+	 * @param position, radius Object space; only edges within radius are considered.
+	 * @return (found, (position, normal)) in object space. Not found while a mesh's triangle
+	 *   cache is still being built, which the first call on that mesh starts.
+	 */
+	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestHullEdge( const Vector3& position, float radius );
 	Vector3 GetLocatorRotationFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorPosition( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorDirection( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );

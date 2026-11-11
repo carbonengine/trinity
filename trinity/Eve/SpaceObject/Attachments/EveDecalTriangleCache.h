@@ -58,5 +58,17 @@ struct DecalTriangleCache
 	 */
 	void Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, std::vector<uint32_t>& out ) const;
 
+	/**
+	 * @brief Finds the point on a hull edge of LOD lodIndex nearest to point, within radius.
+	 *
+	 * An edge is where two triangles meet at a fold sharper than sharpCos (the cosine of the
+	 * angle between their face normals), or an open edge with a triangle on one side only.
+	 * Vertices are matched by position, so the split vertices of a hard edge still join up.
+	 * @param outNormal The two faces' normals averaged (a face's own on an open edge): a
+	 *   decal projected along it wraps over the edge onto both faces.
+	 * @return false if no edge lies within radius.
+	 */
+	bool FindNearestEdge( size_t lodIndex, const Vector3& point, float radius, float sharpCos, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const;
+
 	size_t GetMemoryUsage() const;
 };
