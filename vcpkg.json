@@ -7,7 +7,7 @@
     },
     {
       "name": "carbon-core",
-      "version>=": "3.0.0"
+      "version>=": "3.2.0"
     },
     {
       "name": "carbon-destiny",
@@ -111,7 +111,7 @@
     },
     "dx11": {
       "description": "Create DirectX 11 targets",
-       "supports": "windows & x64",
+      "supports": "windows & x64",
       "dependencies": [
         {
           "name": "directx-dxc",
@@ -132,7 +132,11 @@
         {
           "name": "nvidia-streamline",
           "version>=": "2.8.0",
-          "features":["dlss-fg","dlss-sr","nis" ]
+          "features": [
+            "dlss-fg",
+            "dlss-sr",
+            "nis"
+          ]
         }
       ]
     },
@@ -163,7 +167,12 @@
         {
           "name": "nvidia-streamline",
           "version>=": "2.8.0",
-          "features":["dlss-fg","dlss-sr","nis","reflex" ]
+          "features": [
+            "dlss-fg",
+            "dlss-sr",
+            "nis",
+            "reflex"
+          ]
         },
         {
           "name": "intel-xess",
@@ -194,7 +203,7 @@
   "overrides": [
     {
       "name": "openssl",
-      "version": "1.1.1k#8"
+      "version": "3.6.5#2"
     },
     {
       "name": "libpng",

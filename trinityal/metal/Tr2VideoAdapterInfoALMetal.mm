@@ -114,7 +114,7 @@ io_service_t IOServicePortFromCGDisplayID( CGDirectDisplayID displayID )
 	io_service_t serv, servicePort = 0;
 
 	CFMutableDictionaryRef matching = IOServiceMatching( "IODisplayConnect" );
-	if( IOServiceGetMatchingServices( kIOMasterPortDefault, matching, &iter ) )
+	if( IOServiceGetMatchingServices( MACH_PORT_NULL, matching, &iter ) )
 	{
 		return 0;
 	}
@@ -181,7 +181,7 @@ void RefreshDisplays()
 	if( uint64_t regID = [device respondsToSelector:@selector( registryID )] ? device.registryID : 0 )
 	{
 		if( io_registry_entry_t entry =
-				IOServiceGetMatchingService( kIOMasterPortDefault, IORegistryEntryIDMatching( regID ) ) )
+				IOServiceGetMatchingService( MACH_PORT_NULL, IORegistryEntryIDMatching( regID ) ) )
 		{
 			io_registry_entry_t parent;
 			if( IORegistryEntryGetParentEntry( entry, kIOServicePlane, &parent ) == kIOReturnSuccess )
