@@ -237,6 +237,10 @@ private:
 	// the geometry can be frozen
 	bool m_isGeometryFrozen;
 
+	// build the index buffer at runtime even when g_buildDecalBuffers is off; the buffer is then owned by
+	// this decal instead of being cached on the mesh
+	bool m_dynamicIndexBuffers;
+
 	// A part of a modular parent that the decal may project onto
 	struct PartTarget
 	{

@@ -51,6 +51,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_minBounds( 0, 0, 0 ),
 	m_maxBounds( 0, 0, 0 ),
 	m_isGeometryFrozen( false ),
+	m_dynamicIndexBuffers( false ),
 	m_usePartTargets( false )
 {
 	// init
@@ -217,6 +218,11 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		if( HasStaticIndexBuffers() )
 		{
 			CreateStaticIndexBuffers( geomRes );
+		}
+		else if( m_dynamicIndexBuffers )
+		{
+			// runtime decal: owned here, never added to the mesh's shared decal cache (that cache only grows)
+			m_decalGeometry = mesh && geomRes->IsGood() ? BuildDecalGeometry( mesh, meshCache, m_decalMatrix, m_inverseDecalMatrix ) : nullptr;
 		}
 		else if( g_buildDecalBuffers )
 		{
@@ -806,6 +812,19 @@ std::shared_ptr<MeshDecalData> EveSpaceObjectDecal::BuildDecalGeometry( TriGeome
 	newDecal->m_inverseDecalMatrix = inverseDecalMatrix;
 	newDecal->m_lodMask = meshData->m_lodMask;
 
+	Vector3 aabbMin( -1.f, -1.f, -1.f );
+	Vector3 aabbMax( 1.f, 1.f, 1.f );
+	BoundingBoxTransform( aabbMin, aabbMax, decalMatrix );
+
+	// a decal volume outside the mesh bounds hits nothing: skip reading the buffers back
+	if( aabbMin.x > meshData->m_maxBounds.x || aabbMax.x < meshData->m_minBounds.x ||
+		aabbMin.y > meshData->m_maxBounds.y || aabbMax.y < meshData->m_minBounds.y ||
+		aabbMin.z > meshData->m_maxBounds.z || aabbMax.z < meshData->m_minBounds.z )
+	{
+		newDecal->m_lods.resize( meshData->m_lods.size() );
+		return newDecal;
+	}
+
 	// is vertex compressed to 16bit floats?
 	bool vertexPositionCompressed = false;
 	Tr2VertexDefinition vd;
@@ -816,10 +835,6 @@ std::shared_ptr<MeshDecalData> EveSpaceObjectDecal::BuildDecalGeometry( TriGeome
 			vertexPositionCompressed = pos->m_dataType == vd.FLOAT16_4;
 		}
 	}
-
-	Vector3 aabbMin( -1.f, -1.f, -1.f );
-	Vector3 aabbMax( 1.f, 1.f, 1.f );
-	BoundingBoxTransform( aabbMin, aabbMax, decalMatrix );
 
 	for( int i = 0; i < static_cast<int>( meshData->m_lods.size() ); i++ )
 	{

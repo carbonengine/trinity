@@ -26,6 +26,12 @@ const Be::ClassInfo* EveSpaceObjectDecal::ExposeToBlue()
 		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "min size on screen in pixels before the decal is LODed out", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "decalEffect", m_decalEffect, "The effect used to draw the decal", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"dynamicIndexBuffers",
+			m_dynamicIndexBuffers,
+			"Build the decal geometry from the parent mesh at runtime, whatever the buildDecalBuffers setting says. "
+			"For runtime decals (impacts, scratches) that have no baked index buffers; ignored when static index buffers are set.",
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "batchType", m_batchType, "Batch type (render pass) used to render the decal", Be::READ )
 
