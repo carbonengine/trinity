@@ -158,6 +158,98 @@ bool Tr2SignedDistanceField::Max( const Tr2SignedDistanceField& other )
 	return true;
 }
 
+const Tr2VoxelData::Dimensions& Tr2SignedDistanceField::GetDimensions() const
+{
+	return m_dimensions;
+}
+
+void Tr2SignedDistanceField::DownSample()
+{
+	if( m_sdf.empty() )
+	{
+		return;
+	}
+
+	const int32_t srcW = int32_t( m_dimensions.width );
+	const int32_t srcH = int32_t( m_dimensions.height );
+	const int32_t srcD = int32_t( m_dimensions.depth );
+
+	if( srcW <= 0 || srcH <= 0 || srcD <= 0 )
+	{
+		return;
+	}
+
+	const int32_t dstW = std::max<int32_t>( 1, ( srcW + 1 ) / 2 );
+	const int32_t dstH = std::max<int32_t>( 1, ( srcH + 1 ) / 2 );
+	const int32_t dstD = std::max<int32_t>( 1, ( srcD + 1 ) / 2 );
+
+	if( dstW == srcW && dstH == srcH && dstD == srcD )
+	{
+		return;
+	}
+
+	auto srcIndex = [srcW, srcH]( int32_t x, int32_t y, int32_t z ) -> size_t {
+		return size_t( x ) + size_t( srcW ) * ( size_t( y ) + size_t( srcH ) * size_t( z ) );
+	};
+
+	std::vector<float> downsampled;
+	downsampled.resize( size_t( dstW ) * dstH * dstD );
+
+	for( int32_t z = 0; z < dstD; ++z )
+	{
+		for( int32_t y = 0; y < dstH; ++y )
+		{
+			for( int32_t x = 0; x < dstW; ++x )
+			{
+				const int32_t sx = x * 2;
+				const int32_t sy = y * 2;
+				const int32_t sz = z * 2;
+
+				float sum = 0.0f;
+				int32_t count = 0;
+
+				for( int32_t oz = 0; oz < 2; ++oz )
+				{
+					const int32_t iz = sz + oz;
+					if( iz >= srcD )
+					{
+						continue;
+					}
+
+					for( int32_t oy = 0; oy < 2; ++oy )
+					{
+						const int32_t iy = sy + oy;
+						if( iy >= srcH )
+						{
+							continue;
+						}
+
+						for( int32_t ox = 0; ox < 2; ++ox )
+						{
+							const int32_t ix = sx + ox;
+							if( ix >= srcW )
+							{
+								continue;
+							}
+
+							sum += m_sdf[srcIndex( ix, iy, iz )];
+							++count;
+						}
+					}
+				}
+
+				downsampled[size_t( x ) + size_t( dstW ) * ( size_t( y ) + size_t( dstH ) * size_t( z ) )] =
+					count > 0 ? ( sum / float( count ) ) : s_deepEmpty;
+			}
+		}
+	}
+
+	m_sdf.swap( downsampled );
+	m_dimensions.width = Tr2VoxelData::CoordType( dstW );
+	m_dimensions.height = Tr2VoxelData::CoordType( dstH );
+	m_dimensions.depth = Tr2VoxelData::CoordType( dstD );
+}
+
 bool Tr2SignedDistanceField::IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type )
 {
 	return type.elementCount == 1 && ( type.type == Tr2VoxelDataType::Float || ( type.type == Tr2VoxelDataType::Int8 && type.normalized ) );

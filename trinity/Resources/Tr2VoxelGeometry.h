@@ -77,6 +77,9 @@ public:
 	uint32_t GetRelaxIterations() const;
 	void SetRelaxIterations( uint32_t relaxIterations );
 
+	uint32_t GetLodLevels() const;
+	void SetLodLevels( uint32_t lodLevels );
+
 	// Return type should have been `Method`, but BlueExposure can't handle that.
 	uint32_t GetMethod() const;
 	void SetMethod( Method method );
@@ -138,6 +141,7 @@ private:
 	float m_facetMaxCut = 0.3f;
 	float m_cleaveDepth = 0.f;
 	EnumFilter<Tr2VoxelGeometryComponents> m_components;
+	uint32_t m_lodLevels = 1;
 	bool m_packedTangents = false;
 	bool m_rebuildPending = false;
 	int32_t m_buildLock = 0;

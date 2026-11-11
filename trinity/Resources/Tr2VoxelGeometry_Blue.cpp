@@ -73,6 +73,8 @@ const Be::ClassInfo* Tr2VoxelGeometry::ExposeToBlue()
 		MAP_ATTRIBUTE( "relaxIterations", m_relaxIterations, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "relaxIterations", GetRelaxIterations, SetRelaxIterations, "Number of relaxation iterations for smoothing\n\n:jessica-group: Shape" )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "components", m_components.m_filter, "Filter for vertex components (see trinity.Tr2VoxelGeometryComponents)\n\n:jessica-group: Output", Be::READWRITE | Be::NOTIFY | Be::PERSIST, Tr2VoxelGeometryComponentsChooser )
+		MAP_ATTRIBUTE( "lodLevels", m_lodLevels, "", Be::PERSISTONLY )
+		MAP_PROPERTY( "lodLevels", GetLodLevels, SetLodLevels, "Maximum number of LOD levels generated\n\n:jessica-group: Output" )
 		MAP_ATTRIBUTE( "packedTangents", m_packedTangents, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "packedTangents", GetPackedTangents, SetPackedTangents, "Whether to pack tangents\n\n:jessica-group: Output" )
 

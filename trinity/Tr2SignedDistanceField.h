@@ -100,6 +100,18 @@ public:
 	bool Max( const Tr2SignedDistanceField& other );
 
 	/**
+	 * @brief Gets the dimensions of the signed distance field grid.
+	 * @return A reference to the Dimensions object representing the grid dimensions.
+	 */
+	[[nodiscard]] const Tr2VoxelData::Dimensions& GetDimensions() const;
+
+	/**
+	 * @brief Down-samples the signed distance field by a factor of 2 in each dimension, reducing the resolution of the field. 
+	 * The resulting field will have half the width, height, and depth of the original field.
+	 */
+	void DownSample();
+
+	/**
 	 * @brief Checks whether a voxel payload type is a valid SDF channel type.
 	 * @param type The payload type value to validate.
 	 * @return true if the payload type is valid for an SDF channel; otherwise, false.
