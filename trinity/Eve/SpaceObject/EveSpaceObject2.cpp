@@ -1603,10 +1603,9 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 		}
 		if( !parts.empty() )
 		{
-			DecalMeshCacheMap meshCaches;
 			for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
-				( *it )->GetModularRenderables( renderables, meshCaches, parts, m_meshScreenSize, m_boundingSphereRadius );
+				( *it )->GetModularRenderables( renderables, parts, m_meshScreenSize, m_boundingSphereRadius );
 			}
 		}
 	}

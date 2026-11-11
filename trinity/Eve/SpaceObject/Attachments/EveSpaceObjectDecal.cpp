@@ -15,6 +15,7 @@
 #include "Tr2InstancedMesh.h"
 #include "TriSettingsRegistrar.h"
 #include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
+#include "EveDecalTriangleCache.h"
 
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
@@ -222,7 +223,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		else if( m_dynamicIndexBuffers )
 		{
 			// runtime decal: owned here, never added to the mesh's shared decal cache (that cache only grows)
-			m_decalGeometry = mesh && geomRes->IsGood() ? BuildDecalGeometry( mesh, meshCache, m_decalMatrix, m_inverseDecalMatrix ) : nullptr;
+			m_decalGeometry = mesh && geomRes->IsGood() ? BuildDecalGeometryCached( mesh, m_decalMatrix, m_inverseDecalMatrix ) : nullptr;
 		}
 		else if( g_buildDecalBuffers )
 		{
@@ -247,7 +248,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 	renderables.push_back( this );
 }
 
-void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& renderables, DecalMeshCacheMap& meshCaches, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius )
+void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius )
 {
 	if( !m_usePartTargets )
 	{
@@ -323,7 +324,7 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 
 		if( !found->decalGeometry || found->decalGeometry->m_lodMask != meshData->m_lodMask )
 		{
-			found->decalGeometry = BuildDecalGeometry( meshData, meshCaches[geometry], found->decalMatrix, found->inverseDecalMatrix );
+			found->decalGeometry = BuildDecalGeometryCached( meshData, found->decalMatrix, found->inverseDecalMatrix );
 		}
 	}
 
@@ -940,6 +941,55 @@ std::shared_ptr<MeshDecalData> EveSpaceObjectDecal::BuildDecalGeometry( TriGeome
 		}
 	}
 
+	return newDecal;
+}
+
+// ------------------------------------------------------------------------------------------------------
+std::shared_ptr<MeshDecalData> EveSpaceObjectDecal::BuildDecalGeometryCached( TriGeometryResMeshData* meshData, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix )
+{
+	TRINITY_STATS_ZONE( __FUNCTION__ );
+
+	std::shared_ptr<MeshDecalData> newDecal = std::make_shared<MeshDecalData>();
+	newDecal->m_inverseDecalMatrix = inverseDecalMatrix;
+	newDecal->m_lodMask = meshData->m_lodMask;
+
+	Vector3 aabbMin( -1.f, -1.f, -1.f );
+	Vector3 aabbMax( 1.f, 1.f, 1.f );
+	BoundingBoxTransform( aabbMin, aabbMax, decalMatrix );
+
+	// a decal volume outside the mesh bounds hits nothing: don't build the cache for it
+	if( aabbMin.x > meshData->m_maxBounds.x || aabbMax.x < meshData->m_minBounds.x ||
+		aabbMin.y > meshData->m_maxBounds.y || aabbMax.y < meshData->m_minBounds.y ||
+		aabbMin.z > meshData->m_maxBounds.z || aabbMax.z < meshData->m_minBounds.z )
+	{
+		newDecal->m_lods.resize( meshData->m_lods.size() );
+		return newDecal;
+	}
+
+	const DecalTriangleCache* cache = DecalTriangleCache::Get( meshData );
+	if( !cache )
+	{
+		return nullptr;
+	}
+
+	std::vector<uint32_t> allIndices;
+	for( size_t i = 0; i < meshData->m_lods.size(); ++i )
+	{
+		MeshDecalLodData lod;
+		lod.m_startIndex = uint32_t( allIndices.size() );
+		cache->Query( i, aabbMin, aabbMax, inverseDecalMatrix, allIndices );
+		lod.m_primitiveCount = ( uint32_t( allIndices.size() ) - lod.m_startIndex ) / 3;
+		newDecal->m_lods.push_back( lod );
+	}
+
+	if( !allIndices.empty() )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		if( !SUCCEEDED( g_sharedBuffer.Allocate( 4, uint32_t( allIndices.size() ), allIndices.data(), renderContext, newDecal->m_indexBuffer ) ) )
+		{
+			return nullptr;
+		}
+	}
 	return newDecal;
 }
 

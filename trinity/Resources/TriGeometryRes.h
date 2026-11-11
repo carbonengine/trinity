@@ -139,6 +139,7 @@ struct MeshDecalData
 };
 
 struct TriGeometryResMeshData;
+struct DecalTriangleCache;
 
 extern bool g_eveIsAudioOcclusionGeometryEnabled;
 
@@ -216,6 +217,8 @@ struct TriGeometryResMeshData
 
 	std::unique_ptr<AudioGeometryResData> m_audioGeometry;
 	std::vector<std::shared_ptr<MeshDecalData>> m_decals;
+	// CPU triangles + grid for runtime decals, built on demand (see DecalTriangleCache)
+	std::shared_ptr<DecalTriangleCache> m_decalTriangleCache;
 
 	uint32_t m_lodMask; //A bit mask of which LODs have been loaded.
 	TrackableStdVector<std::unique_ptr<TriGeometryResLodData>> m_lods;

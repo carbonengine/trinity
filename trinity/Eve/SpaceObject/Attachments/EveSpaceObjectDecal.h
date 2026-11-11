@@ -14,7 +14,6 @@
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/EveUpdateContext.h"
 #include "../../../Resources/TriGeometryRes.h"
-#include <unordered_map>
 
 BLUE_DECLARE_INTERFACE( ITr2InstanceData );
 BLUE_DECLARE( Tr2Buffer );
@@ -72,9 +71,6 @@ struct DecalMeshCache
 	};
 	std::vector<MeshBuffers> buffers;
 };
-
-// CPU copies of the vertex/index buffers of each hull geometry, shared by all decals of an object within a frame
-using DecalMeshCacheMap = std::unordered_map<const TriGeometryRes*, DecalMeshCache>;
 
 struct EveChildGeometry;
 
@@ -138,13 +134,13 @@ public:
 	void GetInstancedRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 	/**
 	 * @brief Gathers the decal for a parent without a mesh of its own (a modular object), projecting it onto
-	 * every part geometry the decal volume overlaps. Index buffers are built on the CPU from the parts'
-	 * vertices and owned by this decal; they are rebuilt when the decal or a part moves.
+	 * every part geometry the decal volume overlaps. Index buffers are built on the CPU from each part
+	 * geometry's DecalTriangleCache and owned by this decal; they are rebuilt when the decal or a part moves.
 	 * @param parts Part geometries of the parent, in the parent's object space (EveSpaceObjectChild::CollectOwnedGeometry).
 	 * @param objectScreenSize Screen size of the whole parent, used to pick a LOD per part.
 	 * @param objectRadius Bounding sphere radius of the whole parent in object space.
 	 */
-	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCacheMap & meshCaches, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius );
+	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius );
 
 	// access position etc.
 	const Vector3& GetPosition() const;
@@ -179,6 +175,9 @@ private:
 	// Collects the triangles of every LOD of meshData that intersect the decal volume. Returns null if the
 	// mesh buffers are not ready yet. inverseDecalMatrix maps the mesh's vertex space into decal space.
 	static std::shared_ptr<MeshDecalData> BuildDecalGeometry( TriGeometryResMeshData * meshData, DecalMeshCache & meshCache, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix );
+	// Same result as BuildDecalGeometry, but reads the triangles from the mesh's DecalTriangleCache
+	// (built once per mesh), so only the triangles near the decal volume are tested.
+	static std::shared_ptr<MeshDecalData> BuildDecalGeometryCached( TriGeometryResMeshData * meshData, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix );
 	void FillPerObjectData( EveDecalPerObjectData & data, const Matrix& worldMatrix, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix, const Matrix& parentBoneMatrix ) const;
 	void CommitBatch( ITriRenderBatchAccumulator * batches, const TriGeometryResLodData* lod, const MeshDecalData& decalGeometry, int lodIndex, const Tr2PerObjectData* perObjectData );
 	// update
