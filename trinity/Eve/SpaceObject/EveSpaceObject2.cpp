@@ -1592,6 +1592,24 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 			}
 		}
 	}
+	else if( !m_mesh && m_isMeshVisible && !m_decals.empty() )
+	{
+		// modular objects have no mesh of their own: project the decals onto the parts' geometry
+		std::vector<EveChildGeometry> parts;
+		std::vector<EveChildGeometryArea> areas;
+		for( auto& child : m_effectChildren )
+		{
+			child->CollectOwnedGeometry( TRIBATCHTYPE_OPAQUE, IdentityMatrix(), parts, areas );
+		}
+		if( !parts.empty() )
+		{
+			DecalMeshCacheMap meshCaches;
+			for( auto it = m_decals.begin(); it != m_decals.end(); ++it )
+			{
+				( *it )->GetModularRenderables( renderables, meshCaches, parts, m_meshScreenSize, m_boundingSphereRadius );
+			}
+		}
+	}
 }
 
 void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
