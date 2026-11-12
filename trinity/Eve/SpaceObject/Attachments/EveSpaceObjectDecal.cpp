@@ -255,10 +255,15 @@ namespace
 {
 // A part decal's world matrix is composed on the CPU, while the part itself is drawn through the
 // instanced path (instance matrix, then the child's world matrix, on the GPU): the two positions
-// differ by rounding, and with no depth write or bias the decal z-fights its own surface. Scaling
-// the decal about the eye by this much leaves every pixel where it is and moves it this fraction of
-// its distance towards the eye, which is well above that rounding and well below anything visible.
-constexpr float PART_DEPTH_PULL = 4e-4f;
+// differ by rounding, and with no depth write or bias the decal z-fights its own surface. The decal
+// is scaled about the eye, which leaves every pixel where it is and moves its depth a fraction of
+// its distance towards the eye. That rounding is a few float steps at the largest coordinate in
+// the chain (a level instance sits tens of km from its object's origin), so the fraction covers
+// PART_DEPTH_ULPS of them at the part's nearest point (no nearer than 2 m), within these bounds.
+constexpr float PART_DEPTH_PULL_MIN = 4e-4f;
+constexpr float PART_DEPTH_PULL_MAX = 0.005f;
+constexpr float PART_DEPTH_ULPS = 2.f;
+constexpr float FLOAT_STEP = 1.f / 8388608.f; // 2^-23, a float's relative resolution
 
 // The LOD the instanced mesh manager draws a part with (EveInstancedMeshManager::GetMeshLod)
 int InstancedMeshLod( const TriGeometryResMeshData& meshData, float screenSize )
@@ -469,7 +474,12 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 			if( m_hasLastFrustum )
 			{
 				const Vector3& eye = m_lastFrustum.m_viewPos;
-				world = world * TranslationMatrix( -eye ) * ScalingMatrix( 1.f - PART_DEPTH_PULL, 1.f - PART_DEPTH_PULL, 1.f - PART_DEPTH_PULL ) * TranslationMatrix( eye );
+				float objectScale = MaxAxisScale( m_parentData.transform );
+				// the largest magnitudes the part's vertices pass through on the way to world space
+				float magnitude = std::max( { Length( target.childToObject.GetTranslation() ) * objectScale, Length( m_parentData.transform.GetTranslation() ), Length( world.GetTranslation() ) } );
+				float nearest = std::max( Length( world.GetTranslation() - eye ) - target.lodRadius * MaxAxisScale( world ), 2.f );
+				float pull = std::clamp( PART_DEPTH_ULPS * magnitude * FLOAT_STEP / nearest, PART_DEPTH_PULL_MIN, PART_DEPTH_PULL_MAX );
+				world = world * TranslationMatrix( -eye ) * ScalingMatrix( 1.f - pull, 1.f - pull, 1.f - pull ) * TranslationMatrix( eye );
 			}
 			FillPerObjectData( *partData, world, target.decalMatrix, target.inverseDecalMatrix, IdentityMatrix() );
 			CommitBatch( batches, lod, *target.decalGeometry, target.lodIndex, partData );
