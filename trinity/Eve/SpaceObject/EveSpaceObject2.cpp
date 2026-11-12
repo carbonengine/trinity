@@ -2866,7 +2866,8 @@ std::pair<EveSpaceObject2::GeometryQueryStatus, std::pair<Vector3, Vector3>> Eve
 			continue;
 		}
 		TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
-		if( !meshData )
+		// the cache holds rest-pose positions, which an animated part moves away from
+		if( !meshData || DecalTriangleCache::IsDeformed( *meshData ) )
 		{
 			continue;
 		}

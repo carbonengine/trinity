@@ -316,6 +316,21 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	return nullptr;
 }
 
+bool DecalTriangleCache::IsDeformed( const TriGeometryResMeshData& meshData )
+{
+	for( const auto& lod : meshData.m_lods )
+	{
+		for( const auto& area : lod->m_areas )
+		{
+			if( area.m_isSkinned || area.m_isMorphed )
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 void DecalTriangleCache::Shutdown()
 {
 	BuildQueue& queue = GetBuildQueue();

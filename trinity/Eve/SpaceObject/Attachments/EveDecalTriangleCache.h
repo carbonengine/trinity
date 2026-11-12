@@ -68,6 +68,12 @@ struct DecalTriangleCache
 	static const DecalTriangleCache* Get( TriGeometryResMeshData* meshData );
 
 	/**
+	 * @brief Whether any area of the mesh is skinned or morphed. Its vertices move away from the
+	 * positions the cache holds, so a decal or a nearest query built on them would land wrong.
+	 */
+	static bool IsDeformed( const TriGeometryResMeshData& meshData );
+
+	/**
 	 * @brief Cancels the builds that have not started and waits for the running ones. Get starts no
 	 * build afterwards.
 	 */

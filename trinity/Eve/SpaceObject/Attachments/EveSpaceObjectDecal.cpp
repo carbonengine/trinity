@@ -399,7 +399,9 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 				continue;
 			}
 			TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
-			if( !meshData )
+			// a part's decal is drawn with an identity parent bone on its rest-pose triangles: an
+			// animated part would leave it behind
+			if( !meshData || DecalTriangleCache::IsDeformed( *meshData ) )
 			{
 				continue;
 			}
