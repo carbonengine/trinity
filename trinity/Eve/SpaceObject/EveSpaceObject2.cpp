@@ -538,14 +538,10 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	// Particle Systems
 	// Get the reference position
 	Vector3d referencePosition( 0.0, 0.0, 0.0 );
-	if( m_referencePointSource.p != m_ballPosition.p )
+	IEveReferencePointPtr refObject( BlueCastPtr( m_ballPosition ) );
+	if( refObject )
 	{
-		m_referencePointSource = m_ballPosition;
-		m_referencePoint = BlueCastPtr( m_ballPosition );
-	}
-	if( m_referencePoint )
-	{
-		m_referencePoint->GetReferencePoint( &referencePosition, time );
+		refObject->GetReferencePoint( &referencePosition, time );
 	}
 
 	if( m_previousPosition.x != UNINITIALIZED_POSITION )
