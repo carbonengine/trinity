@@ -2139,7 +2139,6 @@ endif()
 
 if(BUILD_TESTING)
     find_package(GTest CONFIG REQUIRED)
-    include(GoogleTest)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
     include(GoogleTest)
 
