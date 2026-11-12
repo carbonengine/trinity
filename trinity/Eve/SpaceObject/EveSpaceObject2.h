@@ -521,6 +521,23 @@ public:
 	 *   cache is still being built, which the first call on that mesh starts.
 	 */
 	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestHullEdge( const Vector3& position, float radius );
+
+	/**
+	 * @brief The point on the object's own geometry (its mesh, or a modular object's parts) nearest
+	 * to position, and that surface's normal, turned towards position.
+	 * @see DecalTriangleCache::FindNearestSurface
+	 * @param position, radius Object space; only surfaces within radius are considered.
+	 * @return (found, (position, normal)) in object space. Not found while a mesh's triangle
+	 *   cache is still being built, which the first call on that mesh starts.
+	 */
+	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestSurfacePoint( const Vector3& position, float radius );
+
+private:
+	// The nearest of query( cache, part-space point, part-space radius ) over the object's own geometry
+	template<typename Query>
+	std::pair<bool, std::pair<Vector3, Vector3>> FindNearestOnGeometry( const Vector3& position, float radius, Query&& query );
+
+public:
 	Vector3 GetLocatorRotationFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorPosition( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorDirection( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );

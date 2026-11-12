@@ -74,5 +74,12 @@ struct DecalTriangleCache
 	 */
 	bool FindNearestEdge( size_t lodIndex, const Vector3& point, float radius, float sharpCos, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const;
 
+	/**
+	 * @brief Finds the point on a triangle of LOD lodIndex nearest to point, within radius.
+	 * @param outNormal The triangle's face normal, turned to the side point is on.
+	 * @return false if no triangle lies within radius.
+	 */
+	bool FindNearestSurface( size_t lodIndex, const Vector3& point, float radius, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const;
+
 	size_t GetMemoryUsage() const;
 };

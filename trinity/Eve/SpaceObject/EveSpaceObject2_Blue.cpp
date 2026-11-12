@@ -558,6 +558,14 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param position: object-space point\n"
 			":param radius: search radius in metres\n" )
 		MAP_METHOD_AND_WRAP(
+			"GetNearestSurfacePoint",
+			GetNearestSurfacePoint,
+			"( position, radius ) -> ( found, ( position, normal ) )\n"
+			"Nearest point on the object's geometry, in object space, with that surface's normal turned "
+			"towards position. Not found while the geometry's triangle cache is still being built.\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
 			"GetLocatorPositionFromSet",
 			GetLocatorPositionFromSet,
 			"locator position from a set Specified by name\n"

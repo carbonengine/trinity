@@ -327,6 +327,46 @@ struct EdgeFaces
 	uint32_t count = 0;
 };
 
+// Closest point to p on triangle abc (Ericson, Real-Time Collision Detection 5.1.5)
+Vector3 ClosestPointOnTriangle( const Vector3& p, const Vector3& a, const Vector3& b, const Vector3& c )
+{
+	Vector3 ab = b - a, ac = c - a, ap = p - a;
+	float d1 = Dot( ab, ap ), d2 = Dot( ac, ap );
+	if( d1 <= 0.f && d2 <= 0.f )
+	{
+		return a;
+	}
+	Vector3 bp = p - b;
+	float d3 = Dot( ab, bp ), d4 = Dot( ac, bp );
+	if( d3 >= 0.f && d4 <= d3 )
+	{
+		return b;
+	}
+	float vc = d1 * d4 - d3 * d2;
+	if( vc <= 0.f && d1 >= 0.f && d3 <= 0.f )
+	{
+		return a + ab * ( d1 / ( d1 - d3 ) );
+	}
+	Vector3 cp = p - c;
+	float d5 = Dot( ab, cp ), d6 = Dot( ac, cp );
+	if( d6 >= 0.f && d5 <= d6 )
+	{
+		return c;
+	}
+	float vb = d5 * d2 - d1 * d6;
+	if( vb <= 0.f && d2 >= 0.f && d6 <= 0.f )
+	{
+		return a + ac * ( d2 / ( d2 - d6 ) );
+	}
+	float va = d3 * d6 - d5 * d4;
+	if( va <= 0.f && ( d4 - d3 ) >= 0.f && ( d5 - d6 ) >= 0.f )
+	{
+		return b + ( c - b ) * ( ( d4 - d3 ) / ( ( d4 - d3 ) + ( d5 - d6 ) ) );
+	}
+	float denom = 1.f / ( va + vb + vc );
+	return a + ab * ( vb * denom ) + ac * ( vc * denom );
+}
+
 Vector3 ClosestPointOnSegment( const Vector3& p, const Vector3& a, const Vector3& b )
 {
 	Vector3 ab = b - a;
@@ -445,6 +485,42 @@ bool DecalTriangleCache::FindNearestEdge( size_t lodIndex, const Vector3& point,
 			outNormal = normal;
 		}
 	}
+	outDistance = bestDistance;
+	return found;
+}
+
+bool DecalTriangleCache::FindNearestSurface( size_t lodIndex, const Vector3& point, float radius, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const
+{
+	if( lodIndex >= lods.size() || radius <= 0.f )
+	{
+		return false;
+	}
+	const Lod& lod = lods[lodIndex];
+	const Vector3 extent( radius, radius, radius );
+	bool found = false;
+	float bestDistance = radius;
+	ForEachTriangleNear( lod, point - extent, point + extent, [&]( const uint32_t* tri ) {
+		const Vector3& v0 = lod.positions[tri[0]];
+		const Vector3& v1 = lod.positions[tri[1]];
+		const Vector3& v2 = lod.positions[tri[2]];
+		Vector3 faceNormal = Cross( v1 - v0, v2 - v0 );
+		float area = Length( faceNormal );
+		if( area < 1e-8f )
+		{
+			return;
+		}
+		Vector3 closest = ClosestPointOnTriangle( point, v0, v1, v2 );
+		float distance = Length( closest - point );
+		if( distance <= bestDistance )
+		{
+			found = true;
+			bestDistance = distance;
+			outPosition = closest;
+			faceNormal = faceNormal / area;
+			// either winding: face the side the query point is on
+			outNormal = Dot( faceNormal, point - closest ) < 0.f ? -faceNormal : faceNormal;
+		}
+	} );
 	outDistance = bestDistance;
 	return found;
 }

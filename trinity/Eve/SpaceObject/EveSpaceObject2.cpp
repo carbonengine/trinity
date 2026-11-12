@@ -2835,11 +2835,9 @@ bool EveSpaceObject2::GetDamageLocatorBindPosition( int index, Vector3& out ) co
 	return true;
 }
 
-std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge( const Vector3& position, float radius )
+template<typename Query>
+std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeometry( const Vector3& position, float radius, Query&& query )
 {
-	// cosine of the fold, between two faces' normals, that counts as an edge
-	constexpr float SHARP_EDGE_COS = 0.866f;
-
 	std::vector<EveChildGeometry> parts;
 	std::vector<EveChildGeometryArea> areas;
 	if( m_mesh && m_mesh->GetGeometryResource() )
@@ -2879,7 +2877,7 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge
 		Matrix objectToPart = Inverse( m );
 		Vector3 local = XMVector3TransformCoord( position, objectToPart );
 		float localRadius = bestDistance / scale;
-		// cheap reject: the part's bounds are further away than the best edge so far
+		// cheap reject: the part's bounds are further away than the best result so far
 		if( local.x + localRadius < meshData->m_minBounds.x || local.x - localRadius > meshData->m_maxBounds.x ||
 			local.y + localRadius < meshData->m_minBounds.y || local.y - localRadius > meshData->m_maxBounds.y ||
 			local.z + localRadius < meshData->m_minBounds.z || local.z - localRadius > meshData->m_maxBounds.z )
@@ -2891,13 +2889,13 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge
 		{
 			continue;
 		}
-		Vector3 edgePosition, edgeNormal;
+		Vector3 partPosition, partNormal;
 		float localDistance;
-		if( !cache->FindNearestEdge( 0, local, localRadius, SHARP_EDGE_COS, edgePosition, edgeNormal, localDistance ) )
+		if( !query( *cache, local, localRadius, partPosition, partNormal, localDistance ) )
 		{
 			continue;
 		}
-		Vector3 objectPosition = XMVector3TransformCoord( edgePosition, m );
+		Vector3 objectPosition = XMVector3TransformCoord( partPosition, m );
 		float distance = Length( objectPosition - position );
 		if( distance <= bestDistance )
 		{
@@ -2905,10 +2903,26 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge
 			bestDistance = distance;
 			bestPosition = objectPosition;
 			// normals take the inverse transpose of the part transform
-			bestNormal = Normalize( Vector3( XMVector3TransformNormal( edgeNormal, Transpose( objectToPart ) ) ) );
+			bestNormal = Normalize( Vector3( XMVector3TransformNormal( partNormal, Transpose( objectToPart ) ) ) );
 		}
 	}
 	return std::make_pair( found, std::make_pair( bestPosition, bestNormal ) );
+}
+
+std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge( const Vector3& position, float radius )
+{
+	// cosine of the fold, between two faces' normals, that counts as an edge
+	constexpr float SHARP_EDGE_COS = 0.866f;
+	return FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
+		return cache.FindNearestEdge( 0, point, r, SHARP_EDGE_COS, outPosition, outNormal, outDistance );
+	} );
+}
+
+std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestSurfacePoint( const Vector3& position, float radius )
+{
+	return FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
+		return cache.FindNearestSurface( 0, point, r, outPosition, outNormal, outDistance );
+	} );
 }
 
 Vector3 EveSpaceObject2::GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName )
