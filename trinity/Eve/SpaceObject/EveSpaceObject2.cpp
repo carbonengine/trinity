@@ -723,6 +723,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.activationStrength = m_activationStrength;
 		params.localToWorldTransform = worldTransform;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, params.bones, params.boneCount );
 
