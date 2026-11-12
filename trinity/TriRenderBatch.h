@@ -439,6 +439,8 @@ private:
 // shader has been ported to the deferred system and has a GBuffer technique.
 void PartitionByTechnique( ITriRenderBatchAccumulator& source, const BlueSharedString& techniqueName, ITriRenderBatchAccumulator& withTechnique, ITriRenderBatchAccumulator& withoutTechnique );
 
+void MoveAllBatches( ITriRenderBatchAccumulator& source, ITriRenderBatchAccumulator& target );
+
 const BlueSharedString& GBufferTechnique();
 
 #endif // TriRenderBatch_H

@@ -301,6 +301,13 @@ void PartitionByTechnique( ITriRenderBatchAccumulator& source, const BlueSharedS
 	source.Clear();
 }
 
+void MoveAllBatches( ITriRenderBatchAccumulator& source, ITriRenderBatchAccumulator& target )
+{
+	MoveAll( source.GetGdprBatches(), target.GetGdprBatches() );
+	MoveAll( source.GetBatches(), target.GetBatches() );
+	source.Clear();
+}
+
 const BlueSharedString& GBufferTechnique()
 {
 	static const BlueSharedString gBufferTechnique( "GBuffer" );

@@ -1532,9 +1532,18 @@ void EveSpaceScene::GatherBatches( bool includeDistortions, Tr2RenderContext& re
 
 	FinalizeBatches( m_primaryBatches );
 
+	// Pixel shader visualizers replace the forward shader, so everything goes to the forward lists
+	const bool pixelShaderReplaced = m_visualizeMethod != VM_NONE && m_visualizerEffects[m_visualizeMethod].type == VisualizerEffect::PIXEL_SHADER_REPLACEMENT;
 	for( auto& [type, batches] : m_gBufferBatches )
 	{
-		PartitionByTechnique( *m_primaryBatches[type], GBufferTechnique(), *batches, *m_forwardBatches[type] );
+		if( pixelShaderReplaced )
+		{
+			MoveAllBatches( *m_primaryBatches[type], *m_forwardBatches[type] );
+		}
+		else
+		{
+			PartitionByTechnique( *m_primaryBatches[type], GBufferTechnique(), *batches, *m_forwardBatches[type] );
+		}
 		CCP_STATS_ADD( gBufferBatches, batches->GetBatchCount() );
 		CCP_STATS_ADD( forwardBatches, m_forwardBatches[type]->GetBatchCount() );
 	}
