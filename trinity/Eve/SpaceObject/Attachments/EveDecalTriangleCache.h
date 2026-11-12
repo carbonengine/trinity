@@ -4,6 +4,7 @@
 
 #include "../../../Resources/TriGeometryRes.h"
 #include <atomic>
+#include <chrono>
 
 /**
  * @brief CPU copy of a mesh's triangles, bucketed in a hierarchical loose grid per LOD, so that a runtime
@@ -44,6 +45,10 @@ struct DecalTriangleCache
 	std::vector<Lod> lods;
 	// set by the worker thread once lods can be read
 	std::atomic<bool> ready = false;
+	// the mesh could not be read back: Get does not try again before retryAt
+	bool failed = false;
+	uint32_t failures = 0;
+	std::chrono::steady_clock::time_point retryAt;
 
 	/**
 	 * @brief Returns the cache for meshData, starting to build it if needed.

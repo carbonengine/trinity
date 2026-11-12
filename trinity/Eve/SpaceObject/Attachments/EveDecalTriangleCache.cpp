@@ -15,6 +15,9 @@ constexpr uint32_t MAX_CELLS_PER_AXIS = 256;
 constexpr float MAX_CELLS = float( 1u << 21 );
 // grid builds in flight at once; a mesh asked for beyond that retries on a later frame
 constexpr int MAX_CONCURRENT_BUILDS = 2;
+// after a failed readback, wait this long before the next, doubling up to the cap
+constexpr std::chrono::seconds RETRY_BACKOFF_FIRST( 2 );
+constexpr std::chrono::seconds RETRY_BACKOFF_MAX( 60 );
 
 struct BuildQueue
 {
@@ -200,7 +203,12 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	}
 
 	auto& cache = meshData->m_decalTriangleCache;
-	if( cache && cache->lodMask == meshData->m_lodMask && cache->lods.size() == meshData->m_lods.size() )
+	const auto now = std::chrono::steady_clock::now();
+	if( cache && cache->failed && now < cache->retryAt )
+	{
+		return nullptr;
+	}
+	if( cache && !cache->failed && cache->lodMask == meshData->m_lodMask && cache->lods.size() == meshData->m_lods.size() )
 	{
 		return cache->ready.load( std::memory_order_acquire ) ? cache.get() : nullptr;
 	}
@@ -236,6 +244,14 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	{
 		if( !CopyLod( *meshData, *meshData->m_lods[i], raw[i] ) )
 		{
+			// a readback costs tens of ms on a large mesh: don't repeat it every frame
+			uint32_t failures = cache && cache->failed ? cache->failures + 1 : 1;
+			auto backoff = std::min( RETRY_BACKOFF_FIRST * ( 1 << std::min( failures - 1, 5u ) ), RETRY_BACKOFF_MAX );
+			auto failedCache = std::make_shared<DecalTriangleCache>();
+			failedCache->failed = true;
+			failedCache->failures = failures;
+			failedCache->retryAt = now + backoff;
+			cache = failedCache;
 			return nullptr;
 		}
 	}
