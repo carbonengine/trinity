@@ -21,8 +21,8 @@ object BumpVcpkgRegistry : BuildType({
     params {
         param("vcpkg_port_name", "carbon-trinity")
         param("github_registry_repository", "carbonengine/vcpkg-registry")
-        param("git_user_name", "TeamCity")
-        param("git_user_email", "teamcity@ccpgames.com")
+        param("git_user_name", "Carbon Automation")
+        param("git_user_email", "213465544+ccpgames-carbon@users.noreply.github.com")
         param("env.GITHUB_TOKEN", "%GITHUB_CARBON_PAT%")
         param("teamcity.vcsTrigger.runBuildInNewEmptyBranch", "true")
     }
