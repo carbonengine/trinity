@@ -532,10 +532,32 @@ public:
 	 */
 	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestSurfacePoint( const Vector3& position, float radius );
 
+	// Status of QueryNearestHullEdge and QueryNearestSurfacePoint
+	enum class GeometryQueryStatus : int
+	{
+		FOUND = 0,
+		// nothing within the radius, and every part in reach was searched
+		NONE = 1,
+		// nothing found yet: a part in reach is still building its triangle cache, ask again later
+		PENDING = 2,
+	};
+
+	/**
+	 * @brief GetNearestHullEdge, telling a part still building its triangle cache from nothing in reach.
+	 * @return (status, (position, normal)), status a GeometryQueryStatus.
+	 */
+	std::pair<int, std::pair<Vector3, Vector3>> QueryNearestHullEdge( const Vector3& position, float radius );
+
+	/**
+	 * @brief GetNearestSurfacePoint, telling a part still building its triangle cache from nothing in reach.
+	 * @return (status, (position, normal)), status a GeometryQueryStatus.
+	 */
+	std::pair<int, std::pair<Vector3, Vector3>> QueryNearestSurfacePoint( const Vector3& position, float radius );
+
 private:
 	// The nearest of query( cache, part-space point, part-space radius ) over the object's own geometry
 	template<typename Query>
-	std::pair<bool, std::pair<Vector3, Vector3>> FindNearestOnGeometry( const Vector3& position, float radius, Query&& query );
+	std::pair<GeometryQueryStatus, std::pair<Vector3, Vector3>> FindNearestOnGeometry( const Vector3& position, float radius, Query&& query );
 
 public:
 	Vector3 GetLocatorRotationFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );

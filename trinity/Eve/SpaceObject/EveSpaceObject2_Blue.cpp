@@ -558,6 +558,22 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param position: object-space point\n"
 			":param radius: search radius in metres\n" )
 		MAP_METHOD_AND_WRAP(
+			"QueryNearestHullEdge",
+			QueryNearestHullEdge,
+			"( position, radius ) -> ( status, ( position, normal ) )\n"
+			"GetNearestHullEdge with a status: 0 found, 1 nothing within radius (every part in reach searched), "
+			"2 pending (a part in reach is still building its triangle cache; ask again on a later frame).\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
+			"QueryNearestSurfacePoint",
+			QueryNearestSurfacePoint,
+			"( position, radius ) -> ( status, ( position, normal ) )\n"
+			"GetNearestSurfacePoint with a status: 0 found, 1 nothing within radius (every part in reach searched), "
+			"2 pending (a part in reach is still building its triangle cache; ask again on a later frame).\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
 			"GetNearestSurfacePoint",
 			GetNearestSurfacePoint,
 			"( position, radius ) -> ( found, ( position, normal ) )\n"

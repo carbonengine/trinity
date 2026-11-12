@@ -2836,7 +2836,7 @@ bool EveSpaceObject2::GetDamageLocatorBindPosition( int index, Vector3& out ) co
 }
 
 template<typename Query>
-std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeometry( const Vector3& position, float radius, Query&& query )
+std::pair<EveSpaceObject2::GeometryQueryStatus, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeometry( const Vector3& position, float radius, Query&& query )
 {
 	std::vector<EveChildGeometry> parts;
 	std::vector<EveChildGeometryArea> areas;
@@ -2853,6 +2853,7 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeome
 	}
 
 	bool found = false;
+	bool pending = false;
 	float bestDistance = radius;
 	Vector3 bestPosition = position;
 	Vector3 bestNormal( 0.f, 0.f, 0.f );
@@ -2861,6 +2862,7 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeome
 		TriGeometryRes* geometry = part.geometry;
 		if( !geometry || !geometry->IsGood() || !geometry->GetMeshCount() )
 		{
+			pending = pending || ( geometry && !geometry->IsGood() );
 			continue;
 		}
 		TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
@@ -2887,6 +2889,7 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeome
 		const DecalTriangleCache* cache = DecalTriangleCache::Get( meshData );
 		if( !cache )
 		{
+			pending = true;
 			continue;
 		}
 		Vector3 partPosition, partNormal;
@@ -2906,23 +2909,38 @@ std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::FindNearestOnGeome
 			bestNormal = Normalize( Vector3( XMVector3TransformNormal( partNormal, Transpose( objectToPart ) ) ) );
 		}
 	}
-	return std::make_pair( found, std::make_pair( bestPosition, bestNormal ) );
+	GeometryQueryStatus status = found ? GeometryQueryStatus::FOUND : pending ? GeometryQueryStatus::PENDING : GeometryQueryStatus::NONE;
+	return std::make_pair( status, std::make_pair( bestPosition, bestNormal ) );
+}
+
+std::pair<int, std::pair<Vector3, Vector3>> EveSpaceObject2::QueryNearestHullEdge( const Vector3& position, float radius )
+{
+	// cosine of the fold, between two faces' normals, that counts as an edge
+	constexpr float SHARP_EDGE_COS = 0.866f;
+	auto result = FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
+		return cache.FindNearestEdge( 0, point, r, SHARP_EDGE_COS, outPosition, outNormal, outDistance );
+	} );
+	return std::make_pair( int( result.first ), result.second );
+}
+
+std::pair<int, std::pair<Vector3, Vector3>> EveSpaceObject2::QueryNearestSurfacePoint( const Vector3& position, float radius )
+{
+	auto result = FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
+		return cache.FindNearestSurface( 0, point, r, outPosition, outNormal, outDistance );
+	} );
+	return std::make_pair( int( result.first ), result.second );
 }
 
 std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestHullEdge( const Vector3& position, float radius )
 {
-	// cosine of the fold, between two faces' normals, that counts as an edge
-	constexpr float SHARP_EDGE_COS = 0.866f;
-	return FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
-		return cache.FindNearestEdge( 0, point, r, SHARP_EDGE_COS, outPosition, outNormal, outDistance );
-	} );
+	auto result = QueryNearestHullEdge( position, radius );
+	return std::make_pair( result.first == int( GeometryQueryStatus::FOUND ), result.second );
 }
 
 std::pair<bool, std::pair<Vector3, Vector3>> EveSpaceObject2::GetNearestSurfacePoint( const Vector3& position, float radius )
 {
-	return FindNearestOnGeometry( position, radius, [&]( const DecalTriangleCache& cache, const Vector3& point, float r, Vector3& outPosition, Vector3& outNormal, float& outDistance ) {
-		return cache.FindNearestSurface( 0, point, r, outPosition, outNormal, outDistance );
-	} );
+	auto result = QueryNearestSurfacePoint( position, radius );
+	return std::make_pair( result.first == int( GeometryQueryStatus::FOUND ), result.second );
 }
 
 Vector3 EveSpaceObject2::GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName )
