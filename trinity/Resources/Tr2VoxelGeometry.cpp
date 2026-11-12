@@ -581,12 +581,13 @@ protected:
 	 * Only smooth vertices are cut: a vertex whose quads spread wider than s_featureCos sits on a real edge and stays, and the cut ramps in from such
 	 * vertices at s_cutRampSlope so no edge stands proud as a fin. A quad the cuts turn over has its most cut corner
 	 * lowered a step down s_cutFractions, for up to s_unfoldRounds rounds, after which its corners go uncut.
-	 * @param field The signed distance field used to compute per-vertex cut vectors.
+	 * @param surfaceCuts The cuts of the full resolution field, shared by every LOD so their cuts line up.
+	 * @param positionScale Grid cells per position unit; positions p sit at p * positionScale + ( positionScale - 1 ) / 2 in grid space.
 	 * @param positions The mesh vertex positions. Input positions are analyzed and then updated in place with the computed cuts.
 	 * @param quads Quad index buffer (4 indices per quad) defining mesh connectivity used for normals, feature detection, and neighborhood traversal.
 	 * @param cancel Cancellation flag checked at key stages; if set, the function exits early without further processing.
 	 */
-	void ApplySurfaceCuts( const Tr2SignedDistanceField& field, std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	void ApplySurfaceCuts( const Tr2SurfaceCuts& surfaceCuts, float positionScale, std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
 		if( !m_cutParams.IsEnabled() || quads.empty() )
 		{
@@ -649,7 +650,7 @@ protected:
 			}
 		}
 
-		// Mesh distance to the nearest feature vertex, out to where the ramp no longer limits the deepest cut
+		// Mesh distance in grid cells to the nearest feature vertex, out to where the ramp no longer limits the deepest cut
 		const float rampReach = m_cutParams.GetMaxCut() / s_cutRampSlope;
 		std::vector<float> featureDistance( vertexCount, std::numeric_limits<float>::infinity() );
 		using QueueEntry = std::pair<float, uint32_t>;
@@ -677,7 +678,7 @@ protected:
 				for( uint32_t side : { 1u, 3u } )
 				{
 					const uint32_t neighbor = quads[base + ( ( corner + side ) & 3 )];
-					const float d = distance + Length( positions[neighbor] - positions[v] );
+					const float d = distance + Length( positions[neighbor] - positions[v] ) * positionScale;
 					if( d < featureDistance[neighbor] && d < rampReach )
 					{
 						featureDistance[neighbor] = d;
@@ -691,7 +692,7 @@ protected:
 			return;
 		}
 
-		Tr2SurfaceCuts surfaceCuts( field, m_dimensions, m_cutParams );
+		const float gridOffset = ( positionScale - 1.f ) * 0.5f;
 		std::vector<Vector3> cuts( vertexCount, Vector3( 0.f, 0.f, 0.f ) );
 		for( size_t v = 0; v < vertexCount; ++v )
 		{
@@ -699,14 +700,15 @@ protected:
 			{
 				continue;
 			}
-			Vector3 cut = surfaceCuts.GetCut( positions[v], facing[v] );
+			const Vector3 gridPosition = positions[v] * positionScale + Vector3( gridOffset, gridOffset, gridOffset );
+			Vector3 cut = surfaceCuts.GetCut( gridPosition, facing[v] );
 			const float length = Length( cut );
 			const float limit = s_cutRampSlope * featureDistance[v];
 			if( length > limit )
 			{
 				cut *= limit / length;
 			}
-			cuts[v] = cut;
+			cuts[v] = cut / positionScale;
 		}
 		if( cancel )
 		{
@@ -1135,11 +1137,16 @@ protected:
 
 		int32_t scale = int32_t( std::max( m_subdivision, 1u ) );
 
-		auto& field = GetSignedDistanceField( cancel );
+		const auto& field = GetSignedDistanceField( cancel );
 		if( cancel )
 		{
 			return {};
 		}
+		// Cuts come from the full resolution field for every LOD, so coarser LODs cut along the same planes
+		const Tr2SurfaceCuts surfaceCuts( field, m_dimensions, m_cutParams );
+		// Downsampled copy for the coarser LODs; the cached field stays at full resolution
+		std::optional<Tr2SignedDistanceField> downsampledField;
+		const Tr2SignedDistanceField* lodField = &field;
 
 		cmf::Span<cmf::VertexElement> decl = CreateVertexDeclaration( allocator );
 		cmf::Span<cmf::MeshLod> lods;
@@ -1147,7 +1154,7 @@ protected:
 
 		for( uint32_t lod = 0; lod < m_outputSettings.lodLevels; ++lod )
 		{
-			auto window = CreateLatticeWindow( field, scale, cancel );
+			auto window = CreateLatticeWindow( *lodField, scale, cancel );
 			if( cancel )
 			{
 				return {};
@@ -1158,14 +1165,15 @@ protected:
 			std::vector<uint32_t> quads;
 			// Without a data tag channel the requested element reads zero
 			const bool sampleDataTags = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_inputSettings.HasDataTagChannel();
+			const int32_t fieldScale = int32_t( positionScale );
 			Sweep(
 				window,
 				cancel,
-				[&]( const Int3& block ) { return getDualVertex( window, field, block, scale ); },
+				[&]( const Int3& block ) { return getDualVertex( window, *lodField, block, scale ); },
 				[&]( const Int3& solidCell, const Int3& emptyCell ) {
 					if( sampleDataTags )
 					{
-						dataTags.push_back( { GetDataTag( solidCell, scale ), GetDataTag( emptyCell, scale ) } );
+						dataTags.push_back( { GetDataTag( solidCell, scale, fieldScale ), GetDataTag( emptyCell, scale, fieldScale ) } );
 					}
 				},
 				positions,
@@ -1187,7 +1195,7 @@ protected:
 			{
 				return {};
 			}
-			ApplySurfaceCuts( field, positions, quads, cancel );
+			ApplySurfaceCuts( surfaceCuts, positionScale, positions, quads, cancel );
 			if( cancel )
 			{
 				return {};
@@ -1203,7 +1211,9 @@ protected:
 				shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, dataTags, indices );
 			}
 
-			const Vector3 offset = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f + Vector3( 0.5f, 0.5f, 0.5f );
+			// A downsampled cell centre sits in the middle of the full resolution cells it merged
+			const float gridOffset = ( positionScale - 1.f ) * 0.5f;
+			const Vector3 offset = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f + Vector3( 0.5f, 0.5f, 0.5f ) + Vector3( gridOffset, gridOffset, gridOffset );
 			cmf::Modify( lods, allocator ).emplace_back( AllocateBuffers( allocator, buffers, positionScale, offset, decl, positions, normals, shadingNormals, curvature, smoothedCurvature, dataTags, indices ) );
 			if( lod > 0 )
 			{
@@ -1216,12 +1226,17 @@ protected:
 				{
 					break;
 				}
-				field.Downsample();
+				if( !downsampledField )
+				{
+					downsampledField = field;
+				}
+				downsampledField->DownSample();
+				lodField = &*downsampledField;
 				positionScale *= 2.0f;
 			}
 			else
 			{
-				scale -= 1;
+				scale = std::max( 1, scale / 2 );
 			}
 		}
 		return { lods, decl };
@@ -1232,16 +1247,17 @@ protected:
 	 * nearest voxel inside the grid.
 	 * @param cell The lattice cell, -1..lattice per axis.
 	 * @param scale The lattice subdivision.
+	 * @param fieldScale Grid cells per field cell, 2^n after the field has been downsampled n times.
 	 * @return The data tag channel value of the voxel.
 	 */
-	float GetDataTag( const Int3& cell, int32_t scale ) const
+	float GetDataTag( const Int3& cell, int32_t scale, int32_t fieldScale ) const
 	{
 		const Int3 dims = DimensionsToInt3( m_dimensions );
 		Int3 voxel;
 		for( int j = 0; j < 3; ++j )
 		{
-			// Lattice cell c sits at c / scale in grid space; rounded to the nearest voxel
-			voxel[j] = std::clamp( ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
+			// Lattice cell c sits at c / scale * fieldScale + ( fieldScale - 1 ) / 2 in grid space; rounded to the nearest voxel
+			voxel[j] = std::clamp( fieldScale * ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
 		}
 		const size_t index = size_t( voxel[0] ) + size_t( dims[0] ) * ( size_t( voxel[1] ) + size_t( dims[1] ) * size_t( voxel[2] ) );
 		if( m_inputSettings.tags.m_type.type == Tr2VoxelDataType::Boolean )
