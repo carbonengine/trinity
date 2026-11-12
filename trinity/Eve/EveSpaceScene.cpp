@@ -2387,12 +2387,12 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Render the G-buffer batches into depth, albedo, normal, material and velocity, over
+//   Render the G-buffer batches into depth, albedo, specular, normal, parameters and velocity, over
 //   what the depth pass wrote for the forward batches. Batches also write their emissive
 //   colour into the scene colour map, which the lighting pass then adds to; decals blend
 //   over it by their alpha.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& specularMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& parametersMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2408,13 +2408,15 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 
 		Tr2PushPopRT albedoTarget( albedoMap, renderContext, 0 );
 		Tr2PushPopRT normalTarget( normalMap, renderContext, 1 );
-		Tr2PushPopRT materialTarget( materialMap, renderContext, 2 );
+		Tr2PushPopRT parametersTarget( parametersMap, renderContext, 2 );
 		Tr2PushPopRT velocityTarget( velocityMap, renderContext, 3 );
 		Tr2PushPopRT emissiveTarget( colorMap, renderContext, 4 );
+		Tr2PushPopRT specularTarget( specularMap, renderContext, 5 );
 		renderContext.m_esm.SetDepthStencilBuffer( depthMap );
 
 		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 0 );
 		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 2 );
+		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 5 );
 		if( velocityMap.IsValid() && !m_velocityMapDirty )
 		{
 			renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 3 );

@@ -17,7 +17,7 @@ public:
 	Tr2DeferredLighting( const Tr2DeferredLighting& ) = delete;
 	Tr2DeferredLighting& operator=( const Tr2DeferredLighting& ) = delete;
 
-	void Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, Tr2RenderContext& renderContext );
+	void Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& specularMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& parametersMap, Tr2RenderContext& renderContext );
 
 	Tr2Effect* GetEffect() const;
 

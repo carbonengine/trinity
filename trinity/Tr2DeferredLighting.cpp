@@ -14,7 +14,7 @@ Tr2DeferredLighting::Tr2DeferredLighting( const char* effectFilePath )
 
 Tr2DeferredLighting::~Tr2DeferredLighting() = default;
 
-void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& materialMap, Tr2RenderContext& renderContext )
+void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& specularMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& parametersMap, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -22,10 +22,12 @@ void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2Texture
 
 	static const BlueSharedString albedoName( "GBufferAlbedo" );
 	static const BlueSharedString normalName( "GBufferNormal" );
-	static const BlueSharedString materialName( "GBufferMaterial" );
+	static const BlueSharedString parametersName( "GBufferParameters" );
+	static const BlueSharedString specularName( "GBufferSpecular" );
 	m_effect->SetParameter( albedoName, albedoMap );
 	m_effect->SetParameter( normalName, normalMap );
-	m_effect->SetParameter( materialName, materialMap );
+	m_effect->SetParameter( parametersName, parametersMap );
+	m_effect->SetParameter( specularName, specularMap );
 
 	renderContext.m_esm.PushRenderTarget( colorMap );
 	renderContext.m_esm.PushDepthStencilBuffer( depthMap );
@@ -40,7 +42,8 @@ void Tr2DeferredLighting::Render( const Tr2TextureAL& colorMap, const Tr2Texture
 
 	m_effect->SetParameter( albedoName, Tr2TextureAL() );
 	m_effect->SetParameter( normalName, Tr2TextureAL() );
-	m_effect->SetParameter( materialName, Tr2TextureAL() );
+	m_effect->SetParameter( parametersName, Tr2TextureAL() );
+	m_effect->SetParameter( specularName, Tr2TextureAL() );
 }
 
 Tr2Effect* Tr2DeferredLighting::GetEffect() const
