@@ -3,6 +3,8 @@
 #include "StdAfx.h"
 #include "Tr2MeshBase.h"
 #include "Resources/TriGeometryRes.h"
+#include "Resources/TriTextureRes.h"
+#include "TriSettingsRegistrar.h"
 #include "Utilities/BoundingBox.h"
 #include "Raytracing/Tr2RaytracingGeometry.h"
 
@@ -87,12 +89,14 @@ void Tr2MeshBase::OnListModified(
 		{
 			area->AddOwnerMesh( this );
 		}
+		Tr2ScreenSizeRequests::BumpGeneration();
 		break;
 	case BELIST_REMOVED:
 		if( Tr2MeshAreaPtr area = BlueCastPtr( value ) )
 		{
 			area->RemoveOwnerMesh( this );
 		}
+		Tr2ScreenSizeRequests::BumpGeneration();
 		break;
 	case BELIST_LOADFINISHED:
 		for( ssize_t i = 0; i < list->GetSize(); ++i )
@@ -102,6 +106,7 @@ void Tr2MeshBase::OnListModified(
 				entity->AddOwnerMesh( this );
 			}
 		}
+		Tr2ScreenSizeRequests::BumpGeneration();
 		break;
 	case BELIST_UNLOADSTART:
 		for( ssize_t i = 0; i < list->GetSize(); ++i )
@@ -575,27 +580,72 @@ void Tr2MeshBase::SetMaterialBoundsAdjustment( const Tr2MaterialBoundsAdjustment
 	CacheBounds();
 }
 
+bool g_meshScreenSizeRequestCache = true;
+TRI_REGISTER_SETTING( "meshScreenSizeRequestCache", g_meshScreenSizeRequestCache );
+
+CCP_STATS_DECLARE( meshScreenSizeCacheMisses, "Trinity/Mesh/screenSizeRequestCacheMisses", true, CST_COUNTER_HIGH, "Meshes that re-evaluated their texture LOD requests this frame." );
+
 void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 {
-	if( auto geometry = GetGeometryResource() )
+	auto geometry = GetGeometryResource();
+	if( !geometry )
 	{
-		if( auto lod = geometry->GetMeshLod( m_meshIndex, screenSize ) )
+		return;
+	}
+	auto lod = geometry->GetMeshLod( m_meshIndex, screenSize );
+	if( !lod )
+	{
+		return;
+	}
+	auto& cache = m_screenSizeCache;
+	// A mesh shared between objects can be updated from several threads at once; only one of them uses the cache
+	if( !g_meshScreenSizeRequestCache || cache.busy.exchange( true, std::memory_order_acquire ) )
+	{
+		for( auto areaType : m_areaLookupArray )
 		{
-			for( auto areaType : m_areaLookupArray )
+			if( areaType )
 			{
-				if( areaType )
+				for( auto& area : *areaType )
 				{
-					for( auto& area : *areaType )
+					if( area && area->GetMaterialInterface() )
 					{
-						if( area && area->GetMaterialInterface() )
-						{
-							area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities );
-						}
+						area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities );
 					}
 				}
 			}
 		}
+		return;
 	}
+	const uint32_t generation = Tr2ScreenSizeRequests::Generation();
+	if( cache.geometry == geometry && cache.lod == lod && cache.worldRadius == worldRadius && cache.generation == generation && cache.requests.Covers( screenSize ) )
+	{
+		for( auto& request : cache.requests.requests )
+		{
+			request.texture->RequestResolution( request.lod );
+		}
+		cache.busy.store( false, std::memory_order_release );
+		return;
+	}
+	CCP_STATS_INC( meshScreenSizeCacheMisses );
+	cache.geometry = geometry;
+	cache.lod = lod;
+	cache.worldRadius = worldRadius;
+	cache.generation = generation;
+	cache.requests.Reset();
+	for( auto areaType : m_areaLookupArray )
+	{
+		if( areaType )
+		{
+			for( auto& area : *areaType )
+			{
+				if( area && area->GetMaterialInterface() )
+				{
+					area->GetMaterialInterface()->UsedWithScreenSize( screenSize, worldRadius, lod->m_uvDensities, cache.requests );
+				}
+			}
+		}
+	}
+	cache.busy.store( false, std::memory_order_release );
 }
 
 Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
