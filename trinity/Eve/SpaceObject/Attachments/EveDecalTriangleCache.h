@@ -18,6 +18,7 @@
  * finishes, Get returns null and the decal tries again on a later frame. The cache is owned by the mesh's TriGeometryResMeshData,
  * so it is released together with the geometry (TriGeometryRes::ReleaseResources clears the mesh data on
  * release, re-initialization and reload). It is also rebuilt if the mesh's LOD set no longer matches.
+ * Its memory is reported as Trinity/decalTriangleCacheBytes.
  */
 struct DecalTriangleCache
 {
@@ -49,6 +50,10 @@ struct DecalTriangleCache
 	bool failed = false;
 	uint32_t failures = 0;
 	std::chrono::steady_clock::time_point retryAt;
+	// bytes added to the Trinity/decalTriangleCacheBytes statistic, taken off again on destruction
+	std::atomic<int64_t> reportedBytes = 0;
+
+	~DecalTriangleCache();
 
 	/**
 	 * @brief Returns the cache for meshData, starting to build it if needed.

@@ -7,6 +7,8 @@
 #include "TbbStub.h"
 #include <unordered_map>
 
+CCP_STATS_DECLARE( decalTriangleCacheBytes, "Trinity/decalTriangleCacheBytes", false, CST_MEMORY, "Memory of the CPU triangle caches runtime decals build their geometry from." );
+
 namespace
 {
 // average number of triangles per cell the finest grid level aims for
@@ -210,7 +212,17 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	}
 	if( cache && !cache->failed && cache->lodMask == meshData->m_lodMask && cache->lods.size() == meshData->m_lods.size() )
 	{
-		return cache->ready.load( std::memory_order_acquire ) ? cache.get() : nullptr;
+		if( !cache->ready.load( std::memory_order_acquire ) )
+		{
+			return nullptr;
+		}
+		if( cache->reportedBytes.load() == 0 )
+		{
+			int64_t bytes = int64_t( cache->GetMemoryUsage() );
+			cache->reportedBytes.store( bytes );
+			CCP_STATS_ADD( decalTriangleCacheBytes, bytes );
+		}
+		return cache.get();
 	}
 
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -574,6 +586,14 @@ bool DecalTriangleCache::FindNearestSurface( size_t lodIndex, const Vector3& poi
 	} );
 	outDistance = bestDistance;
 	return found;
+}
+
+DecalTriangleCache::~DecalTriangleCache()
+{
+	if( int64_t bytes = reportedBytes.load() )
+	{
+		CCP_STATS_ADD( decalTriangleCacheBytes, -bytes );
+	}
 }
 
 size_t DecalTriangleCache::GetMemoryUsage() const
