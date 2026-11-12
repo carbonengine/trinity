@@ -1,14 +1,14 @@
 {
   "default-registry": {
     "kind": "git",
-    "baseline": "242ac6932a9cd2607332969129e9572516f28d65",
+    "baseline": "afa249f12f52ed8a3b919f195495ba8b330288d1",
     "repository": "https://github.com/microsoft/vcpkg.git"
   },
   "registries": [
     {
       "kind": "git",
       "repository": "https://github.com/carbonengine/vcpkg-registry.git",
-      "baseline": "a83134805f3fa07da6a6add87c4b250d9778bfd1",
+      "baseline": "853ee39d8b2ff4264ef24fa01434e4cbea108ee5",
       "packages": [
         "python3",
         "carbon-*",
@@ -16,6 +16,7 @@
         "greenlet",
         "ccp-debug-info",
         "crashpad",
+        "directx-dxc",
         "zlib",
         "re2c",
         "amd-fidelityfx",

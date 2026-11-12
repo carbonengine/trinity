@@ -2140,6 +2140,7 @@ endif()
 if(BUILD_TESTING)
     find_package(GTest CONFIG REQUIRED)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    include(GoogleTest)
 
     # Find exefile tool, which is used to run the tests
     if (DEFINED CMAKE_BUILD_TYPE AND NOT CMAKE_BUILD_TYPE MATCHES "Release")
