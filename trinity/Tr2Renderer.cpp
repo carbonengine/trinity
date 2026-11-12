@@ -1057,6 +1057,8 @@ void Tr2Renderer::BeginFrame()
 
 void Tr2Renderer::EndFrame()
 {
+	DecalTriangleCache::ReleaseIdle();
+
 	if( s_debugTextRenderer )
 	{
 		s_debugTextRenderer->Clear();

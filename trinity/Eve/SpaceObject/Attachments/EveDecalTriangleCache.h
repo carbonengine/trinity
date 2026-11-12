@@ -18,7 +18,8 @@
  * finishes, Get returns null and the decal tries again on a later frame. The cache is owned by the mesh's TriGeometryResMeshData,
  * so it is released together with the geometry (TriGeometryRes::ReleaseResources clears the mesh data on
  * release, re-initialization and reload). It is also rebuilt if the mesh's LOD set no longer matches.
- * Its memory is reported as Trinity/decalTriangleCacheBytes.
+ * Its memory is reported as Trinity/decalTriangleCacheBytes. A ready cache that Get has not handed out
+ * for IDLE_RELEASE has its triangles freed by ReleaseIdle; the next Get against the mesh rebuilds it.
  */
 struct DecalTriangleCache
 {
@@ -52,6 +53,10 @@ struct DecalTriangleCache
 	std::chrono::steady_clock::time_point retryAt;
 	// bytes added to the Trinity/decalTriangleCacheBytes statistic, taken off again on destruction
 	std::atomic<int64_t> reportedBytes = 0;
+	// when Get last handed this cache out; ReleaseIdle frees the triangles of a cache idle too long
+	std::chrono::steady_clock::time_point lastUsed;
+	// ReleaseIdle freed the triangles: Get rebuilds the cache
+	bool released = false;
 
 	~DecalTriangleCache();
 
@@ -66,6 +71,12 @@ struct DecalTriangleCache
 	 * build afterwards.
 	 */
 	static void Shutdown();
+
+	/**
+	 * @brief Frees the triangles of every ready cache Get has not handed out for IDLE_RELEASE. Called once
+	 * a frame on the main thread (Tr2Renderer::EndFrame); does its work at most once a second.
+	 */
+	static void ReleaseIdle();
 
 	/**
 	 * @brief Appends the indices of the triangles of LOD lodIndex that intersect the decal volume.

@@ -20,6 +20,20 @@ constexpr int MAX_CONCURRENT_BUILDS = 2;
 // after a failed readback, wait this long before the next, doubling up to the cap
 constexpr std::chrono::seconds RETRY_BACKOFF_FIRST( 2 );
 constexpr std::chrono::seconds RETRY_BACKOFF_MAX( 60 );
+// A cache unused this long has its triangles freed. Collisions come in bursts: a grind calls Get every
+// metre, and a ship bumping around one level piece comes back to it within seconds, so a minute keeps
+// those from paying a rebuild (a readback of tens of ms plus about a second of build) while a ship
+// that has moved on gives the memory (~30 bytes per triangle) back.
+constexpr std::chrono::seconds IDLE_RELEASE( 60 );
+constexpr std::chrono::seconds IDLE_SWEEP_INTERVAL( 1 );
+
+// caches built so far, for ReleaseIdle; main thread only. Weak, so a mesh released with its cache
+// leaves no dangling entry, and no mesh is ever reached through it.
+std::vector<std::weak_ptr<DecalTriangleCache>>& GetCacheRegistry()
+{
+	static std::vector<std::weak_ptr<DecalTriangleCache>>* registry = new std::vector<std::weak_ptr<DecalTriangleCache>>();
+	return *registry;
+}
 
 struct BuildQueue
 {
@@ -210,12 +224,13 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	{
 		return nullptr;
 	}
-	if( cache && !cache->failed && cache->lodMask == meshData->m_lodMask && cache->lods.size() == meshData->m_lods.size() )
+	if( cache && !cache->failed && !cache->released && cache->lodMask == meshData->m_lodMask && cache->lods.size() == meshData->m_lods.size() )
 	{
 		if( !cache->ready.load( std::memory_order_acquire ) )
 		{
 			return nullptr;
 		}
+		cache->lastUsed = now;
 		if( cache->reportedBytes.load() == 0 )
 		{
 			int64_t bytes = int64_t( cache->GetMemoryUsage() );
@@ -271,7 +286,9 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	auto newCache = std::make_shared<DecalTriangleCache>();
 	newCache->lodMask = meshData->m_lodMask;
 	newCache->lods.resize( meshData->m_lods.size() );
+	newCache->lastUsed = now;
 	cache = newCache;
+	GetCacheRegistry().push_back( newCache );
 
 	// the task only touches its own copies, so the mesh may be released while it runs
 	++queue.inFlight;
@@ -586,6 +603,40 @@ bool DecalTriangleCache::FindNearestSurface( size_t lodIndex, const Vector3& poi
 	} );
 	outDistance = bestDistance;
 	return found;
+}
+
+void DecalTriangleCache::ReleaseIdle()
+{
+	static std::chrono::steady_clock::time_point nextSweep;
+	const auto now = std::chrono::steady_clock::now();
+	if( now < nextSweep )
+	{
+		return;
+	}
+	nextSweep = now + IDLE_SWEEP_INTERVAL;
+
+	auto& registry = GetCacheRegistry();
+	registry.erase( std::remove_if( registry.begin(), registry.end(), [&]( const std::weak_ptr<DecalTriangleCache>& entry ) {
+		auto cache = entry.lock();
+		if( !cache )
+		{
+			return true;
+		}
+		// a cache still building belongs to its task until it is ready: leave it alone
+		if( !cache->ready.load( std::memory_order_acquire ) || now - cache->lastUsed < IDLE_RELEASE )
+		{
+			return false;
+		}
+		std::vector<Lod>().swap( cache->lods );
+		cache->released = true;
+		cache->ready.store( false, std::memory_order_release );
+		if( int64_t bytes = cache->reportedBytes.exchange( 0 ) )
+		{
+			CCP_STATS_ADD( decalTriangleCacheBytes, -bytes );
+		}
+		return true;
+	} ),
+					registry.end() );
 }
 
 DecalTriangleCache::~DecalTriangleCache()
