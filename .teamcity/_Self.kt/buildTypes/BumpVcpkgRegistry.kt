@@ -6,6 +6,7 @@ import jetbrains.buildServer.configs.kotlin.AbsoluteId
 import jetbrains.buildServer.configs.kotlin.BuildType
 import jetbrains.buildServer.configs.kotlin.CheckoutMode
 import jetbrains.buildServer.configs.kotlin.DslContext
+import jetbrains.buildServer.configs.kotlin.ParameterDisplay
 import jetbrains.buildServer.configs.kotlin.buildFeatures.sshAgent
 import jetbrains.buildServer.configs.kotlin.buildSteps.ScriptBuildStep
 import jetbrains.buildServer.configs.kotlin.buildSteps.script
@@ -24,6 +25,8 @@ object BumpVcpkgRegistry : BuildType({
         param("git_user_name", "Carbon Automation")
         param("git_user_email", "213465544+ccpgames-carbon@users.noreply.github.com")
         param("env.GITHUB_TOKEN", "%GITHUB_CARBON_PAT%")
+        text("env.VCPKG_MANIFEST_ONLY_DEPENDENCIES", "carbon-exefile", label = "Manifest only dependencies", display = ParameterDisplay.NORMAL, allowEmpty = true,
+            description = "Comma separated dependencies that belong in this component's vcpkg.json but not in its registry port, e.g. dependencies only used by its tests or tooling. Any other dependency missing from the port is added to it.")
         param("teamcity.vcsTrigger.runBuildInNewEmptyBranch", "true")
     }
 
