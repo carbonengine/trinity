@@ -2390,9 +2390,10 @@ void EveSpaceScene::RenderDepthPass( const Tr2TextureAL& depthMap, const Tr2Text
 //   Render the G-buffer batches into depth, albedo, specular, normal, parameters and velocity, over
 //   what the depth pass wrote for the forward batches. Batches also write their emissive
 //   colour into the scene colour map, which the lighting pass then adds to; decals blend
-//   over it by their alpha.
+//   over it by their alpha. Opaque batches write their outline ids into the custom stencil
+//   when it is in use.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& specularMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& parametersMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2TextureAL& albedoMap, const Tr2TextureAL& specularMap, const Tr2TextureAL& normalMap, const Tr2TextureAL& parametersMap, const Tr2TextureAL& velocityMap, const Tr2TextureAL& colorMap, const Tr2TextureAL& customStencil, Tr2RenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
@@ -2424,8 +2425,11 @@ void EveSpaceScene::RenderGBufferPass( const Tr2TextureAL& depthMap, const Tr2Te
 
 		ApplyPerFrameData( renderContext );
 
-		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
+		{
+			Tr2PushPopRT outlineTarget( customStencil, renderContext, 6 );
+			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+			renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_OPAQUE], GBufferTechnique() );
+		}
 		renderContext.SetReadOnlyDepth( true );
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DECAL );
 		renderContext.RenderBatches( m_gBufferBatches[TRIBATCHTYPE_DECAL], GBufferTechnique() );

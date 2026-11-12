@@ -531,9 +531,9 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 	Tr2GpuResourcePool::Texture normalMap = GetNormalMap( renderSize, outputs );
 	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
 	const bool renderMainPass = m_scene->m_display && m_mainPassRenderingEnabled;
-	// The G-buffer pass writes depth and normals for its own batches; the depth pass only
-	// draws them when there is no G-buffer pass or the custom stencil needs their outline ids
-	const bool gBufferBatchesInDepthPass = !renderMainPass || customStencil.IsValid();
+	// The G-buffer pass writes depth, normals and outline ids for its own batches; the depth
+	// pass only draws them when there is no G-buffer pass
+	const bool gBufferBatchesInDepthPass = !renderMainPass;
 	{
 		TimeSection depthPassSection( m_timers.depthPass, "DepthPass", rootTimer, renderContext );
 		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, renderContext, m_depthPassTechnique, gBufferBatchesInDepthPass );
@@ -552,7 +552,7 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 		SetNamedOutput( outputs, "GBuffer4", specularMap );
 
 		TimeSection gBufferPassSection( m_timers.gBufferPass, "GBufferPass", rootTimer, renderContext );
-		m_scene->RenderGBufferPass( depthBuffer, albedoMap, specularMap, normalMap, parametersMap, velocityMap, customBackBuffer, renderContext );
+		m_scene->RenderGBufferPass( depthBuffer, albedoMap, specularMap, normalMap, parametersMap, velocityMap, customBackBuffer, customStencil, renderContext );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
 	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
