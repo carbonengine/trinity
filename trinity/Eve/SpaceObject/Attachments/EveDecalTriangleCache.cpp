@@ -4,7 +4,7 @@
 #include "EveDecalTriangleCache.h"
 #include "Utilities/BoundingBox.h"
 #include "Shader/Tr2EffectStateManager.h"
-#include <thread>
+#include "TbbStub.h"
 #include <unordered_map>
 
 namespace
@@ -13,6 +13,22 @@ namespace
 constexpr float TRIANGLES_PER_CELL = 4.f;
 constexpr uint32_t MAX_CELLS_PER_AXIS = 256;
 constexpr float MAX_CELLS = float( 1u << 21 );
+// grid builds in flight at once; a mesh asked for beyond that retries on a later frame
+constexpr int MAX_CONCURRENT_BUILDS = 2;
+
+struct BuildQueue
+{
+	Tr2ParallelTaskGroup group;
+	std::atomic<int> inFlight = 0;
+	std::atomic<bool> shutDown = false;
+};
+
+// never destroyed: Shutdown drains it, and tearing a task group down during static destruction is unsafe
+BuildQueue& GetBuildQueue()
+{
+	static BuildQueue* queue = new BuildQueue();
+	return *queue;
+}
 
 // Raw copy of one LOD's buffers, taken on the main thread and converted on the worker
 struct RawLod
@@ -191,6 +207,12 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
+	BuildQueue& queue = GetBuildQueue();
+	if( queue.shutDown.load() || queue.inFlight.load() >= MAX_CONCURRENT_BUILDS )
+	{
+		return nullptr;
+	}
+
 	for( auto& lod : meshData->m_lods )
 	{
 		if( !lod->m_allocationsValid )
@@ -223,16 +245,29 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	newCache->lods.resize( meshData->m_lods.size() );
 	cache = newCache;
 
-	// the worker only touches its own copies, so the mesh may be released while it runs
-	std::thread( [newCache, raw = std::move( raw ), bytesPerVertex = meshData->m_bytesPerVertex, positionsCompressed]() {
-		for( size_t i = 0; i < raw.size(); ++i )
+	// the task only touches its own copies, so the mesh may be released while it runs
+	++queue.inFlight;
+	queue.group.run( [newCache, raw = std::move( raw ), bytesPerVertex = meshData->m_bytesPerVertex, positionsCompressed, &queue]() {
+		for( size_t i = 0; i < raw.size() && !queue.shutDown.load(); ++i )
 		{
 			ConvertLod( raw[i], bytesPerVertex, positionsCompressed, newCache->lods[i] );
 			BuildGrid( newCache->lods[i] );
 		}
-		newCache->ready.store( true, std::memory_order_release );
-	} ).detach();
+		if( !queue.shutDown.load() )
+		{
+			newCache->ready.store( true, std::memory_order_release );
+		}
+		--queue.inFlight;
+	} );
 	return nullptr;
+}
+
+void DecalTriangleCache::Shutdown()
+{
+	BuildQueue& queue = GetBuildQueue();
+	queue.shutDown.store( true );
+	queue.group.cancel();
+	queue.group.wait();
 }
 
 namespace

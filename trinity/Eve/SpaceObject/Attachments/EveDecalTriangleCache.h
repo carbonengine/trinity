@@ -13,8 +13,8 @@
  * least as large as the triangle; a query looks at every level with its box grown by half a cell there.
  *
  * The first runtime decal build against a mesh reads the mesh back from the GPU on the main thread and
- * builds the grid on a worker thread; until that finishes, Get returns null and the decal tries again on a
- * later frame. The cache is owned by the mesh's TriGeometryResMeshData,
+ * builds the grid as a task in a shared task group, at most MAX_CONCURRENT_BUILDS at a time; until that
+ * finishes, Get returns null and the decal tries again on a later frame. The cache is owned by the mesh's TriGeometryResMeshData,
  * so it is released together with the geometry (TriGeometryRes::ReleaseResources clears the mesh data on
  * release, re-initialization and reload). It is also rebuilt if the mesh's LOD set no longer matches.
  */
@@ -50,6 +50,12 @@ struct DecalTriangleCache
 	 * @return null while the mesh's buffers or the cache are not ready yet.
 	 */
 	static const DecalTriangleCache* Get( TriGeometryResMeshData* meshData );
+
+	/**
+	 * @brief Cancels the builds that have not started and waits for the running ones. Get starts no
+	 * build afterwards.
+	 */
+	static void Shutdown();
 
 	/**
 	 * @brief Appends the indices of the triangles of LOD lodIndex that intersect the decal volume.

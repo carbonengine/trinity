@@ -10,6 +10,7 @@
 #include "TriSettingsRegistrar.h"
 #include "TriPoolAllocator.h"
 #include "Resources/TriGeometryRes.h"
+#include "Eve/SpaceObject/Attachments/EveDecalTriangleCache.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -357,6 +358,7 @@ bool Tr2Renderer::Initialize()
 
 void Tr2Renderer::Shutdown()
 {
+	DecalTriangleCache::Shutdown();
 	GlobalStore().UnregisterVariable( "Time" );
 	USE_MAIN_THREAD_RENDER_CONTEXT(); //TODO!
 	renderContext.m_esm.Shutdown();
