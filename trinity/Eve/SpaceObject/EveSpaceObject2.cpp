@@ -1615,7 +1615,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 		}
 		else
 		{
-			( *it )->GetModularRenderables( renderables, parts, m_meshScreenSize, m_boundingSphereRadius );
+			( *it )->GetModularRenderables( renderables, parts, m_meshScreenSize, m_boundingSphereRadius, geometryRes );
 		}
 	}
 }

@@ -140,7 +140,7 @@ public:
 	 * @param objectScreenSize Screen size of the whole parent, used to pick a LOD per part.
 	 * @param objectRadius Bounding sphere radius of the whole parent in object space.
 	 */
-	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius );
+	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius, const TriGeometryRes* ownGeometry );
 
 	// true if this decal builds its own geometry at runtime (dynamicIndexBuffers)
 	bool HasDynamicIndexBuffers() const
@@ -257,11 +257,17 @@ private:
 		// owned here rather than cached on the (shared) mesh data: runtime decals come and go
 		std::shared_ptr<MeshDecalData> decalGeometry;
 		float screenSizeScale = 1.f;
+		// radius of the part's bounds about its own origin, as the instanced mesh manager sizes it for LOD
+		float lodRadius = 0.f;
 		int lodIndex = -1;
 		bool overlaps = false;
 		bool seen = false;
 	};
 	std::vector<PartTarget> m_partTargets;
+	// the camera of the last visibility update: part LODs and the depth pull are taken from it
+	TriFrustum m_lastFrustum;
+	float m_lastInvLodFactor = 1.f;
+	bool m_hasLastFrustum = false;
 	// true when the parent has no mesh and the decal renders through m_partTargets
 	bool m_usePartTargets;
 };

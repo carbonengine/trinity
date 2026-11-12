@@ -130,6 +130,9 @@ bool EveSpaceObjectDecal::OnPrepareResources()
 void EveSpaceObjectDecal::UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData )
 {
 	m_isVisible = 0;
+	m_lastFrustum = updateContext.GetFrustum();
+	m_lastInvLodFactor = updateContext.GetInvLodFactor();
+	m_hasLastFrustum = true;
 
 	if( !m_display || !m_decalEffect )
 	{
@@ -248,7 +251,36 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 	renderables.push_back( this );
 }
 
-void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius )
+namespace
+{
+// A part decal's world matrix is composed on the CPU, while the part itself is drawn through the
+// instanced path (instance matrix, then the child's world matrix, on the GPU): the two positions
+// differ by rounding, and with no depth write or bias the decal z-fights its own surface. Scaling
+// the decal about the eye by this much leaves every pixel where it is and moves it this fraction of
+// its distance towards the eye, which is well above that rounding and well below anything visible.
+constexpr float PART_DEPTH_PULL = 4e-4f;
+
+// The LOD the instanced mesh manager draws a part with (EveInstancedMeshManager::GetMeshLod)
+int InstancedMeshLod( const TriGeometryResMeshData& meshData, float screenSize )
+{
+	const size_t lodCount = meshData.m_lods.size();
+	for( size_t lod = 0; lod + 1 < lodCount; ++lod )
+	{
+		if( screenSize > meshData.m_lods[lod + 1]->m_maxScreenSize )
+		{
+			return int( lod );
+		}
+	}
+	return int( lodCount ) - 1;
+}
+
+float MaxAxisScale( const Matrix& m )
+{
+	return std::sqrt( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ), LengthSq( Vector3( m._21, m._22, m._23 ) ), LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
+}
+}
+
+void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius, const TriGeometryRes* ownGeometry )
 {
 	if( !m_usePartTargets )
 	{
@@ -303,7 +335,9 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 				decalMin.y <= meshData->m_maxBounds.y && decalMax.y >= meshData->m_minBounds.y &&
 				decalMin.z <= meshData->m_maxBounds.z && decalMax.z >= meshData->m_minBounds.z;
 
-			// the instanced mesh manager picks a part's LOD from the part's own bounding sphere
+			Vector3 boundsCenter = ( meshData->m_minBounds + meshData->m_maxBounds ) * 0.5f;
+			target.lodRadius = Length( meshData->m_maxBounds - meshData->m_minBounds ) * 0.5f + Length( boundsCenter );
+			// fallback before the first visibility update: scale the object's screen size by the part's size
 			if( objectRadius > 0.f )
 			{
 				const Matrix& m = part.childToObject;
@@ -338,7 +372,28 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 		{
 			continue;
 		}
-		int lodIndex = m_isGeometryFrozen ? 0 : target.geometry->GetLodIndexForScreenSize( 0, objectScreenSize * target.screenSizeScale );
+		int lodIndex = 0;
+		if( m_isGeometryFrozen )
+		{
+			lodIndex = 0;
+		}
+		else if( target.geometry == ownGeometry )
+		{
+			// the object's own mesh draws at the object's screen size
+			lodIndex = target.geometry->GetLodIndexForScreenSize( 0, objectScreenSize );
+		}
+		else if( m_hasLastFrustum )
+		{
+			// as EveChildInstancedMeshes sizes the instance's sphere and EveInstancedMeshManager picks its LOD
+			Matrix world = target.childToObject * m_parentData.transform;
+			float screenSize = m_lastFrustum.GetPixelSizeAccrossEst( world.GetTranslation(), target.lodRadius * MaxAxisScale( world ) ) * m_lastInvLodFactor;
+			const TriGeometryResMeshData* meshData = target.geometry->GetMeshData( 0 );
+			lodIndex = meshData ? InstancedMeshLod( *meshData, screenSize ) : -1;
+		}
+		else
+		{
+			lodIndex = target.geometry->GetLodIndexForScreenSize( 0, objectScreenSize * target.screenSizeScale );
+		}
 		if( lodIndex < 0 || lodIndex >= int( target.decalGeometry->m_lods.size() ) || !target.decalGeometry->m_lods[lodIndex].m_primitiveCount )
 		{
 			continue;
@@ -410,7 +465,13 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 				return;
 			}
 			// draw the part's vertices with the part's world transform and the decal volume in part space
-			FillPerObjectData( *partData, target.childToObject * m_parentData.transform, target.decalMatrix, target.inverseDecalMatrix, IdentityMatrix() );
+			Matrix world = target.childToObject * m_parentData.transform;
+			if( m_hasLastFrustum )
+			{
+				const Vector3& eye = m_lastFrustum.m_viewPos;
+				world = world * TranslationMatrix( -eye ) * ScalingMatrix( 1.f - PART_DEPTH_PULL, 1.f - PART_DEPTH_PULL, 1.f - PART_DEPTH_PULL ) * TranslationMatrix( eye );
+			}
+			FillPerObjectData( *partData, world, target.decalMatrix, target.inverseDecalMatrix, IdentityMatrix() );
 			CommitBatch( batches, lod, *target.decalGeometry, target.lodIndex, partData );
 		}
 		return;
