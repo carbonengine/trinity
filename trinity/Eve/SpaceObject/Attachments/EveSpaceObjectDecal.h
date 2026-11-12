@@ -260,10 +260,11 @@ private:
 		// radius of the part's bounds about its own origin, as the instanced mesh manager sizes it for LOD
 		float lodRadius = 0.f;
 		int lodIndex = -1;
-		bool overlaps = false;
-		bool seen = false;
 	};
+	// the parts the decal volume overlaps, from the broad phase of the parts list m_partsSignature names
 	std::vector<PartTarget> m_partTargets;
+	// hash of the parts list m_partTargets was built from; 0 when they must be rebuilt
+	uint64_t m_partsSignature = 0;
 	// the camera of the last visibility update: part LODs and the depth pull are taken from it
 	TriFrustum m_lastFrustum;
 	float m_lastInvLodFactor = 1.f;

@@ -100,6 +100,7 @@ bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 		}
 		// the part targets cache the decal volume in part space
 		m_partTargets.clear();
+		m_partsSignature = 0;
 	}
 	return true;
 }
@@ -201,6 +202,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 	{
 		m_usePartTargets = false;
 		m_partTargets.clear();
+		m_partsSignature = 0;
 	}
 
 	if( m_isVisible <= 0 || !geomRes )
@@ -279,6 +281,25 @@ int InstancedMeshLod( const TriGeometryResMeshData& meshData, float screenSize )
 	return int( lodCount ) - 1;
 }
 
+// FNV-1a over each part's geometry and transform: equal for the same parts list
+uint64_t PartsSignature( const std::vector<EveChildGeometry>& parts )
+{
+	uint64_t hash = 1469598103934665603ull;
+	auto mix = [&hash]( const void* data, size_t size ) {
+		const auto* bytes = static_cast<const uint8_t*>( data );
+		for( size_t i = 0; i < size; ++i )
+		{
+			hash = ( hash ^ bytes[i] ) * 1099511628211ull;
+		}
+	};
+	for( const auto& part : parts )
+	{
+		mix( &part.geometry, sizeof( part.geometry ) );
+		mix( &part.childToObject, sizeof( part.childToObject ) );
+	}
+	return hash ? hash : 1;
+}
+
 float MaxAxisScale( const Matrix& m )
 {
 	return std::sqrt( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ), LengthSq( Vector3( m._21, m._22, m._23 ) ), LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
@@ -302,72 +323,73 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 		return;
 	}
 
-	for( auto& target : m_partTargets )
+	const uint64_t signature = PartsSignature( parts );
+	if( signature != m_partsSignature )
 	{
-		target.seen = false;
-	}
+		// broad phase: the parts whose bounds the decal volume touches, in object space
+		Vector3 decalMin( -1.f, -1.f, -1.f );
+		Vector3 decalMax( 1.f, 1.f, 1.f );
+		BoundingBoxTransform( decalMin, decalMax, m_decalMatrix );
 
-	for( const auto& part : parts )
-	{
-		TriGeometryRes* geometry = part.geometry;
-		if( !geometry || !geometry->IsGood() || !geometry->GetMeshCount() )
+		std::vector<PartTarget> previous = std::move( m_partTargets );
+		m_partTargets.clear();
+		for( const auto& part : parts )
 		{
-			continue;
-		}
-		TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
-		if( !meshData )
-		{
-			continue;
-		}
+			TriGeometryRes* geometry = part.geometry;
+			if( !geometry || !geometry->IsGood() || !geometry->GetMeshCount() )
+			{
+				continue;
+			}
+			TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
+			if( !meshData )
+			{
+				continue;
+			}
+			Vector3 partMin = meshData->m_minBounds;
+			Vector3 partMax = meshData->m_maxBounds;
+			BoundingBoxTransform( partMin, partMax, part.childToObject );
+			if( decalMin.x > partMax.x || decalMax.x < partMin.x || decalMin.y > partMax.y || decalMax.y < partMin.y || decalMin.z > partMax.z || decalMax.z < partMin.z )
+			{
+				continue;
+			}
 
-		auto found = std::find_if( m_partTargets.begin(), m_partTargets.end(), [&]( const PartTarget& target ) {
-			return !target.seen && target.geometry == geometry && target.childToObject == part.childToObject;
-		} );
-		if( found == m_partTargets.end() )
-		{
+			// a part already targeted keeps its built geometry
+			auto kept = std::find_if( previous.begin(), previous.end(), [&]( const PartTarget& target ) {
+				return target.geometry == geometry && target.childToObject == part.childToObject;
+			} );
+			if( kept != previous.end() )
+			{
+				m_partTargets.push_back( std::move( *kept ) );
+				previous.erase( kept );
+				continue;
+			}
+
 			PartTarget target;
 			target.geometry = geometry;
 			target.childToObject = part.childToObject;
 			// part vertices are in part space; the decal volume lives in object space
 			target.decalMatrix = m_decalMatrix * Inverse( part.childToObject );
 			target.inverseDecalMatrix = Inverse( target.decalMatrix );
-
-			// cheap reject: does the decal volume touch the part's bounds at all?
-			Vector3 decalMin( -1.f, -1.f, -1.f );
-			Vector3 decalMax( 1.f, 1.f, 1.f );
-			BoundingBoxTransform( decalMin, decalMax, target.decalMatrix );
-			target.overlaps = decalMin.x <= meshData->m_maxBounds.x && decalMax.x >= meshData->m_minBounds.x &&
-				decalMin.y <= meshData->m_maxBounds.y && decalMax.y >= meshData->m_minBounds.y &&
-				decalMin.z <= meshData->m_maxBounds.z && decalMax.z >= meshData->m_minBounds.z;
-
 			Vector3 boundsCenter = ( meshData->m_minBounds + meshData->m_maxBounds ) * 0.5f;
 			target.lodRadius = Length( meshData->m_maxBounds - meshData->m_minBounds ) * 0.5f + Length( boundsCenter );
 			// fallback before the first visibility update: scale the object's screen size by the part's size
 			if( objectRadius > 0.f )
 			{
-				const Matrix& m = part.childToObject;
-				float scale = std::max( { Length( Vector3( m._11, m._12, m._13 ) ),
-										  Length( Vector3( m._21, m._22, m._23 ) ),
-										  Length( Vector3( m._31, m._32, m._33 ) ) } );
-				target.screenSizeScale = meshData->m_boundingSphere.w * scale / objectRadius;
+				target.screenSizeScale = meshData->m_boundingSphere.w * MaxAxisScale( part.childToObject ) / objectRadius;
 			}
 			m_partTargets.push_back( std::move( target ) );
-			found = m_partTargets.end() - 1;
 		}
-		found->seen = true;
-
-		if( !found->overlaps )
-		{
-			continue;
-		}
-
-		if( !found->decalGeometry || found->decalGeometry->m_lodMask != meshData->m_lodMask )
-		{
-			found->decalGeometry = BuildDecalGeometryCached( meshData, found->decalMatrix, found->inverseDecalMatrix );
-		}
+		m_partsSignature = signature;
 	}
 
-	m_partTargets.erase( std::remove_if( m_partTargets.begin(), m_partTargets.end(), []( const PartTarget& target ) { return !target.seen; } ), m_partTargets.end() );
+	for( auto& target : m_partTargets )
+	{
+		TriGeometryResMeshData* meshData = target.geometry->IsGood() ? target.geometry->GetMeshData( 0 ) : nullptr;
+		if( meshData && ( !target.decalGeometry || target.decalGeometry->m_lodMask != meshData->m_lodMask ) )
+		{
+			target.decalGeometry = BuildDecalGeometryCached( meshData, target.decalMatrix, target.inverseDecalMatrix );
+		}
+	}
 
 	bool anyVisible = false;
 	for( auto& target : m_partTargets )
