@@ -188,6 +188,7 @@ private:
 	void CommitBatch( ITriRenderBatchAccumulator * batches, const TriGeometryResLodData* lod, const MeshDecalData& decalGeometry, int lodIndex, const Tr2PerObjectData* perObjectData );
 	// update
 	void UpdateDecalMatrix();
+	void UpdateDrawDecalMatrix();
 	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
 
 	bool HasStaticIndexBuffers() const;
@@ -218,6 +219,11 @@ private:
 	// matrices representing the "volume" of the decal projection
 	Matrix m_decalMatrix;
 	Matrix m_inverseDecalMatrix;
+	// per-axis share (0..1) of that volume the decal draws in: animating it rebuilds no geometry
+	Vector3 m_growScale = Vector3( 1.f, 1.f, 1.f );
+	// the drawn volume: m_decalMatrix with m_growScale applied in decal space
+	Matrix m_drawDecalMatrix;
+	Matrix m_drawInverseDecalMatrix;
 
 	// base mesh geometry
 	TriGeometryResPtr m_baseGeometryResource;
@@ -254,6 +260,7 @@ private:
 		// the decal volume expressed in the part's vertex space
 		Matrix decalMatrix;
 		Matrix inverseDecalMatrix;
+		Matrix objectToPart;
 		// owned here rather than cached on the (shared) mesh data: runtime decals come and go
 		std::shared_ptr<MeshDecalData> decalGeometry;
 		float screenSizeScale = 1.f;

@@ -21,6 +21,13 @@ const Be::ClassInfo* EveSpaceObjectDecal::ExposeToBlue()
 		MAP_ATTRIBUTE( "position", m_position, "center of decal", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "orientation of decal", Be::READWRITE | Be::NOTIFY | Be::PERSIST );
 		MAP_ATTRIBUTE( "scaling", m_scaling, "size of decal", Be::READWRITE | Be::NOTIFY | Be::PERSIST );
+		MAP_ATTRIBUTE(
+			"growScale",
+			m_growScale,
+			"Per-axis share (0..1) of the volume scaling sets that the decal draws in. Animating it costs no geometry "
+			"rebuild, unlike scaling: the decal's geometry stays built for the full volume and the shader shows nothing "
+			"outside the drawn one.",
+			Be::READWRITE | Be::NOTIFY | Be::PERSIST );
 
 		MAP_ATTRIBUTE( "parentBoneIndex", m_parentBoneIndex, "the bone index this decal is tight to (-1 to disable)", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "min size on screen in pixels before the decal is LODed out", Be::READWRITE | Be::PERSIST )

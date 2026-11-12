@@ -74,6 +74,16 @@ void EveSpaceObjectDecal::UpdateDecalMatrix()
 	m_decalMatrix = TransformationMatrix( m_scaling, m_rotation, m_position );
 	// and calc the inverse right away, is needed for intersection
 	m_inverseDecalMatrix = Inverse( m_decalMatrix );
+	UpdateDrawDecalMatrix();
+}
+
+void EveSpaceObjectDecal::UpdateDrawDecalMatrix()
+{
+	// a grow from 0 must not make the drawn volume singular
+	constexpr float MIN_GROW = 1e-4f;
+	Vector3 grow( std::max( m_growScale.x, MIN_GROW ), std::max( m_growScale.y, MIN_GROW ), std::max( m_growScale.z, MIN_GROW ) );
+	m_drawDecalMatrix = ScalingMatrix( grow ) * m_decalMatrix;
+	m_drawInverseDecalMatrix = Inverse( m_drawDecalMatrix );
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -101,6 +111,11 @@ bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 		// the part targets cache the decal volume in part space
 		m_partTargets.clear();
 		m_partsSignature = 0;
+	}
+	else if( IsMatch( value, m_growScale ) )
+	{
+		// the geometry stays built for the full volume; only what is drawn of it changes
+		UpdateDrawDecalMatrix();
 	}
 	return true;
 }
@@ -368,7 +383,8 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 			target.geometry = geometry;
 			target.childToObject = part.childToObject;
 			// part vertices are in part space; the decal volume lives in object space
-			target.decalMatrix = m_decalMatrix * Inverse( part.childToObject );
+			target.objectToPart = Inverse( part.childToObject );
+			target.decalMatrix = m_decalMatrix * target.objectToPart;
 			target.inverseDecalMatrix = Inverse( target.decalMatrix );
 			Vector3 boundsCenter = ( meshData->m_minBounds + meshData->m_maxBounds ) * 0.5f;
 			target.lodRadius = Length( meshData->m_maxBounds - meshData->m_minBounds ) * 0.5f + Length( boundsCenter );
@@ -503,7 +519,7 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 				float pull = std::clamp( PART_DEPTH_ULPS * magnitude * FLOAT_STEP / nearest, PART_DEPTH_PULL_MIN, PART_DEPTH_PULL_MAX );
 				world = world * TranslationMatrix( -eye ) * ScalingMatrix( 1.f - pull, 1.f - pull, 1.f - pull ) * TranslationMatrix( eye );
 			}
-			FillPerObjectData( *partData, world, target.decalMatrix, target.inverseDecalMatrix, IdentityMatrix() );
+			FillPerObjectData( *partData, world, m_drawDecalMatrix * target.objectToPart, target.childToObject * m_drawInverseDecalMatrix, IdentityMatrix() );
 			CommitBatch( batches, lod, *target.decalGeometry, target.lodIndex, partData );
 		}
 		return;
@@ -604,7 +620,7 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 		return NULL;
 	}
 
-	FillPerObjectData( *perObjectData, m_parentData.transform, m_decalMatrix, m_inverseDecalMatrix, m_parentBoneMatrix );
+	FillPerObjectData( *perObjectData, m_parentData.transform, m_drawDecalMatrix, m_drawInverseDecalMatrix, m_parentBoneMatrix );
 	return perObjectData;
 }
 
