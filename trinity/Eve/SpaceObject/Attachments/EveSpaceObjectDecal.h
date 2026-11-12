@@ -224,6 +224,10 @@ private:
 	// the drawn volume: m_decalMatrix with m_growScale applied in decal space
 	Matrix m_drawDecalMatrix;
 	Matrix m_drawInverseDecalMatrix;
+	// inverse of the volume the runtime geometry was built for: a later volume inside it keeps the geometry
+	Matrix m_builtInverseDecalMatrix;
+	// m_decalGeometry or every part target holds geometry built from the decal volume
+	bool HasBuiltRuntimeGeometry() const;
 
 	// base mesh geometry
 	TriGeometryResPtr m_baseGeometryResource;

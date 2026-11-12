@@ -86,10 +86,31 @@ void EveSpaceObjectDecal::UpdateDrawDecalMatrix()
 	m_drawInverseDecalMatrix = Inverse( m_drawDecalMatrix );
 }
 
+namespace
+{
+// Whether the volume decalMatrix maps [-1, 1]^3 to lies inside the one builtInverse maps back to it
+bool IsVolumeInside( const Matrix& decalMatrix, const Matrix& builtInverse )
+{
+	constexpr float SLACK = 1e-3f;
+	Matrix toBuilt = decalMatrix * builtInverse;
+	for( int corner = 0; corner < 8; ++corner )
+	{
+		Vector3 p( corner & 1 ? 1.f : -1.f, corner & 2 ? 1.f : -1.f, corner & 4 ? 1.f : -1.f );
+		Vector3 q = XMVector3TransformCoord( p, toBuilt );
+		if( std::abs( q.x ) > 1.f + SLACK || std::abs( q.y ) > 1.f + SLACK || std::abs( q.z ) > 1.f + SLACK )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+}
+
 // ------------------------------------------------------------------------------------------------------
 bool EveSpaceObjectDecal::Initialize()
 {
 	UpdateDecalMatrix();
+	m_builtInverseDecalMatrix = m_inverseDecalMatrix;
 
 	PrepareResources();
 
@@ -103,6 +124,13 @@ bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 	{
 		// update the decal matrix
 		UpdateDecalMatrix();
+		if( !HasStaticIndexBuffers() && HasBuiltRuntimeGeometry() && IsVolumeInside( m_decalMatrix, m_builtInverseDecalMatrix ) )
+		{
+			// every triangle the new volume touches is in the built geometry already, and the shader
+			// shows nothing outside the drawn volume: only the drawn matrices change
+			return true;
+		}
+		m_builtInverseDecalMatrix = m_inverseDecalMatrix;
 		// and rebuild the index buffer, cause decal volume has changed size and might hit new triangles
 		if( !HasStaticIndexBuffers() )
 		{
@@ -118,6 +146,19 @@ bool EveSpaceObjectDecal::OnModified( Be::Var* value )
 		UpdateDrawDecalMatrix();
 	}
 	return true;
+}
+
+bool EveSpaceObjectDecal::HasBuiltRuntimeGeometry() const
+{
+	if( !m_usePartTargets )
+	{
+		return m_decalGeometry != nullptr;
+	}
+	if( m_partTargets.empty() || !m_partsSignature )
+	{
+		return false;
+	}
+	return std::all_of( m_partTargets.begin(), m_partTargets.end(), []( const PartTarget& target ) { return target.decalGeometry != nullptr; } );
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -244,10 +285,12 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		{
 			// runtime decal: owned here, never added to the mesh's shared decal cache (that cache only grows)
 			m_decalGeometry = mesh && geomRes->IsGood() ? BuildDecalGeometryCached( mesh, m_decalMatrix, m_inverseDecalMatrix ) : nullptr;
+			m_builtInverseDecalMatrix = m_inverseDecalMatrix;
 		}
 		else if( g_buildDecalBuffers )
 		{
 			CreateDecalIndexBuffers( geomRes, meshCache );
+			m_builtInverseDecalMatrix = m_inverseDecalMatrix;
 		}
 	}
 
@@ -379,6 +422,8 @@ void EveSpaceObjectDecal::GetModularRenderables( std::vector<ITr2Renderable*>& r
 				continue;
 			}
 
+			// built from the current volume: a later volume must fit inside this one to keep the geometry
+			m_builtInverseDecalMatrix = m_inverseDecalMatrix;
 			PartTarget target;
 			target.geometry = geometry;
 			target.childToObject = part.childToObject;
