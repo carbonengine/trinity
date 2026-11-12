@@ -5,6 +5,7 @@
 #include "Utilities/BoundingBox.h"
 #include "Shader/Tr2EffectStateManager.h"
 #include "TbbStub.h"
+#include <thread>
 #include <unordered_map>
 
 CCP_STATS_DECLARE( decalTriangleCacheBytes, "Trinity/decalTriangleCacheBytes", false, CST_MEMORY, "Memory of the CPU triangle caches runtime decals build their geometry from." );
@@ -15,8 +16,12 @@ namespace
 constexpr float TRIANGLES_PER_CELL = 4.f;
 constexpr uint32_t MAX_CELLS_PER_AXIS = 256;
 constexpr float MAX_CELLS = float( 1u << 21 );
-// grid builds in flight at once; a mesh asked for beyond that retries on a later frame
-constexpr int MAX_CONCURRENT_BUILDS = 2;
+// GPU readbacks a frame may start: each holds the main thread for tens of ms on a large mesh, so a
+// burst of first hits on new meshes spreads over frames instead of stalling one
+constexpr int MAX_READBACKS_PER_FRAME = 1;
+// grid builds in flight at once, out of the hardware threads; a mesh asked for beyond that retries later
+constexpr unsigned BUILD_THREADS_SHARE = 4;
+constexpr int MIN_CONCURRENT_BUILDS = 2;
 // after a failed readback, wait this long before the next, doubling up to the cap
 constexpr std::chrono::seconds RETRY_BACKOFF_FIRST( 2 );
 constexpr std::chrono::seconds RETRY_BACKOFF_MAX( 60 );
@@ -27,7 +32,7 @@ constexpr std::chrono::seconds RETRY_BACKOFF_MAX( 60 );
 constexpr std::chrono::seconds IDLE_RELEASE( 60 );
 constexpr std::chrono::seconds IDLE_SWEEP_INTERVAL( 1 );
 
-// caches built so far, for ReleaseIdle; main thread only. Weak, so a mesh released with its cache
+// caches built so far, for EndFrame's idle release; main thread only. Weak, so a mesh released with its cache
 // leaves no dangling entry, and no mesh is ever reached through it.
 std::vector<std::weak_ptr<DecalTriangleCache>>& GetCacheRegistry()
 {
@@ -40,6 +45,9 @@ struct BuildQueue
 	Tr2ParallelTaskGroup group;
 	std::atomic<int> inFlight = 0;
 	std::atomic<bool> shutDown = false;
+	const int maxInFlight = std::max( MIN_CONCURRENT_BUILDS, int( std::thread::hardware_concurrency() / BUILD_THREADS_SHARE ) );
+	// main thread only
+	int readbacksThisFrame = 0;
 };
 
 // never destroyed: Shutdown drains it, and tearing a task group down during static destruction is unsafe
@@ -243,7 +251,7 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	BuildQueue& queue = GetBuildQueue();
-	if( queue.shutDown.load() || queue.inFlight.load() >= MAX_CONCURRENT_BUILDS )
+	if( queue.shutDown.load() || queue.inFlight.load() >= queue.maxInFlight || queue.readbacksThisFrame >= MAX_READBACKS_PER_FRAME )
 	{
 		return nullptr;
 	}
@@ -266,6 +274,7 @@ const DecalTriangleCache* DecalTriangleCache::Get( TriGeometryResMeshData* meshD
 		}
 	}
 
+	++queue.readbacksThisFrame;
 	std::vector<RawLod> raw( meshData->m_lods.size() );
 	for( size_t i = 0; i < meshData->m_lods.size(); ++i )
 	{
@@ -605,8 +614,10 @@ bool DecalTriangleCache::FindNearestSurface( size_t lodIndex, const Vector3& poi
 	return found;
 }
 
-void DecalTriangleCache::ReleaseIdle()
+void DecalTriangleCache::EndFrame()
 {
+	GetBuildQueue().readbacksThisFrame = 0;
+
 	static std::chrono::steady_clock::time_point nextSweep;
 	const auto now = std::chrono::steady_clock::now();
 	if( now < nextSweep )

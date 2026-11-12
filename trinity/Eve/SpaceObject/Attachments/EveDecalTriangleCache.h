@@ -14,12 +14,13 @@
  * least as large as the triangle; a query looks at every level with its box grown by half a cell there.
  *
  * The first runtime decal build against a mesh reads the mesh back from the GPU on the main thread and
- * builds the grid as a task in a shared task group, at most MAX_CONCURRENT_BUILDS at a time; until that
+ * builds the grid as a task in a shared task group. A frame does at most one readback (tens of ms on a
+ * large mesh) and a quarter of the hardware threads (at least two) build at once; until its build
  * finishes, Get returns null and the decal tries again on a later frame. The cache is owned by the mesh's TriGeometryResMeshData,
  * so it is released together with the geometry (TriGeometryRes::ReleaseResources clears the mesh data on
  * release, re-initialization and reload). It is also rebuilt if the mesh's LOD set no longer matches.
  * Its memory is reported as Trinity/decalTriangleCacheBytes. A ready cache that Get has not handed out
- * for IDLE_RELEASE has its triangles freed by ReleaseIdle; the next Get against the mesh rebuilds it.
+ * for IDLE_RELEASE has its triangles freed by EndFrame; the next Get against the mesh rebuilds it.
  */
 struct DecalTriangleCache
 {
@@ -53,9 +54,9 @@ struct DecalTriangleCache
 	std::chrono::steady_clock::time_point retryAt;
 	// bytes added to the Trinity/decalTriangleCacheBytes statistic, taken off again on destruction
 	std::atomic<int64_t> reportedBytes = 0;
-	// when Get last handed this cache out; ReleaseIdle frees the triangles of a cache idle too long
+	// when Get last handed this cache out; EndFrame frees the triangles of a cache idle too long
 	std::chrono::steady_clock::time_point lastUsed;
-	// ReleaseIdle freed the triangles: Get rebuilds the cache
+	// EndFrame freed the triangles: Get rebuilds the cache
 	bool released = false;
 
 	~DecalTriangleCache();
@@ -73,10 +74,11 @@ struct DecalTriangleCache
 	static void Shutdown();
 
 	/**
-	 * @brief Frees the triangles of every ready cache Get has not handed out for IDLE_RELEASE. Called once
-	 * a frame on the main thread (Tr2Renderer::EndFrame); does its work at most once a second.
+	 * @brief Called once a frame on the main thread (Tr2Renderer::EndFrame): opens the next frame's
+	 * readback, and at most once a second frees the triangles of every ready cache Get has not handed
+	 * out for IDLE_RELEASE.
 	 */
-	static void ReleaseIdle();
+	static void EndFrame();
 
 	/**
 	 * @brief Appends the indices of the triangles of LOD lodIndex that intersect the decal volume.
