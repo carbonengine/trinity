@@ -6,6 +6,7 @@
 #include "Shader/Tr2Effect.h"
 #include "../TbbStub.h"
 #include "./Tr2RingBuffer.h"
+#include "Tr2RaytracingVertexTransforms.h"
 
 class Tr2Shader;
 
@@ -54,34 +55,29 @@ public:
 
 	bool IsGood() const;
 	bool IsGoodForArea( uint32_t area ) const;
-	bool GetAndResetDirtyFlag();
 	void MarkDirty();
 
 	TriGeometryResLodData* GetCurrentLodData() const;
 	TriGeometryResLodData* GetHighestLodData() const;
 	uint32_t GetTransformOffset() const;
-	const Tr2BufferAL* GetSkinnedVertexBuffer() const;
 	const Tr2BufferAL& GetVertexBuffer() const;
 	const Tr2BufferAL& GetIndexBuffer() const;
 
-	void SetSkinnedVertices( const Tr2BufferAL& buffer, uint32_t offset );
-	uint32_t GetSkinnedVertexOffset() const;
-
 private:
-	const Tr2BufferAL* m_skinnedVertices;
 	Tr2GeometryProviderPtr m_geometry;
 	uint32_t m_meshIndex;
 	std::vector<float> m_transforms;
 	uint32_t m_boneOffset;
-	uint32_t m_skinnedVertexOffset;
 	std::vector<uint8_t> m_morphAnimationDatas;
 	uint32_t m_morphAnimationDataOffset;
 	uint32_t m_morphAnimationDataCount;
+	// The transformed vertices are outdated: bones, morph targets or LOD changed. Cleared by
+	// Tr2RaytracingVertexTransforms::Update.
 	bool m_isDirty;
 	float m_screenSize;
 	int m_lodIndex;
 
-	friend class Tr2RaytracingGeometry;
+	friend class Tr2RaytracingVertexTransforms;
 };
 
 class Tr2RaytracingMeshArea
@@ -103,11 +99,43 @@ public:
 		return m_blasOutdated || !m_blas.IsValid();
 	}
 
+	// While set, and the area's material has a TransformVertices technique, Tr2RaytracingVertexTransforms runs the
+	// technique and refits the BLAS every frame, e.g. while the displacement is animated. Set by the owner
+	// (Tr2MeshArea::SetUpdateCustomRtDisplacement).
+	void SetUpdateCustomRtDisplacement( bool update )
+	{
+		m_updateCustomRtDisplacement = update;
+	}
+	bool GetUpdateCustomRtDisplacement() const
+	{
+		return m_updateCustomRtDisplacement;
+	}
+
+	// Sets the shader that writes the area's transformed vertices: a material and technique, or no material for an area
+	// that uses the LOD's shared static BLAS. A change marks the BLAS outdated. Called by Tr2RaytracingVertexTransforms
+	// every frame.
+	void SetVertexTransform( const Tr2Material* material, uint32_t techniqueIndex );
+	// The transformed vertices that an outdated BLAS is built from: 3 floats per vertex of the mesh's current LOD,
+	// starting at vertex 'offset', or null if they haven't been written. Only valid in the frame they were written.
+	void SetTransformedVertices( const Tr2BufferAL* buffer, uint32_t offset )
+	{
+		m_transformedVertices = buffer;
+		m_transformedVertexOffset = offset;
+	}
+
 private:
 	uint32_t m_areaIndex;
 
 	Tr2RtBottomLevelAccelerationStructureAL m_blas;
 	bool m_blasOutdated;
+	// The shader that writes the transformed vertices (see SetVertexTransform). Null if the area uses the LOD's shared
+	// static BLAS.
+	const Tr2Material* m_transformMaterial;
+	uint32_t m_transformTechniqueIndex;
+	const Tr2BufferAL* m_transformedVertices;
+	uint32_t m_transformedVertexOffset;
+	// See SetUpdateCustomRtDisplacement.
+	bool m_updateCustomRtDisplacement = false;
 };
 
 BLUE_CLASS( Tr2RaytracingGeometry ) :
@@ -116,7 +144,7 @@ BLUE_CLASS( Tr2RaytracingGeometry ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	Tr2RaytracingGeometry();
+	Tr2RaytracingGeometry() = default;
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
 	void BeginSceneUpdate();
@@ -134,13 +162,6 @@ public:
 	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
 
 private:
-	struct VtxOffsets
-	{
-		uint32_t positionOffset;
-		uint32_t boneOffset;
-		uint32_t boneWeightsOffset;
-	};
-
 	struct GeometryData
 	{
 		Tr2RaytracingMesh* mesh;
@@ -156,16 +177,11 @@ private:
 		uint32_t bakedMorphOffset;
 	};
 
-	const BlueSharedString m_inVertexBufferTechniqueName = BlueSharedString( "InVB" );
-	const BlueSharedString m_outVertexBufferTechniqueName = BlueSharedString( "OutVB" );
 	static const uint32_t INVALID_MATERIAL = 0xffffffff;
 
 	void PrepareShaderTableDescription( Tr2RenderContext & renderContext, int32_t numRaycasters, Tr2RtShaderTableDescriptionAL** shaderTableDescs, Tr2RaytracingPipelineStateManager** pipelineManagers );
 	void TransformMeshes( Tr2RenderContext & renderContext );
 	void BuildAccelerationStructures( Tr2RenderContext & renderContext );
-	void NoteDeformedGeometry( Tr2RaytracingMesh & mesh, Tr2RaytracingMeshArea & area );
-
-	VtxOffsets FindOffsets( unsigned declHandle );
 
 	struct RtLibraryState
 	{
@@ -189,14 +205,9 @@ private:
 	std::vector<RtShaderState> m_rtShaderStates;
 	std::vector<RtLibraryState> m_rtLibraryStates;
 	std::vector<BlueSharedStringW> m_rtLibraryHitGroupNames;
-	std::atomic<bool> m_hasDeformedGeometry{ false };
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
-	Tr2EffectPtr m_skinVerticesEffect;
-	Tr2ConstantBufferAL m_skinVerticesData;
-	std::unordered_map<unsigned, VtxOffsets> m_offsets;
-
-	Tr2BufferAL m_skinnedVertices;
+	Tr2RaytracingVertexTransforms m_vertexTransforms;
 
 	Tr2BindlessResourcesAL m_usedResources;
 	Tr2EnumerableThreadSpecific<Tr2BindlessResourcesAL> m_threadLocalUsedResources;

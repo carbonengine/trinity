@@ -9,6 +9,7 @@ set(_SHADER_SOURCES
     include/Carbon/InteriorScene/PerSceneData.fxh
     include/Carbon/SpaceScene/Raytracing/GeometryData.fxh
     include/Carbon/SpaceScene/Raytracing/ShadowData.fxh
+    include/Carbon/SpaceScene/Raytracing/TransformVertices.fxh
     include/Carbon/SpaceScene/BehaviorGroupBooster.fxh
     include/Carbon/SpaceScene/DepthMap.fxh
     include/Carbon/SpaceScene/DynamicLighting.fxh

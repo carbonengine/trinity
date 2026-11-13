@@ -929,6 +929,8 @@ set(_SOURCES
     Raytracing/Tr2RaytracingManager.cpp
     Raytracing/Tr2RaytracingManager.h
     Raytracing/Tr2RaytracingManager_Blue.cpp
+    Raytracing/Tr2RaytracingVertexTransforms.cpp
+    Raytracing/Tr2RaytracingVertexTransforms.h
     Particle/ITr2GenericEmitter.h
     Particle/ITr2GenericParticleConstraint.h
     Particle/ITr2ParticleForce.h
@@ -1679,6 +1681,7 @@ set(_SOURCES
     Tr2RingBuffer.cpp
     Tr2RingBuffer.h
     Tr2RingBuffer_Blue.cpp
+    Tr2RingBufferImpl.h
     Tr2RotationTool.cpp
     Tr2RotationTool.h
     Tr2RotationTool_Blue.cpp
