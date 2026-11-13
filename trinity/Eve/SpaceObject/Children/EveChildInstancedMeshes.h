@@ -7,6 +7,7 @@
 #include "ITr2Renderable.h"
 #include "Tr2PersistentPerObjectData.h"
 #include "../Attachments/EveMeshOverlayEffect.h"
+#include "../Utils/EveAudioOccluder.h"
 
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2Effect );
@@ -203,6 +204,23 @@ private:
 
 	void ReleaseResources( TriStorage s ) override;
 	bool OnPrepareResources() override;
+
+	struct AudioInstance
+	{
+		EveAudioOccluder occluder;
+		uint32_t mesh = 0;
+		Matrix localTransform = IdentityMatrix();
+	};
+
+	void UpdateAudioGeometry( bool allowAudioGeometry );
+	void UnregisterAudioGeometry();
+
+	ITr2AudGeometryPtr m_audioGeometry;
+	std::vector<AudioInstance> m_audioInstances;
+	Matrix m_audioWorldTransform = IdentityMatrix();
+	bool m_audioGeometryDirty = true;
+	// a geometry resource is still loading, so its instances are not registered yet
+	bool m_audioGeometryPending = false;
 
 	Matrix m_worldTransform = IdentityMatrix();
 	EveSpacePerObjectData m_perObjectData;
