@@ -655,6 +655,8 @@ set(_SOURCES
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes.h
     Eve/SpaceObject/Utils/fxAttributes/EveSpaceObjectFxAttributes_Blue.cpp
     Eve/SpaceObject/Utils/fxAttributes/IEveFxAttribute.h
+    Eve/SpaceObject/Utils/EveAudioOccluder.cpp
+    Eve/SpaceObject/Utils/EveAudioOccluder.h
     Eve/SpaceObject/Utils/EveBoosterUtilities.cpp
     Eve/SpaceObject/Utils/EveBoosterUtilities.h
     Eve/SpaceObject/Utils/EveCustomMask.cpp
