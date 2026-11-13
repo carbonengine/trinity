@@ -121,6 +121,12 @@ inline bool StringReplace( std::string& baseString, const char* oldString, const
 	return false;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Static BlueSharedString for a string literal, created once at first use
+// --------------------------------------------------------------------------------
+#define MEMOIZED_STRING( x ) ( []( const char* str ) { static BlueSharedString s( str ); return s; }( x "" ) )
+
 
 
 

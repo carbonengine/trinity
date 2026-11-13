@@ -2152,12 +2152,12 @@ void EveSpaceObject2::RefreshDamageLocatorMask( const LocatorStructureList* dama
 
 void EveSpaceObject2::UpdateDamageLocatorFilter()
 {
-	TRINITY_STATS_ZONE( __FUNCTION__ );
-
 	if( m_damageFilterState == DamageFilterState::Idle )
 	{
 		return;
 	}
+
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 
 	if( !m_damageLocatorAutoFilterEnabled && !m_damageLocatorFilterRequested )
 	{
