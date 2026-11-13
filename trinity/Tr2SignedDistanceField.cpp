@@ -25,7 +25,7 @@ Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnaps
 			[&]( float value ) {
 				return transform.Apply( value );
 			} );
-		return;
+		break;
 	case Tr2VoxelDataType::Int8:
 		if( sdf.m_type.normalized )
 		{
@@ -37,11 +37,13 @@ Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnaps
 				[&]( auto value ) {
 					return transform.Apply( normalizedTransform.Apply( float( value ) ) );
 				} );
-			return;
+			break;
 		}
 	default:
 		return;
 	}
+
+	BlurSdf( m_sdf, s_sdfBlurAlpha );
 }
 
 Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnapshot& occupancy, const std::atomic<bool>& cancel ) :
@@ -437,13 +439,35 @@ std::vector<float> Tr2SignedDistanceField::ComputeSdf( const Tr2VoxelData::Paylo
 
 std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const
 {
-	const Int3 dims = GetGridSize();
-	const auto sdf = ComputeSdf( occupancyChannel, cancel );
+	auto sdf = ComputeSdf( occupancyChannel, cancel );
 	if( cancel )
 	{
 		return {};
 	}
 
+	BlurSdf( sdf, s_blurAlpha );
+
+	auto occupancy = [&]( size_t i ) {
+		return ( occupancyChannel.m_data[i / 8] & ( 1 << ( i % 8 ) ) ) != 0;
+	};
+
+	for( size_t i = 0; i < sdf.size(); ++i )
+	{
+		if( occupancy( i ) )
+		{
+			sdf[i] = std::min( sdf[i], -s_signFloor );
+		}
+		else
+		{
+			sdf[i] = std::max( sdf[i], s_signFloor );
+		}
+	}
+	return sdf;
+}
+
+void Tr2SignedDistanceField::BlurSdf( std::vector<float>& sdf, float alpha ) const
+{
+	const Int3 dims = GetGridSize();
 	// Decode into a copy padded by one ring of deep empty so every in-grid sample has its full blur stencil
 	const Int3 padded = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
 	const std::array<size_t, 3> strides = { 1, size_t( padded[0] ), size_t( padded[0] ) * padded[1] };
@@ -463,9 +487,7 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		}
 	}
 
-	// Separable Jacobi low-pass per axis. Only interior samples of each line move. The correction form is an exact
-	// identity wherever the field is locally linear, so only cell-frequency curvature is damped.
-	const float half = 0.5 * s_blurAlpha;
+	const float half = 0.5f * alpha;
 	for( int axis = 0; axis < 3; ++axis )
 	{
 		const int u = s_axisUV[axis][0];
@@ -487,11 +509,6 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		}
 	}
 
-	auto occupancy = [&]( size_t i ) {
-		return ( occupancyChannel.m_data[i / 8] & ( 1 << ( i % 8 ) ) ) != 0;
-	};
-
-	std::vector<float> field( size_t( dims[0] ) * dims[1] * dims[2] );
 	i = 0;
 	for( int32_t z = 0; z < dims[2]; ++z )
 	{
@@ -499,19 +516,8 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		{
 			for( int32_t x = 0; x < dims[0]; ++x, ++i )
 			{
-				auto value = values[paddedIndex( x, y, z )];
-				// Clamp the field to the occupancy sign so no solid cell can vanish from the mesh and no empty cell can seal over
-				if( occupancy( i ) )
-				{
-					value = std::min( value, -s_signFloor );
-				}
-				else
-				{
-					value = std::max( value, s_signFloor );
-				}
-				field[i] = value;
+				sdf[i] = values[paddedIndex( x, y, z )];
 			}
 		}
 	}
-	return field;
 }

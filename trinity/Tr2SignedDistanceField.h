@@ -135,10 +135,12 @@ private:
 	static constexpr float s_sdfClamp = 3.0; // encode clamp in cells
 	static constexpr float s_deepEmpty = s_sdfClamp; // field value sampled outside the grid
 	static constexpr float s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
-	static constexpr float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
+	static constexpr float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field for occupancy to SDF conversion
+	static constexpr float s_sdfBlurAlpha = 0.001; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field for source SDF blurring
 
 	Int3 GetGridSize() const;
 	static float GetCornerWeight( const Vector3& t, int32_t corner ); // trilinear weight of a cube corner (bits x, y, z)
 	std::vector<float> ComputeSdf( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
 	std::vector<float> CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
+	void BlurSdf( std::vector<float>& sdf, float alpha ) const;
 };
