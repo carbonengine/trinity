@@ -265,6 +265,16 @@ void Tr2VoxelData::ModifiedChannels::MarkChannelModified( size_t channelIndex )
 	m_modifiedChannelsBitmask |= ( 1ull << channelIndex );
 }
 
+Tr2VoxelData::ModifiedChannels::operator bool() const
+{
+	return m_modifiedChannelsBitmask != 0;
+}
+
+Tr2VoxelData::ModifiedChannels& Tr2VoxelData::ModifiedChannels::operator|=( const ModifiedChannels& other )
+{
+	m_modifiedChannelsBitmask |= other.m_modifiedChannelsBitmask;
+	return *this;
+}
 
 
 Tr2VoxelData::Tr2VoxelData( IRoot* )
@@ -339,6 +349,23 @@ Tr2VoxelData::PayloadSnapshot Tr2VoxelData::GetPayloadSnapshot( size_t index )
 	return snapshot;
 }
 
+void Tr2VoxelData::PauseNotifications()
+{
+	++m_notificationsPaused;
+}
+
+void Tr2VoxelData::ResumeNotifications()
+{
+	if( m_notificationsPaused > 0 )
+	{
+		--m_notificationsPaused;
+		if( m_notificationsPaused == 0 && m_modifiedChannels )
+		{
+			m_onDataChanged.Broadcast( m_modifiedChannels );
+			m_modifiedChannels = {};
+		}
+	}
+}
 
 bool Tr2VoxelData::GetPackedBit( const uint8_t* data, size_t bitIndex )
 {
@@ -363,12 +390,26 @@ bool Tr2VoxelData::SetPackedBit( uint8_t* data, size_t bitIndex, bool value )
 }
 
 
-BluePy Tr2VoxelData::SetVoxels( PyObject* set )
+BluePy Tr2VoxelData::SetVoxels( const std::vector<size_t>& channels, PyObject* set )
 {
+	for( auto channelIndex : channels )
+	{
+		if( channelIndex >= m_payload.size() )
+		{
+			PyErr_SetString( PyExc_IndexError, "Payload index out of range" );
+			return {};
+		}
+	}
+	if( channels.empty() )
+	{
+		PyErr_SetString( PyExc_ValueError, "No channels specified" );
+		return {};
+	}
+
 	auto setIter = BluePy( PyObject_GetIter( set ), true );
 	if( !setIter )
 	{
-		PyErr_SetString( PyExc_TypeError, "SetVoxels the first argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
+		PyErr_SetString( PyExc_TypeError, "SetVoxels the second argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
 		return {};
 	}
 
@@ -392,15 +433,15 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 
 	while( BluePy element = BluePy( PyIter_Next( setIter ) ) )
 	{
-		if( !element || !PyTuple_Check( element ) || PyTuple_Size( element ) != 1 + m_payload.size() )
+		if( !element || !PyTuple_Check( element ) || PyTuple_Size( element ) != 1 + channels.size() )
 		{
-			PyErr_SetString( PyExc_TypeError, "SetVoxels the first argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
+			PyErr_SetString( PyExc_TypeError, "SetVoxels the second argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
 			return {};
 		}
 		Coord coord = {};
 		if( !BlueExtractArgument( PyTuple_GET_ITEM( element.o, 0 ), coord, 1 ) )
 		{
-			PyErr_SetString( PyExc_TypeError, "SetVoxels the first argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
+			PyErr_SetString( PyExc_TypeError, "SetVoxels the second argument must be a sequence of tuples of the form ((x, y, z), p0, p1,...)" );
 			return {};
 		}
 		if( !IsWithinBounds( coord ) )
@@ -408,17 +449,112 @@ BluePy Tr2VoxelData::SetVoxels( PyObject* set )
 			PyErr_SetString( PyExc_ValueError, "SetVoxels coordinates out of bounds" );
 			return {};
 		}
-		if( !ExtractPayload( element, coord, modifiedChannels ) )
+		if( !ExtractPayload( element, 1, coord, channels, modifiedChannels ) )
 		{
 			return {};
 		}
 	}
 
-	m_onDataChanged.Broadcast( modifiedChannels );
+	BroadcastDataChanged( modifiedChannels );
 
 	return BluePy( Py_None, true );
 }
 
+BluePy Tr2VoxelData::SetAllVoxels( const std::vector<size_t>& channels, PyObject* set )
+{
+	for( auto channelIndex : channels )
+	{
+		if( channelIndex >= m_payload.size() )
+		{
+			PyErr_SetString( PyExc_IndexError, "Payload index out of range" );
+			return {};
+		}
+	}
+	if( channels.empty() )
+	{
+		PyErr_SetString( PyExc_ValueError, "No channels specified" );
+		return {};
+	}
+
+	auto setIter = BluePy( PyObject_GetIter( set ), true );
+	if( !setIter )
+	{
+		PyErr_SetString( PyExc_TypeError, "SetAllVoxels the second argument must be a sequence of tuples of the form (p0, p1,...)" );
+		return {};
+	}
+
+	{
+		std::lock_guard guard( m_payloadMutex );
+
+		for( auto& payload : m_payload )
+		{
+			if( payload.current.readerCount )
+			{
+				auto& snapshot = payload.old.emplace_back();
+				snapshot.readerCount = payload.current.readerCount;
+				std::swap( snapshot.data, payload.current.data );
+				payload.current.data.insert( payload.current.data.begin(), snapshot.data.begin(), snapshot.data.end() );
+				payload.current.readerCount = 0;
+			}
+		}
+	}
+
+	ModifiedChannels modifiedChannels;
+
+	Coord coord = { 0, 0, 0 };
+	while( BluePy element = BluePy( PyIter_Next( setIter ) ) )
+	{
+		if( !element || !PyTuple_Check( element ) || PyTuple_Size( element ) != Py_ssize_t( channels.size() ) )
+		{
+			PyErr_SetString( PyExc_TypeError, "SetAllVoxels the second argument must be a sequence of tuples of the form (p0, p1,...)" );
+			return {};
+		}
+		if( !ExtractPayload( element, 0, coord, channels, modifiedChannels ) )
+		{
+			return {};
+		}
+		if( uint32_t( ++coord.x ) >= m_dimensions.width )
+		{
+			coord.x = 0;
+			if( uint32_t( ++coord.y ) >= m_dimensions.height )
+			{
+				coord.y = 0;
+				if( uint32_t( ++coord.z ) >= m_dimensions.depth )
+				{
+					if( BluePy( PyIter_Next( setIter ) ) )
+					{
+						PyErr_SetString( PyExc_ValueError, "SetAllVoxels the second argument has more elements than the voxel data" );
+						return {};
+					}
+				}
+			}
+		}
+	}
+	if( uint32_t( coord.z ) < m_dimensions.depth )
+	{
+		PyErr_SetString( PyExc_ValueError, "SetAllVoxels the second argument has fewer elements than the voxel data" );
+		return {};
+	}
+
+	BroadcastDataChanged( modifiedChannels );
+
+	return BluePy( Py_None, true );
+}
+
+void Tr2VoxelData::BroadcastDataChanged( const ModifiedChannels& modifiedChannels )
+{
+	if( modifiedChannels )
+	{
+		if( m_notificationsPaused == 0 )
+		{
+			m_onDataChanged.Broadcast( modifiedChannels );
+		}
+		else
+		{
+			m_modifiedChannels |= modifiedChannels;
+		}
+	}
+}
 
 BluePy Tr2VoxelData::PyGetPayloadData( size_t index, const Coord& coord )
 {
@@ -460,20 +596,20 @@ BluePy Tr2VoxelData::PyGetPayloadData( size_t index, const Coord& coord )
 }
 
 template <typename Dst>
-bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels )
+bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, Py_ssize_t tupleIndex, size_t channelIndex, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels )
 {
 	if( payloadType.normalized )
 	{
-		return ExtractNormalizedPayloadElement<Dst>( element, index, payloadType.elementCount, coord, modifiedChannels );
+		return ExtractNormalizedPayloadElement<Dst>( element, tupleIndex, channelIndex, payloadType.elementCount, coord, modifiedChannels );
 	}
 	std::array<typename PythonStorageType<Dst>::type, 4> p;
 	// The 1+ here is because the first element of the tuple is the coordinate, and the payloads start at index 1
-	if( !::ExtractPayloadElement( PyTuple_GetItem( element, Py_ssize_t( 1 + index ) ), payloadType.elementCount, p ) )
+	if( !::ExtractPayloadElement( PyTuple_GetItem( element, tupleIndex ), payloadType.elementCount, p ) )
 	{
 		return false;
 	}
 	size_t coordIndex = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
-	auto& dest = m_payload[index];
+	auto& dest = m_payload[channelIndex];
 	auto bytesPerPixel = dest.type.GetBytesPerValue();
 	for( size_t j = 0; j < payloadType.elementCount; ++j )
 	{
@@ -481,7 +617,7 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 		{
 			if( SetPackedBit( dest.current.data.data(), coordIndex * payloadType.elementCount + j, p[j] ) )
 			{
-				modifiedChannels.MarkChannelModified( index );
+				modifiedChannels.MarkChannelModified( channelIndex );
 			}
 		}
 		else
@@ -489,7 +625,7 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 			auto& destElement = reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j];
 			if( destElement != static_cast<Dst>( p[j] ) )
 			{
-				modifiedChannels.MarkChannelModified( index );
+				modifiedChannels.MarkChannelModified( channelIndex );
 			}
 			destElement = static_cast<Dst>( p[j] );
 		}
@@ -498,16 +634,16 @@ bool Tr2VoxelData::ExtractPayloadElement( PyObject* element, size_t index, const
 }
 
 template <typename Dst>
-bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels )
+bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, Py_ssize_t tupleIndex, size_t channelIndex, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels )
 {
 	std::array<float, 4> p;
 	// The 1+ here is because the first element of the tuple is the coordinate, and the payloads start at index 1
-	if( !::ExtractPayloadElement( PyTuple_GetItem( element, Py_ssize_t( 1 + index ) ), elementCount, p ) )
+	if( !::ExtractPayloadElement( PyTuple_GetItem( element, tupleIndex ), elementCount, p ) )
 	{
 		return false;
 	}
 	auto coordIndex = coord.x + m_dimensions.width * ( coord.y + m_dimensions.height * coord.z );
-	auto& dest = m_payload[index];
+	auto& dest = m_payload[channelIndex];
 	auto bytesPerPixel = dest.type.GetBytesPerValue();
 	for( size_t j = 0; j < elementCount; ++j )
 	{
@@ -515,69 +651,69 @@ bool Tr2VoxelData::ExtractNormalizedPayloadElement( PyObject* element, size_t in
 		auto& dstElement = reinterpret_cast<Dst*>( dest.current.data.data() + coordIndex * bytesPerPixel )[j];
 		if( dstElement != newValue )
 		{
-			modifiedChannels.MarkChannelModified( index );
+			modifiedChannels.MarkChannelModified( channelIndex );
 		}
 		dstElement = newValue;
 	}
 	return true;
 }
 
-bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord, ModifiedChannels& modifiedChannels )
+bool Tr2VoxelData::ExtractPayload( PyObject* element, Py_ssize_t tupleOffset, const Coord& coord, const std::vector<size_t>& channels, ModifiedChannels& modifiedChannels )
 {
-	for( size_t i = 0; i < m_payload.size(); ++i )
+	for( auto i : channels )
 	{
 		switch( m_payload[i].type.type )
 		{
 		case Tr2VoxelDataType::Boolean:
-			if( !ExtractPayloadElement<bool>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<bool>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Float:
-			if( !ExtractPayloadElement<float>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<float>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Float16:
-			if( !ExtractPayloadElement<Float_16>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<Float_16>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt8:
-			if( !ExtractPayloadElement<uint8_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<uint8_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt16:
-			if( !ExtractPayloadElement<uint16_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<uint16_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::UInt32:
-			if( !ExtractPayloadElement<uint32_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<uint32_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int8:
-			if( !ExtractPayloadElement<int8_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<int8_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int16:
-			if( !ExtractPayloadElement<int16_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<int16_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
 			break;
 		case Tr2VoxelDataType::Int32:
-			if( !ExtractPayloadElement<int32_t>( element, i, m_payload[i].type, coord, modifiedChannels ) )
+			if( !ExtractPayloadElement<int32_t>( element, tupleOffset, i, m_payload[i].type, coord, modifiedChannels ) )
 			{
 				return false;
 			}
@@ -585,6 +721,7 @@ bool Tr2VoxelData::ExtractPayload( PyObject* element, const Coord& coord, Modifi
 		default:
 			return false;
 		}
+		++tupleOffset;
 	}
 	return true;
 }

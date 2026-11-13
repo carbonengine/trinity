@@ -50,7 +50,7 @@ def _sphereCoords():
 def _sphereData(channels=(FLOAT,), valuesFn=lambda coord: (_sphereDistance(coord),)):
     """Creates voxel data with a sphere in the middle of the grid; valuesFn maps a coordinate to the per-channel values."""
     data = trinity.Tr2VoxelData((SPHERE_SIZE, SPHERE_SIZE, SPHERE_SIZE), list(channels))
-    data.SetVoxels([(coord,) + tuple(valuesFn(coord)) for coord in _sphereCoords()])
+    data.SetVoxels(range(len(channels)), [(coord,) + tuple(valuesFn(coord)) for coord in _sphereCoords()])
     return data
 
 
@@ -80,8 +80,7 @@ class TestVoxelGeometry(unittest.TestCase):
                 geometry.TestBuildFile("res:/voxels.cmf")
 
     def test_canCreateSimpleGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
-        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
+        data = _sphereData()
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.shapeChannelIndex = 0
         with TempRes():
@@ -92,8 +91,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
 
     def test_canPersistGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
-        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
+        data = _sphereData()
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         with TempRes():
             geometry.TestBuildFile( "res:/voxels1.cmf")
@@ -106,8 +104,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(f1, f2)
 
     def test_canCreateSurfaceNetsGeometry(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT])
-        data.SetVoxels([((0, 0, 0), 0.0), ((1, 0, 0), 1.0), ((1, 1, 1), math.sqrt(3.0))])
+        data = _sphereData()
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.method = trinity.Tr2VoxelGeometryMethod.SurfaceNets
         geometry.subdivision = 1
@@ -120,8 +117,7 @@ class TestVoxelGeometry(unittest.TestCase):
             self.assertEqual(granny.GetMeshAreaCount(0), 1)
 
     def test_canCreateSurfaceNetsGeometryWithDataTags(self):
-        data = trinity.Tr2VoxelData((2, 2, 2), [FLOAT, {"type": trinity.Tr2VoxelDataType.Int8, "elementCount": 1, "normalized": True}])
-        data.SetVoxels([((0, 0, 0), 0.0, 0.4), ((1, 0, 0), 1.0, 5.0), ((1, 1, 1), math.sqrt(3.0), 0.7)])
+        data = _sphereData((FLOAT, BOOL), lambda coord: (_sphereDistance(coord), _sphereDistance(coord) < 0))
         geometry = trinity.Tr2VoxelGeometry(data, 0)
         geometry.dataTagChannelIndex = 1
         geometry.method = trinity.Tr2VoxelGeometryMethod.SurfaceNets
