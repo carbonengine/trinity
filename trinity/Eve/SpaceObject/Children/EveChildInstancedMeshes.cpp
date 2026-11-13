@@ -29,6 +29,7 @@ EveChildInstancedMeshes::EveChildInstancedMeshes( IRoot* lockobj )
 
 EveChildInstancedMeshes::~EveChildInstancedMeshes()
 {
+	UnregisterAudioGeometry();
 	UnregisterFromMeshManager();
 	for( Mesh& mesh : m_meshes )
 	{
@@ -63,7 +64,65 @@ void EveChildInstancedMeshes::RegisterComponents()
 
 void EveChildInstancedMeshes::UnRegisterComponents()
 {
+	UnregisterAudioGeometry();
 	UnregisterFromMeshManager();
+}
+
+void EveChildInstancedMeshes::UpdateAudioGeometry( bool allowAudioGeometry )
+{
+	if( !allowAudioGeometry || !g_eveIsAudioOcclusionGeometryEnabled )
+	{
+		UnregisterAudioGeometry();
+		return;
+	}
+
+	const bool moved = m_audioWorldTransform != m_worldTransform;
+	if( !m_audioGeometryDirty && !m_audioGeometryPending && !moved )
+	{
+		return;
+	}
+
+	if( m_audioGeometryDirty )
+	{
+		size_t count = 0;
+		for( const Mesh& mesh : m_meshes )
+		{
+			count += mesh.instances.size();
+		}
+		m_audioInstances.resize( count );
+
+		size_t slot = 0;
+		for( uint32_t meshIndex = 0; meshIndex < m_meshes.size(); ++meshIndex )
+		{
+			for( const auto& instance : m_meshes[meshIndex].instances )
+			{
+				AudioInstance& audioInstance = m_audioInstances[slot++];
+				audioInstance.mesh = meshIndex;
+				audioInstance.localTransform = Matrix( instance.worldTransform );
+			}
+		}
+		m_audioGeometryDirty = false;
+	}
+
+	if( !m_audioGeometry )
+	{
+		m_audioGeometry = EveAudioOccluder::CreateAudioGeometry();
+	}
+
+	m_audioWorldTransform = m_worldTransform;
+	m_audioGeometryPending = false;
+	for( AudioInstance& audioInstance : m_audioInstances )
+	{
+		const Mesh& mesh = m_meshes[audioInstance.mesh];
+		m_audioGeometryPending |= mesh.geometry && mesh.geometry->IsLoading();
+		audioInstance.occluder.Update( m_audioGeometry, mesh.geometry, mesh.meshIndex, audioInstance.localTransform * m_worldTransform );
+	}
+}
+
+void EveChildInstancedMeshes::UnregisterAudioGeometry()
+{
+	m_audioInstances.clear();
+	m_audioGeometryDirty = true;
 }
 
 void EveChildInstancedMeshes::UnregisterFromMeshManager()
@@ -215,6 +274,8 @@ bool EveChildInstancedMeshes::GetBoundingSphere( Vector4& sphere, BoundingSphere
 void EveChildInstancedMeshes::UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
 	m_worldTransform = params.localToWorldTransform;
+
+	UpdateAudioGeometry( !params.spaceObjectParent || params.spaceObjectParent->IsAudioOccluder() );
 
 	// overlay effect curves must update on the game thread; they may reference attributes that are not thread safe
 	Be::Time time = updateContext.GetTime();
@@ -535,6 +596,7 @@ void EveChildInstancedMeshes::AddMesh(
 			GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
 		}
 		m_allRegistered = false;
+		m_audioGeometryDirty = true;
 		return;
 	}
 
@@ -598,6 +660,7 @@ void EveChildInstancedMeshes::AddMesh(
 		GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
 	}
 	m_allRegistered = false;
+	m_audioGeometryDirty = true;
 }
 
 void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag )
@@ -616,6 +679,7 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 			continue;
 		}
 		removedOwnedLocators |= !mesh.ownedLocatorSets.empty();
+		m_audioGeometryDirty = true;
 		if( newEnd == begin( mesh.instances ) )
 		{
 			if( mesh.sphereHandle )
@@ -687,6 +751,7 @@ void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 				mesh.instances[i].worldTransform = packedTransform;
 				mesh.instances[i].mirrored = mirrored;
 				movedOwnedLocators |= !mesh.ownedLocatorSets.empty();
+				m_audioGeometryDirty = true;
 			}
 		}
 	}
@@ -706,6 +771,7 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 	{
 		if( mesh.geometry == p )
 		{
+			m_audioGeometryDirty = true;
 			mesh.combinedVertexDeclaration = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 
 			if( auto data = mesh.geometry->GetMeshData( mesh.meshIndex ) )
