@@ -832,6 +832,8 @@ set(_SOURCES
     Eve/EveRootTransform.cpp
     Eve/EveRootTransform.h
     Eve/EveRootTransform_Blue.cpp
+    Eve/EveSceneView.cpp
+    Eve/EveSceneView.h
     Eve/EveSpaceScene.cpp
     Eve/EveSpaceScene.h
     Eve/EveSpaceScene_Blue.cpp
@@ -1279,6 +1281,9 @@ set(_SOURCES
     Resources/Tr2TextureLodManager.cpp
     Resources/Tr2TextureLodManager.h
     Resources/Tr2TextureLodManager_Blue.cpp
+    Resources/Tr2VoxelGeometry.cpp
+    Resources/Tr2VoxelGeometry.h
+    Resources/Tr2VoxelGeometry_Blue.cpp
     Resources/TriGeometryRes.cpp
     Resources/TriGeometryRes.h
     Resources/TriGeometryRes_Blue.cpp
@@ -1360,6 +1365,9 @@ set(_SOURCES
     Sprite2d/Tr2Sprite2dContainer_Blue.cpp
     Sprite2d/Tr2Sprite2dDisplayList.cpp
     Sprite2d/Tr2Sprite2dDisplayList.h
+    Sprite2d/Tr2Sprite2dEffect.cpp
+    Sprite2d/Tr2Sprite2dEffect.h
+    Sprite2d/Tr2Sprite2dEffect_Blue.cpp
     Sprite2d/Tr2Sprite2dFrame.cpp
     Sprite2d/Tr2Sprite2dFrame.h
     Sprite2d/Tr2Sprite2dFrame_Blue.cpp
@@ -1689,6 +1697,10 @@ set(_SOURCES
     Tr2ShadowMap.cpp
     Tr2ShadowMap.h
     Tr2ShadowMap_Blue.cpp
+    Tr2SignedDistanceField.cpp
+    Tr2SignedDistanceField.h
+    Tr2SurfaceCuts.cpp
+    Tr2SurfaceCuts.h
     Tr2ShLightingManager.cpp
     Tr2ShLightingManager.h
     Tr2ShLightingManager_Blue.cpp

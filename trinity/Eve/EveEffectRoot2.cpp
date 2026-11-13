@@ -206,6 +206,7 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
+		( *it )->SetParentBall( m_ballPosition );
 		( *it )->Update( m_lastUpdateMatrix );
 	}
 
@@ -220,6 +221,7 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 		params.bones = nullptr;
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
+		params.ballPosition = m_ballPosition;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
@@ -268,6 +270,7 @@ void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
@@ -1007,7 +1010,7 @@ ITr2AudEmitterPtr EveEffectRoot2::FindSoundEmitter( const char* name )
 
 void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( observer );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 void EveEffectRoot2::SetMute( bool isMute )

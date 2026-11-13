@@ -8,12 +8,14 @@
 
 #include <ITriObserverLocal.h>
 
+BLUE_DECLARE_INTERFACE( ITr2AudParentBall );
 
 struct Vector3;
 struct Matrix;
 
 BLUE_CLASS( TriObserverLocal ) :
-	public ITriObserverLocal
+	public ITriObserverLocal,
+	public IInitialize
 {
 public:
 	TriObserverLocal( IRoot* lockobj = NULL );
@@ -22,6 +24,8 @@ public:
 	EXPOSE_TO_BLUE();
 
 	void Update( const Matrix& worldTransform );
+	/// Tells an audio emitter observer which ball it is mounted on. Does nothing for other observers.
+	void SetParentBall( IRoot * ball );
 
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
@@ -32,8 +36,8 @@ public:
 	bool GetMute();
 	void SetMute( bool isMute );
 
-	// INotify
-	virtual bool OnModified( Be::Var * val );
+	// IInitialize
+	bool Initialize() override;
 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions & options );
@@ -47,6 +51,7 @@ private:
 	Vector3 m_front;
 	Vector3 m_position;
 	IBluePlacementObserverPtr m_observer;
+	ITr2AudParentBall* m_parentBall;
 };
 
 BLUE_DECLARE_VECTOR( TriObserverLocal );

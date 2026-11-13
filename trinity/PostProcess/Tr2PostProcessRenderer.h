@@ -134,6 +134,7 @@ public:
 
 	PostProcess::Quality GetPostProcessingQuality() const;
 	void SetPostProcessingQuality( PostProcess::Quality quality );
+	static Matrix GetJitter( uint64_t frameIndex, uint32_t renderWidth, uint32_t renderHeight );
 
 private:
 	struct DownsampleData
@@ -150,13 +151,13 @@ private:
 	void RenderSharpening( float strength, Tr2GpuResourcePool::Texture& input, Tr2GpuResourcePool::Texture& output, Tr2RenderContext& renderContext );
 
 	// bloom
-	Tr2GpuResourcePool::Texture RenderBloom( Tr2GpuResourcePool::Texture & dest, Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext, Tr2PPBloomEffect * bloom, Tr2PPDynamicExposureEffect * dynamicExposure );
+	Tr2GpuResourcePool::Texture RenderBloom( Tr2GpuResourcePool::Texture& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure );
 	Tr2GpuResourcePool::Texture RenderBloomDebug(
-		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS> & downsample,
-		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS> & upsample,
-		Tr2GpuResourcePool::Texture & blitCurrent,
-		Tr2GpuResourcePool & gpuResourcePool,
-		Tr2RenderContext & renderContext );
+		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& downsample,
+		std::array<Tr2GpuResourcePool::Texture, Bloom::MAX_BLOOM_STEPS>& upsample,
+		Tr2GpuResourcePool::Texture& blitCurrent,
+		Tr2GpuResourcePool& gpuResourcePool,
+		Tr2RenderContext& renderContext );
 
 	Tr2EffectPtr m_downSamplerLuminancePreserve;
 	Tr2EffectPtr m_downSampler;
@@ -180,7 +181,7 @@ private:
 
 	// dynamic exposure
 	Tr2GpuResourcePool::Buffer RenderDynamicExposure( const Tr2TextureAL& dest, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure );
-	void RenderDynamicExposureDebug( Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext, Tr2PPDynamicExposureEffect * dynamicExposure, const Tr2BufferAL& histogramBuffer );
+	void RenderDynamicExposureDebug( Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, Tr2PPDynamicExposureEffect* dynamicExposure, const Tr2BufferAL& histogramBuffer );
 
 	Tr2EffectPtr m_dynamicExposureCreateHistogramShader;
 	Tr2EffectPtr m_dynamicExposureMergeHistogramShader;
@@ -239,14 +240,14 @@ private:
 	// transparency mask
 	Tr2EffectPtr m_transparencyMaskEffect;
 
-	[[nodiscard]] Tr2GpuResourcePool::Buffer GetExposureBuffer( Tr2GpuResourcePool & gpuResourcePool ) const;
-	[[nodiscard]] Tr2GpuResourcePool::Texture GetBlackTexture( Tr2GpuResourcePool & gpuResourcePool ) const;
+	[[nodiscard]] Tr2GpuResourcePool::Buffer GetExposureBuffer( Tr2GpuResourcePool& gpuResourcePool ) const;
+	[[nodiscard]] Tr2GpuResourcePool::Texture GetBlackTexture( Tr2GpuResourcePool& gpuResourcePool ) const;
 
 	// Common
-	Tr2GpuResourcePool::Texture Blur( Tr2GpuResourcePool::Texture src, Tr2GpuResourcePool & gpuResourcePool, Tr2RenderContext & renderContext, const PostProcessBlur::BlurContext& blurContext );
+	Tr2GpuResourcePool::Texture Blur( Tr2GpuResourcePool::Texture src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext, const PostProcessBlur::BlurContext& blurContext );
 	Tr2GpuResourcePool::Texture DownSampleDepth( const Tr2TextureAL& depth, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext );
 
-	[[nodiscard]] Tr2GpuResourcePool::Texture RenderGenericEffects( std::vector<Tr2AccumulatedGenericEffects::GenericEffectInstance> & effects, const Tr2GpuResourcePool::Texture& src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext ) const;
+	[[nodiscard]] Tr2GpuResourcePool::Texture RenderGenericEffects( std::vector<Tr2AccumulatedGenericEffects::GenericEffectInstance>& effects, const Tr2GpuResourcePool::Texture& src, Tr2GpuResourcePool& gpuResourcePool, Tr2RenderContext& renderContext ) const;
 
 	Tr2EffectPtr m_downsampleDepthEffect;
 	std::map<uint32_t, std::pair<Tr2EffectPtr, Tr2EffectPtr>> m_blurEffects;
