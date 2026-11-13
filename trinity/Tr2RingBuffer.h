@@ -35,7 +35,7 @@ public:
 	// The templates are defined in Tr2RingBufferImpl.h.
 	template <typename T>
 	uint32_t UploadTransforms( const T* data, uint32_t matrixCount );
-	void PrepareBuffer( Tr2RenderContext & renderContext );
+	void PrepareBuffer( Tr2RenderContext& renderContext );
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 
 	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
@@ -55,7 +55,7 @@ private:
 	// UploadTransforms may run on worker threads, so Resize only grows the mirror;
 	// the GPU buffer is recreated in PrepareBuffer on the main thread.
 	void Resize( uint32_t size );
-	void CreateGpuBuffer( Tr2PrimaryRenderContextAL & renderContext );
+	void CreateGpuBuffer( Tr2PrimaryRenderContextAL& renderContext );
 
 	std::string m_name;
 

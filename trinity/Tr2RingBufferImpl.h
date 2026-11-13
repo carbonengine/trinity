@@ -61,6 +61,7 @@ Tr2RingBuffer& Tr2RingBuffer::GetInstance()
 		self->m_stride = sizeof( T );
 		self->SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
 		self->Resize( INITIAL_SIZE );
+		self->CreateGpuBuffer( renderContext );
 	}
 
 	CCP_ASSERT_M( sizeof( T ) == self->m_stride, "Stride has to match size of datatype!" );
