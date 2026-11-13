@@ -1,0 +1,120 @@
+// Copyright © 2026 CCP ehf.
+
+#pragma once
+
+#include "../../../Resources/TriGeometryRes.h"
+#include <atomic>
+#include <chrono>
+
+/**
+ * @brief CPU copy of a mesh's triangles, bucketed in a hierarchical loose grid per LOD, so that a runtime
+ * decal only tests the triangles near its volume instead of reading back and scanning the whole mesh.
+ *
+ * Each triangle is stored once, in the cell of its centre on the finest grid level whose cells are at
+ * least as large as the triangle; a query looks at every level with its box grown by half a cell there.
+ *
+ * The first runtime decal build against a mesh reads the mesh back from the GPU on the main thread and
+ * builds the grid as a task in a shared task group. A frame does at most one readback (tens of ms on a
+ * large mesh) and a quarter of the hardware threads (at least two) build at once; until its build
+ * finishes, Get returns null and the decal tries again on a later frame. The cache is owned by the mesh's TriGeometryResMeshData,
+ * so it is released together with the geometry (TriGeometryRes::ReleaseResources clears the mesh data on
+ * release, re-initialization and reload). It is also rebuilt if the mesh's LOD set no longer matches.
+ * Its memory is reported as Trinity/decalTriangleCacheBytes. A ready cache that Get has not handed out
+ * for IDLE_RELEASE has its triangles freed by EndFrame; the next Get against the mesh rebuilds it.
+ */
+struct DecalTriangleCache
+{
+	struct Level
+	{
+		Vector3 origin = Vector3( 0.f, 0.f, 0.f );
+		Vector3 cellSize = Vector3( 0.f, 0.f, 0.f );
+		Vector3 invCellSize = Vector3( 0.f, 0.f, 0.f );
+		uint32_t dims[3] = { 1, 1, 1 };
+		// index of this level's first cell in Lod::cellStart
+		uint32_t firstCell = 0;
+	};
+
+	struct Lod
+	{
+		std::vector<Vector3> positions;
+		// 3 per triangle, the LOD's index buffer values, reordered so each cell's triangles are contiguous
+		std::vector<uint32_t> indices;
+		std::vector<Level> levels;
+		// triangles cellStart[c] .. cellStart[c + 1] (in units of triangles) belong to cell c
+		std::vector<uint32_t> cellStart;
+	};
+
+	uint32_t lodMask = 0;
+	std::vector<Lod> lods;
+	// set by the worker thread once lods can be read
+	std::atomic<bool> ready = false;
+	// the mesh could not be read back: Get does not try again before retryAt
+	bool failed = false;
+	uint32_t failures = 0;
+	std::chrono::steady_clock::time_point retryAt;
+	// bytes added to the Trinity/decalTriangleCacheBytes statistic, taken off again on destruction
+	std::atomic<int64_t> reportedBytes = 0;
+	// when Get last handed this cache out; EndFrame frees the triangles of a cache idle too long
+	std::chrono::steady_clock::time_point lastUsed;
+	// EndFrame freed the triangles: Get rebuilds the cache
+	bool released = false;
+
+	~DecalTriangleCache();
+
+	/**
+	 * @brief Returns the cache for meshData, starting to build it if needed.
+	 * @return null while the mesh's buffers or the cache are not ready yet.
+	 */
+	static const DecalTriangleCache* Get( TriGeometryResMeshData* meshData );
+
+	/**
+	 * @brief Whether any area of the mesh is skinned or morphed. Its vertices move away from the
+	 * positions the cache holds, so a decal or a nearest query built on them would land wrong.
+	 */
+	static bool IsDeformed( const TriGeometryResMeshData& meshData );
+
+	/**
+	 * @brief Cancels the builds that have not started and waits for the running ones. Get starts no
+	 * build afterwards.
+	 */
+	static void Shutdown();
+
+	/**
+	 * @brief Called once a frame on the main thread (Tr2Renderer::EndFrame): opens the next frame's
+	 * readback, and at most once a second frees the triangles of every ready cache Get has not handed
+	 * out for IDLE_RELEASE.
+	 */
+	static void EndFrame();
+
+	/**
+	 * @brief Appends the indices of the triangles of LOD lodIndex that intersect the decal volume.
+	 * @param aabbMin, aabbMax Bounds of the decal volume in the mesh's vertex space.
+	 * @param inverseDecalMatrix Maps the mesh's vertex space into decal space (the volume is [-1, 1]^3).
+	 * @param projectionAxis Unit direction the decal projects along, in the mesh's vertex space.
+	 * @param minFacing Triangles whose face normal is closer to perpendicular to projectionAxis than
+	 *   this (|cos| of the angle between them) are left out: the decal's texture would smear along
+	 *   them. Either winding counts. Pass a value <= 0 to keep every triangle.
+	 */
+	void Query( size_t lodIndex, const Vector3& aabbMin, const Vector3& aabbMax, const Matrix& inverseDecalMatrix, const Vector3& projectionAxis, float minFacing, std::vector<uint32_t>& out ) const;
+
+	/**
+	 * @brief Finds the point on a hull edge of LOD lodIndex nearest to point, within radius.
+	 *
+	 * An edge is where two triangles meet at a fold sharper than sharpCos (the cosine of the
+	 * angle between their face normals), or an open edge with a triangle on one side only.
+	 * Vertices are matched by position, so the split vertices of a hard edge still join up.
+	 * @param outNormal The two faces' normals averaged (a face's own on an open edge): a
+	 *   decal projected along it wraps over the edge onto both faces.
+	 * @return false if no edge lies within radius.
+	 */
+	bool FindNearestEdge( size_t lodIndex, const Vector3& point, float radius, float sharpCos, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const;
+
+	/**
+	 * @brief Finds the point on a triangle of LOD lodIndex nearest to point, within radius.
+	 * @param outNormal The triangle's face normal, turned to the side point is on.
+	 * @return false if no triangle lies within radius.
+	 */
+	bool FindNearestSurface( size_t lodIndex, const Vector3& point, float radius, Vector3& outPosition, Vector3& outNormal, float& outDistance ) const;
+
+	size_t GetMemoryUsage() const;
+};

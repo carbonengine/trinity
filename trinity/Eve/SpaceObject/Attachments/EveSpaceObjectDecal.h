@@ -72,6 +72,8 @@ struct DecalMeshCache
 	std::vector<MeshBuffers> buffers;
 };
 
+struct EveChildGeometry;
+
 // --------------------------------------------------------------------------------
 // Description:
 //   ToDo
@@ -130,6 +132,21 @@ public:
 	void UpdateVisibility( const EveUpdateContext& updateContext, const IEveSpaceObject2::ParentData* parentData );
 	void GetRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, TriGeometryRes * geomRes, float screensize );
 	void GetInstancedRenderables( std::vector<ITr2Renderable*> & renderables, DecalMeshCache & meshCache, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
+	/**
+	 * @brief Gathers the decal for a parent without a mesh of its own (a modular object), projecting it onto
+	 * every part geometry the decal volume overlaps. Index buffers are built on the CPU from each part
+	 * geometry's DecalTriangleCache and owned by this decal; they are rebuilt when the decal or a part moves.
+	 * @param parts Part geometries of the parent, in the parent's object space (EveSpaceObjectChild::CollectOwnedGeometry).
+	 * @param objectScreenSize Screen size of the whole parent, used to pick a LOD per part.
+	 * @param objectRadius Bounding sphere radius of the whole parent in object space.
+	 */
+	void GetModularRenderables( std::vector<ITr2Renderable*> & renderables, const std::vector<EveChildGeometry>& parts, float objectScreenSize, float objectRadius, const TriGeometryRes* ownGeometry );
+
+	// true if this decal builds its own geometry at runtime (dynamicIndexBuffers)
+	bool HasDynamicIndexBuffers() const
+	{
+		return m_dynamicIndexBuffers;
+	}
 
 	// access position etc.
 	const Vector3& GetPosition() const;
@@ -161,8 +178,17 @@ public:
 private:
 	// create
 	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes, DecalMeshCache & meshCache );
+	// Collects the triangles of every LOD of meshData that intersect the decal volume. Returns null if the
+	// mesh buffers are not ready yet. inverseDecalMatrix maps the mesh's vertex space into decal space.
+	static std::shared_ptr<MeshDecalData> BuildDecalGeometry( TriGeometryResMeshData * meshData, DecalMeshCache & meshCache, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix );
+	// Same result as BuildDecalGeometry, but reads the triangles from the mesh's DecalTriangleCache
+	// (built once per mesh), so only the triangles near the decal volume are tested.
+	static std::shared_ptr<MeshDecalData> BuildDecalGeometryCached( TriGeometryResMeshData * meshData, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix );
+	void FillPerObjectData( EveDecalPerObjectData & data, const Matrix& worldMatrix, const Matrix& decalMatrix, const Matrix& inverseDecalMatrix, const Matrix& parentBoneMatrix ) const;
+	void CommitBatch( ITriRenderBatchAccumulator * batches, const TriGeometryResLodData* lod, const MeshDecalData& decalGeometry, int lodIndex, const Tr2PerObjectData* perObjectData );
 	// update
 	void UpdateDecalMatrix();
+	void UpdateDrawDecalMatrix();
 	void CreateStaticIndexBuffers( TriGeometryResPtr geomRes );
 
 	bool HasStaticIndexBuffers() const;
@@ -193,6 +219,15 @@ private:
 	// matrices representing the "volume" of the decal projection
 	Matrix m_decalMatrix;
 	Matrix m_inverseDecalMatrix;
+	// per-axis share (0..1) of that volume the decal draws in: animating it rebuilds no geometry
+	Vector3 m_growScale = Vector3( 1.f, 1.f, 1.f );
+	// the drawn volume: m_decalMatrix with m_growScale applied in decal space
+	Matrix m_drawDecalMatrix;
+	Matrix m_drawInverseDecalMatrix;
+	// inverse of the volume the runtime geometry was built for: a later volume inside it keeps the geometry
+	Matrix m_builtInverseDecalMatrix;
+	// m_decalGeometry or every part target holds geometry built from the decal volume
+	bool HasBuiltRuntimeGeometry() const;
 
 	// base mesh geometry
 	TriGeometryResPtr m_baseGeometryResource;
@@ -216,6 +251,37 @@ private:
 
 	// the geometry can be frozen
 	bool m_isGeometryFrozen;
+
+	// build the index buffer at runtime even when g_buildDecalBuffers is off; the buffer is then owned by
+	// this decal instead of being cached on the mesh
+	bool m_dynamicIndexBuffers;
+
+	// A part of a modular parent that the decal may project onto
+	struct PartTarget
+	{
+		TriGeometryResPtr geometry;
+		Matrix childToObject;
+		// the decal volume expressed in the part's vertex space
+		Matrix decalMatrix;
+		Matrix inverseDecalMatrix;
+		Matrix objectToPart;
+		// owned here rather than cached on the (shared) mesh data: runtime decals come and go
+		std::shared_ptr<MeshDecalData> decalGeometry;
+		float screenSizeScale = 1.f;
+		// radius of the part's bounds about its own origin, as the instanced mesh manager sizes it for LOD
+		float lodRadius = 0.f;
+		int lodIndex = -1;
+	};
+	// the parts the decal volume overlaps, from the broad phase of the parts list m_partsSignature names
+	std::vector<PartTarget> m_partTargets;
+	// hash of the parts list m_partTargets was built from; 0 when they must be rebuilt
+	uint64_t m_partsSignature = 0;
+	// the camera of the last visibility update: part LODs and the depth pull are taken from it
+	TriFrustum m_lastFrustum;
+	float m_lastInvLodFactor = 1.f;
+	bool m_hasLastFrustum = false;
+	// true when the parent has no mesh and the decal renders through m_partTargets
+	bool m_usePartTargets;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObjectDecal );

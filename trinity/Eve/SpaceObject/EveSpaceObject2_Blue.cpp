@@ -549,6 +549,39 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			":param position: position of target\n"
 			":param locatorSetName: name of locator set \n" )
 		MAP_METHOD_AND_WRAP(
+			"GetNearestHullEdge",
+			GetNearestHullEdge,
+			"( position, radius ) -> ( found, ( position, normal ) )\n"
+			"Nearest point on an edge of the object's geometry (a fold sharper than 30 degrees, or an open edge), "
+			"in object space, with the normal a decal there should project along to wrap over the edge. "
+			"Not found while the geometry's triangle cache is still being built.\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
+			"QueryNearestHullEdge",
+			QueryNearestHullEdge,
+			"( position, radius ) -> ( status, ( position, normal ) )\n"
+			"GetNearestHullEdge with a status: 0 found, 1 nothing within radius (every part in reach searched), "
+			"2 pending (a part in reach is still building its triangle cache; ask again on a later frame).\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
+			"QueryNearestSurfacePoint",
+			QueryNearestSurfacePoint,
+			"( position, radius ) -> ( status, ( position, normal ) )\n"
+			"GetNearestSurfacePoint with a status: 0 found, 1 nothing within radius (every part in reach searched), "
+			"2 pending (a part in reach is still building its triangle cache; ask again on a later frame).\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
+			"GetNearestSurfacePoint",
+			GetNearestSurfacePoint,
+			"( position, radius ) -> ( found, ( position, normal ) )\n"
+			"Nearest point on the object's geometry, in object space, with that surface's normal turned "
+			"towards position. Not found while the geometry's triangle cache is still being built.\n"
+			":param position: object-space point\n"
+			":param radius: search radius in metres\n" )
+		MAP_METHOD_AND_WRAP(
 			"GetLocatorPositionFromSet",
 			GetLocatorPositionFromSet,
 			"locator position from a set Specified by name\n"

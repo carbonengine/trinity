@@ -511,6 +511,55 @@ public:
 	int GetClosestLocatorIndex( const Vector3* position, BlueSharedString locatorSetName );
 	unsigned int GetLocatorCount( BlueSharedString locatorSetName ) const;
 	Vector3 GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
+
+	/**
+	 * @brief The point on an edge of the object's own geometry (its mesh, or a modular object's
+	 * parts) nearest to position, and the normal to project a decal along so it wraps the edge.
+	 * @see DecalTriangleCache::FindNearestEdge
+	 * @param position, radius Object space; only edges within radius are considered.
+	 * @return (found, (position, normal)) in object space. Not found while a mesh's triangle
+	 *   cache is still being built, which the first call on that mesh starts.
+	 */
+	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestHullEdge( const Vector3& position, float radius );
+
+	/**
+	 * @brief The point on the object's own geometry (its mesh, or a modular object's parts) nearest
+	 * to position, and that surface's normal, turned towards position.
+	 * @see DecalTriangleCache::FindNearestSurface
+	 * @param position, radius Object space; only surfaces within radius are considered.
+	 * @return (found, (position, normal)) in object space. Not found while a mesh's triangle
+	 *   cache is still being built, which the first call on that mesh starts.
+	 */
+	std::pair<bool, std::pair<Vector3, Vector3>> GetNearestSurfacePoint( const Vector3& position, float radius );
+
+	// Status of QueryNearestHullEdge and QueryNearestSurfacePoint
+	enum class GeometryQueryStatus : int
+	{
+		FOUND = 0,
+		// nothing within the radius, and every part in reach was searched
+		NONE = 1,
+		// nothing found yet: a part in reach is still building its triangle cache, ask again later
+		PENDING = 2,
+	};
+
+	/**
+	 * @brief GetNearestHullEdge, telling a part still building its triangle cache from nothing in reach.
+	 * @return (status, (position, normal)), status a GeometryQueryStatus.
+	 */
+	std::pair<int, std::pair<Vector3, Vector3>> QueryNearestHullEdge( const Vector3& position, float radius );
+
+	/**
+	 * @brief GetNearestSurfacePoint, telling a part still building its triangle cache from nothing in reach.
+	 * @return (status, (position, normal)), status a GeometryQueryStatus.
+	 */
+	std::pair<int, std::pair<Vector3, Vector3>> QueryNearestSurfacePoint( const Vector3& position, float radius );
+
+private:
+	// The nearest of query( cache, part-space point, part-space radius ) over the object's own geometry
+	template<typename Query>
+	std::pair<GeometryQueryStatus, std::pair<Vector3, Vector3>> FindNearestOnGeometry( const Vector3& position, float radius, Query&& query );
+
+public:
 	Vector3 GetLocatorRotationFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorPosition( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	bool GetLocatorDirection( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
