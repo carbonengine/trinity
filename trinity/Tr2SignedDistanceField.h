@@ -100,6 +100,18 @@ public:
 	bool Max( const Tr2SignedDistanceField& other );
 
 	/**
+	 * @brief Gets the dimensions of the signed distance field grid.
+	 * @return A reference to the Dimensions object representing the grid dimensions.
+	 */
+	[[nodiscard]] const Tr2VoxelData::Dimensions& GetDimensions() const;
+
+	/**
+	 * @brief Down-samples the signed distance field by a factor of 2 in each dimension, reducing the resolution of the field. 
+	 * The resulting field will have half the width, height, and depth of the original field.
+	 */
+	void DownSample();
+
+	/**
 	 * @brief Checks whether a voxel payload type is a valid SDF channel type.
 	 * @param type The payload type value to validate.
 	 * @return true if the payload type is valid for an SDF channel; otherwise, false.
@@ -123,10 +135,12 @@ private:
 	static constexpr float s_sdfClamp = 3.0; // encode clamp in cells
 	static constexpr float s_deepEmpty = s_sdfClamp; // field value sampled outside the grid
 	static constexpr float s_signFloor = 0.12; // min |field| kept at an in-grid cell centre after the low-pass
-	static constexpr float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field
+	static constexpr float s_blurAlpha = 0.15; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field for occupancy to SDF conversion
+	static constexpr float s_sdfBlurAlpha = 0.001; // sign-preserving low-pass kernel [a/2, 1-a, a/2] of the extraction field for source SDF blurring
 
 	Int3 GetGridSize() const;
 	static float GetCornerWeight( const Vector3& t, int32_t corner ); // trilinear weight of a cube corner (bits x, y, z)
 	std::vector<float> ComputeSdf( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
 	std::vector<float> CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const;
+	void BlurSdf( std::vector<float>& sdf, float alpha ) const;
 };

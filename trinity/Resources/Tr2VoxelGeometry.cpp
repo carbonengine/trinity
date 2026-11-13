@@ -83,6 +83,7 @@ struct InputSettings
 struct OutputSettings
 {
 	EnumFilter<Tr2VoxelGeometryComponents> components;
+	uint32_t lodLevels = 1;
 	bool packedTangents = false;
 };
 
@@ -106,20 +107,11 @@ public:
 			return false;
 		}
 
-		auto [vbView, ibView, decl] = CreateBuffers( allocator, buffers, cancel );
-		if( cancel || vbView.size == 0 )
+		auto [lods, decl] = CreateBuffers( allocator, buffers, cancel );
+		if( cancel || lods.empty() )
 		{
 			return false;
 		}
-
-		cmf::LodMeshArea lodArea = {};
-		lodArea.firstElement = 0;
-		lodArea.elementCount = ibView.size / ibView.stride / 3;
-
-		cmf::MeshLod lod = {};
-		lod.vb = vbView;
-		lod.ib = ibView;
-		cmf::Modify( lod.areas, allocator ).emplace_back( lodArea );
 
 		cmf::MeshArea area = {};
 		area.name = allocator.AllocateString( "VoxelDataArea" );
@@ -127,7 +119,7 @@ public:
 		cmf::Mesh mesh = {};
 		mesh.name = allocator.AllocateString( "VoxelData" );
 		mesh.decl = decl;
-		cmf::Modify( mesh.lods, allocator ).emplace_back( lod );
+		mesh.lods = lods;
 		cmf::Modify( mesh.areas, allocator ).emplace_back( area );
 		mesh.topology = cmf::MeshTopology::TriangleList;
 
@@ -185,8 +177,7 @@ protected:
 	 */
 	struct GeneratedMesh
 	{
-		cmf::BufferView vb;
-		cmf::BufferView ib;
+		cmf::Span<cmf::MeshLod> lods;
 		cmf::Span<cmf::VertexElement> decl;
 	};
 
@@ -199,6 +190,35 @@ protected:
 	 */
 	virtual GeneratedMesh CreateBuffers( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel ) = 0;
 
+	cmf::Span<cmf::VertexElement> CreateVertexDeclaration( cmf::MemoryAllocator& allocator ) const
+	{
+		cmf::Span<cmf::VertexElement> decl;
+		uint32_t offset = 0;
+		// Appends a float element and returns its index in decl
+		auto addElement = [&]( cmf::Usage usage, uint8_t usageIndex, cmf::ElementType type, uint8_t componentCount ) {
+			cmf::Modify( decl, allocator ).emplace_back( usage, usageIndex, type, componentCount, offset );
+			offset += cmf::GetVertexElementSize( decl[decl.size() - 1] );
+			return decl.size() - 1;
+		};
+		addElement( cmf::Usage::Position, 0, cmf::ElementType::Float32, 3 );
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
+		{
+			addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 0, cmf::ElementType::Float16, 4 );
+		}
+		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+		{
+			addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 1, cmf::ElementType::Float16, 4 );
+		}
+
+		const auto hasExtraData = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) ||
+			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) ||
+			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags );
+		if( hasExtraData )
+		{
+			addElement( cmf::Usage::TexCoord, 0, cmf::ElementType::Int8Norm, 4 );
+		}
+		return decl;
+	}
 	/**
 	 * @brief Helper function that assembles the generated mesh based on enabled output components and available inputs. 
 	 * @param allocator Allocator used to build and store the vertex declaration metadata.
@@ -212,9 +232,12 @@ protected:
 	 * @param indices Triangle index data copied into the allocated index buffer.
 	 * @return A GeneratedMesh containing the allocated vertex buffer view, index buffer view, and the constructed vertex declaration.
 	 */
-	GeneratedMesh AllocateBuffers(
+	cmf::MeshLod AllocateBuffers(
 		cmf::MemoryAllocator& allocator,
 		cmf::BufferManager& buffers,
+		float scale,
+		const Vector3& offset,
+		const cmf::Span<cmf::VertexElement>& decl,
 		const std::vector<Vector3>& positions,
 		const std::vector<Vector3>& normals,
 		const std::vector<Vector3>& shadingNormals,
@@ -223,41 +246,29 @@ protected:
 		const std::vector<DataTag>& dataTags,
 		const std::vector<uint32_t>& indices ) const
 	{
-		cmf::Span<cmf::VertexElement> decl;
-		uint32_t offset = 0;
-		// Appends a float element and returns its index in decl
-		auto addElement = [&]( cmf::Usage usage, uint8_t usageIndex, cmf::ElementType type, uint8_t componentCount ) {
-			cmf::Modify( decl, allocator ).emplace_back( usage, usageIndex, type, componentCount, offset );
-			offset += cmf::GetVertexElementSize( decl[decl.size() - 1] );
-			return decl.size() - 1;
-		};
-		const size_t positionElement = addElement( cmf::Usage::Position, 0, cmf::ElementType::Float32, 3 );
-		const size_t normalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 0, cmf::ElementType::Float16, 4 ) : 0;
-		const size_t shadingNormalElement = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) ? addElement( m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 1, cmf::ElementType::Float16, 4 ) : 0;
-
-		const auto hasExtraData = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) ||
-			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) ||
-			m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags );
-		const size_t extraElement = hasExtraData ? addElement( cmf::Usage::TexCoord, 0, cmf::ElementType::Int8Norm, 4 ) : 0;
-		const uint32_t vertexStride = offset;
+		const auto vertexStride = std::accumulate( decl.begin(), decl.end(), 0u, []( uint32_t size, const cmf::VertexElement& element ) {
+			return std::max( size, element.offset + cmf::GetVertexElementSize( element ) );
+		} );
+		const auto positionElement = cmf::FindElement( decl, cmf::Usage::Position, 0 );
+		const auto normalElement = cmf::FindElement( decl, m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 0 );
+		const auto shadingNormalElement = cmf::FindElement( decl, m_outputSettings.packedTangents ? cmf::Usage::PackedTangent : cmf::Usage::Normal, 1 );
+		const auto extraElement = cmf::FindElement( decl, cmf::Usage::TexCoord, 0 );
 
 		// Allocate vertex buffer
 		cmf::BufferView vbView = buffers.AllocateBuffer(
 			nullptr,
 			uint32_t( positions.size() * vertexStride ),
 			vertexStride );
-		cmf::BufferElementStream<Vector3> positionStream( decl[positionElement], vbView, buffers );
-		// Lattice coordinates put cell centers at integers; the grid spans [-0.5, dim - 0.5] and is centered on the origin
-		const Vector3 origin = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
+		cmf::BufferElementStream<Vector3> positionStream( *positionElement, vbView, buffers );
 		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
 		{
-			positionStream.set( i, origin + positions[i] + Vector3( 0.5f, 0.5f, 0.5f ) );
+			positionStream.set( i, positions[i] * scale + offset );
 		}
 
-		auto PopulateNormals = [&]( const std::vector<Vector3>& normalsToPopulate, size_t elementIndex ) {
+		auto PopulateNormals = [&]( const std::vector<Vector3>& normalsToPopulate, const cmf::VertexElement* elementIndex ) {
 			if( m_outputSettings.packedTangents )
 			{
-				cmf::BufferElementStream<Vector4> normalStream( decl[elementIndex], vbView, buffers );
+				cmf::BufferElementStream<Vector4> normalStream( *elementIndex, vbView, buffers );
 				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
 				{
 					const Vector3& n = normalsToPopulate[i];
@@ -270,7 +281,7 @@ protected:
 			}
 			else
 			{
-				cmf::BufferElementStream<Vector3> normalStream( decl[elementIndex], vbView, buffers );
+				cmf::BufferElementStream<Vector3> normalStream( *elementIndex, vbView, buffers );
 				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
 				{
 					normalStream.set( i, normalsToPopulate[i] );
@@ -278,17 +289,17 @@ protected:
 			}
 		};
 
-		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothNormals ) )
+		if( normalElement )
 		{
 			PopulateNormals( normals, normalElement );
 		}
-		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+		if( shadingNormalElement )
 		{
 			PopulateNormals( shadingNormals, shadingNormalElement );
 		}
-		if( hasExtraData )
+		if( extraElement )
 		{
-			cmf::BufferElementStream<Vector4> extraDataStream( decl[extraElement], vbView, buffers );
+			cmf::BufferElementStream<Vector4> extraDataStream( *extraElement, vbView, buffers );
 
 			for( uint32_t i = 0; i < extraDataStream.size(); ++i )
 			{
@@ -306,7 +317,11 @@ protected:
 			uint32_t( indices.size() * indexStride ),
 			indexStride );
 
-		return { vbView, ibView, decl };
+		cmf::MeshLod lod = {};
+		lod.ib = ibView;
+		lod.vb = vbView;
+		cmf::Modify( lod.areas, allocator ).emplace_back( cmf::LodMeshArea{ 0, uint32_t( indices.size() / 3 ) } );
+		return lod;
 	}
 
 	const InputSettings m_inputSettings;
@@ -368,7 +383,7 @@ protected:
 			auto [iter, inserted] = indicesMap.try_emplace( cornerIndex * s_faces.size() + faceIndex, uint32_t( vertices.size() ) );
 			if( inserted )
 			{
-				Vector3 position = Vector3( float( corner.x ), float( corner.y ), float( corner.z ) ) - Vector3( 0.5f, 0.5f, 0.5f );
+				Vector3 position = Vector3( float( corner.x ), float( corner.y ), float( corner.z ) );
 				vertices.push_back( position );
 				normals.push_back( s_faces[faceIndex].normal );
 			}
@@ -407,7 +422,14 @@ protected:
 			}
 		}
 
-		return AllocateBuffers( allocator, buffers, vertices, normals, normals, {}, {}, {}, indices );
+		cmf::Span<cmf::VertexElement> decl = CreateVertexDeclaration( allocator );
+		cmf::Span<cmf::MeshLod> lods;
+
+		const Vector3 offset = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f;
+
+		cmf::Modify( lods, allocator ).emplace_back( AllocateBuffers( allocator, buffers, 1.0f, offset, decl, vertices, normals, normals, {}, {}, {}, indices ) );
+
+		return { lods, decl };
 	}
 };
 
@@ -462,19 +484,13 @@ protected:
 		std::vector<float> field; // NaN where the cell has no field value
 	};
 
-	int32_t GetScale() const
+	static Int3 DimensionsToInt3( const Tr2VoxelData::Dimensions& dims )
 	{
-		return int32_t( std::max( m_subdivision, 1u ) );
+		return { int32_t( dims.width ), int32_t( dims.height ), int32_t( dims.depth ) };
 	}
 
-	Int3 GetGridSize() const
+	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
-		return { int32_t( m_dimensions.width ), int32_t( m_dimensions.height ), int32_t( m_dimensions.depth ) };
-	}
-
-	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, const std::atomic<bool>& cancel ) const
-	{
-		const int32_t scale = GetScale();
 		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, cancel );
 	}
 
@@ -565,12 +581,13 @@ protected:
 	 * Only smooth vertices are cut: a vertex whose quads spread wider than s_featureCos sits on a real edge and stays, and the cut ramps in from such
 	 * vertices at s_cutRampSlope so no edge stands proud as a fin. A quad the cuts turn over has its most cut corner
 	 * lowered a step down s_cutFractions, for up to s_unfoldRounds rounds, after which its corners go uncut.
-	 * @param field The signed distance field used to compute per-vertex cut vectors.
+	 * @param surfaceCuts The cuts of the full resolution field, shared by every LOD so their cuts line up.
+	 * @param positionScale Grid cells per position unit; positions p sit at p * positionScale + ( positionScale - 1 ) / 2 in grid space.
 	 * @param positions The mesh vertex positions. Input positions are analyzed and then updated in place with the computed cuts.
 	 * @param quads Quad index buffer (4 indices per quad) defining mesh connectivity used for normals, feature detection, and neighborhood traversal.
 	 * @param cancel Cancellation flag checked at key stages; if set, the function exits early without further processing.
 	 */
-	void ApplySurfaceCuts( const Tr2SignedDistanceField& field, std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	void ApplySurfaceCuts( const Tr2SurfaceCuts& surfaceCuts, float positionScale, std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
 		if( !m_cutParams.IsEnabled() || quads.empty() )
 		{
@@ -633,7 +650,7 @@ protected:
 			}
 		}
 
-		// Mesh distance to the nearest feature vertex, out to where the ramp no longer limits the deepest cut
+		// Mesh distance in grid cells to the nearest feature vertex, out to where the ramp no longer limits the deepest cut
 		const float rampReach = m_cutParams.GetMaxCut() / s_cutRampSlope;
 		std::vector<float> featureDistance( vertexCount, std::numeric_limits<float>::infinity() );
 		using QueueEntry = std::pair<float, uint32_t>;
@@ -661,7 +678,7 @@ protected:
 				for( uint32_t side : { 1u, 3u } )
 				{
 					const uint32_t neighbor = quads[base + ( ( corner + side ) & 3 )];
-					const float d = distance + Length( positions[neighbor] - positions[v] );
+					const float d = distance + Length( positions[neighbor] - positions[v] ) * positionScale;
 					if( d < featureDistance[neighbor] && d < rampReach )
 					{
 						featureDistance[neighbor] = d;
@@ -675,7 +692,7 @@ protected:
 			return;
 		}
 
-		Tr2SurfaceCuts surfaceCuts( field, m_dimensions, m_cutParams );
+		const float gridOffset = ( positionScale - 1.f ) * 0.5f;
 		std::vector<Vector3> cuts( vertexCount, Vector3( 0.f, 0.f, 0.f ) );
 		for( size_t v = 0; v < vertexCount; ++v )
 		{
@@ -683,14 +700,15 @@ protected:
 			{
 				continue;
 			}
-			Vector3 cut = surfaceCuts.GetCut( positions[v], facing[v] );
+			const Vector3 gridPosition = positions[v] * positionScale + Vector3( gridOffset, gridOffset, gridOffset );
+			Vector3 cut = surfaceCuts.GetCut( gridPosition, facing[v] );
 			const float length = Length( cut );
 			const float limit = s_cutRampSlope * featureDistance[v];
 			if( length > limit )
 			{
 				cut *= limit / length;
 			}
-			cuts[v] = cut;
+			cuts[v] = cut / positionScale;
 		}
 		if( cancel )
 		{
@@ -1117,66 +1135,111 @@ protected:
 			return {};
 		}
 
-		const int32_t scale = GetScale();
+		int32_t scale = int32_t( std::max( m_subdivision, 1u ) );
 
-		auto& field = GetSignedDistanceField( cancel );
+		const auto& field = GetSignedDistanceField( cancel );
 		if( cancel )
 		{
 			return {};
 		}
-		auto window = CreateLatticeWindow( field, cancel );
-		if( cancel )
-		{
-			return {};
-		}
+		// Cuts come from the full resolution field for every LOD, so coarser LODs cut along the same planes
+		const Tr2SurfaceCuts surfaceCuts( field, m_dimensions, m_cutParams );
+		// Downsampled copy for the coarser LODs; the cached field stays at full resolution
+		std::optional<Tr2SignedDistanceField> downsampledField;
+		const Tr2SignedDistanceField* lodField = &field;
 
-		std::vector<Vector3> positions;
-		std::vector<DataTag> dataTags;
-		std::vector<uint32_t> quads;
-		// Without a data tag channel the requested element reads zero
-		const bool sampleDataTags = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_inputSettings.HasDataTagChannel();
-		Sweep(
-			window,
-			cancel,
-			[&]( const Int3& block ) { return getDualVertex( window, field, block, scale ); },
-			[&]( const Int3& solidCell, const Int3& emptyCell ) {
-				if( sampleDataTags )
+		cmf::Span<cmf::VertexElement> decl = CreateVertexDeclaration( allocator );
+		cmf::Span<cmf::MeshLod> lods;
+		float positionScale = 1.0f;
+
+		for( uint32_t lod = 0; lod < m_outputSettings.lodLevels; ++lod )
+		{
+			auto window = CreateLatticeWindow( *lodField, scale, cancel );
+			if( cancel )
+			{
+				return {};
+			}
+
+			std::vector<Vector3> positions;
+			std::vector<DataTag> dataTags;
+			std::vector<uint32_t> quads;
+			// Without a data tag channel the requested element reads zero
+			const bool sampleDataTags = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && m_inputSettings.HasDataTagChannel();
+			const int32_t fieldScale = int32_t( positionScale );
+			Sweep(
+				window,
+				cancel,
+				[&]( const Int3& block ) { return getDualVertex( window, *lodField, block, scale ); },
+				[&]( const Int3& solidCell, const Int3& emptyCell ) {
+					if( sampleDataTags )
+					{
+						dataTags.push_back( { GetDataTag( solidCell, scale, fieldScale ), GetDataTag( emptyCell, scale, fieldScale ) } );
+					}
+				},
+				positions,
+				quads );
+			if( cancel )
+			{
+				return {};
+			}
+			if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !sampleDataTags )
+			{
+				dataTags.assign( positions.size(), {} );
+			}
+			if( quads.empty() )
+			{
+				return { lods, decl };
+			}
+			Relax( positions, quads, cancel );
+			if( cancel )
+			{
+				return {};
+			}
+			ApplySurfaceCuts( surfaceCuts, positionScale, positions, quads, cancel );
+			if( cancel )
+			{
+				return {};
+			}
+			auto indices = Triangulate( positions, quads );
+			auto normals = ComputeNormals( positions, indices );
+			std::vector<float> curvature;
+			std::vector<float> smoothedCurvature;
+			ComputeCurvature( positions, normals, quads, m_outputSettings.components, curvature, smoothedCurvature );
+			std::vector<Vector3> shadingNormals;
+			if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
+			{
+				shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, dataTags, indices );
+			}
+
+			// A downsampled cell centre sits in the middle of the full resolution cells it merged
+			const float gridOffset = ( positionScale - 1.f ) * 0.5f;
+			const Vector3 offset = Vector3( float( m_dimensions.width ), float( m_dimensions.height ), float( m_dimensions.depth ) ) * -0.5f + Vector3( 0.5f, 0.5f, 0.5f ) + Vector3( gridOffset, gridOffset, gridOffset );
+			cmf::Modify( lods, allocator ).emplace_back( AllocateBuffers( allocator, buffers, positionScale, offset, decl, positions, normals, shadingNormals, curvature, smoothedCurvature, dataTags, indices ) );
+			if( lod > 0 )
+			{
+				auto& lastLod = lods[lod];
+				lastLod.threshold = std::max( { window.lattice[0], window.lattice[1], window.lattice[2] } ) * scale * 3;
+			}
+			if( scale == 1 )
+			{
+				if( lod + 1 == m_outputSettings.lodLevels )
 				{
-					dataTags.push_back( { GetDataTag( solidCell, scale ), GetDataTag( emptyCell, scale ) } );
+					break;
 				}
-			},
-			positions,
-			quads );
-		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !sampleDataTags )
-		{
-			dataTags.assign( positions.size(), {} );
+				if( !downsampledField )
+				{
+					downsampledField = field;
+				}
+				downsampledField->DownSample();
+				lodField = &*downsampledField;
+				positionScale *= 2.0f;
+			}
+			else
+			{
+				scale = std::max( 1, scale / 2 );
+			}
 		}
-		if( cancel || quads.empty() )
-		{
-			return {};
-		}
-		Relax( positions, quads, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-		ApplySurfaceCuts( field, positions, quads, cancel );
-		if( cancel )
-		{
-			return {};
-		}
-		auto indices = Triangulate( positions, quads );
-		auto normals = ComputeNormals( positions, indices );
-		std::vector<float> curvature;
-		std::vector<float> smoothedCurvature;
-		ComputeCurvature( positions, normals, quads, m_outputSettings.components, curvature, smoothedCurvature );
-		std::vector<Vector3> shadingNormals;
-		if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
-		{
-			shadingNormals = SplitNormals( positions, normals, curvature, smoothedCurvature, dataTags, indices );
-		}
-
-		return AllocateBuffers( allocator, buffers, positions, normals, shadingNormals, curvature, smoothedCurvature, dataTags, indices );
+		return { lods, decl };
 	}
 
 	/**
@@ -1184,16 +1247,17 @@ protected:
 	 * nearest voxel inside the grid.
 	 * @param cell The lattice cell, -1..lattice per axis.
 	 * @param scale The lattice subdivision.
+	 * @param fieldScale Grid cells per field cell, 2^n after the field has been downsampled n times.
 	 * @return The data tag channel value of the voxel.
 	 */
-	float GetDataTag( const Int3& cell, int32_t scale ) const
+	float GetDataTag( const Int3& cell, int32_t scale, int32_t fieldScale ) const
 	{
-		const Int3 dims = GetGridSize();
+		const Int3 dims = DimensionsToInt3( m_dimensions );
 		Int3 voxel;
 		for( int j = 0; j < 3; ++j )
 		{
-			// Lattice cell c sits at c / scale in grid space; rounded to the nearest voxel
-			voxel[j] = std::clamp( ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
+			// Lattice cell c sits at c / scale * fieldScale + ( fieldScale - 1 ) / 2 in grid space; rounded to the nearest voxel
+			voxel[j] = std::clamp( fieldScale * ( 2 * cell[j] + scale ) / ( 2 * scale ), 0, dims[j] - 1 );
 		}
 		const size_t index = size_t( voxel[0] ) + size_t( dims[0] ) * ( size_t( voxel[1] ) + size_t( dims[1] ) * size_t( voxel[2] ) );
 		if( m_inputSettings.tags.m_type.type == Tr2VoxelDataType::Boolean )
@@ -1290,7 +1354,7 @@ private:
 	 */
 	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
 	{
-		const Int3 dims = GetGridSize();
+		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
 		Window window( dims );
 		size_t i = 0;
 		for( int32_t z = 0; z < dims[2]; ++z )
@@ -1317,7 +1381,7 @@ private:
 	 */
 	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
-		const Int3 dims = GetGridSize();
+		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
 		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale } );
 
 		// Cubes are keyed by their minimum sample, -1..dim per axis
@@ -1969,6 +2033,22 @@ void Tr2VoxelGeometry::SetRelaxIterations( uint32_t relaxIterations )
 	TryRebuild();
 }
 
+uint32_t Tr2VoxelGeometry::GetLodLevels() const
+{
+	return m_lodLevels;
+}
+
+void Tr2VoxelGeometry::SetLodLevels( uint32_t lodLevels )
+{
+	lodLevels = std::max( lodLevels, uint32_t( 1 ) );
+	if( m_lodLevels == lodLevels )
+	{
+		return;
+	}
+	m_lodLevels = lodLevels;
+	TryRebuild();
+}
+
 uint32_t Tr2VoxelGeometry::GetMethod() const
 {
 	return static_cast<uint32_t>( m_method );
@@ -2150,7 +2230,7 @@ std::unique_ptr<Tr2ProceduralGeometryBuilder> Tr2VoxelGeometry::CreateBuilder() 
 		std::move( shapeSnapshot ), m_shapeTransform, std::move( occupancySnapshot ), std::move( dataTagSnapshot )
 	};
 	auto outputSettings = OutputSettings{
-		m_components, m_packedTangents
+		m_components, m_lodLevels, m_packedTangents
 	};
 
 	switch( m_method )

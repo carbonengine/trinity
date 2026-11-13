@@ -25,7 +25,7 @@ Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnaps
 			[&]( float value ) {
 				return transform.Apply( value );
 			} );
-		return;
+		break;
 	case Tr2VoxelDataType::Int8:
 		if( sdf.m_type.normalized )
 		{
@@ -37,11 +37,13 @@ Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnaps
 				[&]( auto value ) {
 					return transform.Apply( normalizedTransform.Apply( float( value ) ) );
 				} );
-			return;
+			break;
 		}
 	default:
 		return;
 	}
+
+	BlurSdf( m_sdf, s_sdfBlurAlpha );
 }
 
 Tr2SignedDistanceField::Tr2SignedDistanceField( const Tr2VoxelData::PayloadSnapshot& occupancy, const std::atomic<bool>& cancel ) :
@@ -156,6 +158,97 @@ bool Tr2SignedDistanceField::Max( const Tr2SignedDistanceField& other )
 		m_sdf[i] = std::max( m_sdf[i], other.m_sdf[i] );
 	}
 	return true;
+}
+
+const Tr2VoxelData::Dimensions& Tr2SignedDistanceField::GetDimensions() const
+{
+	return m_dimensions;
+}
+
+void Tr2SignedDistanceField::DownSample()
+{
+	if( m_sdf.empty() )
+	{
+		return;
+	}
+
+	const int32_t srcW = int32_t( m_dimensions.width );
+	const int32_t srcH = int32_t( m_dimensions.height );
+	const int32_t srcD = int32_t( m_dimensions.depth );
+
+	if( srcW <= 0 || srcH <= 0 || srcD <= 0 )
+	{
+		return;
+	}
+
+	const int32_t dstW = std::max<int32_t>( 1, ( srcW + 1 ) / 2 );
+	const int32_t dstH = std::max<int32_t>( 1, ( srcH + 1 ) / 2 );
+	const int32_t dstD = std::max<int32_t>( 1, ( srcD + 1 ) / 2 );
+
+	if( dstW == srcW && dstH == srcH && dstD == srcD )
+	{
+		return;
+	}
+
+	auto linearIndex = []( int32_t x, int32_t y, int32_t z, int32_t w, int32_t h ) -> size_t {
+		return size_t( x ) + size_t( w ) * ( size_t( y ) + size_t( h ) * size_t( z ) );
+	};
+
+	std::vector<float> downsampled;
+	downsampled.resize( size_t( dstW ) * dstH * dstD );
+
+	for( int32_t z = 0; z < dstD; ++z )
+	{
+		for( int32_t y = 0; y < dstH; ++y )
+		{
+			for( int32_t x = 0; x < dstW; ++x )
+			{
+				const int32_t sx = x * 2;
+				const int32_t sy = y * 2;
+				const int32_t sz = z * 2;
+
+				float sum = 0.0f;
+				int32_t count = 0;
+
+				for( int32_t oz = 0; oz < 2; ++oz )
+				{
+					const int32_t iz = sz + oz;
+					if( iz >= srcD )
+					{
+						continue;
+					}
+
+					for( int32_t oy = 0; oy < 2; ++oy )
+					{
+						const int32_t iy = sy + oy;
+						if( iy >= srcH )
+						{
+							continue;
+						}
+
+						for( int32_t ox = 0; ox < 2; ++ox )
+						{
+							const int32_t ix = sx + ox;
+							if( ix >= srcW )
+							{
+								continue;
+							}
+
+							sum += m_sdf[linearIndex( ix, iy, iz, srcW, srcH )];
+							++count;
+						}
+					}
+				}
+
+				downsampled[linearIndex( x, y, z, dstW, dstH )] = count > 0 ? ( sum / float( count ) ) : s_deepEmpty;
+			}
+		}
+	}
+
+	m_sdf.swap( downsampled );
+	m_dimensions.width = Tr2VoxelData::CoordType( dstW );
+	m_dimensions.height = Tr2VoxelData::CoordType( dstH );
+	m_dimensions.depth = Tr2VoxelData::CoordType( dstD );
 }
 
 bool Tr2SignedDistanceField::IsValidSdfChannelType( const Tr2VoxelData::PayloadType& type )
@@ -345,13 +438,35 @@ std::vector<float> Tr2SignedDistanceField::ComputeSdf( const Tr2VoxelData::Paylo
 
 std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2VoxelData::PayloadSnapshot& occupancyChannel, const std::atomic<bool>& cancel ) const
 {
-	const Int3 dims = GetGridSize();
-	const auto sdf = ComputeSdf( occupancyChannel, cancel );
+	auto sdf = ComputeSdf( occupancyChannel, cancel );
 	if( cancel )
 	{
 		return {};
 	}
 
+	BlurSdf( sdf, s_blurAlpha );
+
+	auto occupancy = [&]( size_t i ) {
+		return ( occupancyChannel.m_data[i / 8] & ( 1 << ( i % 8 ) ) ) != 0;
+	};
+
+	for( size_t i = 0; i < sdf.size(); ++i )
+	{
+		if( occupancy( i ) )
+		{
+			sdf[i] = std::min( sdf[i], -s_signFloor );
+		}
+		else
+		{
+			sdf[i] = std::max( sdf[i], s_signFloor );
+		}
+	}
+	return sdf;
+}
+
+void Tr2SignedDistanceField::BlurSdf( std::vector<float>& sdf, float alpha ) const
+{
+	const Int3 dims = GetGridSize();
 	// Decode into a copy padded by one ring of deep empty so every in-grid sample has its full blur stencil
 	const Int3 padded = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
 	const std::array<size_t, 3> strides = { 1, size_t( padded[0] ), size_t( padded[0] ) * padded[1] };
@@ -371,9 +486,7 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		}
 	}
 
-	// Separable Jacobi low-pass per axis. Only interior samples of each line move. The correction form is an exact
-	// identity wherever the field is locally linear, so only cell-frequency curvature is damped.
-	const float half = 0.5 * s_blurAlpha;
+	const float half = 0.5f * alpha;
 	for( int axis = 0; axis < 3; ++axis )
 	{
 		const int u = s_axisUV[axis][0];
@@ -395,11 +508,6 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		}
 	}
 
-	auto occupancy = [&]( size_t i ) {
-		return ( occupancyChannel.m_data[i / 8] & ( 1 << ( i % 8 ) ) ) != 0;
-	};
-
-	std::vector<float> field( size_t( dims[0] ) * dims[1] * dims[2] );
 	i = 0;
 	for( int32_t z = 0; z < dims[2]; ++z )
 	{
@@ -407,19 +515,8 @@ std::vector<float> Tr2SignedDistanceField::CreateFieldFromOccupancy( const Tr2Vo
 		{
 			for( int32_t x = 0; x < dims[0]; ++x, ++i )
 			{
-				auto value = values[paddedIndex( x, y, z )];
-				// Clamp the field to the occupancy sign so no solid cell can vanish from the mesh and no empty cell can seal over
-				if( occupancy( i ) )
-				{
-					value = std::min( value, -s_signFloor );
-				}
-				else
-				{
-					value = std::max( value, s_signFloor );
-				}
-				field[i] = value;
+				sdf[i] = values[paddedIndex( x, y, z )];
 			}
 		}
 	}
-	return field;
 }
