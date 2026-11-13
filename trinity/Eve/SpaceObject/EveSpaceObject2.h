@@ -39,6 +39,7 @@
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "Tr2RingBuffer.h"
 #include <ITr2AudGeometry.h>
+#include "Eve/SpaceObject/Utils/EveAudioOccluder.h"
 
 #include <ITriFunction.h>
 #include <atomic>
@@ -247,11 +248,6 @@ BLUE_CLASS( EveSpaceObject2 ) :
 {
 public:
 	EXPOSE_TO_BLUE();
-
-	static uint64_t NextAudioInstanceId()
-	{
-		return s_nextAudioInstanceId++;
-	}
 
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
@@ -779,10 +775,8 @@ protected:
 	virtual Matrix GetObserverTransform();
 
 	ITr2AudGeometryPtr m_audioGeometry;
-	bool m_audioGeometryRegistered = false;
+	EveAudioOccluder m_audioOccluder;
 	bool m_isAudioOccluder = true;
-	uint64_t m_audioGeometrySetId = 0;
-	uint64_t m_audioInstanceId;
 
 	ITr2AudGeometryPtr GetAudioGeometry() const;
 
@@ -795,9 +789,7 @@ public:
 protected:
 	void SetAudioGeometry( ITr2AudGeometry * audioGeometry );
 	void UnregisterAudioGeometry();
-	void RegisterAudioGeometry();
-
-	static std::atomic<uint64_t> s_nextAudioInstanceId;
+	void UpdateAudioGeometry();
 
 private:
 #if BLUE_WITH_PYTHON
