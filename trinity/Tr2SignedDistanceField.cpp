@@ -190,8 +190,8 @@ void Tr2SignedDistanceField::DownSample()
 		return;
 	}
 
-	auto srcIndex = [srcW, srcH]( int32_t x, int32_t y, int32_t z ) -> size_t {
-		return size_t( x ) + size_t( srcW ) * ( size_t( y ) + size_t( srcH ) * size_t( z ) );
+	auto linearIndex = []( int32_t x, int32_t y, int32_t z, int32_t w, int32_t h ) -> size_t {
+		return size_t( x ) + size_t( w ) * ( size_t( y ) + size_t( h ) * size_t( z ) );
 	};
 
 	std::vector<float> downsampled;
@@ -234,14 +234,13 @@ void Tr2SignedDistanceField::DownSample()
 								continue;
 							}
 
-							sum += m_sdf[srcIndex( ix, iy, iz )];
+							sum += m_sdf[linearIndex( ix, iy, iz, srcW, srcH )];
 							++count;
 						}
 					}
 				}
 
-				downsampled[size_t( x ) + size_t( dstW ) * ( size_t( y ) + size_t( dstH ) * size_t( z ) )] =
-					count > 0 ? ( sum / float( count ) ) : s_deepEmpty;
+				downsampled[linearIndex( x, y, z, dstW, dstH )] = count > 0 ? ( sum / float( count ) ) : s_deepEmpty;
 			}
 		}
 	}
