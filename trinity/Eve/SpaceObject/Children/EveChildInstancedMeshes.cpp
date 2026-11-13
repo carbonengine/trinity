@@ -198,6 +198,11 @@ void EveChildInstancedMeshes::UpdateVisibility( const EveUpdateContext& updateCo
 	m_lastInvLodFactor = updateContext.GetInvLodFactor();
 }
 
+bool EveChildInstancedMeshes::IsAlwaysOn() const
+{
+	return true;
+}
+
 void EveChildInstancedMeshes::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	// only overlay draws render here; the base hull goes through EveInstancedMeshManager
