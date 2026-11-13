@@ -825,7 +825,7 @@ EveSpaceSceneRenderDriver::ReflectionFaces EveSpaceSceneRenderDriver::PrepareRef
 	ReflectionFaces faces;
 
 	Tr2ReflectionProbe* probe = m_scene->GetReflectionProbe();
-	if( !probe || !probe->IsValid() || !m_scene->m_display )
+	if( !probe || !probe->IsValid() || !m_scene->m_display || !probe->ShouldRenderThisFrame() )
 	{
 		return faces;
 	}

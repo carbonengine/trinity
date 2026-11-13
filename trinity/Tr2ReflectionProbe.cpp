@@ -64,6 +64,16 @@ bool Tr2ReflectionProbe::HasData() const
 	return m_hasData && m_postFilterTarget->IsValid();
 }
 
+bool Tr2ReflectionProbe::ShouldRenderThisFrame() const
+{
+	if( m_renderFrequency != ONE_SIDE_EVERY_OTHER_FRAME || !m_onePassDone )
+	{
+		return true;
+	}
+	// Frame parity rather than a toggle, so the answer stays the same however often a frame asks
+	return ( Tr2Renderer::GetCurrentFrameCounter() & 1 ) == 0;
+}
+
 uint8_t Tr2ReflectionProbe::GetStartFace() const
 {
 	if( m_renderFrequency == ALL_SIDES_PER_FRAME || !m_onePassDone )
