@@ -9,6 +9,11 @@
 #include "Tr2MouseCursor.h"
 #include "TriDevice.h"
 
+#include <dwmapi.h>
+#include <cmath>
+
+#pragma comment( lib, "dwmapi.lib" )
+
 
 extern CcpMeanStatisticsEntry g_activeFrametimeMean;
 extern CcpStdDevStatisticsEntry g_activeFrametimeStdDev;
@@ -19,6 +24,126 @@ CCP_STATS_DECLARED_ELSEWHERE( frameTime );
 
 namespace
 {
+// Occlusion detection for the WINDOW_HIDDEN throttle. DXGI_STATUS_OCCLUDED is not reported for flip-model
+// swapchains (mandatory on DX12) under DWM composition, so "covered by another window" is detected from
+// Win32 window geometry. Each poll tick enumerates the opaque top-level windows above us in Z-order once,
+// then tests a batch of quasirandomly placed points against their rects. The window only counts as hidden
+// once every sample of OCCLUSION_SAMPLES_REQUIRED consecutive samples was covered (or it is minimized), so
+// a partially visible window cannot be misdetected from one unlucky batch of points; a single visible
+// sample resets the run, so un-covering the window unthrottles on the next tick.
+const UINT_PTR OCCLUSION_TIMER_ID = 0xE7E0;
+const UINT OCCLUSION_POLL_MS = 250;
+const int OCCLUSION_SAMPLES_PER_TICK = 8;
+const int OCCLUSION_SAMPLES_REQUIRED = 64; // 8 fully covered ticks (~2s) before the throttle engages
+
+// Sample positions come from the R2 quasirandom sequence (generalised golden ratio phi2, the "plastic
+// ratio"): successive points are evenly distributed over the window without aligning to window geometry.
+const float INVERSE_PHI2 = 1.0f / 1.32471795724474602596f;
+float g_occlusionSeqX = 0.5f;
+float g_occlusionSeqY = 0.5f;
+int g_occlusionCoveredSamples = 0;
+
+// Suspended UWP/store apps keep a WS_VISIBLE top-level window in the Z-order that draws nothing; without
+// this check such a window would count as an occluder and could throttle a perfectly visible client.
+bool IsWindowCloaked( HWND hwnd )
+{
+	DWORD cloaked = 0;
+	return SUCCEEDED( ::DwmGetWindowAttribute( hwnd, DWMWA_CLOAKED, &cloaked, sizeof( cloaked ) ) ) && cloaked != 0;
+}
+
+// One EnumWindows pass per tick: collect the rects of every opaque, uncloaked window above hwnd in
+// Z-order. EnumWindows enumerates topmost first, so collection stops at hwnd - nothing below it can
+// occlude it - and each sample point then costs only a few rect tests.
+void CollectOccludersAbove( HWND hwnd, std::vector<RECT>& rects )
+{
+	struct Ctx
+	{
+		HWND target;
+		std::vector<RECT>* rects;
+	} ctx = { hwnd, &rects };
+	::EnumWindows(
+		[]( HWND other, LPARAM lp ) -> BOOL {
+			Ctx* c = reinterpret_cast<Ctx*>( lp );
+			if( other == c->target )
+				return FALSE;
+			if( !::IsWindowVisible( other ) || ::IsIconic( other ) )
+				return TRUE;
+			if( ::GetWindowLongW( other, GWL_EXSTYLE ) & ( WS_EX_LAYERED | WS_EX_TRANSPARENT | WS_EX_TOOLWINDOW ) )
+				return TRUE;
+			if( IsWindowCloaked( other ) )
+				return TRUE;
+			RECT r;
+			if( ::GetWindowRect( other, &r ) )
+				c->rects->push_back( r );
+			return TRUE;
+		},
+		reinterpret_cast<LPARAM>( &ctx ) );
+}
+
+// Per-tick occlusion sample; returns whether the window should currently count as hidden. Stateful: the
+// covered-sample run accumulates across ticks (see block comment above).
+bool SampleWindowOcclusion( HWND hwnd )
+{
+	if( !hwnd )
+	{
+		g_occlusionCoveredSamples = 0;
+		return false;
+	}
+	// Minimized is unambiguous and must bypass sample accumulation: WM_SIZE/SIZE_MINIMIZED has already
+	// set WINDOW_HIDDEN, and returning false while the sample run is still short would clear it again.
+	if( ::IsIconic( hwnd ) )
+	{
+		g_occlusionCoveredSamples = 0;
+		return true;
+	}
+	RECT r;
+	if( !::GetWindowRect( hwnd, &r ) )
+	{
+		g_occlusionCoveredSamples = 0;
+		return false;
+	}
+	const int w = r.right - r.left;
+	const int h = r.bottom - r.top;
+	if( w <= 0 || h <= 0 )
+	{
+		g_occlusionCoveredSamples = 0;
+		return true;
+	}
+
+	std::vector<RECT> occluders;
+	CollectOccludersAbove( hwnd, occluders );
+
+	for( int i = 0; i < OCCLUSION_SAMPLES_PER_TICK; ++i )
+	{
+		g_occlusionSeqX += INVERSE_PHI2;
+		g_occlusionSeqX -= std::floor( g_occlusionSeqX );
+		g_occlusionSeqY += INVERSE_PHI2 * INVERSE_PHI2;
+		g_occlusionSeqY -= std::floor( g_occlusionSeqY );
+		const POINT pt = { r.left + LONG( g_occlusionSeqX * w ), r.top + LONG( g_occlusionSeqY * h ) };
+		bool covered = false;
+		for( const RECT& occluder : occluders )
+		{
+			if( ::PtInRect( &occluder, pt ) )
+			{
+				covered = true;
+				break;
+			}
+		}
+		// A point no occluder covers can still be invisible: outside every monitor (window dragged or
+		// stranded off-screen). Count those as covered, as the topmost-window-at-point variant did.
+		if( !covered && ::MonitorFromPoint( pt, MONITOR_DEFAULTTONULL ) == nullptr )
+			covered = true;
+		if( !covered )
+		{
+			g_occlusionCoveredSamples = 0;
+			return false;
+		}
+	}
+	if( g_occlusionCoveredSamples < OCCLUSION_SAMPLES_REQUIRED )
+		g_occlusionCoveredSamples += OCCLUSION_SAMPLES_PER_TICK;
+	return g_occlusionCoveredSamples >= OCCLUSION_SAMPLES_REQUIRED;
+}
+
 struct MonitorRects
 {
 	std::vector<RECT> rcMonitors;
@@ -123,12 +248,19 @@ void Tr2MainWindow::CreateOSWindow( Tr2MainWindowState::State& state )
 		}
 	}
 	SetPropW( m_hwnd, L"Tr2MainWindow", reinterpret_cast<HANDLE>( this ) );
+
+	// Drive the WINDOW_HIDDEN throttle from actual window occlusion (see SampleWindowOcclusion above).
+	// Polled rather than event-driven because "covered by another window" produces no window message.
+	// Runs from creation so a client launched straight into the background gets throttled too.
+	g_occlusionCoveredSamples = 0;
+	::SetTimer( m_hwnd, OCCLUSION_TIMER_ID, OCCLUSION_POLL_MS, nullptr );
 }
 
 void Tr2MainWindow::DestroyOSWindow()
 {
 	if( m_hwnd )
 	{
+		::KillTimer( m_hwnd, OCCLUSION_TIMER_ID );
 		::DestroyWindow( m_hwnd );
 		m_hwnd = nullptr;
 	}
@@ -600,6 +732,20 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 		{
 			// Prevent the user from selecting the menu in fullscreen mode
 			return HTCLIENT;
+		}
+		break;
+	case WM_TIMER:
+		if( wParam == OCCLUSION_TIMER_ID && gTriDev )
+		{
+			// A focused window is on top and cannot be occluded, so the window scan only ever runs on a
+			// backgrounded client (near-zero cost on the active one). The focused path still resets the
+			// sample run so a later unfocus starts a fresh accumulation.
+			bool occluded = false;
+			if( HasFocus() )
+				g_occlusionCoveredSamples = 0;
+			else
+				occluded = SampleWindowOcclusion( m_hwnd );
+			gTriDev->SetThrottling( TriDevice::WINDOW_HIDDEN, occluded );
 		}
 		break;
 	case WM_ACTIVATE:
