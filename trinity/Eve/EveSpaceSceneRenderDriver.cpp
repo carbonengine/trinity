@@ -336,6 +336,7 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Main()
 	features.velocityMap = true;
 	features.background = true;
 	features.overlay = true;
+	features.customStencil = true;
 	return features;
 }
 
@@ -350,6 +351,7 @@ EveSpaceSceneRenderDriver::Features EveSpaceSceneRenderDriver::Features::Reflect
 	features.velocityMap = false;
 	features.background = false;
 	features.overlay = false;
+	features.customStencil = false;
 	return features;
 }
 
@@ -587,6 +589,8 @@ void EveSpaceSceneRenderDriver::Execute( const Span<const Tr2TextureAL>& destina
 
 	renderContext.m_esm.SetRenderTarget( 0, *destinations.data );
 	renderContext.m_esm.SetDepthStencilBuffer( {} );
+	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", targets.customStencil );
+	ON_BLOCK_EXIT( [&] { GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", Tr2TextureAL{} ); } );
 
 	{
 		TimeSection postProcessSection( m_timers.postProcess, "PostProcess", rootTimer, renderContext );
@@ -730,13 +734,13 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	distortionMap = {};
 
 	Tr2GpuResourcePool::Texture normalMap = GetNormalMapIfNeeded( renderSize, outputs, view.features );
-	Tr2GpuResourcePool::Texture customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs );
+	targets.customStencil = GetCustomStencilMapIfNeeded( renderSize, outputs, view.features );
 	{
 		TimeSection depthPassSection( timers.depthPass, "DepthPass", rootTimer, renderContext );
-		m_scene->RenderDepthPass( depthBuffer, normalMap, customStencil, view.scene, renderContext, m_depthPassTechnique );
+		m_scene->RenderDepthPass( depthBuffer, normalMap, targets.customStencil, view.scene, renderContext, m_depthPassTechnique );
 	}
 	GlobalStore().RegisterVariable( "SpaceSceneNormalMap", normalMap );
-	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", customStencil );
+	GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", targets.customStencil );
 	ON_BLOCK_EXIT( [&] { GlobalStore().RegisterVariable( "SpaceSceneCustomStencil", Tr2TextureAL{} ); } );
 
 	EveSpaceScene::ShadowResources shadowResources;
@@ -987,10 +991,10 @@ Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetNormalMapIfNeeded( con
 	return {};
 }
 
-Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs )
+Tr2GpuResourcePool::Texture EveSpaceSceneRenderDriver::GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet )
 {
 	auto namedOutput = FindNamedOutput( outputs, "CustomStencilMap" );
-	if( m_customStencilFormat != ImageIO::PIXEL_FORMAT_UNKNOWN || namedOutput )
+	if( ( featureSet.customStencil && m_customStencilFormat != ImageIO::PIXEL_FORMAT_UNKNOWN ) || namedOutput )
 	{
 		auto texture = m_gpuResourcePool.GetTempTexture( "customStencil", size, m_customStencilFormat, Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE );
 		if( namedOutput )

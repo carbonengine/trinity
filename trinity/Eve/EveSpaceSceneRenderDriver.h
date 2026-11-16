@@ -104,6 +104,8 @@ private:
 		bool background = false;
 		// special overlay rendering (f.ex texture overlay)
 		bool overlay = false;
+		// custom stencil target written in the depth pre-pass
+		bool customStencil = false;
 
 		static Features Main();
 		static Features ReflectionFace();
@@ -137,6 +139,7 @@ private:
 		Tr2GpuResourcePool::Texture depth;
 		Tr2GpuResourcePool::Texture velocity;
 		Tr2GpuResourcePool::Texture opaqueColor;
+		Tr2GpuResourcePool::Texture customStencil;
 	};
 
 	// The faces the reflection probe renders in a frame, built before the lights are gathered
@@ -166,7 +169,7 @@ private:
 	Tr2GpuResourcePool::Texture GetDistortionMapIfNeeded( const TextureSize2D& size, bool distortion );
 	Tr2GpuResourcePool::Texture GetVelocityMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 	Tr2GpuResourcePool::Texture GetNormalMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
-	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs );
+	Tr2GpuResourcePool::Texture GetCustomStencilMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 	Tr2GpuResourcePool::Texture GetOpaqueColorMapIfNeeded( const TextureSize2D& size, const Span<TempOutput>& outputs, const Features& featureSet );
 
 	void UpdateGpuParticleSystem( Tr2RenderContext& renderContext );
