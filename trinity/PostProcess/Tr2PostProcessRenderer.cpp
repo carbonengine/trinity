@@ -6,6 +6,7 @@
 #include "Shader/Parameter/TriTextureParameter.h"
 #include "include/TriMath.h"
 #include "TriSettingsRegistrar.h"
+#include "Utilities/StringUtils.h"
 
 // FidelityFX headers
 #define A_CPU
@@ -25,8 +26,6 @@ TRI_REGISTER_SETTING( "newBloom", g_newBloom );
 
 int32_t g_dynamicExposureQualityRequirement = PostProcess::Quality::MEDIUM;
 TRI_REGISTER_SETTING( "dynamicExposureQualityRequirement", g_dynamicExposureQualityRequirement );
-
-#define MEMOIZED_STRING( x ) ( []( const char* str ) { static BlueSharedString s( str ); return s; }( x "" ) )
 
 namespace
 {
