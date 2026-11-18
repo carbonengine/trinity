@@ -82,20 +82,20 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSpaceObjectChild
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod );
-	void GetRenderables( std::vector<ITr2Renderable*> & renderables );
-	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
-	void GetLocalToWorldTransform( Matrix & transform ) const;
+	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod ) override;
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	bool IsAlwaysOn() const;
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	void SetScale( const Vector3& scale );
-	void AddTransformModifier( IEveChildTransformModifier * modifier ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
+	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
-	void SetOwner( IEveSpaceObject2 * owner ) override;
+	void SetOwner( IEveSpaceObject2* owner ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -109,10 +109,10 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
-	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType );
 	virtual float GetSortValue();
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	bool SupportsParallelPerObjectData() const override
 	{
 		return true;
@@ -129,31 +129,31 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var * value );
+	bool OnModified( Be::Var* value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachmentOwner
-	void AddAttachment( IEveSpaceObjectAttachment * attachment );
+	void AddAttachment( IEveSpaceObjectAttachment* attachment );
 	void ClearAttachments();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveLightOwner
-	virtual void GetLights( Tr2LightManager & lightManager ) const override;
-	virtual void AddLight( Tr2Light * newLight ) override;
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+	virtual void AddLight( Tr2Light* newLight ) override;
 	virtual void ClearLights() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, Vector3 position, float radius, Tr2RenderReason renderReason ) const override;
-	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
-	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager& rtManager ) const override;
 	void MarkRtDirty() override;
 	bool IsShadowCastingDirty() const override;
 
-	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
-	void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
+	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// PerObjectData
@@ -163,11 +163,11 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
 	IRoot* GetID( uint16_t ) override;
-	void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
+	void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	// access
 	Tr2MeshBase* GetMesh() const;
-	void SetMesh( Tr2MeshBase * mesh );
+	void SetMesh( Tr2MeshBase* mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );
 	void SetCastShadow( bool castShadow );
@@ -182,7 +182,7 @@ public:
 	}
 
 	Tr2GrannyAnimation* GetAnimationController() const override;
-	void SetAnimationController( Tr2GrannyAnimation * animation );
+	void SetAnimationController( Tr2GrannyAnimation* animation );
 
 	void SetInstanceTransforms( std::vector<Matrix> instances );
 
@@ -198,7 +198,7 @@ public:
 	void UnbakeMorphs();
 	bool IsMeshBaked();
 
-	bool UpdateMeshMorphs( Tr2RenderContext & renderContext ) override;
+	bool UpdateMeshMorphs( Tr2RenderContext& renderContext ) override;
 
 	bool IsMorphsBaked() const;
 	BluePy GetSofSourceLocator( uint32_t areaId ) const;
@@ -213,7 +213,7 @@ public:
 	Tr2Effect* GetPartArmorDamageShaderEffect( PartTag partTag ) const override;
 	bool GetPartDamageLocatorAnimatedLocal( PartTag partTag, int index, Vector3& position, Vector3& direction ) const override;
 
-	void SetArmorDamageShaderEffect( Tr2Effect * effect );
+	void SetArmorDamageShaderEffect( Tr2Effect* effect );
 	bool GetDamageLocatorBindPositionLocal( int index, Vector3& out ) const;
 
 protected:
@@ -227,7 +227,7 @@ protected:
 
 	bool DisplayDecals() const;
 
-	bool PrepareMorphBuffers( Tr2RenderContext & renderContext );
+	bool PrepareMorphBuffers( Tr2RenderContext& renderContext );
 
 	std::pair<const Float4x3*, size_t> GetBoneTransforms() const;
 	std::pair<const Float4x3*, size_t> GetRestPoseBoneTransforms() const;
