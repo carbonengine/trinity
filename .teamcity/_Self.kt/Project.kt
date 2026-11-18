@@ -15,7 +15,7 @@ object Project : Project({
     params {
         /* before changing carbon_ref, make sure to disable automatic settings synchronization on teamcity */
         param("carbon_ref", "refs/heads/main")
-        param("carbon-pipeline-tools-ref", "refs/pull/13/head")
+        param("carbon-pipeline-tools-ref", "refs/tags/v0.3.0")
     }
     
     subProject(Windows.Project)
