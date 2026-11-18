@@ -15,7 +15,6 @@ class UniversalBuild() : BuildType({
     name = "Create MacOS Universal Binaries"
 
     params{
-        param("carbon-pipeline-tools-ref", "refs/tags/v0.1.0")
         param("universal-output-dir", "%system.teamcity.build.workingDir%/output_build")
         param("universal-lib-path", "lib/macOS/universal/AppleClang/")
         param("universal-bin-path", "bin/macOS/universal/AppleClang/")
