@@ -2,6 +2,7 @@
 
 #include "StdAfx.h"
 #include "Tr2CurveScalar.h"
+#include "Tr2CurveSegmentSearch.h"
 
 extern Be::VarChooser Tr2CurveInterpolationChooser[];
 extern Be::VarChooser Tr2CurveTangentTypeChooser[];
@@ -96,25 +97,25 @@ void Tr2CurveScalar::SetName( const char* name )
 // --------------------------------------------------------------------------------
 void Tr2CurveScalar::UpdateValue( double time )
 {
-	m_currentValue = GetValue( time );
+	m_currentValue = SampleValue( time, m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::Update( Be::Time time )
 {
-	return m_currentValue = GetValue( TimeAsDouble( time ) );
+	return m_currentValue = SampleValue( TimeAsDouble( time ), m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::Update( double time )
 {
-	return m_currentValue = GetValue( time );
+	return m_currentValue = SampleValue( time, m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::GetValueAt( Be::Time time )
 {
-	return GetValue( TimeAsDouble( time ) );
+	return SampleValue( TimeAsDouble( time ), m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
@@ -126,11 +127,17 @@ void Tr2CurveScalar::ScaleTime( float s )
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::GetValueAt( double time )
 {
-	return GetValue( time );
+	return SampleValue( time, m_lastSegment );
 }
 
 // --------------------------------------------------------------------------------
 float Tr2CurveScalar::GetValue( double time ) const
+{
+	return SampleValue( time, m_lastSegment );
+}
+
+// --------------------------------------------------------------------------------
+float Tr2CurveScalar::SampleValue( double time, size_t& segmentCache ) const
 {
 	if( m_keys.empty() )
 	{
@@ -169,59 +176,13 @@ float Tr2CurveScalar::GetValue( double time ) const
 	}
 
 	float t = GetLocalTime( time );
-
-	if( m_lastSegment + 1 < count )
+	// Most frames land in the cached segment: check it here, without a call
+	size_t i = segmentCache;
+	if( i + 1 >= count || t < m_keys[i].m_time || t >= m_keys[i + 1].m_time )
 	{
-		// try cached last segment first
-		auto& k0 = m_keys[m_lastSegment];
-		auto& k1 = m_keys[m_lastSegment + 1];
-
-		if( t >= k0.m_time && t < k1.m_time )
-		{
-			return GetSegmentValue( t, k0, k1 );
-		}
-
-		if( m_lastSegment + 2 < count )
-		{
-			// try a segment to the right of the cached one
-			auto& k0 = m_keys[m_lastSegment + 1];
-			auto& k1 = m_keys[m_lastSegment + 2];
-
-			if( t >= k0.m_time && t < k1.m_time )
-			{
-				++m_lastSegment;
-				return GetSegmentValue( t, k0, k1 );
-			}
-		}
-
-		if( m_lastSegment > 1 )
-		{
-			// try a segment to the left of the cached one
-			auto& k0 = m_keys[m_lastSegment - 1];
-			auto& k1 = m_keys[m_lastSegment];
-
-			if( t >= k0.m_time && t < k1.m_time )
-			{
-				--m_lastSegment;
-				return GetSegmentValue( t, k0, k1 );
-			}
-		}
+		i = FindCurveSegment( m_keys, t, segmentCache );
 	}
-
-	// cache miss: try all segments
-	for( size_t i = 0; i + 1 < count; ++i )
-	{
-		auto& k0 = m_keys[i];
-		auto& k1 = m_keys[i + 1];
-
-		if( t >= k0.m_time && t < k1.m_time )
-		{
-			m_lastSegment = int32_t( i );
-			return GetSegmentValue( t, k0, k1 );
-		}
-	}
-	m_lastSegment = count - 2;
-	return GetSegmentValue( t, m_keys[count - 2], m_keys[count - 1] );
+	return GetSegmentValue( t, m_keys[i], m_keys[i + 1] );
 }
 
 // --------------------------------------------------------------------------------

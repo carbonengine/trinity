@@ -200,6 +200,7 @@ set(_SOURCES
     Curves/Tr2CurveScalar.cpp
     Curves/Tr2CurveScalar.h
     Curves/Tr2CurveScalar_Blue.cpp
+    Curves/Tr2CurveSegmentSearch.h
     Curves/Tr2CurveScalarExpression.cpp
     Curves/Tr2CurveScalarExpression.h
     Curves/Tr2CurveScalarExpression_Blue.cpp
@@ -236,8 +237,11 @@ set(_SOURCES
     Curves/Tr2TranslationAdapter.cpp
     Curves/Tr2TranslationAdapter.h
     Curves/Tr2TranslationAdapter_Blue.cpp
+    Curves/TriCurveSampler.cpp
+    Curves/TriCurveSampler.h
     Curves/TriCurveSet.cpp
     Curves/TriCurveSet.h
+    Curves/TriCurveSetTime.h
     Curves/TriCurveSet_Blue.cpp
     Curves/TriEventCurve.cpp
     Curves/TriEventCurve.h

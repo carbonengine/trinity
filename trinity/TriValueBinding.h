@@ -6,6 +6,7 @@
 
 
 #include "include/ITr2ValueBinding.h"
+#include "Curves/TriCurveSampler.h"
 
 BLUE_DECLARE( TriValueBinding );
 BLUE_DECLARE_VECTOR( TriValueBinding );
@@ -31,6 +32,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2ValueBinding
 	virtual void CopyValue();
+	virtual void CopyValueAt( const TriCurveSetTime& time );
 
 	static const Be::VarEntry* FindEntry( const char* name, const Be::ClassInfo* type, ssize_t& offs );
 
@@ -48,6 +50,9 @@ public:
 	bool IsValid() const;
 
 protected:
+	bool CanCopy() const;
+	void CopyFrom( void* source );
+
 	IRoot* GetCurrentSourceObject() const;
 	IRoot* GetCurrentDestinationObject() const;
 
@@ -80,6 +85,18 @@ protected:
 
 	float m_scale;
 	Vector4 m_offset;
+
+	// Shifts the time this binding samples its source curve at, without
+	// touching the curve's own keys or time offset, so that several bindings
+	// can drive different targets from the same curve at different times.
+	float m_timeOffset;
+
+	// Set when the source is a curve bound through its currentValue, so an
+	// offset binding can evaluate it at its own time without moving the curve.
+	// m_sampleOffset is where m_source sits inside that value.
+	TriCurveSampler m_sampler;
+	uint8_t m_sampleOffset;
+
 	INotify* m_notifyPtr;
 
 	typedef bool ( *CopyFunc )( void* srcVar, void* dstVar, float scale, const Vector4& offset );
