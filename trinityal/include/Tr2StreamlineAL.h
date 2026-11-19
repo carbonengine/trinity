@@ -38,6 +38,30 @@ void ReleaseStreamline();
 const char* GetSlResultMessage( sl::Result result );
 
 
+//Feature support
+
+struct FeatureSupport
+{
+	bool dlss = false;
+	bool frameGeneration = false; // DLSS-G with Reflex and PCL, only ever true on dx12
+
+	bool operator==( const FeatureSupport& other ) const
+	{
+		return dlss == other.dlss && frameGeneration == other.frameGeneration;
+	}
+	bool operator!=( const FeatureSupport& other ) const
+	{
+		return !( *this == other );
+	}
+};
+
+// Queries feature support by adapter LUID, which doesn't need a D3D device. Results are cached per
+// adapter for the process lifetime. Reuses Streamline if it's already initialized, otherwise it is
+// initialized temporarily and released again. Support can shrink (but never grow) once a device has
+// been set; SetDevice updates the cache with the final result. Nothing is supported without an appID.
+FeatureSupport QueryFeatureSupport( uint32_t adapter, uint32_t appID );
+
+
 //Streamline functions
 
 sl::Result SetDevice( void* d3dDevice, uint32_t adapter );
@@ -73,10 +97,8 @@ void SetPCLMarker( Tr2RenderContextEnum::FrameEvent& frameEvent, sl::FrameToken*
 
 void FreeResources( sl::Feature feature, const sl::ViewportHandle& viewport );
 
-bool IsDLSSAvailable();
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-bool IsFrameGenerationAvailable();
-#endif
+// What is usable on the device passed to SetDevice, nothing before a device is set
+FeatureSupport GetDeviceFeatureSupport();
 
 
 
