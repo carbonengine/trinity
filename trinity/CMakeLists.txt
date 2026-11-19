@@ -315,6 +315,8 @@ set(_SOURCES
     Eve/SpaceObject/Attachments/EveMeshOverlayEffect.cpp
     Eve/SpaceObject/Attachments/EveMeshOverlayEffect.h
     Eve/SpaceObject/Attachments/EveMeshOverlayEffect_Blue.cpp
+    Eve/SpaceObject/Attachments/EveDecalTriangleCache.cpp
+    Eve/SpaceObject/Attachments/EveDecalTriangleCache.h
     Eve/SpaceObject/Attachments/EveSpaceObjectDecal.cpp
     Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h
     Eve/SpaceObject/Attachments/EveSpaceObjectDecal_Blue.cpp
