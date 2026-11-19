@@ -43,8 +43,6 @@
 #include <IEveBallpark.h>
 
 
-std::atomic<uint64_t> EveSpaceObject2::s_nextAudioInstanceId{ 1 };
-
 static const int MAX_JOINT_COUNT = 58;
 
 static const double UNINITIALIZED_POSITION = std::numeric_limits<double>::infinity();
@@ -204,7 +202,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_worldTransform( XMMatrixIdentity() ),
 	m_invWorldTransform( XMMatrixIdentity() ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
-	m_audioInstanceId( NextAudioInstanceId() ),
 	m_mergedLocatorSetsDirty( true ),
 	m_damageLocatorAutoFilterEnabled( false ),
 	m_damageLocatorFilterRequested( false ),
@@ -281,11 +278,6 @@ bool EveSpaceObject2::Initialize()
 	for( uint32_t i = 0; i < m_decals.size(); i++ )
 	{
 		m_decals[i]->SetPriority( i );
-	}
-
-	if( !m_audioGeometry )
-	{
-		BeClasses->CreateInstanceFromName( "AudGeometry", BlueInterfaceIID<ITr2AudGeometry>(), reinterpret_cast<void**>( &m_audioGeometry.p ) );
 	}
 
 	return true;
@@ -529,6 +521,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	Be::Time time = updateContext.GetTime();
 
 	UpdateWorldTransform( time );
+	UpdateAudioGeometry();
 
 	if( !m_update )
 	{
@@ -627,8 +620,6 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 			m_secondaryLightingSphereRadius = pow( boxVolume / 4.f * 3.f / TRI_PI, 1.0f / 3.0f );
 		}
 	}
-
-	RegisterAudioGeometry();
 }
 
 void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
@@ -2427,9 +2418,6 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 		}
 	}
 
-	// Try to register audio geometry now that the geometry resource is loaded
-	RegisterAudioGeometry();
-
 	// If we already have a model we don't want to go through here
 	// as it would nuke all current animations.
 	if( !m_animationUpdater || m_animationUpdater->IsInitialized() )
@@ -3127,11 +3115,6 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	}
 	//is this done in a parent class/subclass anywhere else?
 	m_invWorldTransform = Inverse( m_worldTransform );
-
-	if( m_audioGeometryRegistered && m_audioGeometry )
-	{
-		m_audioGeometry->SetGeometryTransform( m_audioGeometrySetId, m_audioInstanceId, m_worldTransform );
-	}
 }
 
 void EveSpaceObject2::GetModelCenterWorldPosition( Vector3& position ) const
@@ -4100,10 +4083,6 @@ bool EveSpaceObject2::IsPickable() const
 void EveSpaceObject2::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry )
-	{
-		RegisterAudioGeometry();
-	}
 
 	if( registry && m_display )
 	{
@@ -4577,48 +4556,25 @@ ITr2AudGeometryPtr EveSpaceObject2::GetAudioGeometry() const
 void EveSpaceObject2::SetAudioGeometry( ITr2AudGeometry* audioGeometry )
 {
 	UnregisterAudioGeometry();
-
 	m_audioGeometry = audioGeometry;
-	if( m_audioGeometry )
-	{
-		RegisterAudioGeometry();
-	}
 }
 
 void EveSpaceObject2::UnregisterAudioGeometry()
 {
-	if( m_audioGeometryRegistered && m_audioGeometry )
-	{
-		m_audioGeometry->RemoveGeometry( m_audioGeometrySetId, m_audioInstanceId );
-	}
-
-	m_audioGeometryRegistered = false;
-	m_audioGeometrySetId = 0;
+	m_audioOccluder.Release();
 }
 
-void EveSpaceObject2::RegisterAudioGeometry()
+void EveSpaceObject2::UpdateAudioGeometry()
 {
-	if( !m_isAudioOccluder )
+	if( !m_isAudioOccluder || !g_eveIsAudioOcclusionGeometryEnabled || !m_mesh )
 	{
+		m_audioOccluder.Release();
 		return;
 	}
-	if( !m_audioGeometryRegistered && m_audioGeometry && m_mesh && m_geometryResFromMesh && m_geometryResFromMesh->IsGood() )
+
+	if( !m_audioGeometry )
 	{
-		int meshIx = m_mesh->GetMeshIndex();
-		const AudioGeometryResData* audioGeo = m_geometryResFromMesh->GetAudioGeometry( meshIx );
-
-		if( audioGeo && !audioGeo->m_vertices.empty() )
-		{
-			Tr2AudGeometryData data;
-
-			data.m_vertices = audioGeo->m_vertices;
-			data.m_indices = audioGeo->m_indices;
-			data.m_maxBounds = audioGeo->m_maxBounds;
-			data.m_minBounds = audioGeo->m_minBounds;
-
-			m_audioGeometry->SetGeometry( audioGeo->m_id, m_audioInstanceId, data, m_worldTransform );
-			m_audioGeometrySetId = audioGeo->m_id;
-			m_audioGeometryRegistered = true;
-		}
+		m_audioGeometry = EveAudioOccluder::CreateAudioGeometry();
 	}
+	m_audioOccluder.Update( m_audioGeometry, m_geometryResFromMesh, m_mesh->GetMeshIndex(), m_worldTransform );
 }
