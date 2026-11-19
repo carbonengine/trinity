@@ -83,7 +83,6 @@ public:
 	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
 
 private:
-	Matrix m_worldTransform; ///< Cached world transformation matrix.
 	bool m_mute; ///< Whether audio playback is muted.
 	ITr2AudEmitterPtr m_audioEmitter; ///< The audio emitter instance.
 	ITr2AudParentBall* m_parentBall;

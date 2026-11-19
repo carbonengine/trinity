@@ -9,7 +9,6 @@
 
 EveChildAudio::EveChildAudio( IRoot* lockobj ) :
 	m_mute( false ),
-	m_worldTransform( IdentityMatrix() ),
 	m_parentBall( nullptr )
 {
 	m_name = BlueSharedString( "EveChildAudio" );
