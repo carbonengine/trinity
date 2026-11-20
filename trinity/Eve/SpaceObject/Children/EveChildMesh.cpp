@@ -23,6 +23,12 @@ namespace
 {
 constexpr float s_instanceScreenSizeThreshold = 1.f;
 
+// An instance transform only places a copy of the mesh when it is an affine matrix
+bool IsAffineTransform( const Matrix& m )
+{
+	return m._14 == 0.f && m._24 == 0.f && m._34 == 0.f && m._44 == 1.f;
+}
+
 }
 
 Tr2SuballocatedBuffer g_bakedMorphTargetBuffer( "Baked Morph Target Buffer", Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, SHARED_BUFFER_BLOCK_SIZE, SHARED_BUFFER_MAX_SIZE );
@@ -989,7 +995,7 @@ void EveChildMesh::UpdateAsyncronous( const EveUpdateContext& updateContext, con
 	}
 	m_reverseWinding = IsMirrored( m_worldTransform );
 
-	m_audioOccluder.SetTransform( m_worldTransform );
+	UpdateAudioGeometryTransforms();
 
 	// need to update the data we get from the parent to be relevant to us!
 	m_parentOverlayEffects = nullptr;
@@ -1238,7 +1244,7 @@ void EveChildMesh::UpdateAudioGeometry( bool allowAudioGeometry )
 {
 	if( !allowAudioGeometry || !g_eveIsAudioOcclusionGeometryEnabled || !m_mesh )
 	{
-		m_audioOccluder.Release();
+		UnregisterAudioGeometry();
 		return;
 	}
 
@@ -1246,12 +1252,46 @@ void EveChildMesh::UpdateAudioGeometry( bool allowAudioGeometry )
 	{
 		m_audioGeometry = EveAudioOccluder::CreateAudioGeometry();
 	}
-	m_audioOccluder.Update( m_audioGeometry, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_worldTransform );
+
+	if( !m_instancedMesh || m_instanceTransforms.empty() )
+	{
+		m_audioInstanceOccluders.clear();
+		m_audioOccluder.Update( m_audioGeometry, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_worldTransform );
+		return;
+	}
+
+	// The mesh is drawn once for each instance transform and not at the child's own transform, so each copy
+	// occludes where it is drawn.
+	m_audioOccluder.Release();
+	m_audioInstanceOccluders.resize( m_instanceTransforms.size() );
+	for( size_t i = 0; i < m_audioInstanceOccluders.size(); ++i )
+	{
+		if( IsAffineTransform( m_instanceTransforms[i] ) )
+		{
+			m_audioInstanceOccluders[i].Update( m_audioGeometry, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_instanceTransforms[i] * m_worldTransform );
+		}
+		else
+		{
+			m_audioInstanceOccluders[i].Release();
+		}
+	}
+}
+
+void EveChildMesh::UpdateAudioGeometryTransforms()
+{
+	m_audioOccluder.SetTransform( m_worldTransform );
+
+	const size_t count = std::min( m_audioInstanceOccluders.size(), m_instanceTransforms.size() );
+	for( size_t i = 0; i < count; ++i )
+	{
+		m_audioInstanceOccluders[i].SetTransform( m_instanceTransforms[i] * m_worldTransform );
+	}
 }
 
 void EveChildMesh::UnregisterAudioGeometry()
 {
 	m_audioOccluder.Release();
+	m_audioInstanceOccluders.clear();
 }
 
 void EveChildMesh::SetOrigin( Origin origin )

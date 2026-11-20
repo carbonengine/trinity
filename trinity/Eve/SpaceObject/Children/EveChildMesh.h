@@ -299,8 +299,11 @@ protected:
 
 	ITr2AudGeometryPtr m_audioGeometry;
 	EveAudioOccluder m_audioOccluder;
+	// One for each instance transform, in the same order, when the mesh is drawn as instances
+	std::vector<EveAudioOccluder> m_audioInstanceOccluders;
 
 	void UpdateAudioGeometry( bool allowAudioGeometry );
+	void UpdateAudioGeometryTransforms();
 	void UnregisterAudioGeometry();
 
 	void UpdateRtMesh();
