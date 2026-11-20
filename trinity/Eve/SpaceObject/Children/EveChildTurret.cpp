@@ -76,6 +76,8 @@ void EveChildTurret::RegisterComponents()
 	const auto registry = GetComponentRegistry();
 	if( registry && m_display )
 	{
+		registry->RegisterComponent<IEveUnboundedRenderable>( this );
+
 		if( EveEntityPtr entity = BlueCastPtr( m_firingEffect ) )
 		{
 			entity->Register( registry );
@@ -269,16 +271,6 @@ void EveChildTurret::UpdateVisibility( const EveUpdateContext& updateContext, co
 	}
 }
 
-void EveChildTurret::GetRenderables( std::vector<ITr2Renderable*>& renderables )
-{
-	EveChildMesh::GetRenderables( renderables );
-
-	if( m_display && m_firingEffect )
-	{
-		m_firingEffect->GetRenderables( renderables );
-	}
-}
-
 void EveChildTurret::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
 	EveChildMesh::RegisterWithQuadRenderer( quadRenderer );
@@ -289,10 +281,16 @@ void EveChildTurret::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 	}
 }
 
-void EveChildTurret::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
+void EveChildTurret::GetUnboundedRenderables( std::vector<ITr2Renderable*>& renderables )
 {
-	EveChildMesh::AddQuadsToQuadRenderer( frustum, quadRenderer );
+	if( m_display && m_firingEffect )
+	{
+		m_firingEffect->GetRenderables( renderables );
+	}
+}
 
+void EveChildTurret::AddUnboundedQuads( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const
+{
 	if( m_display && m_firingEffect )
 	{
 		m_firingEffect->AddQuadsToQuadRenderer( frustum, quadRenderer );

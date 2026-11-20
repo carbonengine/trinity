@@ -3,6 +3,7 @@
 #include "StdAfx.h"
 #include "EveSpaceScene.h"
 #include "IEveShadowCaster.h"
+#include "IEveUnboundedRenderable.h"
 #include "TriDevice.h"
 #include "Tr2Renderer.h"
 #include "Tr2PushPopDS.h"
@@ -1634,6 +1635,14 @@ void EveSpaceScene::GatherSceneObjectRenderables( std::vector<IEveSpaceObject2*>
 		IEveSpaceObject2* obj = *it;
 		obj->GetRenderables( renderables, m_impostorManager );
 	}
+
+	// Collected here rather than through their owners, so a culled or impostored owner doesn't hide them
+	auto& frustum = m_updateContext.GetFrustum();
+	auto& quadRenderer = *Tr2QuadRenderer::Instance();
+	m_componentRegistry->ProcessComponents<IEveUnboundedRenderable>( [&]( IEveUnboundedRenderable* unbounded ) {
+		unbounded->GetUnboundedRenderables( renderables );
+		unbounded->AddUnboundedQuads( frustum, quadRenderer );
+	} );
 
 	if( impostorManager )
 	{
