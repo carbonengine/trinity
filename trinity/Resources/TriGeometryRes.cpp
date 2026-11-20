@@ -24,7 +24,7 @@ std::atomic<uint64_t> AudioGeometryResData::s_nextId{ 1 };
 bool g_eveIsAudioOcclusionGeometryEnabled = false;
 TRI_REGISTER_SETTING( "eveIsAudioOcclusionGeometryEnabled", g_eveIsAudioOcclusionGeometryEnabled );
 
-// Meshes without an authored audio occlusion mesh use their lowest LOD instead
+// Meshes without an authored audio occlusion mesh use their lowest LOD instead, unless the CMF marks them as not occluding
 bool g_eveAudioOcclusionLodFallback = true;
 TRI_REGISTER_SETTING( "eveAudioOcclusionLodFallback", g_eveAudioOcclusionLodFallback );
 
@@ -2322,6 +2322,13 @@ static std::unique_ptr<AudioGeometryResData> ExtractAudioGeometry( Tr2CmfContent
 	Tr2AudGeometryData& data = audioGeometry->m_data;
 
 	const cmf::AudioOcclusionMesh& occlusionMesh = cmfMesh.audioOcclusionMesh;
+	if( occlusionMesh.indices.empty() && occlusionMesh.bounds.IsInitialized() )
+	{
+		// The asset pipeline looked at the mesh and found it does not block sound (a pole, lattice or debris), so there is no
+		// occlusion mesh to send, and no render LOD stands in for one.
+		return nullptr;
+	}
+
 	if( !occlusionMesh.vertices.empty() && !occlusionMesh.indices.empty() )
 	{
 		data.m_vertices.assign( occlusionMesh.vertices.begin(), occlusionMesh.vertices.end() );
