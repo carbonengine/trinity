@@ -176,6 +176,13 @@ Tr2Effect* Tr2MeshArea::GetMaterialInterface() const
 void Tr2MeshArea::SetMaterial( Tr2EffectPtr mat )
 {
 	m_material = mat;
+	Tr2ScreenSizeRequests::BumpGeneration();
+}
+
+bool Tr2MeshArea::OnModified( Be::Var* value )
+{
+	Tr2ScreenSizeRequests::BumpGeneration();
+	return true;
 }
 
 void Tr2MeshArea::SetName( const std::string& name )
