@@ -13,7 +13,7 @@ BLUE_INTERFACE( ITriEffectParameter ) :
 {
 	virtual const char* GetParameterName() const = 0;
 
-	virtual void RebuildEffectHandles( Tr2Shader * effectRes ) = 0;
+	virtual void RebuildEffectHandles( Tr2Shader* effectRes ) = 0;
 
 	virtual unsigned GetHashValue( unsigned startingHash ) const = 0;
 
@@ -27,9 +27,15 @@ typedef BlueDict<ITriEffectParameter> ITriEffectParameterDict;
 TYPEDEF_BLUECLASS( ITriEffectParameterDict );
 
 BLUE_INTERFACE( ITriEffectResourceParameter ) :
-	public ITriEffectParameter{
-		virtual void OnAddedToMaterial( Tr2Material * material ){} virtual void OnRemovedFromMaterial( Tr2Material * material ){}
-	};
+	public ITriEffectParameter
+{
+	virtual void OnAddedToMaterial( Tr2Material* material )
+	{
+	}
+	virtual void OnRemovedFromMaterial( Tr2Material* material )
+	{
+	}
+};
 BLUE_DECLARE_IVECTOR( ITriEffectResourceParameter );
 
 BLUE_INTERFACE( ITriEffectTextureParameter ) :

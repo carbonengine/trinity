@@ -31,7 +31,7 @@ public:
 	Tr2MeshBase( IRoot* lockobj = NULL );
 	~Tr2MeshBase();
 
-	virtual void GetBatches( ITriRenderBatchAccumulator * batches,
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 							 const Tr2MeshAreaVector* areas,
 							 const Tr2PerObjectData* data,
 							 float screenSize = std::numeric_limits<float>::max(),
@@ -39,8 +39,8 @@ public:
 
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
-	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock> & areaBlockVector, TriBatchType areaType ) const;
-	void CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial> & collectors, TriBatchType areaType ) const;
+	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, TriBatchType areaType ) const;
+	void CollectAreaBlocksWithSharedMaterials( std::vector<TriRenderBatchAreaBlocksWithSharedMaterial>& collectors, TriBatchType areaType ) const;
 
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
@@ -53,7 +53,7 @@ public:
 	virtual CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 ) const;
 	virtual CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const;
 
-	bool GetBoundingBox( Vector3 & min, Vector3 & max ) const;
+	bool GetBoundingBox( Vector3& min, Vector3& max ) const;
 
 	bool BindToRig( const std::string* boneList, const int numBones, TriGeometryResSkeletonData* renderRig, bool forceRebind = false );
 
@@ -88,7 +88,7 @@ public:
 		IRoot* value,
 		const IList* theList );
 
-	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer, const Matrix* boneTransforms = nullptr, const int32_t* meshBindingIndices = nullptr, size_t boneCount = 0, const Tr2MorphTargetAnimationData* morphTargets = nullptr, size_t morphTargetsCount = 0 );
 
 	Tr2RaytracingMesh* GetOrCreateRtMesh();

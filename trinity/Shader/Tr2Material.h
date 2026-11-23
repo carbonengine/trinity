@@ -229,9 +229,9 @@ public:
 	void ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int passIndex, Tr2IndirectDrawBufferWriter& indirectBuffer, Tr2RenderContext& renderContext );
 
 protected:
-	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	void SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2RenderContext & renderContext ) const;
+	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	void SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2RenderContext& renderContext ) const;
 
 
 	Tr2ShaderPtr m_shader;

@@ -56,8 +56,8 @@ public:
 	unsigned int GetJointCount() const;
 	void SetJointCount( unsigned int val );
 
-	void AddOwnerMesh( Tr2MeshBase * mesh );
-	void RemoveOwnerMesh( Tr2MeshBase * mesh );
+	void AddOwnerMesh( Tr2MeshBase* mesh );
+	void RemoveOwnerMesh( Tr2MeshBase* mesh );
 
 	bool HasVertexBufferAccessInRtShadow();
 
