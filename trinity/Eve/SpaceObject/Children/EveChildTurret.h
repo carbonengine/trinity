@@ -43,7 +43,7 @@ public:
 	void AddUnboundedQuads( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 
 	void UpdateCachedGeometryData();
-	void BuildCachedGeometryData( TriGeometryRes & geometryRes );
+	void BuildCachedGeometryData( TriGeometryRes& geometryRes );
 	void ReleaseCachedGeometryData();
 
 	// action
