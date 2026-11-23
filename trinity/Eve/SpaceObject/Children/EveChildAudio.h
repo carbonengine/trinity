@@ -66,7 +66,7 @@ public:
          * @param val Pointer to the modified variable.
          * @return true if the modification was successfully.
          */
-	bool OnModified( Be::Var * val );
+	bool OnModified( Be::Var* val );
 
 	/**
          * @brief Sets the name of the audio emitter.
@@ -76,11 +76,11 @@ public:
 
 	// Implementing the EveSpaceObjectChild interface
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void GetLocalToWorldTransform( Matrix & transform ) const;
+	void GetLocalToWorldTransform( Matrix& transform ) const;
 
 	// ITr2DebugRenderable
-	virtual void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
-	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer ) override;
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 private:
 	bool m_mute; ///< Whether audio playback is muted.
