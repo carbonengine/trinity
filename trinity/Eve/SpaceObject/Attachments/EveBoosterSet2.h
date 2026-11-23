@@ -318,7 +318,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	void GetLights( Tr2LightManager & lightManager ) const override;
+	void GetLights( Tr2LightManager& lightManager ) const override;
 
 private:
 	PEveBoosterItemStructureList m_boosters;
