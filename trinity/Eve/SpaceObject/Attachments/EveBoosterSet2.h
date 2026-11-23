@@ -324,7 +324,7 @@ private:
 	PEveBoosterItemStructureList m_boosters;
 	std::vector<BoosterLight> m_boosterLights;
 	// re-alloc and init the instance vertex buffers
-	void RebuildInstanceData( Tr2RenderContext & renderContext );
+	void RebuildInstanceData( Tr2RenderContext& renderContext );
 
 	// derive the point light for one booster from its persisted entry
 	void ComputeBoosterLight( const EveBoosterItem& item, BoosterLight& out ) const;
