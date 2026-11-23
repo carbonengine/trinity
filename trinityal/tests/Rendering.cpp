@@ -521,13 +521,6 @@ TEST_F( Rendering, CanSampleTexture )
 
 	uint32_t g = 127;
 
-	Tr2ResourceSetDescriptionAL resourceSetDescription( sp );
-	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp, *renderContext ) );
-
 	auto frame = [&] {
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
@@ -538,7 +531,8 @@ TEST_F( Rendering, CanSampleTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -648,14 +642,6 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 				std::numeric_limits<float>::max() ),
 			*renderContext ) );
 
-		Tr2ResourceSetDescriptionAL desc( sp );
-		desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-		desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-		Tr2ResourceSetAL resourceSet;
-		ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -665,7 +651,8 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -898,14 +885,6 @@ TEST_F( Rendering, CanClearRenderTarget )
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -926,7 +905,8 @@ TEST_F( Rendering, CanClearRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -1017,14 +997,6 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -1055,7 +1027,8 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -1149,14 +1122,6 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	Tr2TextureAL readableRt;
 	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -1189,7 +1154,8 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -1481,14 +1447,6 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 		Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE,
 		*renderContext ) );
 
-	Tr2ResourceSetDescriptionAL resourceSetDescription( sp2 );
-	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, depthBuffer );
-	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp2, *renderContext ) );
-
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -1514,7 +1472,8 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, quadVb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp2 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, depthBuffer ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 
 		renderContext->SetReadOnlyDepth( false );
@@ -2002,14 +1961,6 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2024,7 +1975,8 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SRCBLEND, Tr2RenderContextEnum::BM_SRCALPHA ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_DESTBLEND, Tr2RenderContextEnum::BM_INVSRCALPHA ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -2160,14 +2112,6 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		std::numeric_limits<float>::max() );
 	ASSERT_HRESULT_SUCCEEDED( sampler.Create( samplerDesc, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2199,7 +2143,8 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		for( uint32_t i = 0; i < 8; ++i )
@@ -2304,14 +2249,6 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	Tr2TextureAL rt2;
 	ASSERT_HRESULT_SUCCEEDED( rt2.Create( Tr2BitmapDimensions( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2351,7 +2288,8 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -2436,14 +2374,6 @@ TEST_F( Rendering, CanSampleBc1Texture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2456,7 +2386,8 @@ TEST_F( Rendering, CanSampleBc1Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
@@ -2612,14 +2543,6 @@ TEST_F( Rendering, CanSampleBc2Texture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2632,7 +2555,8 @@ TEST_F( Rendering, CanSampleBc2Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
@@ -2719,14 +2643,6 @@ TEST_F( Rendering, CanSampleBc3Texture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -2739,7 +2655,8 @@ TEST_F( Rendering, CanSampleBc3Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
@@ -2827,14 +2744,6 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 
@@ -2857,7 +2766,8 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
@@ -2946,14 +2856,6 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 
@@ -2976,7 +2878,8 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
@@ -3161,14 +3064,6 @@ TEST_F( Rendering, CanLockTextureTwice )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -3187,7 +3082,8 @@ TEST_F( Rendering, CanLockTextureTwice )
 		*reinterpret_cast<uint32_t*>( data ) = 0xffff0000;
 		tex.UnmapForWriting( *renderContext );
 
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb1, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
@@ -3294,14 +3190,6 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -3314,7 +3202,8 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -3410,14 +3299,6 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 			0.0f ),
 		*renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
-	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -3431,7 +3312,8 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
@@ -3493,14 +3375,6 @@ TEST_F( Rendering, CanUsePsUavs )
 	Tr2TextureAL rwTexture;
 	ASSERT_HRESULT_SUCCEEDED( rwTexture.Create( Tr2BitmapDimensions( 64, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, *renderContext ) );
 
-	Tr2ResourceSetAL uavResourceSet;
-	{
-		Tr2ResourceSetDescriptionAL resourceSetDescription( sp );
-		resourceSetDescription.SetUav( Tr2RenderContextEnum::PIXEL_SHADER, 1, rwTexture );
-		ASSERT_HRESULT_SUCCEEDED( uavResourceSet.Create( resourceSetDescription, sp, *renderContext ) );
-	}
-
-
 	float quad[] = {
 		0,
 		0,
@@ -3555,15 +3429,6 @@ TEST_F( Rendering, CanUsePsUavs )
 	Tr2ShaderProgramAL sp2;
 	ASSERT_HRESULT_SUCCEEDED( sp2.Create( shaders2, 2, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL resourceSetDescription( sp2 );
-	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rwTexture );
-	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp2, *renderContext ) );
-
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -3576,7 +3441,7 @@ TEST_F( Rendering, CanUsePsUavs )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( uavResourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( Tr2RenderContextEnum::PIXEL_SHADER, 1, rwTexture ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -3584,7 +3449,8 @@ TEST_F( Rendering, CanUsePsUavs )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, quadVb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp2 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rwTexture ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
@@ -4017,13 +3883,6 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -4054,7 +3913,7 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();

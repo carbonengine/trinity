@@ -12,7 +12,7 @@
 #include "Eve/SpaceObject/Children/EveSpaceObjectChild.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
 #include "Tr2ShLightingManager.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 #include "Tr2DebugRenderer.h"
 #include "ITr2CurveSetOwner.h"
 #include "Shader/IShaderConfigurer.h"
@@ -92,7 +92,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2BoundingBox
-	bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const override;
+	bool GetOrientedBoundingBox( Vector3 & localMin, Vector3 & localMax, Matrix & localToWorld ) const override;
 	bool IsBoundingBoxReady() const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////

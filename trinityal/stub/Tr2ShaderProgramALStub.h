@@ -5,7 +5,7 @@
 #if TRINITY_PLATFORM == TRINITY_STUB
 
 #include "../include/Tr2ShaderProgramAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2RegisterMapAL.h"
 
 namespace TrinityALImpl
 {

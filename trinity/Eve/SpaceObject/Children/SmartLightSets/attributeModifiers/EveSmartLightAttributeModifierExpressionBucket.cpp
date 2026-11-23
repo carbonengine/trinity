@@ -39,7 +39,7 @@ float RandomHash( const EveSmartLightAttributeModifierExpressionBucket* bucket, 
 
 float Random( float a, float b )
 {
-	return ( ( b - a ) * ( (float)rand() / RAND_MAX ) ) + a;
+	return ( ( b - a ) * ( (float)rand() / float( RAND_MAX ) ) ) + a;
 }
 
 float Input( const EveSmartLightAttributeModifierExpressionBucket* bucket, float index )
@@ -84,7 +84,7 @@ CcpParser::Constant s_constants[] = {
 
 EveSmartLightAttributeModifierExpressionBucket::EveSmartLightAttributeModifierExpressionBucket( IRoot* lockobj ) :
 	PARENTLOCK( m_inputs ),
-	m_randomConstant( float( rand() ) / RAND_MAX )
+	m_randomConstant( float( rand() ) / float( RAND_MAX ) )
 {
 	m_name = "ExpressionBucket";
 	m_expression = "";

@@ -2,13 +2,15 @@
 
 #include "StdAfx.h"
 #include <ITr2AudEmitter.h>
+#include <ITr2AudParentBall.h>
 #include "TriObserverLocal.h"
 
 
 TriObserverLocal::TriObserverLocal( IRoot* lockobj ) :
 	m_front( 0.0f, 0.0f, 1.0f ),
 	m_position( 0.0f, 0.0f, 0.0f ),
-	m_mute( false )
+	m_mute( false ),
+	m_parentBall( nullptr )
 {
 }
 
@@ -41,6 +43,14 @@ void TriObserverLocal::Update( const Matrix& worldTransform )
 	}
 }
 
+void TriObserverLocal::SetParentBall( IRoot* ball )
+{
+	if( m_parentBall )
+	{
+		m_parentBall->SetParentBall( ball );
+	}
+}
+
 IBluePlacementObserver* TriObserverLocal::GetObserver()
 {
 	return m_observer;
@@ -49,6 +59,7 @@ IBluePlacementObserver* TriObserverLocal::GetObserver()
 void TriObserverLocal::SetObserver( IBluePlacementObserver* obs )
 {
 	m_observer = obs;
+	m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_observer.p );
 }
 
 void TriObserverLocal::SetPosition( Vector3 pos )
@@ -88,8 +99,9 @@ void TriObserverLocal::SetMute( bool isMute )
 	}
 }
 
-bool TriObserverLocal::OnModified( Be::Var* val )
+bool TriObserverLocal::Initialize()
 {
+	m_parentBall = dynamic_cast<ITr2AudParentBall*>( m_observer.p );
 	return true;
 }
 

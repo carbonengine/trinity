@@ -8,7 +8,7 @@
 #include "Shader/Tr2Effect.h"
 #include "TriRenderBatch.h"
 #include "TriFrustum.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Eve/SpaceObject/Utils/EveBoosterUtilities.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Tr2LightManager.h"

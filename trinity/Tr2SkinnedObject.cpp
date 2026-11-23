@@ -10,7 +10,7 @@
 #include "Utilities/Obb.h"
 #include "Curves/TriCurveSet.h"
 #include "TriLineSet.h"
-#include "Include/ITr2AnimationUpdater.h"
+#include "include/ITr2AnimationUpdater.h"
 #include "ITr2WorldTransformUpdater.h"
 
 Tr2SkinnedObject::Tr2SkinnedObject( IRoot* lockobj ) :

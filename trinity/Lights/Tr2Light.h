@@ -5,6 +5,7 @@
 #include "Tr2LightManager.h"
 #include "Tr2DebugRenderer.h"
 #include "Utilities/MatrixUtils.h"
+#include "../EnumFilter.h"
 
 BLUE_DECLARE( Tr2LightProfileRes );
 
@@ -15,13 +16,6 @@ struct LightFeatures
 	int16_t profileIndex;
 	float parentScale;
 	float parentBrightness;
-};
-
-enum class PerLightShadowSetting
-{
-	DISABLED,
-	ENABLED_ONLY_ON_HIGH_QUALITY,
-	ALWAYS_ENABLED
 };
 
 struct LightData
@@ -45,16 +39,20 @@ struct LightData
 	float outerAngle;
 	float innerAngle;
 
+	EnumFilter<LightingQuality> lightingQuality;
+
 	// Textured light specifics
 	std::wstring texturePath;
 	int32_t boneIndex;
 
 	uint16_t flags;
 
-	Be::Time startTime;
-
-	PerLightShadowSetting castsShadows;
+	EnumFilter<ShadowQuality> castsShadows;
 	bool isVolumetric;
+
+	Tr2LightTags tags;
+
+	Be::Time startTime;
 };
 
 
@@ -79,13 +77,13 @@ public:
 
 	EXPOSE_TO_BLUE();
 	Tr2Light( IRoot* lockobj = nullptr );
-	void AddLight( Tr2LightManager & lightManager, CXMMATRIX transform, float scale, const Float4x3* bones = nullptr, size_t boneCount = 0 );
-	void GetLight( Vector3 & position, float& radius, Color& color );
+	void AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, float scale, const Float4x3* bones = nullptr, size_t boneCount = 0 );
+	void GetLight( Vector3& position, float& radius, Color& color );
 	void ChangeLightColor( Color c );
 
 	virtual void Update();
-	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer, const Matrix& worldMatrix, const Float4x3* bones = nullptr, size_t boneCount = 0 );
-	virtual void SetLightData( LightData & baseData );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const Float4x3* bones = nullptr, size_t boneCount = 0 );
+	virtual void SetLightData( LightData& baseData );
 
 	void SetBoneMatrix( const Float4x3* bones, size_t boneCount );
 	void SetBrightnessMultiplier( float multi );
@@ -93,7 +91,7 @@ public:
 	bool Initialize() override;
 
 	// INotify
-	virtual bool OnModified( Be::Var * value );
+	virtual bool OnModified( Be::Var* value );
 
 	const LightData& GetLightData() const;
 	float GetBrightnessMultiplier() const;
@@ -105,6 +103,7 @@ protected:
 	std::string m_name;
 	Be::Time m_startTime;
 	bool m_isDynamic;
+	bool m_scaleBrightness;
 	float m_brightnessMultiplier;
 	Matrix m_boneTransform; // used for lights that have boneIndices
 
@@ -116,3 +115,5 @@ TYPEDEF_BLUECLASS( Tr2Light );
 
 extern const Be::VarChooser PerLightShadowSettingChooser[];
 extern const Be::VarChooser Tr2LightFlagChooser[];
+extern const Be::VarChooser LightingQualityFilterChooser[];
+extern const Be::VarChooser ReflectionQualityFilterChooser[];

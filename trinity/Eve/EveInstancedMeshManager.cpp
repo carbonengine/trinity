@@ -296,7 +296,6 @@ void EveInstancedMeshManager::AddMeshGroup(
 					false,
 					true };
 	auto& instances = m_meshInstances[key];
-	instances.material = material;
 	if( instances.radius == 0 )
 	{
 		auto meshData = geometry->GetMeshData( meshIndex );
@@ -323,6 +322,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 	meshGroup.handle = &handle;
 	meshGroup.owner = pickingOwner;
 	meshGroup.ownerIndex = pickingOwnerIndex;
+	meshGroup.material = material;
 	handle.owner = this;
 	handle.index = static_cast<uint32_t>( instances.meshGroups.size() - 1 );
 
@@ -360,7 +360,6 @@ void EveInstancedMeshManager::AddMeshGroup(
 					areaCount,
 					areaReversed };
 	auto& instances = m_meshInstances[key];
-	instances.material = material;
 	if( instances.radius == 0 )
 	{
 		auto meshData = geometry->GetMeshData( meshIndex );
@@ -387,6 +386,7 @@ void EveInstancedMeshManager::AddMeshGroup(
 	meshGroup.handle = &handle;
 	meshGroup.owner = pickingOwner;
 	meshGroup.ownerIndex = pickingOwnerIndex;
+	meshGroup.material = material;
 	handle.owner = this;
 	handle.index = static_cast<uint32_t>( instances.meshGroups.size() - 1 );
 
@@ -853,7 +853,7 @@ void EveInstancedMeshManager::GetPickingBatches( EvePendingPickingReadback& read
 				uint32_t stride = uint32_t( mesh.isDynamic ? sizeof( DynamicPerInstanceBufferElement ) : sizeof( StaticPerInstanceBufferElement ) );
 
 				Tr2RenderBatch batch;
-				batch.SetMaterial( meshInfo.material );
+				batch.SetMaterial( group.material );
 				batch.SetGeometry( mesh.combinedVertexDeclaration, draw.lodData->m_vertexAllocation, *draw.indexRange.indices );
 				batch.SetStreamSource( 1, *allocation.buffer, stride );
 				batch.SetDrawIndexedInstanced(
@@ -940,7 +940,7 @@ size_t EveInstancedMeshManager::GetBatches( const std::initializer_list<std::pai
 			}
 
 			Tr2RenderBatch batch;
-			batch.SetMaterial( meshInfo.material );
+			batch.SetMaterial( meshInfo.meshGroups.front().material );
 			batch.SetGeometry( mesh.combinedVertexDeclaration, draw.lodData->m_vertexAllocation, *draw.indexRange.indices );
 			batch.SetStreamSource( 1, *allocation.buffer, stride );
 			batch.SetDrawIndexedInstanced(
@@ -1033,7 +1033,7 @@ void EveInstancedMeshManager::ReportUsedScreenSizes() const
 		{
 			if( auto meshData = mesh.geometry->GetMeshLod( mesh.meshIndex, 0 ) )
 			{
-				meshInfo.material->UsedWithScreenSize( meshInfo.maxScreenSize, meshInfo.radius, meshData->m_uvDensities );
+				meshInfo.meshGroups.front().material->UsedWithScreenSize( meshInfo.maxScreenSize, meshInfo.radius, meshData->m_uvDensities );
 			}
 		}
 	}

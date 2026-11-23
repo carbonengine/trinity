@@ -5,9 +5,10 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
+#include "Utilities/Obb.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriFrustumOrtho.h"
 
@@ -41,8 +42,6 @@
 #include <limits>
 #include <IEveBallpark.h>
 
-
-std::atomic<uint64_t> EveSpaceObject2::s_nextAudioInstanceId{ 1 };
 
 static const int MAX_JOINT_COUNT = 58;
 
@@ -203,7 +202,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_worldTransform( XMMatrixIdentity() ),
 	m_invWorldTransform( XMMatrixIdentity() ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
-	m_audioInstanceId( NextAudioInstanceId() ),
 	m_mergedLocatorSetsDirty( true ),
 	m_damageLocatorAutoFilterEnabled( false ),
 	m_damageLocatorFilterRequested( false ),
@@ -280,11 +278,6 @@ bool EveSpaceObject2::Initialize()
 	for( uint32_t i = 0; i < m_decals.size(); i++ )
 	{
 		m_decals[i]->SetPriority( i );
-	}
-
-	if( !m_audioGeometry )
-	{
-		BeClasses->CreateInstanceFromName( "AudGeometry", BlueInterfaceIID<ITr2AudGeometry>(), reinterpret_cast<void**>( &m_audioGeometry.p ) );
 	}
 
 	return true;
@@ -528,6 +521,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	Be::Time time = updateContext.GetTime();
 
 	UpdateWorldTransform( time );
+	UpdateAudioGeometry();
 
 	if( !m_update )
 	{
@@ -580,6 +574,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 	Matrix observerTransform = GetObserverTransform();
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
 	{
+		( *it )->SetParentBall( m_ballPosition );
 		( *it )->Update( observerTransform );
 	}
 
@@ -594,6 +589,7 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 		params.ownerMaxSpeed = m_maxSpeed;
 		params.activationStrength = m_activationStrength;
 		params.localToWorldTransform = worldTransform;
+		params.ballPosition = m_ballPosition;
 
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, params.bones, params.boneCount );
 
@@ -624,8 +620,6 @@ void EveSpaceObject2::UpdateSyncronous( const EveUpdateContext& updateContext )
 			m_secondaryLightingSphereRadius = pow( boxVolume / 4.f * 3.f / TRI_PI, 1.0f / 3.0f );
 		}
 	}
-
-	RegisterAudioGeometry();
 }
 
 void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
@@ -720,6 +714,7 @@ void EveSpaceObject2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.activationStrength = m_activationStrength;
 		params.localToWorldTransform = worldTransform;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, params.bones, params.boneCount );
 
@@ -1246,6 +1241,10 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 		return;
 	}
 
+	if( !mesh )
+	{
+		return;
+	}
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -2419,9 +2418,6 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 		}
 	}
 
-	// Try to register audio geometry now that the geometry resource is loaded
-	RegisterAudioGeometry();
-
 	// If we already have a model we don't want to go through here
 	// as it would nuke all current animations.
 	if( !m_animationUpdater || m_animationUpdater->IsInitialized() )
@@ -3119,11 +3115,6 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	}
 	//is this done in a parent class/subclass anywhere else?
 	m_invWorldTransform = Inverse( m_worldTransform );
-
-	if( m_audioGeometryRegistered && m_audioGeometry )
-	{
-		m_audioGeometry->SetGeometryTransform( m_audioGeometrySetId, m_audioInstanceId, m_worldTransform );
-	}
 }
 
 void EveSpaceObject2::GetModelCenterWorldPosition( Vector3& position ) const
@@ -3388,7 +3379,7 @@ void EveSpaceObject2::AddController( ITr2Controller* controller )
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( observer );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 // --------------------------------------------------------------------------------
@@ -4092,10 +4083,6 @@ bool EveSpaceObject2::IsPickable() const
 void EveSpaceObject2::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry )
-	{
-		RegisterAudioGeometry();
-	}
 
 	if( registry && m_display )
 	{
@@ -4198,11 +4185,11 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	}
 }
 
-bool EveSpaceObject2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveSpaceObject2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
-	min = m_localAabbMin;
-	max = m_localAabbMax;
-	BoundingBoxTransform( min, max, m_worldTransform );
+	localMin = m_localAabbMin;
+	localMax = m_localAabbMax;
+	localToWorld = m_worldTransform;
 	return true;
 }
 
@@ -4569,48 +4556,25 @@ ITr2AudGeometryPtr EveSpaceObject2::GetAudioGeometry() const
 void EveSpaceObject2::SetAudioGeometry( ITr2AudGeometry* audioGeometry )
 {
 	UnregisterAudioGeometry();
-
 	m_audioGeometry = audioGeometry;
-	if( m_audioGeometry )
-	{
-		RegisterAudioGeometry();
-	}
 }
 
 void EveSpaceObject2::UnregisterAudioGeometry()
 {
-	if( m_audioGeometryRegistered && m_audioGeometry )
-	{
-		m_audioGeometry->RemoveGeometry( m_audioGeometrySetId, m_audioInstanceId );
-	}
-
-	m_audioGeometryRegistered = false;
-	m_audioGeometrySetId = 0;
+	m_audioOccluder.Release();
 }
 
-void EveSpaceObject2::RegisterAudioGeometry()
+void EveSpaceObject2::UpdateAudioGeometry()
 {
-	if( !m_isAudioOccluder )
+	if( !m_isAudioOccluder || !g_eveIsAudioOcclusionGeometryEnabled || !m_mesh )
 	{
+		m_audioOccluder.Release();
 		return;
 	}
-	if( !m_audioGeometryRegistered && m_audioGeometry && m_mesh && m_geometryResFromMesh && m_geometryResFromMesh->IsGood() )
+
+	if( !m_audioGeometry )
 	{
-		int meshIx = m_mesh->GetMeshIndex();
-		const AudioGeometryResData* audioGeo = m_geometryResFromMesh->GetAudioGeometry( meshIx );
-
-		if( audioGeo && !audioGeo->m_vertices.empty() )
-		{
-			Tr2AudGeometryData data;
-
-			data.m_vertices = audioGeo->m_vertices;
-			data.m_indices = audioGeo->m_indices;
-			data.m_maxBounds = audioGeo->m_maxBounds;
-			data.m_minBounds = audioGeo->m_minBounds;
-
-			m_audioGeometry->SetGeometry( audioGeo->m_id, m_audioInstanceId, data, m_worldTransform );
-			m_audioGeometrySetId = audioGeo->m_id;
-			m_audioGeometryRegistered = true;
-		}
+		m_audioGeometry = EveAudioOccluder::CreateAudioGeometry();
 	}
+	m_audioOccluder.Update( m_audioGeometry, m_geometryResFromMesh, m_mesh->GetMeshIndex(), m_worldTransform );
 }

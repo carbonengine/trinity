@@ -4,7 +4,7 @@
 #include "EveStretch.h"
 #include "TriFloat.h"
 #include "Eve/EveUpdateContext.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
 #include "Eve/Turret/EveTurretSet.h"
 #include "Curves/Tr2CurveScalar.h"

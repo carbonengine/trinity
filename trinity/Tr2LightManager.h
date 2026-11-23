@@ -12,6 +12,7 @@
 
 #include "Raytracing/Tr2RaytracingGeometry.h"
 #include "Tr2Denoiser.h"
+#include "EnumFilter.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
@@ -30,21 +31,47 @@ enum class ShadowQuality
 	SHADOW_RAYTRACED
 };
 
+// The base is deliberately set to 32bit because of a bug in MAP_ATTRIBUTE
+enum class LightingQuality : int32_t
+{
+	LOW,
+	MEDIUM,
+	HIGH,
+};
+
+enum class ReflectionQuality : int32_t
+{
+	OFF,
+	LOW,
+	MEDIUM,
+	HIGH,
+	ULTRA,
+};
+
+struct Tr2LightTags
+{
+	EnumFilter<ReflectionQuality> reflects;
+};
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Manages light sources for tiled/clustered lighting. An object of this class does not
 //   store lights permanently. Rather a user adds lights every frame and then the object
-//   updates GPU buffers needed for tiled lighting. Normally the per-frame operations
-//   for the light manager would look like:
-//     lightManager.Clear();
-//     lightManager.SetFrustum( frustum );
+//   updates GPU buffers needed for tiled lighting. The lights are gathered once per frame
+//   for every view (the main view and the reflection probe faces), and each view has its
+//   own lights and buffers. Normally the per-frame operations for the light manager would
+//   look like:
+//     views = lightManager.SetViews( frustums, renderContext ); // the main view first
+//     lightManager.Clear( renderContext );
 //     for each in scene.lights
-//       lightManager.AddPointLight( each ); // this can be done in parallel
-//	   lightManager.ResolveLightData();
-//     lightManager.UpdateLists();
-//     renderYourStuff();
-//  Light manager GPU buffers are accessed through variable store with names
-//  "LightBuffer" and "LightIndexBuffer".
+//       lightManager.AddLight( each ); // this can be done in parallel
+//     lightManager.ResolveLightData();
+//     for each in views
+//       lightManager.BindViewBuffers( *each );
+//       lightManager.UpdateLists( *each, depthMap, renderContext );
+//       renderYourStuff();
+//  The GPU buffers of the view bound by BindViewBuffers are accessed through variable
+//  store with names "LightBuffer" and "LightIndexBuffer".
 // --------------------------------------------------------------------------------------
 class Tr2LightManager : public Tr2DeviceResource
 {
@@ -83,6 +110,7 @@ public:
 			} Raytracing;
 		};
 	};
+	typedef Tr2EnumerableThreadSpecific<std::vector<PerLightData>> ThreadLocalLightData;
 
 	struct ShadowMapAtlasSettings
 	{
@@ -95,6 +123,36 @@ public:
 		uint32_t entryMaxSize;
 	};
 
+	// One view the lights are gathered for (the main view or a reflection probe face), with
+	// its lights and GPU buffers. Only the light manager changes it. The others read its
+	// lights and pass it back to the light manager's functions.
+	class View
+	{
+	public:
+		View( uint32_t maxVolumetricLights, uint32_t maxShadowCastingLights, uint32_t indexBufferSize, bool reflection );
+
+		const std::vector<uint32_t>& GetShadowCastingLights() const;
+		const std::vector<uint32_t>& GetVolumetricLights() const;
+		const PerLightData& GetLightData( uint32_t index ) const;
+
+	private:
+		friend class Tr2LightManager;
+
+		bool reflection = false; // face view: needs the reflection tag
+		TriFrustum frustum;
+		uint32_t maxVolumetricLights;
+		uint32_t maxShadowCastingLights;
+		uint32_t indexBufferSize;
+
+		ThreadLocalLightData tlsLightData;
+		std::vector<PerLightData> lightData;
+		std::vector<uint32_t> shadowCastingLights;
+		std::vector<uint32_t> volumetricLights;
+		Tr2GpuStructuredBufferPtr lightBuffer;
+		Tr2GpuStructuredBufferPtr indexBuffer;
+		Tr2GpuBufferPtr indexBufferCounter;
+	};
+
 	void GetUnpackedShadowMapData( const PerLightData& lightData, uint32_t& shadowMapScale, uint32_t& shadowMapOffsetX, uint32_t& shadowMapOffsetY ) const;
 
 	static const uint16_t FLAG_AFFECTS_SURFACES = 1;
@@ -102,18 +160,34 @@ public:
 	static const uint16_t FLAG_CASTS_SHADOWS = 1 << 2;
 	static const uint16_t FLAG_IS_VOLUMETRIC = 1 << 3;
 
+	static const uint16_t FLAG_BITS = 4;
+
 	static const uint16_t FLAG_DEFAULT = FLAG_AFFECTS_SURFACES;
 
+	static uint16_t PackFlags( uint16_t flags, uint16_t profileIndex );
+
 	void Clear( Tr2RenderContext& renderContext );
-	void SetFrustum( const TriFrustum& frustum );
-	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT );
-	void AddLight( PerLightData& data );
+
+	// The views the lights are gathered for this frame, set before the gather. The first
+	// frustum is the main view's, the others are reflection probe faces. Returns the views
+	// in the order of frustums, valid until the next SetViews. Views are created when the
+	// list grows and released when it shrinks.
+	std::vector<View*> SetViews( const std::vector<TriFrustum>& frustums, Tr2RenderContext& renderContext );
+	// Points the "LightBuffer" and "LightIndexBuffer" variables at the view's buffers
+	void BindViewBuffers( const View& view );
+
+	void AddPointLight( const Vector3& position, float radius, const Color& color, Float_16 innerRadius = Float_16( 0.f ), uint16_t flags = FLAG_DEFAULT, bool scaleBrightness = true );
+	void AddLight( PerLightData& data, bool scaleBrightness = true, const Tr2LightTags& tags = Tr2LightTags() );
 	void ResolveLightData();
-	ALResult UpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	void SetVariableStore();
+	ALResult UpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
 	void AdjustLightCutoff( float lodFactor );
 
 	void SetShadowQuality( ShadowQuality shadowQuality, uint64_t frameCounter );
+	void SetReflectionQuality( ReflectionQuality reflectionQuality );
+	void SetLightingQuality( LightingQuality lightingQuality );
+	LightingQuality GetLightingQuality() const;
+
+	static const uint8_t ANY_LIGHT_QUALITY = 0xff;
 
 	virtual void ReleaseResources( TriStorage s );
 
@@ -126,15 +200,13 @@ public:
 
 	static Tr2TextureArray& GetLightProfileArray();
 
-	const std::vector<uint32_t>& GetShadowCastingLights() const;
-	const std::vector<uint32_t>& GetVolumetricLights() const;
-	const Tr2LightManager::PerLightData& GetLightData( uint32_t index ) const;
 	Tr2GpuResourcePool::Texture GetShadowMapAtlas( Tr2GpuResourcePool& gpuResourcePool );
 	const ShadowMapAtlasSettings& GetShadowMapAtlasSettings() const;
 
 	ShadowQuality GetCurrentSpaceSceneShadowQuality();
 
 	Tr2GpuResourcePool::Texture RenderRaytracedShadows(
+		const View& view,
 		Tr2RaytracingGeometry* geometry,
 		const Tr2TextureAL& depth,
 		const Tr2TextureAL& normal,
@@ -168,33 +240,31 @@ private:
 
 	virtual bool OnPrepareResources();
 
-	ALResult DoUpdateLists( const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
-	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
-	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
+	void CreateViewBuffers( View& view, Tr2RenderContext& renderContext );
+	void ResolveView( View& view );
+
+	ALResult DoUpdateLists( View& view, const Tr2TextureAL& depthMap, Tr2RenderContext& renderContext );
+	ALResult ClearLightIndices( View& view, Tr2RenderContext& renderContext );
+	ALResult UpdateLightBuffer( View& view, Tr2RenderContext& renderContext );
 
 	uint32_t InsertAtlasNode( std::vector<AtlasNode>& atlasNodes, uint32_t nodeId, uint32_t lightIndex, int32_t width, int32_t height );
 
 	bool GetShadowMapAtlasEntry( uint32_t lightIndex, uint32_t width, uint32_t height, uint32_t& out_posX, uint32_t& out_posY );
-	void CreateShadowMapAtlas( uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
+	void CreateShadowMapAtlas( std::vector<PerLightData>& lightData, uint32_t numShadowCastingLights, const std::vector<LightScreenSizeTuple>& lightTuples );
 
-	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
-	std::vector<PerLightData> m_lightData;
-	std::vector<uint32_t> m_shadowCastingLights;
-	std::vector<uint32_t> m_volumetricLights;
-	Tr2GpuStructuredBufferPtr m_lightBuffer;
-	Tr2GpuStructuredBufferPtr m_indexBuffer;
+	static const uint32_t MAIN_VIEW = 0; // the reflection probe faces follow it
+	std::vector<View> m_views;
 
-	Tr2GpuBufferPtr m_indexBufferCounter;
 	Tr2ConstantBufferAL m_perFrameData;
 	Tr2EffectPtr m_effect;
 	Tr2Variable m_lightBufferVariable;
 	Tr2Variable m_indexBufferVariable;
-	TriFrustum m_frustum;
-
 	float m_adjustedCutoff;
 
 	uint32_t nextFrameShadowQuality; // bitmask, collecting ShadowQualities during the current frame
 	ShadowQuality m_currentSpaceSceneShadowQuality;
+	LightingQuality m_lightingQuality = LightingQuality::HIGH;
+	ReflectionQuality m_reflectionQuality = ReflectionQuality::OFF;
 	uint64_t m_currentFrameCounter;
 
 	struct

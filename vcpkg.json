@@ -43,7 +43,7 @@
     },
     {
       "name": "carbon-trinityaudioapi",
-      "version>=": "2.0.3"
+      "version>=": "3.2.0"
     },
     {
       "name": "freetype",
@@ -55,7 +55,7 @@
     },
     {
       "name": "carbon-blue",
-      "version>=": "6.2.0"
+      "version>=": "6.3.1"
     },
     {
       "name": "carbon-math",
@@ -80,6 +80,11 @@
     {
       "name": "carbon-mesh",
       "version>=": "1.0.1"
+    },
+    {
+      "name": "carbon-exefile",
+      "version>=": "4.1.1",
+      "host": true
     }
   ],
   "features": {
@@ -99,7 +104,7 @@
         },
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2",
+          "version>=": "2026-05-27",
           "platform": "windows & x64"
         }
       ]
@@ -110,7 +115,7 @@
       "dependencies": [
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2"
+          "version>=": "2026-05-27"
         },
         {
           "name": "fxc",
@@ -137,7 +142,7 @@
       "dependencies": [
         {
           "name": "directx-dxc",
-          "version>=": "2023-03-01#2"
+          "version>=": "2026-05-27"
         },
         {
           "name": "fxc",
@@ -188,8 +193,8 @@
   },
   "overrides": [
     {
-      "name": "openssl",
-      "version": "1.1.1k#8"
+      "name": "imgui",
+      "version": "1.91.9"
     },
     {
       "name": "libpng",

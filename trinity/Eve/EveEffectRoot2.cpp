@@ -5,6 +5,7 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
+#include "Utilities/Obb.h"
 #include "TriFrustum.h"
 #include "Lights/Tr2PointLight.h"
 #include "Tr2LightManager.h"
@@ -205,6 +206,7 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
+		( *it )->SetParentBall( m_ballPosition );
 		( *it )->Update( m_lastUpdateMatrix );
 	}
 
@@ -219,6 +221,7 @@ void EveEffectRoot2::UpdateSyncronous( const EveUpdateContext& updateContext )
 		params.bones = nullptr;
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
+		params.ballPosition = m_ballPosition;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
@@ -267,6 +270,7 @@ void EveEffectRoot2::UpdateAsyncronous( const EveUpdateContext& updateContext )
 		params.localToWorldTransform = worldTransform;
 		params.isVisible = m_display;
 		params.controllerUpdateFrequency = controllerUpdateFrequency;
+		params.ballPosition = m_ballPosition;
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
@@ -431,15 +435,17 @@ void EveEffectRoot2::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_lastUpdateMatrix;
 }
 
-bool EveEffectRoot2::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
+bool EveEffectRoot2::GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const
 {
 	if( m_boundingSphere.w <= 0.0f )
 	{
 		return false;
 	}
 
-	BoundingBoxInitialize( m_boundingSphere, min, max );
-	BoundingBoxTransform( min, max, m_lastUpdateMatrix );
+	CcpMath::Sphere worldSphere( m_boundingSphere );
+	worldSphere.Transform( m_lastUpdateMatrix );
+	BoundingBoxInitialize( Vector4( worldSphere.center, worldSphere.radius ), localMin, localMax );
+	localToWorld = IdentityMatrix();
 	return true;
 }
 
@@ -1004,7 +1010,7 @@ ITr2AudEmitterPtr EveEffectRoot2::FindSoundEmitter( const char* name )
 
 void EveEffectRoot2::AddObserver( TriObserverLocalPtr observer )
 {
-	m_observers.Append( observer );
+	m_observers.Append( observer->GetRawRoot() );
 }
 
 void EveEffectRoot2::SetMute( bool isMute )

@@ -1440,7 +1440,7 @@ void MetalWorkQueue::ResolveMsaa( id<MTLTexture> source, id<MTLTexture> destinat
 		for( uint32_t i = 0; i < numOldColorAttachments; ++i )
 		{
 			oldColorAttachments[i] = m_currentRenderPassDescriptor.colorAttachments[i].texture;
-			oldAttachmentSlice[i] = uint32_t( m_currentRenderPassDescriptor.colorAttachments[i].depthPlane );
+			oldAttachmentSlice[i] = uint32_t( m_currentRenderPassDescriptor.colorAttachments[i].slice );
 			SetRenderAttachments( nil, i );
 		}
 
@@ -2003,7 +2003,8 @@ void MetalWorkQueue::SetRenderAttachments( id<MTLTexture> texture, uint32_t inde
 	CCP_ASSERT( index < METAL_MAX_RENDER_TARGETS );
 
 	// Check if there's soemthing to actually do.
-	if( texture == m_currentRenderPassDescriptor.colorAttachments[index].texture )
+	if( texture == m_currentRenderPassDescriptor.colorAttachments[index].texture &&
+		slice == m_currentRenderPassDescriptor.colorAttachments[index].slice )
 	{
 		return;
 	}

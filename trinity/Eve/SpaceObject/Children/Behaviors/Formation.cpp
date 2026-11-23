@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "Formation.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 
 
 Formation::Formation( IRoot* lockobj ) :

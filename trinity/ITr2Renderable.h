@@ -38,7 +38,6 @@ enum Tr2RenderReason
 {
 	TR2RENDERREASON_NORMAL,
 	TR2RENDERREASON_REFLECTION,
-	TR2RENDERREASON_VOLUMETRIC,
 };
 
 BLUE_INTERFACE( ITr2Renderable ) :
@@ -48,12 +47,18 @@ BLUE_INTERFACE( ITr2Renderable ) :
 	{
 		return true;
 	}
-	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
 
 	virtual bool HasTransparentBatches() = 0;
 	virtual float GetSortValue() = 0;
 
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
+
+	// True when GetPerObjectData and HasTransparentBatches only touch this object's own state and may run on worker threads.
+	virtual bool SupportsParallelPerObjectData() const
+	{
+		return false;
+	}
 };
 REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
@@ -89,7 +94,7 @@ BLUE_INTERFACE( ITr2Pickable ) :
 	public IRoot
 {
 	virtual IRoot* GetID( uint16_t areaId ) = 0;
-	virtual void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) = 0;
+	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) = 0;
 };
 
 BLUE_DECLARE_INTERFACE( ITr2Pickable );

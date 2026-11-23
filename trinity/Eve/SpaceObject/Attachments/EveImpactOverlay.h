@@ -6,7 +6,7 @@
 
 //#include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "ITr2Renderable.h"
-#include "Include/ITriTargetable.h"
+#include "include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
 #include "EveDamageOverlay.h"
 

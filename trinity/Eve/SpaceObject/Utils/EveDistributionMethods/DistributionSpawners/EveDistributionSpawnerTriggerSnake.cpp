@@ -66,7 +66,7 @@ void EveDistributionSpawnerTriggerSnake::UpdateSyncronous( const EveUpdateContex
 		m_currentTravelTime = 0.f;
 		m_travelProgress = 0.f;
 		m_numDestinationsReached++;
-		m_travelDurationToNextPoint = Lerp( m_minTimeBetweenTriggers, m_maxTimeBetweenTriggers, (float)rand() / RAND_MAX );
+		m_travelDurationToNextPoint = Lerp( m_minTimeBetweenTriggers, m_maxTimeBetweenTriggers, (float)rand() / float( RAND_MAX ) );
 
 		Vector3 searchPoint = Lerp( m_lastTarget, m_targetPoint, 1.3f ); // overshoot to reduce u-turns
 		int32_t closetsPlace = owner.GetClosestFreePlacement( searchPoint );

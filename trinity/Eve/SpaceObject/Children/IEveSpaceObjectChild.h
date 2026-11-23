@@ -14,6 +14,7 @@ class Tr2LightManager;
 BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
 BLUE_DECLARE( EveSpaceObjectChild );
 BLUE_DECLARE_INTERFACE( IEveChildTransformModifier );
+BLUE_DECLARE_INTERFACE( ITriVectorFunction );
 
 struct EveChildUpdateParams
 {
@@ -27,7 +28,8 @@ struct EveChildUpdateParams
 		isVisible( true ),
 		localToWorldTransform( IdentityMatrix() ),
 		controllerUpdateFrequency( 0.5f ),
-		worldVelocity( 0.f, 0.f, 0.f )
+		worldVelocity( 0.f, 0.f, 0.f ),
+		ballPosition( nullptr )
 	{
 	}
 
@@ -41,6 +43,8 @@ struct EveChildUpdateParams
 	bool isVisible;
 	Matrix localToWorldTransform;
 	Vector3 worldVelocity;
+	/// Translation curve of the root space object, usually its destiny ball. May be nullptr.
+	ITriVectorFunction* ballPosition;
 };
 
 /**

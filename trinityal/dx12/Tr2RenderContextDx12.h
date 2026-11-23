@@ -7,7 +7,9 @@
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
-#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2BufferAL.h"
+#include "../include/Tr2RegisterMapAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
@@ -17,15 +19,15 @@
 
 #include "./util/DescriptorStateCacheDx12.h"
 #include "./util/PsoDescription.h"
+#include "./util/ResourceBindingsDx12.h"
 #include "../Tr2HalHelperStructures.h"
 
 class Tr2ConstantBufferAL;
 struct ITr2RenderContextEvents;
 
 class Tr2ShaderAL;
-class Tr2SamplerStateAL;
-class Tr2BufferAL;
 class Tr2RtShaderTableAL;
+class Tr2RtPipelineStateAL;
 struct Tr2Viewport;
 
 
@@ -91,7 +93,16 @@ public:
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw();
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer ) throw();
+	ALResult SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 ) throw();
+	ALResult SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSamplerHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex ) throw();
+	ALResult SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler ) throw();
+
+	ALResult ResetResourceBindings() throw();
 
 	ALResult DrawIndexedPrimitive(
 		uint32_t numVertices,
@@ -142,6 +153,9 @@ public:
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw();
 
 	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
+
+	/** Select the raytracing pipeline the following resource bindings are for, as SetShaderProgram does for draws and compute */
+	ALResult SetRtPipelineState( Tr2RtPipelineStateAL& pipeline, const wchar_t* rayGenShader );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw();
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw();
@@ -235,6 +249,9 @@ public:
 	ALResult SetAllState();
 
 protected:
+	ALResult UseResourceBindings() throw();
+	const TrinityALImpl::Tr2RootSignatureAL* GetProgramRootSignatureDx12() const;
+
 	ID3D12PipelineState* GetPipelineState();
 
 	/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
@@ -261,8 +278,10 @@ protected:
 
 	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
 
-	Tr2ResourceSetAL m_resourceSet;
+private:
+	ResourceBindings m_bindings;
 
+protected:
 	bool GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
 
 public:

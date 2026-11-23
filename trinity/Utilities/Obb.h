@@ -31,9 +31,11 @@ struct Obb
 	//   sizes        - half the size of the OBB along every axis x, y or z. Ie you get to a corner point with center + sizes[0] * x. Full width/height/depth is sizes*2.
 	Vector3 sizes;
 
+	void CreateWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld );
 	void CreateClippedWorldBoundingObb( const Vector3& localMin, const Vector3& localMax, const Matrix& localToWorld, const TriFrustum* frustum );
 
 	Vector3 GetPoint( unsigned N ) const;
+	bool Contains( const Vector3& point ) const;
 
 	void ComputeAABB( Vector3& min, Vector3& max, const Matrix& transform ) const;
 };

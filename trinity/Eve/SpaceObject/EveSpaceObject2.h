@@ -39,6 +39,7 @@
 #include "Raytracing/Tr2RaytracingManager.h"
 #include "Tr2RingBuffer.h"
 #include <ITr2AudGeometry.h>
+#include "Eve/SpaceObject/Utils/EveAudioOccluder.h"
 
 #include <ITriFunction.h>
 #include <atomic>
@@ -248,11 +249,6 @@ BLUE_CLASS( EveSpaceObject2 ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	static uint64_t NextAudioInstanceId()
-	{
-		return s_nextAudioInstanceId++;
-	}
-
 	using IInitialize::Lock;
 	using IInitialize::Unlock;
 
@@ -273,7 +269,7 @@ public:
 	{
 		return m_mesh;
 	}
-	void SetMesh( Tr2MeshBase * mesh );
+	void SetMesh( Tr2MeshBase* mesh );
 
 	void PlayAnimation( const char* animName, bool replace, int loopCount, float start, float speed, Be::OptionalWithDefaultValue<bool, true> clearWhenDone );
 	void PlayAnimationOnce( const char* animName );
@@ -287,7 +283,7 @@ public:
 	int GetBoneCount() const;
 
 	// Actually submit renderables to the list, called from GetRenderables
-	virtual void PushRenderables( std::vector<ITr2Renderable*> & renderables );
+	virtual void PushRenderables( std::vector<ITr2Renderable*>& renderables );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
@@ -295,30 +291,30 @@ public:
 	virtual void UpdateAsyncronous( const EveUpdateContext& updateContext );
 	virtual void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform );
 	virtual void PrepareShaderData( const EveUpdateContext& updateContext );
-	virtual void GetRenderables( std::vector<ITr2Renderable*> & renderables, Tr2ImpostorManager * impostors );
-	virtual bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateModelCenterWorldPosition( Vector3 & position, Be::Time t );
-	virtual void GetModelCenterWorldPosition( Vector3 & position ) const;
-	virtual bool GetLocalBoundingBox( Vector3 & min, Vector3 & max );
-	virtual void GetLocalToWorldTransform( Matrix & transform ) const;
-	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer );
+	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
+	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	virtual void UpdateModelCenterWorldPosition( Vector3& position, Be::Time t );
+	virtual void GetModelCenterWorldPosition( Vector3& position ) const;
+	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max );
+	virtual void GetLocalToWorldTransform( Matrix& transform ) const;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 	virtual void SetProceduralContainerVariable( const char* name, float value ) override;
 	virtual bool IsPickable() const;
-	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const;
+	virtual void GetParentData( IEveSpaceObject2::ParentData* pd ) const;
 	void InvalidateMergedLocators( LocatorInvalidationReason reason ) override;
 
 	void EnsureChildLocatorMerged() const;
 	void UpdateDamageLocatorFilter();
 	EveDamageOverlayPtr EnsureChildDamageOverlay( const LocatorSourceRange& range );
-	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>> & out );
+	void CollectPartDamageOverlays( std::vector<std::pair<EveDamageOverlay*, int32_t>>& out );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const IEveShadowFrustum& shadowFrustum, Tr2RenderReason renderReason, float& sizeInShadow ) const override;
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
-	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
+	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager& rtManager ) const override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -331,33 +327,37 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
-	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual float GetSortValue();
-	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	bool SupportsParallelPerObjectData() const override
+	{
+		return true;
+	}
 	virtual bool IsVisible( const EveUpdateContext& updateContext ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
-	virtual void ReleaseCachedData( BlueAsyncRes * p );
-	virtual void RebuildCachedData( BlueAsyncRes * p );
+	virtual void ReleaseCachedData( BlueAsyncRes* p );
+	virtual void RebuildCachedData( BlueAsyncRes* p );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
 	virtual IRoot* GetID( uint16_t );
-	virtual void GetPickingBatches( ITriRenderBatchAccumulator * batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
+	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2BoundingBox
-	virtual bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const;
+	virtual bool GetOrientedBoundingBox( Vector3& localMin, Vector3& localMax, Matrix& localToWorld ) const;
 	virtual bool IsBoundingBoxReady() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriTargetable
 	unsigned int GetDamageLocatorCount() const;
 	int GetClosestDamageLocatorIndex( const Vector3* position );
-	virtual bool GetDamageLocatorPosition( Vector3 * out, int index, bool inWorldSpace );
+	virtual bool GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace );
 	bool GetDamageLocatorBindPosition( int index, Vector3& out ) const;
-	virtual bool GetDamageLocatorDirection( Vector3 * out, int index, bool inWorldSpace );
+	virtual bool GetDamageLocatorDirection( Vector3* out, int index, bool inWorldSpace );
 	void GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out );
 	int GetGoodDamageLocatorIndex( const Vector3& position );
 	float GetRadius() const;
@@ -365,9 +365,9 @@ public:
 	int CreateImpactFromPosition( const Vector3& position, const Vector3& direction, float lifeTime, float size );
 	void SetLastDamageLocatorHit( unsigned int locator );
 
-	bool UpdateImpact( Vector3 & out, const Vector3& direction, int impactIndex );
+	bool UpdateImpact( Vector3& out, const Vector3& direction, int impactIndex );
 	ImpactConfiguration GetImpactConfiguration() const override;
-	bool GetImpactPosition( Vector3 & out, int locator, const Vector3& posPrev, const Vector3& posNow, float epsilon );
+	bool GetImpactPosition( Vector3& out, int locator, const Vector3& posPrev, const Vector3& posNow, float epsilon );
 	bool HasImpactConfigurationShield() const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -378,7 +378,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var * value );
+	bool OnModified( Be::Var* value );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -392,27 +392,27 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2SecondaryLightSource
-	void RegisterSecondaryLightSource( Tr2ShLightingManager & manager );
-	void UnregisterSecondaryLightSource( Tr2ShLightingManager & manager );
+	void RegisterSecondaryLightSource( Tr2ShLightingManager& manager );
+	void UnregisterSecondaryLightSource( Tr2ShLightingManager& manager );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ImpostorSource
 	virtual void GetImpostorBatches( const TriFrustum& frustum, std::map<TriBatchType, ITriRenderBatchAccumulator*>& batches );
 	virtual float GetRenderPriority( const ImpostorHash& oldHash, const ImpostorHash& newHash ) const;
-	virtual bool GetImpostorBoundingSphere( Vector4 & sphere ) const;
-	virtual void GetLastImpostorBoundingSphere( Vector4 & sphere ) const;
+	virtual bool GetImpostorBoundingSphere( Vector4& sphere ) const;
+	virtual void GetLastImpostorBoundingSphere( Vector4& sphere ) const;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
-	virtual void RenderDebugInfo( ITr2DebugRenderer2 & renderer );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveEffectChildrenOwner
 	EveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
-	void AddToEffectChildrenList( EveSpaceObjectChild * child );
-	void RemoveFromEffectChildrenList( EveSpaceObjectChild * child );
+	void AddToEffectChildrenList( EveSpaceObjectChild* child );
+	void RemoveFromEffectChildrenList( EveSpaceObjectChild* child );
 	PEveSpaceObjectChildVector& GetEffectChildren()
 	{
 		return m_effectChildren;
@@ -424,7 +424,7 @@ public:
 	void HandleControllerEvent( const char* name ) override;
 	void StartControllers();
 	bool GetControllerValueByName( const char* name, float& out );
-	virtual void AddController( ITr2Controller * controller ) override;
+	virtual void AddController( ITr2Controller* controller ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectDecalOwner
@@ -432,20 +432,20 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachmentOwner
-	virtual void AddAttachment( IEveSpaceObjectAttachment * attachment ) override;
+	virtual void AddAttachment( IEveSpaceObjectAttachment* attachment ) override;
 	virtual void ClearAttachments() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2LightOwner
-	virtual void GetLights( Tr2LightManager & lightManager ) const override;
-	virtual void AddLight( Tr2Light * newLight );
+	virtual void GetLights( Tr2LightManager& lightManager ) const override;
+	virtual void AddLight( Tr2Light* newLight );
 	virtual void ClearLights();
 
 	// For stateful GPU particles
 	ITriVectorFunctionPtr GetPositionFunction();
 
 	Vector3 GetModelWorldPosition() const;
-	void GetWorldVelocity( Vector3 & velocity ) const;
+	void GetWorldVelocity( Vector3& velocity ) const;
 
 	Tr2GrannyAnimation* GetAnimationController() const override
 	{
@@ -455,8 +455,8 @@ public:
 
 	// bounding sphere
 	void SetBoundingSphereInformation( const CcpMath::Sphere& boundingSphere );
-	Be::Result<std::string> GetLocalBoundingBoxFromScript( std::pair<Vector3, Vector3> & result );
-	void GetShapeEllipsoid( Vector3 & center, Vector3 & radius );
+	Be::Result<std::string> GetLocalBoundingBoxFromScript( std::pair<Vector3, Vector3>& result );
+	void GetShapeEllipsoid( Vector3& center, Vector3& radius );
 	void SetShapeEllipsoid( const CcpMath::AxisAlignedEllipsoid& ellipsoid );
 
 	// access to visiblity
@@ -473,7 +473,7 @@ public:
 
 	// access stuff
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
-	void AddLocator( EveLocator2 * newLocator );
+	void AddLocator( EveLocator2* newLocator );
 	void AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	void RemoveOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
 	EveMeshOverlayEffectPtr GetOverlayEffectByName( const char* name ) const;
@@ -508,8 +508,8 @@ public:
 	unsigned int GetLocatorCount( BlueSharedString locatorSetName ) const;
 	Vector3 GetLocatorPositionFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	Vector3 GetLocatorRotationFromSet( int index, bool inWorldSpace, BlueSharedString locatorSetName );
-	bool GetLocatorPosition( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
-	bool GetLocatorDirection( Vector3 * out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
+	bool GetLocatorPosition( Vector3* out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
+	bool GetLocatorDirection( Vector3* out, int index, bool inWorldSpace, BlueSharedString locatorSetName );
 	int GetGoodLocatorIndex( const Vector3& position, BlueSharedString locatorSetName );
 	// Function to find closest locator without worrying about direction of locator
 	int GetCloseLocatorIndex( const Vector3& position, BlueSharedString locatorSetName );
@@ -544,10 +544,10 @@ public:
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 
-	void GetPerObjectStructs( EveSpaceObjectVSData & vsData, EveSpaceObjectPSData & psData ) const;
+	void GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpaceObjectPSData& psData ) const;
 
 	// external parameters
-	void AddExternalParameter( Tr2ExternalParameter * externalParameter );
+	void AddExternalParameter( Tr2ExternalParameter* externalParameter );
 
 	std::map<std::string, float> GetControllerVariables() const;
 
@@ -590,10 +590,10 @@ protected:
 	Vector3 GetTransformedDamageLocator( uint32_t index );
 
 	void PrepareForAnimation();
-	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh );
+	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh );
 
 	// Consideration for child classes
-	void PushChildrenAndDecalRenderables( std::vector<ITr2Renderable*> & renderables );
+	void PushChildrenAndDecalRenderables( std::vector<ITr2Renderable*>& renderables );
 
 	virtual void UpdateWorldTransform( Be::Time time );
 
@@ -767,7 +767,7 @@ protected:
 	// Object space damage locator information
 	// Pass the locator's index in the merged damage locator set as mergedDamageIndex so that
 	// locators owned by a child part get the child's bone pose applied; -1 for other sets.
-	virtual void GetLocatorInObjectSpace( Vector3 & position, Vector3 & direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
+	virtual void GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator, int mergedDamageIndex = -1 ) const;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -775,10 +775,8 @@ protected:
 	virtual Matrix GetObserverTransform();
 
 	ITr2AudGeometryPtr m_audioGeometry;
-	bool m_audioGeometryRegistered = false;
+	EveAudioOccluder m_audioOccluder;
 	bool m_isAudioOccluder = true;
-	uint64_t m_audioGeometrySetId = 0;
-	uint64_t m_audioInstanceId;
 
 	ITr2AudGeometryPtr GetAudioGeometry() const;
 
@@ -789,16 +787,14 @@ public:
 	}
 
 protected:
-	void SetAudioGeometry( ITr2AudGeometry * audioGeometry );
+	void SetAudioGeometry( ITr2AudGeometry* audioGeometry );
 	void UnregisterAudioGeometry();
-	void RegisterAudioGeometry();
-
-	static std::atomic<uint64_t> s_nextAudioInstanceId;
+	void UpdateAudioGeometry();
 
 private:
 #if BLUE_WITH_PYTHON
-	static PyObject* PyTransformLocators( PyObject * self, PyObject * args );
-	static PyObject* PyGetTransformedLocatorsFromSet( PyObject * self, PyObject * args );
+	static PyObject* PyTransformLocators( PyObject* self, PyObject* args );
+	static PyObject* PyGetTransformedLocatorsFromSet( PyObject* self, PyObject* args );
 #endif
 
 	void ReleaseDamageFilterSessions();

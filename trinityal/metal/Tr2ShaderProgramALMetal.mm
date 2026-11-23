@@ -262,44 +262,5 @@ ALResult Tr2ShaderProgramAL::SetName( const char* name )
 	}
 	return S_OK;
 }
-
-void Tr2ShaderProgramAL::SetDummyResources( TrinityALImpl::MetalWorkQueue& workQueue )
-{
-	for( uint32_t i = 0; i < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
-	{
-		Tr2RenderContextEnum::ShaderType shaderType = (Tr2RenderContextEnum::ShaderType)i;
-
-		// If there's not resource set then we need to set dummies for all textures and samplers.
-		uint32_t missingTextureMask = m_resourceMask[i].textureMask;
-		uint32_t missingSamplerMask = m_resourceMask[i].samplerMask;
-
-		if( !missingTextureMask && !missingSamplerMask )
-		{
-			continue;
-		}
-
-		// Set any missing textures and samplers to the dummy object.
-		uint32_t index = 0;
-		while( missingTextureMask && missingSamplerMask )
-		{
-			if( missingTextureMask & 0x1 )
-			{
-				auto dummyTexture =
-					m_metalContext->GetDummyTexture( MTLTextureType( m_resourceMask[i].textureTypes[index] ) );
-				workQueue.SetTextures( shaderType, &dummyTexture, NSMakeRange( index, 1 ) );
-			}
-			missingTextureMask >>= 1;
-
-			if( missingSamplerMask & 0x1 )
-			{
-				auto dummySampler = m_metalContext->GetDummySampler();
-				workQueue.SetSamplers( shaderType, &dummySampler, NSMakeRange( index, 1 ) );
-			}
-			missingSamplerMask >>= 1;
-
-			++index;
-		}
-	}
-}
 }
 #endif

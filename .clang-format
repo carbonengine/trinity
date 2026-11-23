@@ -37,6 +37,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
 BreakStringLiterals: false
 ColumnLimit: 0
 CompactNamespaces: false
@@ -54,6 +55,9 @@ IndentWrappedFunctionNames: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: 'EXPOSURE_BEGIN'
 MacroBlockEnd: 'EXPOSURE_END|EXPOSURE_CHAINTO'
+Macros:
+- 'BLUE_CLASS(x)=class x'
+- 'BLUE_INTERFACE(x)=struct x'
 MaxEmptyLinesToKeep: 4
 NamespaceIndentation: None
 PointerAlignment: Left
@@ -71,6 +75,16 @@ SpacesInContainerLiterals: false
 SpacesInParentheses: true
 SpacesInSquareBrackets: false
 Standard: Cpp11
+StatementMacros:
+- 'MAP_INTERFACE'
+- 'MAP_ATTRIBUTE'
+- 'MAP_ATTRIBUTE_WITH_CHOOSER'
+- 'MAP_PROPERTY'
+- 'MAP_PROPERTY_READONLY'
+- 'MAP_METHOD'
+- 'MAP_METHOD_AND_WRAP'
+- 'MAP_METHOD_AND_WRAP'
+- 'MAP_METHOD_AND_WRAP_OPTIONAL_ARGS'
 TabWidth: 4
 UseTab: ForContinuationAndIndentation
 ---
@@ -112,6 +126,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
 BreakBeforeTernaryOperators: false
 BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
 BreakStringLiterals: false
 # Kept at 0 to match the Cpp section: some tools (e.g. CLion's ClangFormat
 # integration) misclassify C++ .h files as ObjC and would otherwise re-wrap
@@ -132,6 +147,9 @@ IndentWrappedFunctionNames: true
 KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: 'EXPOSURE_BEGIN'
 MacroBlockEnd: 'EXPOSURE_END|EXPOSURE_CHAINTO'
+Macros:
+- 'BLUE_CLASS(x)=class x'
+- 'BLUE_INTERFACE(x)=struct x'
 MaxEmptyLinesToKeep: 4
 NamespaceIndentation: None
 ObjCBlockIndentWidth: 4
@@ -150,6 +168,16 @@ SpacesInContainerLiterals: false
 SpacesInParentheses: true
 SpacesInSquareBrackets: false
 Standard: Cpp11
+StatementMacros:
+- 'MAP_INTERFACE'
+- 'MAP_ATTRIBUTE'
+- 'MAP_ATTRIBUTE_WITH_CHOOSER'
+- 'MAP_PROPERTY'
+- 'MAP_PROPERTY_READONLY'
+- 'MAP_METHOD'
+- 'MAP_METHOD_AND_WRAP'
+- 'MAP_METHOD_AND_WRAP'
+- 'MAP_METHOD_AND_WRAP_OPTIONAL_ARGS'
 TabWidth: 4
 UseTab: ForContinuationAndIndentation
 ...

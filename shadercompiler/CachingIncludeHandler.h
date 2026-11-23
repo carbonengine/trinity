@@ -22,11 +22,19 @@ public:
 		time_t modifiedTime;
 	};
 
-	std::optional<IncludedFile> Open( const char* fileName, const char* parentData = nullptr, const char* rootPath = nullptr );
+	enum IncludeType
+	{
+		IncludeLocal,
+		IncludeSystem
+	};
+
+	std::optional<IncludedFile> Open( const char* fileName, IncludeType includeType, const char* parentData = nullptr, const char* rootPath = nullptr );
 
 	void SetRootPath( const char* shaderPath );
 
 	std::optional<IncludedFile> AddPrefix( const char* fileName, const char* prefix );
+
+	void AddSystemIncludePath( const char* path );
 
 private:
 	typedef std::map<const void*, std::string> PathFromFile;
@@ -38,6 +46,7 @@ private:
 	FileFromPath m_fileFromPath;
 	// Path of the entry point file
 	std::string m_rootPath;
+	std::vector<std::string> m_systemIncludePaths;
 
 	std::mutex m_cs;
 };

@@ -41,16 +41,16 @@ ID = LETTER(LETTER|DECIMAL)*;
 #define	YYMARKER (marker)
 #define	YYCTXMARKER (ctxMarker)
 
-bool GetIncludePath( ParserState &state, InlineString& path )
+bool GetIncludePath( ParserState &state, InlineString& path, CachingIncludeHandler::IncludeType& includeType )
 {
-	bool local;
+	includeType = CachingIncludeHandler::IncludeLocal;
 	if( *YYCURSOR == '"' )
 	{
-		local = true;
+		includeType = CachingIncludeHandler::IncludeLocal;
 	}
 	else if( *YYCURSOR == '<' )
 	{
-		local = false;
+		includeType = CachingIncludeHandler::IncludeSystem;
 	}
 	else
 	{
@@ -61,7 +61,7 @@ bool GetIncludePath( ParserState &state, InlineString& path )
 	{
 		if( *YYCURSOR == '"' )
 		{
-			if( local )
+			if( includeType == CachingIncludeHandler::IncludeLocal )
 			{
 				path.end = ++YYCURSOR;
 				return true;
@@ -69,7 +69,7 @@ bool GetIncludePath( ParserState &state, InlineString& path )
 		}
 		else if( *YYCURSOR == '>' )
 		{
-			if( !local )
+			if( includeType == CachingIncludeHandler::IncludeSystem )
 			{
 				path.end = ++YYCURSOR;
 				return true;
@@ -141,14 +141,15 @@ std:
 		{
 			state.GetCurrentLocation().lineNumber++;
 			InlineString path;
-			if( !GetIncludePath( state, path ) )
+			CachingIncludeHandler::IncludeType includeType;
+			if( !GetIncludePath( state, path, includeType ) )
 			{
 				state.ShowMessage( EC_INVALID_INCLUDE_PATH );
 				return PPSR_ERROR;
 			}
 			if( !state.InSkipMode() )
 			{
-				state.IncludeFile( path );
+				state.IncludeFile( path, includeType );
 			}
 			start = YYCURSOR;
 			continue;
@@ -566,7 +567,7 @@ std:
 				++YYCURSOR;
 			}
 
-			if( !state.InSkipMode() )
+			if( !state.InSkipMode() && !state.InDiscoverMode() )
 			{
 				state.ShowMessage( EC_USER_ERROR, std::string( start, YYCURSOR ).c_str() );
 				return PPSR_ERROR;

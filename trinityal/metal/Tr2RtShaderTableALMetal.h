@@ -27,6 +27,9 @@ public:
 	ALResult Create( const Tr2RtShaderTableDescriptionAL& desc,
 					 const ::Tr2RtPipelineStateAL& pipeline,
 					 Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Update( const Tr2RtShaderTableDescriptionAL& desc,
+					 const ::Tr2RtPipelineStateAL& pipeline,
+					 Tr2PrimaryRenderContextAL& renderContext );
 	void Destroy();
 	bool IsValid() const;
 

@@ -5,7 +5,7 @@
 #include "TriDevice.h"
 #include "TriProjection.h"
 #include "TriView.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Curves/Tr2CurveScalar.h"
 
 static const float defFOV = TRI_PIBY2;

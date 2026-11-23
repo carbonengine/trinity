@@ -5,7 +5,7 @@
 #include "EveStretch3.h"
 #include "TriFloat.h"
 #include "Eve/EveUpdateContext.h"
-#include "Include/TriMath.h"
+#include "include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
 #include "Curves/TriCurveSet.h"
 #include "Tr2DynamicBinding.h"

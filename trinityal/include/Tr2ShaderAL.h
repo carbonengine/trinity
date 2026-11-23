@@ -93,6 +93,8 @@ struct Tr2ShaderRegisterAL
 
 	bool IsSrv() const;
 	bool IsUav() const;
+	static bool IsSrvBuffer( RegisterType registerType );
+	static bool IsSrvTexture( RegisterType registerType );
 
 	RegisterType registerType;
 	uint32_t registerIndex;

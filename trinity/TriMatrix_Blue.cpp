@@ -2,8 +2,8 @@
 
 #include "StdAfx.h"
 #include "include/TriMatrix.h"
-#include "Include/ITriVector.h"
-#include "Include/ITriQuaternion.h"
+#include "include/ITriVector.h"
+#include "include/ITriQuaternion.h"
 
 BLUE_DEFINE( TriMatrix );
 

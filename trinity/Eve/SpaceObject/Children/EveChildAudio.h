@@ -10,7 +10,7 @@
 // This is only needed for py2 as the file now belongs in blue.
 // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
 // The file version in the older blue versions had diverged from this one is incompatible.
-#include "Include/ITr2DebugRenderer2.h"
+#include "include/ITr2DebugRenderer2.h"
 #else
 #include <ITr2DebugRenderer2.h>
 #endif
@@ -20,6 +20,7 @@
 // Forward declarations and smart pointer typedefs
 BLUE_DECLARE_INTERFACE( ITr2AudEmitter );
 BLUE_DECLARE_IVECTOR( ITr2AudEmitter );
+BLUE_DECLARE_INTERFACE( ITr2AudParentBall );
 BLUE_DECLARE( EveChildAudio );
 
 /**
@@ -85,6 +86,7 @@ private:
 	Matrix m_worldTransform; ///< Cached world transformation matrix.
 	bool m_mute; ///< Whether audio playback is muted.
 	ITr2AudEmitterPtr m_audioEmitter; ///< The audio emitter instance.
+	ITr2AudParentBall* m_parentBall;
 };
 
 /**

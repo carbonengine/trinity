@@ -14,7 +14,7 @@
 // This is only needed for py2 as the file now belongs in blue.
 // Unfortunatly the blue py2 branch cannot be updated at present due to security vulnerability work.
 // The file version in the older blue versions had diverged from this one is incompatible.
-#include "Include/ITr2DebugRenderer2.h"
+#include "include/ITr2DebugRenderer2.h"
 #else
 #include <ITr2DebugRenderer2.h>
 #endif
@@ -60,7 +60,7 @@ public:
 	virtual Quaternion GetWorldRotation();
 
 	// ITr2BoundingBox
-	bool GetWorldBoundingBox( Vector3 & min, Vector3 & max ) const override;
+	bool GetOrientedBoundingBox( Vector3 & localMin, Vector3 & localMax, Matrix & localToWorld ) const override;
 	bool IsBoundingBoxReady() const override;
 
 	// ITr2SecondaryLightSource

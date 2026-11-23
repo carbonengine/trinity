@@ -47,7 +47,7 @@ struct HashCheckArguments
 std::mutex s_modifiedOutputsCS;
 std::set<std::string> s_modifiedOutputs;
 
-const std::regex s_include( "#[[:space:]]*include[[:space:]]*[<\"]([^>\"]*)" );
+const std::regex s_include( "#[[:space:]]*include[[:space:]]*([<\"])([^>\"]*)" );
 
 bool IsOutputUpToDate( const char* path, const std::string& sourceHash )
 {
@@ -112,14 +112,14 @@ bool CheckHash( const HashCheckArguments& query )
 	return true;
 }
 
-void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, std::set<std::string>& visited, MD5& md5 )
+void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, CachingIncludeHandler::IncludeType includeType, std::set<std::string>& visited, MD5& md5 )
 {
 	if( visited.find( sourcePath ) != end( visited ) )
 	{
 		return;
 	}
 	visited.insert( sourcePath );
-	if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
+	if( auto opened = s_includeHandler.Open( sourcePath, includeType, parentData, rootPath ) )
 	{
 		md5.add( opened->data, opened->size );
 
@@ -127,7 +127,8 @@ void GetSourceHash( const char* sourcePath, const char* parentData, const char* 
 		auto begin = opened->data;
 		while( std::regex_search( begin, opened->data + opened->size, match, s_include ) )
 		{
-			GetSourceHash( match[1].str().c_str(), opened->data, rootPath, visited, md5 );
+			CachingIncludeHandler::IncludeType it = match[1].str() == "<" ? CachingIncludeHandler::IncludeSystem : CachingIncludeHandler::IncludeLocal;
+			GetSourceHash( match[2].str().c_str(), opened->data, rootPath, it, visited, md5 );
 			begin += match.position() + match.length();
 		}
 	}
@@ -159,7 +160,7 @@ std::string GetSourceHash( const char* sourcePath, const std::vector<Macro>& def
 	md5.add( &g_generatePDB, sizeof( g_generatePDB ) );
 	md5.add( &g_skipOptimization, sizeof( g_skipOptimization ) );
 
-	GetSourceHash( sourcePath, nullptr, sourcePath, visited, md5 );
+	GetSourceHash( sourcePath, nullptr, sourcePath, CachingIncludeHandler::IncludeLocal, visited, md5 );
 	return md5.getHash();
 }
 

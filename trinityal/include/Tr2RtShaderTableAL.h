@@ -6,7 +6,6 @@
 #include "../ALResult.h"
 #include "../Tr2DeviceResourceAL.h"
 #include "Tr2ConstantBufferAL.h"
-#include "Tr2ResourceSetAL.h"
 
 namespace TrinityALImpl
 {
@@ -41,6 +40,7 @@ public:
 	void AddHitGroup( const wchar_t* name, const Tr2RtLocalMaterialDescriptionAL& material );
 
 	void Reserve( size_t hitGroupCount );
+	void Clear();
 
 private:
 	struct ShaderRecord
@@ -62,6 +62,8 @@ public:
 	Tr2RtShaderTableAL();
 
 	ALResult Create( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+	// Rebuilds a created table in place, reusing its buffers. Fails before Create and on platforms without in-place updates
+	ALResult Update( const Tr2RtShaderTableDescriptionAL& desc, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 
 	TrinityALImpl::Tr2RtShaderTableAL* TrinityALImpl_GetObject() const;
