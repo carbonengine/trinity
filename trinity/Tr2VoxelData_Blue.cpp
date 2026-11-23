@@ -54,8 +54,26 @@ const Be::ClassInfo* Tr2VoxelData::ExposeToBlue()
 			"SetVoxels",
 			SetVoxels,
 			"Populate the voxel data with the given generator\n\n"
-			":param mod: A generator/sequence of voxel data in a form of tuples ((x, y, z), p0, p1, ...) where p# are payload elements\n"
+			":param channels: A list of channel indices to populate\n"
+			":param mod: A generator/sequence of voxel data in a form of tuples ((x, y, z), p0, p1, ...) where p# are payload elements for the specified channels\n"
 			":type mod: Sequence[Tuple]\n" );
+		MAP_METHOD_AND_WRAP(
+			"SetAllVoxels",
+			SetAllVoxels,
+			"Populate the voxel data with the given generator. Sets all voxels in the specified channels.\n\n"
+			":param channels: A list of channel indices to populate\n"
+			":param mod: A generator/sequence of voxel data in a form of tuples (p0, p1, ...) where p# are payload elements for the specified channels\n"
+			":type mod: Sequence[Tuple]\n" );
+		MAP_METHOD_AND_WRAP(
+			"PauseNotifications",
+			PauseNotifications,
+			"Pauses notifications for data changes.\n"
+			"While notifications are paused, changes to the voxel data will not propagate to subscribers, which can be useful when making multiple changes to the data.\n"
+			"Call ResumeNotifications to resume notifications. It is possible to nest calls to PauseNotifications and ResumeNotifications." );
+		MAP_METHOD_AND_WRAP(
+			"ResumeNotifications",
+			ResumeNotifications,
+			"Resumes notifications for data changes previously paused with PauseNotifications. Any changes made while notifications were paused will now propagate to subscribers." );
 		MAP_METHOD_AND_WRAP(
 			"GetPayloadData",
 			PyGetPayloadData,

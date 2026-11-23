@@ -129,6 +129,8 @@ public:
 	public:
 		bool IsChannelModified( size_t channelIndex ) const;
 		void MarkChannelModified( size_t channelIndex );
+		operator bool() const;
+		ModifiedChannels& operator|=( const ModifiedChannels& other );
 
 	private:
 		uint64_t m_modifiedChannelsBitmask = 0;
@@ -178,6 +180,20 @@ public:
 	PayloadSnapshot GetPayloadSnapshot( size_t index );
 
 	/**
+	 * @brief Pauses "on data changed" notifications for subscribed views if the voxel data changes. Useful when making multiple changes to the 
+	 * voxel data, to avoid unnecessary notifications. Call ResumeNotifications to resume notifications.
+	 * It is possible to call PauseNotifications multiple times, but ResumeNotifications must be called the same number of times to resume
+	 * the notifications.
+	 */
+	void PauseNotifications();
+
+	/**
+	 * @brief Resumes "on data changed" notifications for subscribed views after they have been paused. This should be called after PauseNotifications 
+	 * to ensure that listeners are notified of any changes made while notifications were paused.
+	 */
+	void ResumeNotifications();
+
+	/**
 	 * @brief Reads one element of a Boolean payload. Boolean payloads store one bit per element, least significant bit first:
 	 * element j of voxel i is bit ( i * elementCount + j ) of the payload data.
 	 * @param data The payload data.
@@ -222,19 +238,23 @@ private:
 		std::vector<Snapshot> old;
 	};
 
-	BluePy SetVoxels( PyObject* set );
+	BluePy SetVoxels( const std::vector<size_t>& channels, PyObject* set );
+	BluePy SetAllVoxels( const std::vector<size_t>& channels, PyObject* set );
 	BluePy PyGetPayloadData( size_t index, const Coord& coord );
+	void BroadcastDataChanged( const ModifiedChannels& modifiedChannels );
 
-	bool ExtractPayload( PyObject* element, const Coord& coord, ModifiedChannels& modifiedChannels );
+	bool ExtractPayload( PyObject* element, Py_ssize_t tupleOffset, const Coord& coord, const std::vector<size_t>& channels, ModifiedChannels& modifiedChannels );
 
 	template <typename Dst>
-	bool ExtractPayloadElement( PyObject* element, size_t index, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels );
+	bool ExtractPayloadElement( PyObject* element, Py_ssize_t tupleIndex, size_t channelIndex, const PayloadType& payloadType, const Coord& coord, ModifiedChannels& modifiedChannels );
 	template <typename Dst>
-	bool ExtractNormalizedPayloadElement( PyObject* element, size_t index, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels );
+	bool ExtractNormalizedPayloadElement( PyObject* element, Py_ssize_t tupleIndex, size_t channelIndex, uint8_t elementCount, const Coord& coord, ModifiedChannels& modifiedChannels );
 
 	Dimensions m_dimensions;
 	std::vector<Payload> m_payload;
 	std::mutex m_payloadMutex;
+	ModifiedChannels m_modifiedChannels;
+	int32_t m_notificationsPaused = 0;
 };
 
 TYPEDEF_BLUECLASS( Tr2VoxelData );

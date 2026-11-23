@@ -422,6 +422,11 @@ protected:
 			}
 		}
 
+		if( cancel || vertices.empty() || indices.empty() )
+		{
+			return {};
+		}
+
 		cmf::Span<cmf::VertexElement> decl = CreateVertexDeclaration( allocator );
 		cmf::Span<cmf::MeshLod> lods;
 
