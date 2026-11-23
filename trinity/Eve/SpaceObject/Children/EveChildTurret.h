@@ -36,7 +36,7 @@ public:
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 
 	// IEveUnboundedRenderable: the firing effect reaches the target outside the owner's bounds
 	void GetUnboundedRenderables( std::vector<ITr2Renderable*>& renderables ) override;
