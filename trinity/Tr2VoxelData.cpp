@@ -392,6 +392,7 @@ bool Tr2VoxelData::SetPackedBit( uint8_t* data, size_t bitIndex, bool value )
 
 BluePy Tr2VoxelData::SetVoxels( const std::vector<size_t>& channels, PyObject* set )
 {
+	TRINITY_STATS_ZONE( __FUNCTION__ );
 	for( auto channelIndex : channels )
 	{
 		if( channelIndex >= m_payload.size() )

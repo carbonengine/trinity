@@ -102,6 +102,7 @@ public:
 
 	bool BuildCmf( cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel, cmf::Data& data ) override
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( cancel )
 		{
 			return false;
@@ -151,6 +152,7 @@ protected:
 	 */
 	Tr2SignedDistanceField& GetSignedDistanceField( const std::atomic<bool>& cancel )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( m_signedDistanceField )
 		{
 			return *m_signedDistanceField;
@@ -496,6 +498,7 @@ protected:
 
 	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, cancel );
 	}
 
@@ -514,6 +517,7 @@ protected:
 	template <typename GetDualVertex, typename AddVertexData>
 	static void Sweep( const Window& window, const std::atomic<bool>& cancel, GetDualVertex getDualVertex, AddVertexData addVertexData, std::vector<Vector3>& positions, std::vector<uint32_t>& quads )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		const Int3& lattice = window.lattice;
 		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
 		const std::array<size_t, 3> blockStrides = { 1, size_t( lattice[0] + 1 ), size_t( lattice[0] + 1 ) * size_t( lattice[1] + 1 ) };
@@ -594,6 +598,7 @@ protected:
 	 */
 	void ApplySurfaceCuts( const Tr2SurfaceCuts& surfaceCuts, float positionScale, std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( !m_cutParams.IsEnabled() || quads.empty() )
 		{
 			return;
@@ -865,6 +870,7 @@ protected:
 	 */
 	static std::vector<Vector3> SplitNormals( std::vector<Vector3>& positions, std::vector<Vector3>& normals, std::vector<float>& curvature, std::vector<float>& smoothedCurvature, std::vector<DataTag>& dataTags, std::vector<uint32_t>& indices )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		const size_t vertexCount = positions.size();
 		const size_t triangleCount = indices.size() / 3;
 
@@ -1025,6 +1031,7 @@ protected:
 	 */
 	static void ComputeCurvature( const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<uint32_t>& quads, EnumFilter<Tr2VoxelGeometryComponents> outputComponents, std::vector<float>& curvature, std::vector<float>& smoothedCurvature )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( !outputComponents.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !outputComponents.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
 		{
 			return;
@@ -1096,6 +1103,7 @@ protected:
 	 */
 	void Relax( std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( m_relaxIterations == 0 || quads.empty() )
 		{
 			return;
@@ -1135,6 +1143,7 @@ protected:
 	template <typename GetDualVertex>
 	GeneratedMesh CreateBuffersImpl( GetDualVertex getDualVertex, cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
 		{
 			return {};
@@ -1296,6 +1305,7 @@ private:
 	 */
 	static std::vector<std::vector<uint32_t>> GetQuadNeighbors( size_t vertexCount, const std::vector<uint32_t>& quads )
 	{
+		TRINITY_STATS_ZONE( __FUNCTION__ );
 		std::vector<std::vector<uint32_t>> neighbors( vertexCount );
 		for( size_t q = 0; q < quads.size(); q += 4 )
 		{
