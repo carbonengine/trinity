@@ -50,14 +50,15 @@ Color Tr2CurveColor::GetValue( double time ) const
 }
 
 // --------------------------------------------------------------------------------
-Color Tr2CurveColor::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+Vector4 Tr2CurveColor::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
 {
 	double t = time - m_timeOffset;
-	return ToOutput( Color(
+	const Color value = ToOutput( Color(
 		m_r.SampleValue( t, segmentCaches[0] ),
 		m_g.SampleValue( t, segmentCaches[1] ),
 		m_b.SampleValue( t, segmentCaches[2] ),
 		m_a.IsEmpty() ? 1.0f : m_a.SampleValue( t, segmentCaches[3] ) ) );
+	return Vector4( value.r, value.g, value.b, value.a );
 }
 
 // --------------------------------------------------------------------------------

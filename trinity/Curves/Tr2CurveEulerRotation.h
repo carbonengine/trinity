@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Tr2CurveScalar.h"
-#include "Tr2CurveSegmentSearch.h"
 
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
@@ -11,7 +10,8 @@
 
 BLUE_CLASS( Tr2CurveEulerRotation ) :
 	public ITriCurveLength,
-	public ITriQuaternionFunction
+	public ITriQuaternionFunction,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveEulerRotation( IRoot* lockobj = nullptr );
@@ -34,7 +34,7 @@ public:
 	Quaternion GetValue( double time ) const;
 	// The value at time, like GetValue, but looking each channel's keys up from
 	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
-	Quaternion SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,

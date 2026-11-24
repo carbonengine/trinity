@@ -137,6 +137,12 @@ float Tr2CurveScalar::GetValue( double time ) const
 }
 
 // --------------------------------------------------------------------------------
+Vector4 Tr2CurveScalar::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+{
+	return Vector4( SampleValue( time, segmentCaches[0] ), 0.0f, 0.0f, 0.0f );
+}
+
+// --------------------------------------------------------------------------------
 float Tr2CurveScalar::SampleValue( double time, size_t& segmentCache ) const
 {
 	if( m_keys.empty() )

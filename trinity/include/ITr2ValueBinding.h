@@ -4,7 +4,7 @@
 #ifndef ITr2ValueBinding_H
 #define ITr2ValueBinding_H
 
-struct TriCurveSetTime;
+#include "TriCurveSetTime.h"
 
 BLUE_INTERFACE( ITr2ValueBinding ) :
 	public IRoot

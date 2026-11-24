@@ -5,24 +5,17 @@
 #define TriCurveSampler_h
 
 #include <ITriFunction.h>
-#include "Tr2CurveSegmentSearch.h"
-
-BLUE_DECLARE( Tr2CurveScalar );
-BLUE_DECLARE( Tr2CurveQuaternion );
-BLUE_DECLARE( Tr2CurveVector3 );
-BLUE_DECLARE( Tr2CurveColor );
-BLUE_DECLARE( Tr2CurveEulerRotation );
+#include "ITr2SampledCurve.h"
 
 // Samples a typed curve's value at any time without moving the curve's current
 // value - so a curve shared with others, or one that fires events as it
 // advances, is unaffected.
 //
-// Keyed curves (Tr2CurveScalar, Tr2CurveQuaternion, and the Tr2CurveVector3,
-// Tr2CurveColor and Tr2CurveEulerRotation built from scalar channels) are
-// sampled through key segment caches of the sampler's own, so a binding
-// sampling a shared curve at its offset time finds its keys as quickly as if it
-// had a copy of the curve, and leaves the curve's own caches to the curve's own
-// UpdateValue.
+// Keyed curves (ITr2SampledCurve) are sampled through key segment caches of the
+// sampler's own, so a binding sampling a shared curve at its offset time finds
+// its keys as quickly as if it had a copy of the curve, and leaves the curve's
+// own caches to the curve's own UpdateValue. Other curves are sampled through
+// their function interface.
 //
 // Holds a raw curve pointer found once, so it is only valid while the source
 // object is, and must be found again whenever the source changes.
@@ -38,19 +31,15 @@ public:
 		return m_kind != Kind::None;
 	}
 
-	// The curve's value at time, laid out from out.x as in its currentValue: a
-	// scalar fills x, a vector xyz, a quaternion or color all four.
-	void Sample( double time, Vector4& out );
+	// The curve's value at time, laid out from x as in its currentValue: a scalar
+	// fills x, a vector xyz, a quaternion or color all four.
+	Vector4 Sample( double time );
 
 private:
 	enum class Kind : uint8_t
 	{
 		None,
-		KeyedScalar,
-		KeyedQuaternion,
-		KeyedVector3,
-		KeyedColor,
-		KeyedEulerRotation,
+		Keyed,
 		Scalar,
 		Vector,
 		Quaternion,
@@ -58,15 +47,10 @@ private:
 	};
 
 	Kind m_kind = Kind::None;
-	// Single-channel keyed curves use the first element
 	Tr2CurveChannelSegments m_segments = {};
 	union
 	{
-		Tr2CurveScalar* keyedScalar;
-		Tr2CurveQuaternion* keyedQuaternion;
-		Tr2CurveVector3* keyedVector3;
-		Tr2CurveColor* keyedColor;
-		Tr2CurveEulerRotation* keyedEulerRotation;
+		ITr2SampledCurve* keyed;
 		ITriScalarFunction* scalar;
 		ITriVectorFunction* vector;
 		ITriQuaternionFunction* quaternion;

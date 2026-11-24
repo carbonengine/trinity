@@ -58,6 +58,7 @@ set(PUBLIC_HEADER_FILES
     include/Tr2Curve.h
     include/Tr2WindowHandle.h
     include/TriColor.h
+    include/TriCurveSetTime.h
     include/TriMath.h
     include/TriMath.h
     include/TriQuaternion.h
@@ -170,6 +171,7 @@ set(_SOURCES
     Curves/Fader/Tr2ScalarFader.cpp
     Curves/Fader/Tr2ScalarFader.h
     Curves/Fader/Tr2ScalarFader_Blue.cpp
+    Curves/ITr2SampledCurve.h
     Curves/Tr2BoneMatrixCurve.cpp
     Curves/Tr2BoneMatrixCurve.h
     Curves/Tr2BoneMatrixCurve_Blue.cpp
@@ -241,7 +243,6 @@ set(_SOURCES
     Curves/TriCurveSampler.h
     Curves/TriCurveSet.cpp
     Curves/TriCurveSet.h
-    Curves/TriCurveSetTime.h
     Curves/TriCurveSet_Blue.cpp
     Curves/TriEventCurve.cpp
     Curves/TriEventCurve.h
@@ -887,6 +888,7 @@ set(_SOURCES
     include/Tr2Curve.h
     include/Tr2WindowHandle.h
     include/TriColor.h
+    include/TriCurveSetTime.h
     include/TriMath.h
     include/TriMath.h
     include/TriQuaternion.h

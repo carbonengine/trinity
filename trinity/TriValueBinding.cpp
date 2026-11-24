@@ -8,7 +8,7 @@
 #include "include/ITriQuaternion.h"
 #include "include/ITriMatrix.h"
 #include "Curves/TriCurveSampler.h"
-#include "Curves/TriCurveSetTime.h"
+#include "include/TriCurveSetTime.h"
 
 TriValueBinding::TriValueBinding( IRoot* lockobj ) :
 	m_isWeak( false ),
@@ -86,8 +86,7 @@ void TriValueBinding::CopyValueAt( const TriCurveSetTime& time )
 	// Evaluate the source curve at our own time into a local value rather than
 	// moving the curve: its current value is shared with other bindings and
 	// readers, and stateful curves must only ever see their curve set's time.
-	Vector4 sampled;
-	m_sampler.Sample( time.Shifted( m_timeOffset ), sampled );
+	Vector4 sampled = m_sampler.Sample( time.Shifted( m_timeOffset ) );
 	CopyFrom( reinterpret_cast<uint8_t*>( &sampled ) + m_sampleOffset );
 }
 

@@ -22,7 +22,7 @@ BLUE_DECLARE_STRUCTURE_LIST( Tr2CurveQuaternionKey );
 
 
 BLUE_CLASS( Tr2CurveQuaternion ) :
-	public ITriQuaternionFunction, public ITriCurveLength
+	public ITriQuaternionFunction, public ITriCurveLength, public ITr2SampledCurve
 {
 public:
 	Tr2CurveQuaternion( IRoot* lockobj = nullptr );
@@ -48,6 +48,7 @@ public:
 	// curve at times of their own (bindings with a time offset), so they and the
 	// curve's own UpdateValue don't keep moving each other's cache.
 	Quaternion SampleValue( double time, size_t& segmentCache ) const;
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 	Quaternion GetCurrentValue() const;
 
 	void OnKeysChanged();

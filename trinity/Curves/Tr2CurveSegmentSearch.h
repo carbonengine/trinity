@@ -5,12 +5,6 @@
 #define Tr2CurveSegmentSearch_h
 
 #include <algorithm>
-#include <array>
-
-// One key segment cache per channel, for sampling curves built from up to four
-// scalar channel curves (Tr2CurveVector3, Tr2CurveColor, Tr2CurveEulerRotation)
-// at times of the caller's own. Channel i of the curve uses element i.
-using Tr2CurveChannelSegments = std::array<size_t, 4>;
 
 // Index i of the key segment [keys[i], keys[i + 1]) that contains t, for a curve
 // with at least two keys. Falls back to the last segment when none contains t.

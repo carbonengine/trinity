@@ -3,7 +3,6 @@
 #pragma once
 
 #include "Tr2CurveScalar.h"
-#include "Tr2CurveSegmentSearch.h"
 
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
@@ -11,7 +10,8 @@
 
 BLUE_CLASS( Tr2CurveVector3 ) :
 	public ITriCurveLength,
-	public ITriVectorFunction
+	public ITriVectorFunction,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveVector3( IRoot* lockobj = nullptr );
@@ -25,7 +25,7 @@ public:
 	Vector3 GetValue( double time ) const;
 	// The value at time, like GetValue, but looking each channel's keys up from
 	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
-	Vector3 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,

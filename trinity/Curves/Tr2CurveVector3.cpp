@@ -30,12 +30,13 @@ Vector3 Tr2CurveVector3::GetValue( double time ) const
 	return Vector3( m_x.GetValue( time ), m_y.GetValue( time ), m_z.GetValue( time ) );
 }
 
-Vector3 Tr2CurveVector3::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+Vector4 Tr2CurveVector3::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
 {
-	return Vector3(
+	return Vector4(
 		m_x.SampleValue( time, segmentCaches[0] ),
 		m_y.SampleValue( time, segmentCaches[1] ),
-		m_z.SampleValue( time, segmentCaches[2] ) );
+		m_z.SampleValue( time, segmentCaches[2] ),
+		0.0f );
 }
 
 // --------------------------------------------------------------------------------

@@ -112,6 +112,13 @@ Quaternion Tr2CurveQuaternion::GetValue( double time ) const
 }
 
 // --------------------------------------------------------------------------------
+Vector4 Tr2CurveQuaternion::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+{
+	const Quaternion value = SampleValue( time, segmentCaches[0] );
+	return Vector4( value.x, value.y, value.z, value.w );
+}
+
+// --------------------------------------------------------------------------------
 Quaternion Tr2CurveQuaternion::SampleValue( double time, size_t& segmentCache ) const
 {
 	if( m_keys.empty() )

@@ -2,7 +2,7 @@
 
 #include "StdAfx.h"
 #include "TriCurveSet.h"
-#include "TriCurveSetTime.h"
+#include "include/TriCurveSetTime.h"
 #include "TriValueBinding.h"
 #include <ICurveSetDriver.h>
 #include "include/ITriDuration.h"
