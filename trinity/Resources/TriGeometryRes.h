@@ -25,7 +25,7 @@ BLUE_CLASS( Tr2RaycastGeometryRes ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	void SetLodIndices( std::vector<int32_t> && lodIndices );
+	void SetLodIndices( std::vector<int32_t>&& lodIndices );
 	BVH::BoundingVolumeHierarchy& GetBVH();
 
 protected:

@@ -8,6 +8,7 @@
 #include "include/ITr2InstanceData.h"
 #include "Tr2CmfContent.h"
 #include "Tr2SuballocatedBuffer.h"
+#include <ITr2AudGeometry.h>
 
 constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 32u * 1024u * 1024u;
 constexpr uint32_t SHARED_BUFFER_MAX_SIZE = 2048u * 1024u * 1024u;
@@ -96,12 +97,7 @@ extern bool g_eveIsAudioOcclusionGeometryEnabled;
 struct AudioGeometryResData
 {
 	uint64_t m_id;
-
-	std::vector<Vector3> m_vertices;
-	std::vector<uint32_t> m_indices;
-
-	Vector3 m_minBounds;
-	Vector3 m_maxBounds;
+	Tr2AudGeometryData m_data;
 
 	AudioGeometryResData() :
 		m_id( s_nextId++ )

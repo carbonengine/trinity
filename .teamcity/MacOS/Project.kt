@@ -63,8 +63,6 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
         param("teamcity.vcsTrigger.runBuildInNewEmptyBranch", "true")
         param("github_checkout_folder", "github")
         param("env.CTEST_JUNIT_OUTPUT_FILE", "ctest_results.xml")
-        select("env.VISUAL_STUDIO_PLATFORM_TOOLSET", "v141", label = "Visual Studio Platform Toolset", description = "Specify the toolset for the build. e.g. v141 or v143.",
-                options = listOf("v141 (2017)" to "v141", "v143 (2022)" to "v143"))
         param("env.CMAKE_BUILD_TARGETS", "all")
         param("env.CMAKE_INSTALL_PREFIX", ".build-artifact")
         param("env.SENTRY_PROJECT", "exefile-crashes")
@@ -129,12 +127,6 @@ class CarbonBuildMacOS(buildName: String, configType: String, preset: String, ag
             name = "Upload symbols to sentry"
             path = "sentry-cli"
             arguments = "upload-dif --wait %env.CMAKE_BUILD_FOLDER%"
-            param("script.content", """
-                #!/usr/bin/env bash -eu
-                filesWithSymbols = (
-                  # insert your binary files with symbols here!
-                )
-            """.trimIndent())
         }
     }
 

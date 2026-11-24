@@ -23,6 +23,10 @@ std::atomic<uint64_t> AudioGeometryResData::s_nextId{ 1 };
 bool g_eveIsAudioOcclusionGeometryEnabled = false;
 TRI_REGISTER_SETTING( "eveIsAudioOcclusionGeometryEnabled", g_eveIsAudioOcclusionGeometryEnabled );
 
+// Meshes without an authored audio occlusion mesh use their lowest LOD instead
+bool g_eveAudioOcclusionLodFallback = true;
+TRI_REGISTER_SETTING( "eveAudioOcclusionLodFallback", g_eveAudioOcclusionLodFallback );
+
 CCP_STATS_DECLARE( geometryResBytes, "Trinity/geometryResBytes", false, CST_MEMORY, "Size of memory occupied by geometry resources." );
 
 #if TRINITY_PLATFORM != TRINITY_DIRECTX11
@@ -1459,6 +1463,70 @@ void Tr2GeometryProvider::SetupSkeletonsFromCMF( const cmf::Data& cmfData )
 	}
 }
 
+
+// Returns the authored audio occlusion mesh, or the lowest loaded LOD when the file has none.
+static std::unique_ptr<AudioGeometryResData> ExtractAudioGeometry( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const TriGeometryResMeshData& mesh )
+{
+	// Wwise indexes triangles with 16 bits
+	constexpr uint32_t maxTriangles = 0xFFFF;
+
+	auto audioGeometry = std::make_unique<AudioGeometryResData>();
+	Tr2AudGeometryData& data = audioGeometry->m_data;
+
+	const cmf::AudioOcclusionMesh& occlusionMesh = cmfMesh.audioOcclusionMesh;
+	if( !occlusionMesh.vertices.empty() && !occlusionMesh.indices.empty() )
+	{
+		data.m_vertices.assign( occlusionMesh.vertices.begin(), occlusionMesh.vertices.end() );
+		data.m_indices.assign( occlusionMesh.indices.begin(), occlusionMesh.indices.end() );
+		data.m_minBounds = occlusionMesh.bounds.m_min;
+		data.m_maxBounds = occlusionMesh.bounds.m_max;
+		return audioGeometry;
+	}
+
+	if( !g_eveAudioOcclusionLodFallback || cmfMesh.topology != cmf::MeshTopology::TriangleList || mesh.m_lods.empty() )
+	{
+		return nullptr;
+	}
+
+	const cmf::MeshLod& cmfLod = cmfMesh.lods[mesh.m_lods.back()->m_originalLodIndex];
+	const cmf::VertexElement* positionElement = cmf::FindElement( cmfMesh.decl, cmf::Usage::Position );
+	const uint32_t vertexCount = cmf::GetStreamElementCount( cmfLod.vb );
+	const uint32_t indexCount = cmf::GetStreamElementCount( cmfLod.ib );
+	if( !positionElement || vertexCount == 0 || indexCount < 3 || indexCount / 3 > maxTriangles )
+	{
+		return nullptr;
+	}
+
+	const void* vertexData = cmfContents.GetViewData( cmfLod.vb );
+	const void* indexData = cmfContents.GetViewData( cmfLod.ib );
+	if( !vertexData || !indexData )
+	{
+		return nullptr;
+	}
+
+	cmf::ConstBufferElementStream<Vector3> positions( *positionElement, vertexData, vertexCount, cmfLod.vb.stride );
+	cmf::ConstIndexBufferStream indices( indexData, indexCount, cmfLod.ib.stride );
+	if( !positions.exists() || !indices.exists() )
+	{
+		return nullptr;
+	}
+
+	data.m_vertices.reserve( vertexCount );
+	for( const Vector3 position : positions )
+	{
+		data.m_vertices.push_back( position );
+	}
+	data.m_indices.reserve( indexCount );
+	for( const uint32_t index : indices )
+	{
+		data.m_indices.push_back( index );
+	}
+	data.m_minBounds = mesh.m_minBounds;
+	data.m_maxBounds = mesh.m_maxBounds;
+	return audioGeometry;
+}
+
+
 bool Tr2GeometryProvider::CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -1479,17 +1547,7 @@ bool Tr2GeometryProvider::CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, 
 
 		if( g_eveIsAudioOcclusionGeometryEnabled )
 		{
-			const auto& audioMesh = cmfContents.GetData()->meshes[i].audioOcclusionMesh;
-			if( !audioMesh.vertices.empty() && !audioMesh.indices.empty() )
-			{
-				auto audioGeometry = std::make_unique<AudioGeometryResData>();
-				audioGeometry->m_indices.insert( audioGeometry->m_indices.end(), audioMesh.indices.begin(), audioMesh.indices.end() );
-				audioGeometry->m_vertices.insert( audioGeometry->m_vertices.end(), audioMesh.vertices.begin(), audioMesh.vertices.end() );
-				audioGeometry->m_minBounds = audioMesh.bounds.m_min;
-				audioGeometry->m_maxBounds = audioMesh.bounds.m_max;
-
-				mesh->m_audioGeometry = std::move( audioGeometry );
-			}
+			mesh->m_audioGeometry = ExtractAudioGeometry( cmfContents, cmfContents.GetData()->meshes[i], *mesh );
 		}
 	}
 

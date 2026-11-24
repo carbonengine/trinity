@@ -1305,19 +1305,6 @@ bool TriGeometryRes::CreateLodFromGrannyMesh( granny_mesh* grannyMesh, TriGeomet
 #endif
 
 #if WITH_GRANNY
-static granny_mesh* FindOcclusionMesh( granny_file_info* gi, const std::string& meshName )
-{
-	std::string occlusionName = meshName + "_Occlusion";
-	for( int i = 0; i < gi->MeshCount; ++i )
-	{
-		std::string name;
-		CopyGrannyName( name, gi->Meshes[i]->Name );
-		if( name == occlusionName )
-			return gi->Meshes[i];
-	}
-	return nullptr;
-}
-
 bool TriGeometryRes::CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext )
 {
 	TRINITY_STATS_ZONE( __FUNCTION__ );
@@ -1328,65 +1315,12 @@ bool TriGeometryRes::CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsa
 		{
 			CreateLodFromGrannyMesh( gi->Meshes[lod->m_grannyMeshIndex], lod.get(), cpuUsage, renderContext );
 		}
-
-		if( g_eveIsAudioOcclusionGeometryEnabled )
-		{
-			granny_mesh* audioMesh = FindOcclusionMesh( gi, mesh->m_name );
-			if( !audioMesh && !mesh->m_lods.empty() )
-			{
-				audioMesh = gi->Meshes[mesh->m_lods.back()->m_grannyMeshIndex];
-			}
-
-			if( audioMesh )
-			{
-				ExtractAudioGeometry( mesh.get(), audioMesh );
-			}
-		}
 	}
 
 	CCP_STATS_ADD( geometryResBytes, m_memoryUse );
 	return true;
 }
 
-void TriGeometryRes::ExtractAudioGeometry( TriGeometryResMeshData* mesh, granny_mesh* grannyMesh )
-{
-	auto audioGeometry = std::make_unique<AudioGeometryResData>();
-
-	unsigned int positionOffset;
-	Tr2VertexDefinition::DataType positionType;
-	GetVertexPositionOffsetAndType( grannyMesh, positionOffset, positionType );
-
-	const int vertexCount = grannyMesh->PrimaryVertexData->VertexCount;
-	Tr2VertexDefinition audioVertexDef = BuildFromGrannyVertexDecl( grannyMesh->PrimaryVertexData->VertexType );
-	const unsigned int bytesPerVertex = audioVertexDef.m_nextOffset[0];
-
-	// Read original indices from granny mesh
-	int indexCount = grannyMesh->PrimaryTopology->Index16Count;
-	if( indexCount == 0 )
-	{
-		indexCount = grannyMesh->PrimaryTopology->IndexCount;
-	}
-
-	if( indexCount == 0 || indexCount % 3 != 0 )
-	{
-		return;
-	}
-
-
-	audioGeometry->m_vertices.resize( vertexCount );
-	for( int v = 0; v < vertexCount; ++v )
-	{
-		GetMeshVertexPosition( grannyMesh, static_cast<uint32_t>( v ), audioGeometry->m_vertices[v], bytesPerVertex, positionOffset, positionType );
-	}
-
-	audioGeometry->m_indices.resize( indexCount );
-	GrannyCopyMeshIndices( grannyMesh, sizeof( uint32_t ), audioGeometry->m_indices.data() );
-
-	audioGeometry->m_minBounds = mesh->m_minBounds;
-	audioGeometry->m_maxBounds = mesh->m_maxBounds;
-
-	mesh->m_audioGeometry = std::move( audioGeometry );
-}
 #endif
 
 Be::Result<std::string> TriGeometryRes::SaveMesh( const char* filename, uint32_t meshIndex ) const

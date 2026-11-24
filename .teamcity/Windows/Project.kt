@@ -123,12 +123,6 @@ class CarbonBuildWindows(buildName: String, configType: String, preset: String, 
             name = "Upload symbols to sentry"
             path = "sentry-cli"
             arguments = "upload-dif --wait %env.CMAKE_BUILD_FOLDER%"
-            param("script.content", """
-                #!/usr/bin/env bash -eu
-                filesWithSymbols = (
-                  # insert your binary files with symbols here!
-                )
-            """.trimIndent())
         }
         script {
             name = "(Windows) CMD Upload debug symbols to internal symbol server"
