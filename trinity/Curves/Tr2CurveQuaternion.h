@@ -22,7 +22,9 @@ BLUE_DECLARE_STRUCTURE_LIST( Tr2CurveQuaternionKey );
 
 
 BLUE_CLASS( Tr2CurveQuaternion ) :
-	public ITriQuaternionFunction, public ITriCurveLength
+	public ITriQuaternionFunction,
+	public ITriCurveLength,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveQuaternion( IRoot* lockobj = nullptr );
@@ -31,18 +33,24 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion * in, Be::Time time );
-	virtual Quaternion* Update( Quaternion * in, double time );
-	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
+	virtual Quaternion* Update( Quaternion* in, Be::Time time );
+	virtual Quaternion* Update( Quaternion* in, double time );
+	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
 
 	virtual float Length();
 
 	Quaternion GetValue( double time ) const;
+	// The value at time, like GetValue, but looking keys up from the caller's
+	// segment cache rather than the curve's own. For callers that sample the
+	// curve at times of their own (bindings with a time offset), so they and the
+	// curve's own UpdateValue don't keep moving each other's cache.
+	Quaternion SampleValue( double time, size_t& segmentCache ) const;
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 	Quaternion GetCurrentValue() const;
 
 	void OnKeysChanged();

@@ -12,6 +12,7 @@ const Be::ClassInfo* Tr2CurveVector3::ExposeToBlue()
 		MAP_INTERFACE( ITriFunction )
 		MAP_INTERFACE( ITriVectorFunction )
 		MAP_INTERFACE( ITriCurveLength )
+		MAP_INTERFACE( ITr2SampledCurve )
 
 		MAP_ATTRIBUTE(
 			"name",
