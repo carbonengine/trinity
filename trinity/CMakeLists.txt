@@ -853,6 +853,7 @@ set(_SOURCES
     Eve/IEveShadowCaster.h
     Eve/IEveSpaceObject2.h
     Eve/IEveTransform.h
+    Eve/IEveUnboundedRenderable.h
     Font/Tr2FontManager.cpp
     Font/Tr2FontManager.h
     Font/Tr2FontManager_Blue.cpp

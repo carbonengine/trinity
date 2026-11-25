@@ -5,6 +5,7 @@
 #define EveChildTurret_H
 
 #include "EveChildMesh.h"
+#include "Eve/IEveUnboundedRenderable.h"
 #include "Eve/Turret/EveTurretAiming.h"
 #include "Eve/Turret/EveTurretTarget.h"
 #include "include/ITr2PoseModifier.h"
@@ -14,7 +15,8 @@ BLUE_DECLARE( EveTurretTarget );
 
 BLUE_CLASS( EveChildTurret ) :
 	public EveChildMesh,
-	public ITr2PoseModifier
+	public ITr2PoseModifier,
+	public IEveUnboundedRenderable
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -34,12 +36,14 @@ public:
 	void UpdateSyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateAsyncronous( const EveUpdateContext& updateContext, const EveChildUpdateParams& params ) override;
 	void UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform, Tr2Lod parentLod ) override;
-	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
-	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
+
+	// IEveUnboundedRenderable: the firing effect reaches the target outside the owner's bounds
+	void GetUnboundedRenderables( std::vector<ITr2Renderable*>& renderables ) override;
+	void AddUnboundedQuads( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 
 	void UpdateCachedGeometryData();
-	void BuildCachedGeometryData( TriGeometryRes & geometryRes );
+	void BuildCachedGeometryData( TriGeometryRes& geometryRes );
 	void ReleaseCachedGeometryData();
 
 	// action
