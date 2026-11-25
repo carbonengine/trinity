@@ -20,14 +20,14 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion * in, Be::Time time );
-	virtual Quaternion* Update( Quaternion * in, double time );
-	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
+	virtual Quaternion* Update( Quaternion* in, Be::Time time );
+	virtual Quaternion* Update( Quaternion* in, double time );
+	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
 
 	virtual float Length();
 

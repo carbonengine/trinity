@@ -91,7 +91,9 @@ struct Tr2CurveRasterizeDestination
 
 
 BLUE_CLASS( Tr2CurveScalar ) :
-	public ITriScalarFunction, public ITriCurveLength, public ITr2SampledCurve
+	public ITriScalarFunction,
+	public ITriCurveLength,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveScalar( IRoot* lockobj = nullptr );

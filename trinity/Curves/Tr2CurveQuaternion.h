@@ -22,7 +22,9 @@ BLUE_DECLARE_STRUCTURE_LIST( Tr2CurveQuaternionKey );
 
 
 BLUE_CLASS( Tr2CurveQuaternion ) :
-	public ITriQuaternionFunction, public ITriCurveLength, public ITr2SampledCurve
+	public ITriQuaternionFunction,
+	public ITriCurveLength,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveQuaternion( IRoot* lockobj = nullptr );
@@ -31,14 +33,14 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion * in, Be::Time time );
-	virtual Quaternion* Update( Quaternion * in, double time );
-	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
+	virtual Quaternion* Update( Quaternion* in, Be::Time time );
+	virtual Quaternion* Update( Quaternion* in, double time );
+	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
 
 	virtual float Length();
 

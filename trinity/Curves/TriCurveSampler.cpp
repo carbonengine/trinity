@@ -58,20 +58,17 @@ Vector4 TriCurveSampler::Sample( double time )
 		return m_curve.keyed->SampleValue( time, m_segments );
 	case Kind::Scalar:
 		return Vector4( m_curve.scalar->GetValueAt( time ), 0.0f, 0.0f, 0.0f );
-	case Kind::Vector:
-	{
+	case Kind::Vector: {
 		Vector3 value;
 		m_curve.vector->GetValueAt( &value, time );
 		return Vector4( value.x, value.y, value.z, 0.0f );
 	}
-	case Kind::Quaternion:
-	{
+	case Kind::Quaternion: {
 		Quaternion value;
 		m_curve.quaternion->GetValueAt( &value, time );
 		return Vector4( value.x, value.y, value.z, value.w );
 	}
-	case Kind::Color:
-	{
+	case Kind::Color: {
 		Color value;
 		m_curve.color->GetValueAt( &value, time );
 		return Vector4( value.r, value.g, value.b, value.a );

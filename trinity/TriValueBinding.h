@@ -27,7 +27,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
-	virtual bool OnModified( Be::Var * val );
+	virtual bool OnModified( Be::Var* val );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2ValueBinding
@@ -45,7 +45,7 @@ public:
 	void SetDestination( const std::string& destAttribute, IRootPtr destination );
 	void SetScale( float scale );
 
-	void CreateWeakBinding( IRoot * source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale = 1.0f, const Vector4& offset = Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
+	void CreateWeakBinding( IRoot* source, const char* sourceAttr, IRoot* dest, const char* destAttr, float scale = 1.0f, const Vector4& offset = Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) );
 
 	bool IsValid() const;
 
@@ -57,10 +57,10 @@ protected:
 	IRoot* GetCurrentDestinationObject() const;
 
 	IRootPtr GetSourceObject() const;
-	void SetSourceObject( IRoot * sourceObject );
+	void SetSourceObject( IRoot* sourceObject );
 
 	IRootPtr GetDestinationObject() const;
-	void SetDestinationObject( IRoot * destinationObject );
+	void SetDestinationObject( IRoot* destinationObject );
 
 	std::string m_name;
 	IRootPtr m_sourceObject;
