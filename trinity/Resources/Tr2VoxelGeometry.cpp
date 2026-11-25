@@ -472,12 +472,17 @@ protected:
 	 */
 	struct Window
 	{
-		explicit Window( const Int3& lattice_ ) :
+		explicit Window( const Int3& lattice_, bool withGradients = false ) :
 			lattice( lattice_ ),
 			strides( { 1, size_t( lattice_[0] + 2 ), size_t( lattice_[0] + 2 ) * size_t( lattice_[1] + 2 ) } ),
 			occupancy( strides[2] * size_t( lattice_[2] + 2 ), 0 ),
 			field( occupancy.size(), std::numeric_limits<float>::quiet_NaN() )
 		{
+			if( withGradients )
+			{
+				const float nan = std::numeric_limits<float>::quiet_NaN();
+				gradient.assign( occupancy.size(), Vector3( nan, nan, nan ) );
+			}
 		}
 
 		size_t Index( int32_t x, int32_t y, int32_t z ) const
@@ -489,6 +494,7 @@ protected:
 		const std::array<size_t, 3> strides;
 		std::vector<uint8_t> occupancy;
 		std::vector<float> field; // NaN where the cell has no field value
+		std::vector<Vector3> gradient; // interpolated field gradient, NaN where not filled; empty unless requested
 	};
 
 	static Int3 DimensionsToInt3( const Tr2VoxelData::Dimensions& dims )
@@ -496,10 +502,10 @@ protected:
 		return { int32_t( dims.width ), int32_t( dims.height ), int32_t( dims.depth ) };
 	}
 
-	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
+	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, int32_t scale, bool withGradients, const std::atomic<bool>& cancel ) const
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
-		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, cancel );
+		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, withGradients, cancel );
 	}
 
 	/**
@@ -1141,7 +1147,7 @@ protected:
 	}
 
 	template <typename GetDualVertex>
-	GeneratedMesh CreateBuffersImpl( GetDualVertex getDualVertex, cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel )
+	GeneratedMesh CreateBuffersImpl( GetDualVertex getDualVertex, bool withGradients, cmf::MemoryAllocator& allocator, cmf::BufferManager& buffers, const std::atomic<bool>& cancel )
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
 		if( m_dimensions.width == 0 || m_dimensions.height == 0 || m_dimensions.depth == 0 )
@@ -1168,7 +1174,7 @@ protected:
 
 		for( uint32_t lod = 0; lod < m_outputSettings.lodLevels; ++lod )
 		{
-			auto window = CreateLatticeWindow( *lodField, scale, cancel );
+			auto window = CreateLatticeWindow( *lodField, scale, withGradients, cancel );
 			if( cancel )
 			{
 				return {};
@@ -1391,13 +1397,15 @@ private:
 	 * @brief Creates a subdivided window over the grid with trilinear interpolation of the signed distance field.
 	 * @param field The signed distance field to use for creating the window.
 	 * @param scale The subdivision scale factor; each grid cell is subdivided into scale^3 cells.
+	 * @param withGradients Also fill the window gradients of the band cells with the trilinear interpolation of the sample gradients
+	 * (Tr2SignedDistanceField::SampleGradient at the cell).
 	 * @param cancel An atomic boolean flag that can be used to cancel the operation.
 	 * @return A Window object representing the subdivided grid with occupancy and field values.
 	 */
-	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, const std::atomic<bool>& cancel ) const
+	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, bool withGradients, const std::atomic<bool>& cancel ) const
 	{
 		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
-		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale } );
+		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale }, withGradients );
 
 		// Cubes are keyed by their minimum sample, -1..dim per axis
 		const Int3 cubes = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
@@ -1497,6 +1505,36 @@ private:
 								}
 							}
 						}
+						if( withGradients )
+						{
+							// Same hierarchy over the corner gradients, so each grid gradient is evaluated once per cube rather than per lattice cell
+							const Vector3 g000 = field.GetGradient( cx, cy, cz );
+							const Vector3 g100 = field.GetGradient( cx + 1, cy, cz );
+							const Vector3 g010 = field.GetGradient( cx, cy + 1, cz );
+							const Vector3 g110 = field.GetGradient( cx + 1, cy + 1, cz );
+							const Vector3 g001 = field.GetGradient( cx, cy, cz + 1 );
+							const Vector3 g101 = field.GetGradient( cx + 1, cy, cz + 1 );
+							const Vector3 g011 = field.GetGradient( cx, cy + 1, cz + 1 );
+							const Vector3 g111 = field.GetGradient( cx + 1, cy + 1, cz + 1 );
+							for( int32_t iz = 0; iz < scale; ++iz )
+							{
+								const float tz = t[iz];
+								const Vector3 e00 = g000 + ( g001 - g000 ) * tz;
+								const Vector3 e10 = g100 + ( g101 - g100 ) * tz;
+								const Vector3 e01 = g010 + ( g011 - g010 ) * tz;
+								const Vector3 e11 = g110 + ( g111 - g110 ) * tz;
+								for( int32_t iy = 0; iy < scale; ++iy )
+								{
+									const float ty = t[iy];
+									const Vector3 f0 = e00 + ( e01 - e00 ) * ty;
+									const Vector3 f1 = e10 + ( e11 - e10 ) * ty;
+									for( int32_t ix = 0; ix < scale; ++ix )
+									{
+										window.gradient[window.Index( cx * scale + ix, cy * scale + iy, cz * scale + iz )] = f0 + ( f1 - f0 ) * t[ix];
+									}
+								}
+							}
+						}
 					}
 					else if( solid[cube] )
 					{
@@ -1563,7 +1601,7 @@ protected:
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
 
-		return CreateBuffersImpl( GetDualVertex, allocator, buffers, cancel );
+		return CreateBuffersImpl( GetDualVertex, false, allocator, buffers, cancel );
 	}
 
 private:
@@ -1647,7 +1685,7 @@ protected:
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
 
-		return CreateBuffersImpl( GetDualVertex, allocator, buffers, cancel );
+		return CreateBuffersImpl( GetDualVertex, true, allocator, buffers, cancel );
 	}
 
 private:
@@ -1657,17 +1695,27 @@ private:
 	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigen decomposition
 
 	/**
-	 * @brief Computes a gradient vector from a signed distance field at a given cell, using direct lookup at scale 1 or sampled lookup for other scales.
+	 * @brief Computes a gradient vector from a signed distance field at a given cell, using direct lookup at scale 1 or the window's
+	 * precomputed gradients for other scales, falling back to sampled lookup for cells the window did not fill.
+	 * @param window The lattice window, whose gradients are used when filled.
 	 * @param field The signed distance field to query.
 	 * @param cell The integer cell coordinates used as the gradient sample position.
 	 * @param scale The sampling scale factor. A value of 1 uses direct cell gradient lookup; other values use scaled sampling.
 	 * @return The gradient vector at the requested position, obtained either directly or via scaled sampling.
 	 */
-	static Vector3 GetGradient( const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
+	static Vector3 GetGradient( const Window& window, const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
 	{
 		if( scale == 1 )
 		{
 			return field.GetGradient( cell[0], cell[1], cell[2] );
+		}
+		if( !window.gradient.empty() )
+		{
+			const Vector3& gradient = window.gradient[window.Index( cell[0], cell[1], cell[2] )];
+			if( !std::isnan( gradient[0] ) )
+			{
+				return gradient;
+			}
 		}
 		return field.SampleGradient( Vector3( float( cell[0] ), float( cell[1] ), float( cell[2] ) ) / float( scale ) );
 	}
@@ -1769,8 +1817,8 @@ private:
 					{
 						t = std::min( std::max( da / ( da - db ), float( 0.0 ) ), float( 1.0 ) );
 					}
-					const Vector3 ga = GetGradient( field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
-					const Vector3 gb = GetGradient( field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
+					const Vector3 ga = GetGradient( window, field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
+					const Vector3 gb = GetGradient( window, field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
 					Vector3& point = points[count];
 					Vector3& normal = normals[count];
 					for( int j = 0; j < 3; ++j )
