@@ -462,6 +462,37 @@ public:
 protected:
 	using Int3 = std::array<int32_t, 3>;
 
+	/**
+	 * @brief Per-vertex quad-perimeter adjacency in compressed form: the neighbours of vertex v are
+	 * neighbors[offsets[v]..offsets[v + 1]), unique and sorted ascending.
+	 */
+	struct QuadNeighbors
+	{
+		struct Ring
+		{
+			const uint32_t* first;
+			const uint32_t* last;
+			const uint32_t* begin() const { return first; }
+			const uint32_t* end() const { return last; }
+			size_t size() const { return size_t( last - first ); }
+			bool empty() const { return first == last; }
+		};
+
+		Ring operator[]( size_t vertex ) const
+		{
+			const uint32_t* data = neighbors.data();
+			return { data + offsets[vertex], data + offsets[vertex + 1] };
+		}
+
+		std::vector<uint32_t> offsets;
+		std::vector<uint32_t> neighbors;
+	};
+
+	static bool NeedsCurvature( EnumFilter<Tr2VoxelGeometryComponents> outputComponents )
+	{
+		return outputComponents.HasBit( Tr2VoxelGeometryComponents::Curvature ) || outputComponents.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature );
+	}
+
 	static constexpr float s_roamMargin = 0.015; // dual vertex clamp cube inset, keeps neighboring vertices apart
 
 	// (u, v) per axis, right-handed: u x v = +axis
@@ -1030,21 +1061,20 @@ protected:
 	 * body reads neutral.
 	 * @param positions The positions of the vertices.
 	 * @param normals The normals of the vertices.
-	 * @param quads The indices of the quads.
+	 * @param neighbors The quad-perimeter adjacency of the vertices.
 	 * @param outputComponents The components to compute; curvature and/or smoothed curvature.
 	 * @param curvature The output vector of raw curvature values.
 	 * @param smoothedCurvature The output vector of smoothed curvature values.
 	 */
-	static void ComputeCurvature( const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const std::vector<uint32_t>& quads, EnumFilter<Tr2VoxelGeometryComponents> outputComponents, std::vector<float>& curvature, std::vector<float>& smoothedCurvature )
+	static void ComputeCurvature( const std::vector<Vector3>& positions, const std::vector<Vector3>& normals, const QuadNeighbors& neighbors, EnumFilter<Tr2VoxelGeometryComponents> outputComponents, std::vector<float>& curvature, std::vector<float>& smoothedCurvature )
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
-		if( !outputComponents.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !outputComponents.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) )
+		if( !NeedsCurvature( outputComponents ) )
 		{
 			return;
 		}
 
 		const size_t vertexCount = positions.size();
-		const auto neighbors = GetQuadNeighbors( vertexCount, quads );
 
 		std::vector<float> level( vertexCount, 0.f );
 		for( size_t i = 0; i < vertexCount; ++i )
@@ -1104,17 +1134,16 @@ protected:
 	/**
 	 * @brief Jacobi Laplacian smoothing: each vertex moves a fraction s_relaxAlpha toward the mean of its quad-perimeter neighbours
 	 * @param positions The positions of the vertices.
-	 * @param quads The indices of the quads.
+	 * @param neighbors The quad-perimeter adjacency of the vertices.
 	 * @param cancel A flag to cancel the operation.
 	 */
-	void Relax( std::vector<Vector3>& positions, const std::vector<uint32_t>& quads, const std::atomic<bool>& cancel ) const
+	void Relax( std::vector<Vector3>& positions, const QuadNeighbors& neighbors, const std::atomic<bool>& cancel ) const
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
-		if( m_relaxIterations == 0 || quads.empty() )
+		if( m_relaxIterations == 0 )
 		{
 			return;
 		}
-		const auto neighbors = GetQuadNeighbors( positions.size(), quads );
 
 		std::vector<Vector3> moved( positions.size() );
 		for( uint32_t iteration = 0; iteration < m_relaxIterations; ++iteration )
@@ -1210,7 +1239,13 @@ protected:
 			{
 				return { lods, decl };
 			}
-			Relax( positions, quads, cancel );
+			// Relax and curvature share the adjacency; surface cuts move vertices but keep the topology
+			QuadNeighbors neighbors;
+			if( m_relaxIterations > 0 || NeedsCurvature( m_outputSettings.components ) )
+			{
+				neighbors = GetQuadNeighbors( positions.size(), quads );
+			}
+			Relax( positions, neighbors, cancel );
 			if( cancel )
 			{
 				return {};
@@ -1224,7 +1259,7 @@ protected:
 			auto normals = ComputeNormals( positions, indices );
 			std::vector<float> curvature;
 			std::vector<float> smoothedCurvature;
-			ComputeCurvature( positions, normals, quads, m_outputSettings.components, curvature, smoothedCurvature );
+			ComputeCurvature( positions, normals, neighbors, m_outputSettings.components, curvature, smoothedCurvature );
 			std::vector<Vector3> shadingNormals;
 			if( m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SplitNormals ) )
 			{
@@ -1304,31 +1339,61 @@ private:
 	static constexpr uint32_t s_smoothedCurvaturePasses = 8; // smoothing passes of the smoothed curvature element, wide enough to hide per-cell ripple
 
 	/**
-	 * @brief Builds a per-vertex adjacency list from a quad index buffer.
-	 * @param vertexCount The total number of vertices; determines the size of the returned neighbor list.
+	 * @brief Builds the per-vertex adjacency from a quad index buffer.
+	 * @param vertexCount The total number of vertices.
 	 * @param quads A flat array of vertex indices where each consecutive group of 4 indices defines one quad.
-	 * @return A vector of neighbor lists, one per vertex, containing unique adjacent vertex indices sorted in ascending order.
+	 * @return The adjacency, with each vertex's neighbours unique and sorted in ascending order.
 	 */
-	static std::vector<std::vector<uint32_t>> GetQuadNeighbors( size_t vertexCount, const std::vector<uint32_t>& quads )
+	static QuadNeighbors GetQuadNeighbors( size_t vertexCount, const std::vector<uint32_t>& quads )
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
-		std::vector<std::vector<uint32_t>> neighbors( vertexCount );
+		QuadNeighbors result;
+		auto& offsets = result.offsets;
+		auto& neighbors = result.neighbors;
+
+		// Every quad edge adds each endpoint to the other's ring
+		offsets.assign( vertexCount + 1, 0 );
 		for( size_t q = 0; q < quads.size(); q += 4 )
 		{
 			for( size_t i = 0; i < 4; ++i )
 			{
-				const uint32_t a = quads[q + i];
-				const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
-				neighbors[a].push_back( b );
-				neighbors[b].push_back( a );
+				++offsets[quads[q + i] + 1];
+				++offsets[quads[q + ( ( i + 1 ) & 3 )] + 1];
 			}
 		}
-		for( auto& list : neighbors )
+		for( size_t v = 0; v < vertexCount; ++v )
 		{
-			std::sort( list.begin(), list.end() );
-			list.erase( std::unique( list.begin(), list.end() ), list.end() );
+			offsets[v + 1] += offsets[v];
 		}
-		return neighbors;
+		neighbors.resize( offsets[vertexCount] );
+		{
+			std::vector<uint32_t> cursor( offsets.begin(), offsets.end() - 1 );
+			for( size_t q = 0; q < quads.size(); q += 4 )
+			{
+				for( size_t i = 0; i < 4; ++i )
+				{
+					const uint32_t a = quads[q + i];
+					const uint32_t b = quads[q + ( ( i + 1 ) & 3 )];
+					neighbors[cursor[a]++] = b;
+					neighbors[cursor[b]++] = a;
+				}
+			}
+		}
+
+		// Sort and dedupe each ring, compacting the rings toward the front in place
+		uint32_t write = 0;
+		for( size_t v = 0; v < vertexCount; ++v )
+		{
+			const auto first = neighbors.begin() + offsets[v];
+			const auto last = neighbors.begin() + offsets[v + 1];
+			std::sort( first, last );
+			const auto unique = std::unique( first, last );
+			offsets[v] = write;
+			write = uint32_t( std::copy( first, unique, neighbors.begin() + write ) - neighbors.begin() );
+		}
+		offsets[vertexCount] = write;
+		neighbors.resize( write );
+		return result;
 	}
 
 	/**
