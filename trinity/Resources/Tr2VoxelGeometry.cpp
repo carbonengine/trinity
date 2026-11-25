@@ -499,6 +499,40 @@ protected:
 	static constexpr std::array<std::array<int, 2>, 3> s_axisUV = { { { 1, 2 }, { 2, 0 }, { 0, 1 } } };
 
 	/**
+	 * @brief One of the 12 edges of a block's 2x2x2 cell cube: its low and high corners relative to the block's minimum cell.
+	 */
+	struct BlockEdge
+	{
+		int32_t axis;
+		Int3 lo;
+		Int3 hi;
+	};
+
+	// The block's edges ordered by axis, then du, then dv over that axis's (u, v). A constant table keeps the corners out of
+	// runtime-indexed stack stores, whose reloads cannot be store-forwarded and stall every edge
+	static constexpr std::array<BlockEdge, 12> s_blockEdges = [] {
+		std::array<BlockEdge, 12> edges = {};
+		size_t e = 0;
+		for( int32_t axis = 0; axis < 3; ++axis )
+		{
+			for( int32_t du = 0; du < 2; ++du )
+			{
+				for( int32_t dv = 0; dv < 2; ++dv )
+				{
+					BlockEdge& edge = edges[e++];
+					edge.axis = axis;
+					edge.lo = { 0, 0, 0 };
+					edge.lo[s_axisUV[axis][0]] = du;
+					edge.lo[s_axisUV[axis][1]] = dv;
+					edge.hi = edge.lo;
+					edge.hi[axis] = 1;
+				}
+			}
+		}
+		return edges;
+	}();
+
+	/**
 	 * @brief Occupancy and field over the lattice plus a one cell ring of empty cells (lattice coordinates -1..lattice)
 	 */
 	struct Window
@@ -1685,43 +1719,32 @@ private:
 		const size_t base = window.Index( block[0], block[1], block[2] );
 		Vector3 sum = { 0.0, 0.0, 0.0 };
 		int32_t count = 0;
-		for( int axis = 0; axis < 3; ++axis )
+		for( const BlockEdge& edge : s_blockEdges )
 		{
-			const int u = s_axisUV[axis][0];
-			const int v = s_axisUV[axis][1];
-			for( int32_t du = 0; du < 2; ++du )
+			const Int3& lo = edge.lo;
+			const Int3& hi = edge.hi;
+			const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
+			const size_t ib = ia + window.strides[edge.axis];
+			if( window.occupancy[ia] == window.occupancy[ib] )
 			{
-				for( int32_t dv = 0; dv < 2; ++dv )
-				{
-					Int3 lo = { 0, 0, 0 };
-					lo[u] = du;
-					lo[v] = dv;
-					Int3 hi = lo;
-					hi[axis] = 1;
-					const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
-					const size_t ib = ia + window.strides[axis];
-					if( window.occupancy[ia] == window.occupancy[ib] )
-					{
-						continue;
-					}
-					const bool loSolid = window.occupancy[ia] != 0;
-					const Int3& solidOffset = loSolid ? lo : hi;
-					const Int3& emptyOffset = loSolid ? hi : lo;
-					const float da = window.field[loSolid ? ia : ib];
-					const float db = window.field[loSolid ? ib : ia];
-					float t = 0.5;
-					// NaN is a cell without a field value, so split the edge
-					if( !std::isnan( da ) && !std::isnan( db ) && da != db )
-					{
-						t = std::min( std::max( da / ( da - db ), s_tMin ), float( 1.0 - s_tMin ) );
-					}
-					for( int j = 0; j < 3; ++j )
-					{
-						sum[j] += solidOffset[j] + t * ( emptyOffset[j] - solidOffset[j] );
-					}
-					++count;
-				}
+				continue;
 			}
+			const bool loSolid = window.occupancy[ia] != 0;
+			const Int3& solidOffset = loSolid ? lo : hi;
+			const Int3& emptyOffset = loSolid ? hi : lo;
+			const float da = window.field[loSolid ? ia : ib];
+			const float db = window.field[loSolid ? ib : ia];
+			float t = 0.5;
+			// NaN is a cell without a field value, so split the edge
+			if( !std::isnan( da ) && !std::isnan( db ) && da != db )
+			{
+				t = std::min( std::max( da / ( da - db ), s_tMin ), float( 1.0 - s_tMin ) );
+			}
+			for( int j = 0; j < 3; ++j )
+			{
+				sum[j] += solidOffset[j] + t * ( emptyOffset[j] - solidOffset[j] );
+			}
+			++count;
 		}
 		Vector3 result;
 		for( int j = 0; j < 3; ++j )
@@ -1855,55 +1878,44 @@ private:
 		std::array<Vector3, 12> points;
 		std::array<Vector3, 12> normals;
 		int32_t count = 0;
-		for( int axis = 0; axis < 3; ++axis )
+		for( const BlockEdge& edge : s_blockEdges )
 		{
-			const int u = s_axisUV[axis][0];
-			const int v = s_axisUV[axis][1];
-			for( int32_t du = 0; du < 2; ++du )
+			const Int3& lo = edge.lo;
+			const Int3& hi = edge.hi;
+			const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
+			const size_t ib = ia + window.strides[edge.axis];
+			if( window.occupancy[ia] == window.occupancy[ib] )
 			{
-				for( int32_t dv = 0; dv < 2; ++dv )
-				{
-					Int3 lo = { 0, 0, 0 };
-					lo[u] = du;
-					lo[v] = dv;
-					Int3 hi = lo;
-					hi[axis] = 1;
-					const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
-					const size_t ib = ia + window.strides[axis];
-					if( window.occupancy[ia] == window.occupancy[ib] )
-					{
-						continue;
-					}
-					const float da = window.field[ia];
-					const float db = window.field[ib];
-					float t = 0.5;
-					// NaN is a cell without a field value, so split the edge
-					if( !std::isnan( da ) && !std::isnan( db ) && da != db )
-					{
-						t = std::min( std::max( da / ( da - db ), float( 0.0 ) ), float( 1.0 ) );
-					}
-					const Vector3 ga = GetGradient( window, field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
-					const Vector3 gb = GetGradient( window, field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
-					Vector3& point = points[count];
-					Vector3& normal = normals[count];
-					for( int j = 0; j < 3; ++j )
-					{
-						point[j] = lo[j] + t * ( hi[j] - lo[j] );
-						normal[j] = ga[j] + t * ( gb[j] - ga[j] );
-					}
-					const float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
-					if( length > 1e-6 )
-					{
-						normal = { normal[0] / length, normal[1] / length, normal[2] / length };
-					}
-					else
-					{
-						// Flat field, the crossing only contributes to the mass point
-						normal = { 0.0, 0.0, 0.0 };
-					}
-					++count;
-				}
+				continue;
 			}
+			const float da = window.field[ia];
+			const float db = window.field[ib];
+			float t = 0.5;
+			// NaN is a cell without a field value, so split the edge
+			if( !std::isnan( da ) && !std::isnan( db ) && da != db )
+			{
+				t = std::min( std::max( da / ( da - db ), float( 0.0 ) ), float( 1.0 ) );
+			}
+			const Vector3 ga = GetGradient( window, field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
+			const Vector3 gb = GetGradient( window, field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
+			Vector3& point = points[count];
+			Vector3& normal = normals[count];
+			for( int j = 0; j < 3; ++j )
+			{
+				point[j] = lo[j] + t * ( hi[j] - lo[j] );
+				normal[j] = ga[j] + t * ( gb[j] - ga[j] );
+			}
+			const float length = std::sqrt( normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2] );
+			if( length > 1e-6 )
+			{
+				normal = { normal[0] / length, normal[1] / length, normal[2] / length };
+			}
+			else
+			{
+				// Flat field, the crossing only contributes to the mass point
+				normal = { 0.0, 0.0, 0.0 };
+			}
+			++count;
 		}
 
 		Vector3 massPoint = { 0.0, 0.0, 0.0 };
