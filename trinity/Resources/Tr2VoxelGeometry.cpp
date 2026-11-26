@@ -506,6 +506,8 @@ protected:
 		int32_t axis;
 		Int3 lo;
 		Int3 hi;
+		int32_t loCorner; // lo and hi as Window::BlockCells corner indices
+		int32_t hiCorner;
 	};
 
 	// The block's edges ordered by axis, then du, then dv over that axis's (u, v). A constant table keeps the corners out of
@@ -526,6 +528,8 @@ protected:
 					edge.lo[s_axisUV[axis][1]] = dv;
 					edge.hi = edge.lo;
 					edge.hi[axis] = 1;
+					edge.loCorner = edge.lo[0] + 2 * edge.lo[1] + 4 * edge.lo[2];
+					edge.hiCorner = edge.loCorner + ( 1 << axis );
 				}
 			}
 		}
@@ -533,33 +537,155 @@ protected:
 	}();
 
 	/**
-	 * @brief Occupancy and field over the lattice plus a one cell ring of empty cells (lattice coordinates -1..lattice)
+	 * @brief Occupancy and field over the lattice plus a one cell ring of empty cells (lattice coordinates -1..lattice), stored
+	 * sparsely. The lattice is tiled by cubes of scale^3 cells, one per grid cube (-1..dims per axis; cube c holds cells
+	 * c * scale..c * scale + scale - 1, so the cubes -1 and dims hold only ring cells). Only band cubes, the ones a sign change
+	 * can touch, have a brick of cell data; every other cube is uniformly solid or empty, with no field value.
 	 */
 	struct Window
 	{
-		explicit Window( const Int3& lattice_, bool withGradients = false ) :
-			lattice( lattice_ ),
-			strides( { 1, size_t( lattice_[0] + 2 ), size_t( lattice_[0] + 2 ) * size_t( lattice_[1] + 2 ) } ),
-			occupancy( strides[2] * size_t( lattice_[2] + 2 ), 0 ),
-			field( occupancy.size(), std::numeric_limits<float>::quiet_NaN() )
+		/**
+		 * @brief The 2x2x2 cells of a block, indexed by corner bits x = 1, y = 2, z = 4.
+		 */
+		struct BlockCells
 		{
-			if( withGradients )
+			std::array<uint8_t, 8> occupancy;
+			std::array<float, 8> field; // NaN where the cell has no field value
+			std::array<const Vector3*, 8> gradient; // null where the window holds no gradient for the cell
+		};
+
+		/**
+		 * @brief A band cube within a row of cubes, with its brick.
+		 */
+		struct BandCube
+		{
+			int32_t x;
+			uint32_t brick;
+		};
+
+		static constexpr uint32_t s_noBrick = std::numeric_limits<uint32_t>::max();
+
+		Window( const Int3& dims_, int32_t scale_ ) :
+			dims( dims_ ),
+			scale( scale_ ),
+			lattice( { dims_[0] * scale_, dims_[1] * scale_, dims_[2] * scale_ } ),
+			cubeStrides( { 1, size_t( dims_[0] + 2 ), size_t( dims_[0] + 2 ) * size_t( dims_[1] + 2 ) } ),
+			localStrides( { 1, size_t( scale_ ), size_t( scale_ ) * size_t( scale_ ) } ),
+			brickSize( localStrides[2] * size_t( scale_ ) ),
+			bricks( cubeStrides[2] * size_t( dims_[2] + 2 ), s_noBrick ),
+			solid( bricks.size(), 0 )
+		{
+		}
+
+		/**
+		 * @brief The cube holding a lattice coordinate, valid from -scale up.
+		 */
+		int32_t FloorDiv( int32_t c ) const
+		{
+			return ( c + scale ) / scale - 1;
+		}
+
+		size_t CubeIndex( int32_t x, int32_t y, int32_t z ) const
+		{
+			return size_t( x + 1 ) + cubeStrides[1] * size_t( y + 1 ) + cubeStrides[2] * size_t( z + 1 );
+		}
+
+		/**
+		 * @brief Finds the cube of a cell (-1..lattice per axis) and the cell's index within the cube's brick.
+		 */
+		void Locate( const Int3& cell, size_t& cube, size_t& local ) const
+		{
+			cube = 0;
+			local = 0;
+			for( int axis = 0; axis < 3; ++axis )
 			{
-				const float nan = std::numeric_limits<float>::quiet_NaN();
-				gradient.assign( occupancy.size(), Vector3( nan, nan, nan ) );
+				const int32_t c = FloorDiv( cell[axis] );
+				cube += size_t( c + 1 ) * cubeStrides[axis];
+				local += size_t( cell[axis] - c * scale ) * localStrides[axis];
 			}
 		}
 
-		size_t Index( int32_t x, int32_t y, int32_t z ) const
+		uint8_t GetOccupancy( const Int3& cell ) const
 		{
-			return size_t( x + 1 ) + strides[1] * size_t( y + 1 ) + strides[2] * size_t( z + 1 );
+			size_t cube;
+			size_t local;
+			Locate( cell, cube, local );
+			const uint32_t brick = bricks[cube];
+			return brick == s_noBrick ? solid[cube] : occupancy[size_t( brick ) * brickSize + local];
 		}
 
+		/**
+		 * @brief Gathers the cells of a block, keyed by its minimum cell (-1..lattice-1 per axis).
+		 */
+		BlockCells GetBlock( const Int3& block ) const
+		{
+			// Per axis, the cube and in-brick offsets of the block's low and high cells
+			std::array<std::array<size_t, 2>, 3> cubeOffsets;
+			std::array<std::array<size_t, 2>, 3> localOffsets;
+			for( int axis = 0; axis < 3; ++axis )
+			{
+				const int32_t c = FloorDiv( block[axis] );
+				const int32_t l = block[axis] - c * scale;
+				cubeOffsets[axis][0] = size_t( c + 1 ) * cubeStrides[axis];
+				localOffsets[axis][0] = size_t( l ) * localStrides[axis];
+				if( l + 1 < scale )
+				{
+					cubeOffsets[axis][1] = cubeOffsets[axis][0];
+					localOffsets[axis][1] = localOffsets[axis][0] + localStrides[axis];
+				}
+				else
+				{
+					cubeOffsets[axis][1] = cubeOffsets[axis][0] + cubeStrides[axis];
+					localOffsets[axis][1] = 0;
+				}
+			}
+			BlockCells cells;
+			for( int32_t corner = 0; corner < 8; ++corner )
+			{
+				const int32_t bx = corner & 1;
+				const int32_t by = ( corner >> 1 ) & 1;
+				const int32_t bz = corner >> 2;
+				const size_t cube = cubeOffsets[0][bx] + cubeOffsets[1][by] + cubeOffsets[2][bz];
+				const uint32_t brick = bricks[cube];
+				if( brick == s_noBrick )
+				{
+					cells.occupancy[corner] = solid[cube];
+					cells.field[corner] = std::numeric_limits<float>::quiet_NaN();
+					cells.gradient[corner] = nullptr;
+				}
+				else
+				{
+					const size_t index = size_t( brick ) * brickSize + localOffsets[0][bx] + localOffsets[1][by] + localOffsets[2][bz];
+					cells.occupancy[corner] = occupancy[index];
+					cells.field[corner] = field[index];
+					cells.gradient[corner] = gradient.empty() ? nullptr : &gradient[index];
+				}
+			}
+			return cells;
+		}
+
+		/**
+		 * @brief The band cubes of a row of cubes (-1..dims per axis), in ascending x.
+		 */
+		std::pair<const BandCube*, const BandCube*> GetBandRow( int32_t y, int32_t z ) const
+		{
+			const size_t row = size_t( y + 1 ) + size_t( dims[1] + 2 ) * size_t( z + 1 );
+			return { bandCubes.data() + rowOffsets[row], bandCubes.data() + rowOffsets[row + 1] };
+		}
+
+		const Int3 dims; // grid cubes per axis, not counting the ring cubes
+		const int32_t scale; // lattice cells per cube and axis
 		const Int3 lattice;
-		const std::array<size_t, 3> strides;
-		std::vector<uint8_t> occupancy;
-		std::vector<float> field; // NaN where the cell has no field value
-		std::vector<Vector3> gradient; // interpolated field gradient, NaN where not filled; empty unless requested
+		const std::array<size_t, 3> cubeStrides;
+		const std::array<size_t, 3> localStrides; // cell strides within a brick
+		const size_t brickSize;
+		std::vector<uint32_t> bricks; // per cube, its brick or s_noBrick
+		std::vector<uint8_t> solid; // per cube, the occupancy of all its cells when it has no brick
+		std::vector<uint32_t> rowOffsets; // per row of cubes, its first entry in bandCubes
+		std::vector<BandCube> bandCubes; // the band cubes row by row; a band cube's brick is its position here
+		std::vector<uint8_t> occupancy; // per brick cell
+		std::vector<float> field; // per brick cell, NaN where the cell has no field value
+		std::vector<Vector3> gradient; // per brick cell, interpolated field gradient, NaN where not filled; empty unless requested
 	};
 
 	static Int3 DimensionsToInt3( const Tr2VoxelData::Dimensions& dims )
@@ -567,10 +693,201 @@ protected:
 		return { int32_t( dims.width ), int32_t( dims.height ), int32_t( dims.depth ) };
 	}
 
+	/**
+	 * @brief Creates the window over the field's grid subdivided scale-fold, whose field is the trilinear interpolation of the SDF.
+	 * Cells are only filled in band cubes: the grid cubes whose corners are mixed and their Chebyshev-1 neighbours, which is
+	 * where every sign change and every crossing partner lives.
+	 * @param field The signed distance field to use for creating the window.
+	 * @param scale The subdivision scale factor; each grid cell is subdivided into scale^3 cells.
+	 * @param withGradients Also fill the window gradients of the band cells with the trilinear interpolation of the sample gradients
+	 * (Tr2SignedDistanceField::SampleGradient at the cell). Ignored at scale 1, where the sample gradients are read directly.
+	 * @param cancel An atomic boolean flag that can be used to cancel the operation.
+	 * @return The window.
+	 */
 	Window CreateLatticeWindow( const Tr2SignedDistanceField& field, int32_t scale, bool withGradients, const std::atomic<bool>& cancel ) const
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
-		return scale == 1 ? CreateGridWindow( field ) : CreateSubdividedWindow( field, scale, withGradients, cancel );
+		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
+		Window window( dims, scale );
+
+		// Occupancy of the grid samples -1..dim+1 per axis, the corners of the cubes -1..dim
+		const std::array<size_t, 3> sampleStrides = { 1, size_t( dims[0] + 3 ), size_t( dims[0] + 3 ) * size_t( dims[1] + 3 ) };
+		std::vector<uint8_t> sampleSolid( sampleStrides[2] * size_t( dims[2] + 3 ) );
+		{
+			size_t i = 0;
+			for( int32_t z = -1; z <= dims[2] + 1; ++z )
+			{
+				for( int32_t y = -1; y <= dims[1] + 1; ++y )
+				{
+					for( int32_t x = -1; x <= dims[0] + 1; ++x, ++i )
+					{
+						sampleSolid[i] = field.GetValue( x, y, z ) <= 0.0 ? 1 : 0;
+					}
+				}
+			}
+		}
+
+		// A cube is solid when all its corners are, and in the band when they are mixed
+		std::vector<uint8_t> band( window.bricks.size(), 0 );
+		for( int32_t z = -1; z <= dims[2]; ++z )
+		{
+			for( int32_t y = -1; y <= dims[1]; ++y )
+			{
+				for( int32_t x = -1; x <= dims[0]; ++x )
+				{
+					const size_t sample = size_t( x + 1 ) + sampleStrides[1] * size_t( y + 1 ) + sampleStrides[2] * size_t( z + 1 );
+					int32_t count = 0;
+					for( int32_t corner = 0; corner < 8; ++corner )
+					{
+						count += sampleSolid[sample + sampleStrides[0] * ( corner & 1 ) + sampleStrides[1] * ( ( corner >> 1 ) & 1 ) + sampleStrides[2] * ( corner >> 2 )];
+					}
+					const size_t cube = window.CubeIndex( x, y, z );
+					window.solid[cube] = count == 8 ? 1 : 0;
+					band[cube] = count > 0 && count < 8 ? 1 : 0;
+				}
+			}
+		}
+		// Chebyshev-1 dilation of the band, which is where the crossing partners of a band cell live
+		for( int axis = 0; axis < 3; ++axis )
+		{
+			const auto mask = band;
+			for( int32_t z = -1; z <= dims[2]; ++z )
+			{
+				for( int32_t y = -1; y <= dims[1]; ++y )
+				{
+					for( int32_t x = -1; x <= dims[0]; ++x )
+					{
+						const Int3 coord = { x, y, z };
+						const size_t i = window.CubeIndex( x, y, z );
+						if( ( coord[axis] > -1 && mask[i - window.cubeStrides[axis]] ) || ( coord[axis] < dims[axis] && mask[i + window.cubeStrides[axis]] ) )
+						{
+							band[i] = 1;
+						}
+					}
+				}
+			}
+		}
+
+		// A brick per band cube, numbered row by row
+		window.rowOffsets.reserve( size_t( dims[1] + 2 ) * size_t( dims[2] + 2 ) + 1 );
+		for( int32_t z = -1; z <= dims[2]; ++z )
+		{
+			for( int32_t y = -1; y <= dims[1]; ++y )
+			{
+				window.rowOffsets.push_back( uint32_t( window.bandCubes.size() ) );
+				for( int32_t x = -1; x <= dims[0]; ++x )
+				{
+					const size_t cube = window.CubeIndex( x, y, z );
+					if( band[cube] )
+					{
+						window.bricks[cube] = uint32_t( window.bandCubes.size() );
+						window.bandCubes.push_back( { x, window.bricks[cube] } );
+					}
+				}
+			}
+		}
+		window.rowOffsets.push_back( uint32_t( window.bandCubes.size() ) );
+
+		// Bricks of the ring cubes keep these: empty, no field value
+		const size_t cellCount = window.bandCubes.size() * window.brickSize;
+		const float nan = std::numeric_limits<float>::quiet_NaN();
+		window.occupancy.assign( cellCount, 0 );
+		window.field.assign( cellCount, nan );
+		withGradients = withGradients && scale > 1;
+		if( withGradients )
+		{
+			window.gradient.assign( cellCount, Vector3( nan, nan, nan ) );
+		}
+
+		std::vector<float> t( scale );
+		for( int32_t i = 0; i < scale; ++i )
+		{
+			t[i] = i / float( scale );
+		}
+
+		// Only cubes 0..dim-1 cover lattice cells
+		for( int32_t cz = 0; cz < dims[2]; ++cz )
+		{
+			if( cancel )
+			{
+				return window;
+			}
+			for( int32_t cy = 0; cy < dims[1]; ++cy )
+			{
+				const auto [first, last] = window.GetBandRow( cy, cz );
+				for( auto bandCube = first; bandCube != last; ++bandCube )
+				{
+					const int32_t cx = bandCube->x;
+					if( cx < 0 || cx >= dims[0] )
+					{
+						continue;
+					}
+					const size_t brickBase = size_t( bandCube->brick ) * window.brickSize;
+					// Lerped hierarchically so each cube costs 4k + 2k^2 + k^3 lerps
+					const float s000 = field.GetValue( cx, cy, cz );
+					const float s100 = field.GetValue( cx + 1, cy, cz );
+					const float s010 = field.GetValue( cx, cy + 1, cz );
+					const float s110 = field.GetValue( cx + 1, cy + 1, cz );
+					const float s001 = field.GetValue( cx, cy, cz + 1 );
+					const float s101 = field.GetValue( cx + 1, cy, cz + 1 );
+					const float s011 = field.GetValue( cx, cy + 1, cz + 1 );
+					const float s111 = field.GetValue( cx + 1, cy + 1, cz + 1 );
+					size_t index = brickBase;
+					for( int32_t iz = 0; iz < scale; ++iz )
+					{
+						const float tz = t[iz];
+						const float e00 = s000 + ( s001 - s000 ) * tz;
+						const float e10 = s100 + ( s101 - s100 ) * tz;
+						const float e01 = s010 + ( s011 - s010 ) * tz;
+						const float e11 = s110 + ( s111 - s110 ) * tz;
+						for( int32_t iy = 0; iy < scale; ++iy )
+						{
+							const float ty = t[iy];
+							const float f0 = e00 + ( e01 - e00 ) * ty;
+							const float f1 = e10 + ( e11 - e10 ) * ty;
+							for( int32_t ix = 0; ix < scale; ++ix, ++index )
+							{
+								const float value = f0 + ( f1 - f0 ) * t[ix];
+								window.field[index] = value;
+								window.occupancy[index] = value <= 0.0 ? 1 : 0;
+							}
+						}
+					}
+					if( withGradients )
+					{
+						// Same hierarchy over the corner gradients, so each grid gradient is evaluated once per cube rather than per lattice cell
+						const Vector3 g000 = field.GetGradient( cx, cy, cz );
+						const Vector3 g100 = field.GetGradient( cx + 1, cy, cz );
+						const Vector3 g010 = field.GetGradient( cx, cy + 1, cz );
+						const Vector3 g110 = field.GetGradient( cx + 1, cy + 1, cz );
+						const Vector3 g001 = field.GetGradient( cx, cy, cz + 1 );
+						const Vector3 g101 = field.GetGradient( cx + 1, cy, cz + 1 );
+						const Vector3 g011 = field.GetGradient( cx, cy + 1, cz + 1 );
+						const Vector3 g111 = field.GetGradient( cx + 1, cy + 1, cz + 1 );
+						index = brickBase;
+						for( int32_t iz = 0; iz < scale; ++iz )
+						{
+							const float tz = t[iz];
+							const Vector3 e00 = g000 + ( g001 - g000 ) * tz;
+							const Vector3 e10 = g100 + ( g101 - g100 ) * tz;
+							const Vector3 e01 = g010 + ( g011 - g010 ) * tz;
+							const Vector3 e11 = g110 + ( g111 - g110 ) * tz;
+							for( int32_t iy = 0; iy < scale; ++iy )
+							{
+								const float ty = t[iy];
+								const Vector3 f0 = e00 + ( e01 - e00 ) * ty;
+								const Vector3 f1 = e10 + ( e11 - e10 ) * ty;
+								for( int32_t ix = 0; ix < scale; ++ix, ++index )
+								{
+									window.gradient[index] = f0 + ( f1 - f0 ) * t[ix];
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		return window;
 	}
 
 	/**
@@ -578,7 +895,7 @@ protected:
 	 * getDualVertex), wound counter-clockwise seen from the empty side.
 	 * @tparam GetDualVertex The callable type used to compute a vertex position from a block coordinate.
 	 * @tparam AddVertexData The callable type used to record per-vertex data of a newly created vertex.
-	 * @param window The sampling window containing lattice dimensions, occupancy data, indexing, and strides used to detect surface crossings.
+	 * @param window The sampling window whose band cubes are scanned for surface crossings.
 	 * @param cancel An atomic cancellation flag; if set during processing, the function stops early and returns.
 	 * @param getDualVertex A callable that takes a block coordinate and returns the corresponding dual vertex position.
 	 * @param addVertexData A callable invoked once per new dual vertex with the solid and empty lattice cells of the sign change edge that created it.
@@ -590,12 +907,18 @@ protected:
 	{
 		TRINITY_STATS_ZONE( __FUNCTION__ );
 		const Int3& lattice = window.lattice;
-		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis
-		const std::array<size_t, 3> blockStrides = { 1, size_t( lattice[0] + 1 ), size_t( lattice[0] + 1 ) * size_t( lattice[1] + 1 ) };
-		std::vector<uint32_t> blockVertices( blockStrides[2] * size_t( lattice[2] + 1 ), std::numeric_limits<uint32_t>::max() );
+		const int32_t scale = window.scale;
+		// Blocks are keyed by their minimum cell, -1..lattice-1 per axis, and stored in the brick of the cube holding it. Such a
+		// cube is always in the band, the map only keeps the sweep whole if one is not
+		std::vector<uint32_t> blockVertices( window.bandCubes.size() * window.brickSize, std::numeric_limits<uint32_t>::max() );
+		std::unordered_map<size_t, uint32_t> otherBlockVertices;
 
 		auto getVertex = [&]( const Int3& block, const Int3& solidCell, const Int3& emptyCell ) {
-			auto& vertex = blockVertices[size_t( block[0] + 1 ) + blockStrides[1] * size_t( block[1] + 1 ) + blockStrides[2] * size_t( block[2] + 1 )];
+			size_t cube;
+			size_t local;
+			window.Locate( block, cube, local );
+			const uint32_t brick = window.bricks[cube];
+			auto& vertex = brick != Window::s_noBrick ? blockVertices[size_t( brick ) * window.brickSize + local] : otherBlockVertices.try_emplace( cube * window.brickSize + local, std::numeric_limits<uint32_t>::max() ).first->second;
 			if( vertex == std::numeric_limits<uint32_t>::max() )
 			{
 				vertex = uint32_t( positions.size() );
@@ -612,6 +935,7 @@ protected:
 		{
 			const int u = s_axisUV[axis][0];
 			const int v = s_axisUV[axis][1];
+			const size_t neighborStride = window.localStrides[axis];
 			// Edges between a cell and its +axis neighbor; the axis coordinate runs -1..lattice-1 so boundary faces are emitted
 			Int3 lo = { 0, 0, 0 };
 			lo[axis] = -1;
@@ -621,35 +945,52 @@ protected:
 				{
 					return;
 				}
+				const int32_t cz = window.FloorDiv( z );
+				const int32_t lz = z - cz * scale;
 				for( int32_t y = lo[1]; y < lattice[1]; ++y )
 				{
-					for( int32_t x = lo[0]; x < lattice[0]; ++x )
+					const int32_t cy = window.FloorDiv( y );
+					const int32_t ly = y - cy * scale;
+					// The low cell of a sign change always sits in a band cube; cubes are visited in x order, so edges come in lattice order
+					const auto [first, last] = window.GetBandRow( cy, cz );
+					for( auto bandCube = first; bandCube != last; ++bandCube )
 					{
-						const size_t index = window.Index( x, y, z );
-						if( window.occupancy[index] == window.occupancy[index + window.strides[axis]] )
+						const int32_t cubeX = bandCube->x * scale;
+						const int32_t xBegin = std::max( cubeX, lo[0] );
+						const int32_t xEnd = std::min( cubeX + scale, lattice[0] );
+						const size_t rowBase = size_t( bandCube->brick ) * window.brickSize + window.localStrides[1] * size_t( ly ) + window.localStrides[2] * size_t( lz );
+						for( int32_t x = xBegin; x < xEnd; ++x )
 						{
-							continue;
+							const int32_t lx = x - cubeX;
+							const size_t index = rowBase + size_t( lx );
+							const int32_t local = axis == 0 ? lx : axis == 1 ? ly : lz;
+							const Int3 lowCell = { x, y, z };
+							Int3 highCell = lowCell;
+							++highCell[axis];
+							const uint8_t low = window.occupancy[index];
+							const uint8_t high = local + 1 < scale ? window.occupancy[index + neighborStride] : window.GetOccupancy( highCell );
+							if( low == high )
+							{
+								continue;
+							}
+							const bool lowSolid = low != 0;
+							const Int3& solidCell = lowSolid ? lowCell : highCell;
+							const Int3& emptyCell = lowSolid ? highCell : lowCell;
+							std::array<uint32_t, 4> quad;
+							for( size_t i = 0; i < 4; ++i )
+							{
+								Int3 block = lowCell;
+								block[u] += s_quadUV[i][0];
+								block[v] += s_quadUV[i][1];
+								quad[i] = getVertex( block, solidCell, emptyCell );
+							}
+							if( !lowSolid )
+							{
+								// Low cell is the empty side, so the normal points -axis
+								std::reverse( quad.begin(), quad.end() );
+							}
+							quads.insert( quads.end(), quad.begin(), quad.end() );
 						}
-						const Int3 lowCell = { x, y, z };
-						Int3 highCell = lowCell;
-						++highCell[axis];
-						const bool lowSolid = window.occupancy[index] != 0;
-						const Int3& solidCell = lowSolid ? lowCell : highCell;
-						const Int3& emptyCell = lowSolid ? highCell : lowCell;
-						std::array<uint32_t, 4> quad;
-						for( size_t i = 0; i < 4; ++i )
-						{
-							Int3 block = lowCell;
-							block[u] += s_quadUV[i][0];
-							block[v] += s_quadUV[i][1];
-							quad[i] = getVertex( block, solidCell, emptyCell );
-						}
-						if( !lowSolid )
-						{
-							// Low cell is the empty side, so the normal points -axis
-							std::reverse( quad.begin(), quad.end() );
-						}
-						quads.insert( quads.end(), quad.begin(), quad.end() );
 					}
 				}
 			}
@@ -1468,191 +1809,6 @@ private:
 	}
 
 	/**
-	 * @brief Creates a window over the grid with occupancy straight from the grid and field from the filtered SDF.
-	 * @param field The signed distance field to use for creating the window.
-	 * @return A Window object representing the grid with occupancy and field values.
-	 */
-	Window CreateGridWindow( const Tr2SignedDistanceField& field ) const
-	{
-		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
-		Window window( dims );
-		size_t i = 0;
-		for( int32_t z = 0; z < dims[2]; ++z )
-		{
-			for( int32_t y = 0; y < dims[1]; ++y )
-			{
-				for( int32_t x = 0; x < dims[0]; ++x, ++i )
-				{
-					const size_t index = window.Index( x, y, z );
-					window.occupancy[index] = field.GetValue( i ) <= 0.0 ? 1 : 0;
-					window.field[index] = field.GetValue( i );
-				}
-			}
-		}
-		return window;
-	}
-
-	/**
-	 * @brief Creates a subdivided window over the grid with trilinear interpolation of the signed distance field.
-	 * @param field The signed distance field to use for creating the window.
-	 * @param scale The subdivision scale factor; each grid cell is subdivided into scale^3 cells.
-	 * @param withGradients Also fill the window gradients of the band cells with the trilinear interpolation of the sample gradients
-	 * (Tr2SignedDistanceField::SampleGradient at the cell).
-	 * @param cancel An atomic boolean flag that can be used to cancel the operation.
-	 * @return A Window object representing the subdivided grid with occupancy and field values.
-	 */
-	Window CreateSubdividedWindow( const Tr2SignedDistanceField& field, int32_t scale, bool withGradients, const std::atomic<bool>& cancel ) const
-	{
-		const Int3 dims = DimensionsToInt3( field.GetDimensions() );
-		Window window( { dims[0] * scale, dims[1] * scale, dims[2] * scale }, withGradients );
-
-		// Cubes are keyed by their minimum sample, -1..dim per axis
-		const Int3 cubes = { dims[0] + 2, dims[1] + 2, dims[2] + 2 };
-		const std::array<size_t, 3> cubeStrides = { 1, size_t( cubes[0] ), size_t( cubes[0] ) * cubes[1] };
-		auto cubeIndex = [&]( int32_t x, int32_t y, int32_t z ) {
-			return size_t( x + 1 ) + cubeStrides[1] * size_t( y + 1 ) + cubeStrides[2] * size_t( z + 1 );
-		};
-		std::vector<uint8_t> solid( cubeStrides[2] * cubes[2], 0 );
-		std::vector<uint8_t> band( solid.size(), 0 );
-		for( int32_t z = -1; z <= dims[2]; ++z )
-		{
-			for( int32_t y = -1; y <= dims[1]; ++y )
-			{
-				for( int32_t x = -1; x <= dims[0]; ++x )
-				{
-					bool any = false;
-					bool all = true;
-					for( int32_t corner = 0; corner < 8; ++corner )
-					{
-						const bool positive = field.GetValue( x + ( corner & 1 ), y + ( ( corner >> 1 ) & 1 ), z + ( corner >> 2 ) ) <= 0.0;
-						any = any || positive;
-						all = all && positive;
-					}
-					solid[cubeIndex( x, y, z )] = all ? 1 : 0;
-					band[cubeIndex( x, y, z )] = any && !all ? 1 : 0;
-				}
-			}
-		}
-		// Chebyshev-1 dilation of the band, which is where the crossing partners of a band cell live
-		for( int axis = 0; axis < 3; ++axis )
-		{
-			const auto mask = band;
-			for( int32_t z = -1; z <= dims[2]; ++z )
-			{
-				for( int32_t y = -1; y <= dims[1]; ++y )
-				{
-					for( int32_t x = -1; x <= dims[0]; ++x )
-					{
-						const Int3 coord = { x, y, z };
-						const size_t i = cubeIndex( x, y, z );
-						if( ( coord[axis] > -1 && mask[i - cubeStrides[axis]] ) || ( coord[axis] < dims[axis] && mask[i + cubeStrides[axis]] ) )
-						{
-							band[i] = 1;
-						}
-					}
-				}
-			}
-		}
-
-		std::vector<float> t( scale );
-		for( int32_t i = 0; i < scale; ++i )
-		{
-			t[i] = i / float( scale );
-		}
-
-		// Only cubes 0..dim-1 cover lattice cells
-		for( int32_t cz = 0; cz < dims[2]; ++cz )
-		{
-			if( cancel )
-			{
-				return window;
-			}
-			for( int32_t cy = 0; cy < dims[1]; ++cy )
-			{
-				for( int32_t cx = 0; cx < dims[0]; ++cx )
-				{
-					const size_t cube = cubeIndex( cx, cy, cz );
-					if( band[cube] )
-					{
-						// Lerped hierarchically so each cube costs 4k + 2k^2 + k^3 lerps
-						const float s000 = field.GetValue( cx, cy, cz );
-						const float s100 = field.GetValue( cx + 1, cy, cz );
-						const float s010 = field.GetValue( cx, cy + 1, cz );
-						const float s110 = field.GetValue( cx + 1, cy + 1, cz );
-						const float s001 = field.GetValue( cx, cy, cz + 1 );
-						const float s101 = field.GetValue( cx + 1, cy, cz + 1 );
-						const float s011 = field.GetValue( cx, cy + 1, cz + 1 );
-						const float s111 = field.GetValue( cx + 1, cy + 1, cz + 1 );
-						for( int32_t iz = 0; iz < scale; ++iz )
-						{
-							const float tz = t[iz];
-							const float e00 = s000 + ( s001 - s000 ) * tz;
-							const float e10 = s100 + ( s101 - s100 ) * tz;
-							const float e01 = s010 + ( s011 - s010 ) * tz;
-							const float e11 = s110 + ( s111 - s110 ) * tz;
-							for( int32_t iy = 0; iy < scale; ++iy )
-							{
-								const float ty = t[iy];
-								const float f0 = e00 + ( e01 - e00 ) * ty;
-								const float f1 = e10 + ( e11 - e10 ) * ty;
-								for( int32_t ix = 0; ix < scale; ++ix )
-								{
-									const float value = f0 + ( f1 - f0 ) * t[ix];
-									const size_t index = window.Index( cx * scale + ix, cy * scale + iy, cz * scale + iz );
-									window.field[index] = value;
-									window.occupancy[index] = value <= 0.0 ? 1 : 0;
-								}
-							}
-						}
-						if( withGradients )
-						{
-							// Same hierarchy over the corner gradients, so each grid gradient is evaluated once per cube rather than per lattice cell
-							const Vector3 g000 = field.GetGradient( cx, cy, cz );
-							const Vector3 g100 = field.GetGradient( cx + 1, cy, cz );
-							const Vector3 g010 = field.GetGradient( cx, cy + 1, cz );
-							const Vector3 g110 = field.GetGradient( cx + 1, cy + 1, cz );
-							const Vector3 g001 = field.GetGradient( cx, cy, cz + 1 );
-							const Vector3 g101 = field.GetGradient( cx + 1, cy, cz + 1 );
-							const Vector3 g011 = field.GetGradient( cx, cy + 1, cz + 1 );
-							const Vector3 g111 = field.GetGradient( cx + 1, cy + 1, cz + 1 );
-							for( int32_t iz = 0; iz < scale; ++iz )
-							{
-								const float tz = t[iz];
-								const Vector3 e00 = g000 + ( g001 - g000 ) * tz;
-								const Vector3 e10 = g100 + ( g101 - g100 ) * tz;
-								const Vector3 e01 = g010 + ( g011 - g010 ) * tz;
-								const Vector3 e11 = g110 + ( g111 - g110 ) * tz;
-								for( int32_t iy = 0; iy < scale; ++iy )
-								{
-									const float ty = t[iy];
-									const Vector3 f0 = e00 + ( e01 - e00 ) * ty;
-									const Vector3 f1 = e10 + ( e11 - e10 ) * ty;
-									for( int32_t ix = 0; ix < scale; ++ix )
-									{
-										window.gradient[window.Index( cx * scale + ix, cy * scale + iy, cz * scale + iz )] = f0 + ( f1 - f0 ) * t[ix];
-									}
-								}
-							}
-						}
-					}
-					else if( solid[cube] )
-					{
-						for( int32_t iz = 0; iz < scale; ++iz )
-						{
-							for( int32_t iy = 0; iy < scale; ++iy )
-							{
-								const size_t index = window.Index( cx * scale, cy * scale + iy, cz * scale + iz );
-								std::fill_n( window.occupancy.begin() + index, scale, uint8_t( 1 ) );
-							}
-						}
-					}
-				}
-			}
-		}
-		return window;
-	}
-
-	/**
 	 * @brief Computes the normal of a triangle defined by three points.
 	 * @param p0 The first vertex of the triangle.
 	 * @param p1 The second vertex of the triangle.
@@ -1716,24 +1872,24 @@ private:
 	 */
 	static Vector3 GetDualVertex( const Window& window, const Tr2SignedDistanceField&, const Int3& block, int32_t scale )
 	{
-		const size_t base = window.Index( block[0], block[1], block[2] );
+		const Window::BlockCells cells = window.GetBlock( block );
 		Vector3 sum = { 0.0, 0.0, 0.0 };
 		int32_t count = 0;
 		for( const BlockEdge& edge : s_blockEdges )
 		{
 			const Int3& lo = edge.lo;
 			const Int3& hi = edge.hi;
-			const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
-			const size_t ib = ia + window.strides[edge.axis];
-			if( window.occupancy[ia] == window.occupancy[ib] )
+			const int32_t ia = edge.loCorner;
+			const int32_t ib = edge.hiCorner;
+			if( cells.occupancy[ia] == cells.occupancy[ib] )
 			{
 				continue;
 			}
-			const bool loSolid = window.occupancy[ia] != 0;
+			const bool loSolid = cells.occupancy[ia] != 0;
 			const Int3& solidOffset = loSolid ? lo : hi;
 			const Int3& emptyOffset = loSolid ? hi : lo;
-			const float da = window.field[loSolid ? ia : ib];
-			const float db = window.field[loSolid ? ib : ia];
+			const float da = cells.field[loSolid ? ia : ib];
+			const float db = cells.field[loSolid ? ib : ia];
 			float t = 0.5;
 			// NaN is a cell without a field value, so split the edge
 			if( !std::isnan( da ) && !std::isnan( db ) && da != db )
@@ -1785,25 +1941,21 @@ private:
 	/**
 	 * @brief Computes a gradient vector from a signed distance field at a given cell, using direct lookup at scale 1 or the window's
 	 * precomputed gradients for other scales, falling back to sampled lookup for cells the window did not fill.
-	 * @param window The lattice window, whose gradients are used when filled.
+	 * @param windowGradient The window's gradient of the cell (Window::BlockCells::gradient), used when filled; may be null.
 	 * @param field The signed distance field to query.
 	 * @param cell The integer cell coordinates used as the gradient sample position.
 	 * @param scale The sampling scale factor. A value of 1 uses direct cell gradient lookup; other values use scaled sampling.
 	 * @return The gradient vector at the requested position, obtained either directly or via scaled sampling.
 	 */
-	static Vector3 GetGradient( const Window& window, const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
+	static Vector3 GetGradient( const Vector3* windowGradient, const Tr2SignedDistanceField& field, const Int3& cell, int32_t scale )
 	{
 		if( scale == 1 )
 		{
 			return field.GetGradient( cell[0], cell[1], cell[2] );
 		}
-		if( !window.gradient.empty() )
+		if( windowGradient && !std::isnan( ( *windowGradient )[0] ) )
 		{
-			const Vector3& gradient = window.gradient[window.Index( cell[0], cell[1], cell[2] )];
-			if( !std::isnan( gradient[0] ) )
-			{
-				return gradient;
-			}
+			return *windowGradient;
 		}
 		return field.SampleGradient( Vector3( float( cell[0] ), float( cell[1] ), float( cell[2] ) ) / float( scale ) );
 	}
@@ -1874,7 +2026,7 @@ private:
 		// cube and scaled back into grid cell space
 
 		// Crossings are relative to the block's minimum cell to keep the solve well conditioned
-		const size_t base = window.Index( block[0], block[1], block[2] );
+		const Window::BlockCells cells = window.GetBlock( block );
 		std::array<Vector3, 12> points;
 		std::array<Vector3, 12> normals;
 		int32_t count = 0;
@@ -1882,22 +2034,22 @@ private:
 		{
 			const Int3& lo = edge.lo;
 			const Int3& hi = edge.hi;
-			const size_t ia = base + lo[0] + window.strides[1] * lo[1] + window.strides[2] * lo[2];
-			const size_t ib = ia + window.strides[edge.axis];
-			if( window.occupancy[ia] == window.occupancy[ib] )
+			const int32_t ia = edge.loCorner;
+			const int32_t ib = edge.hiCorner;
+			if( cells.occupancy[ia] == cells.occupancy[ib] )
 			{
 				continue;
 			}
-			const float da = window.field[ia];
-			const float db = window.field[ib];
+			const float da = cells.field[ia];
+			const float db = cells.field[ib];
 			float t = 0.5;
 			// NaN is a cell without a field value, so split the edge
 			if( !std::isnan( da ) && !std::isnan( db ) && da != db )
 			{
 				t = std::min( std::max( da / ( da - db ), float( 0.0 ) ), float( 1.0 ) );
 			}
-			const Vector3 ga = GetGradient( window, field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
-			const Vector3 gb = GetGradient( window, field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
+			const Vector3 ga = GetGradient( cells.gradient[ia], field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
+			const Vector3 gb = GetGradient( cells.gradient[ib], field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
 			Vector3& point = points[count];
 			Vector3& normal = normals[count];
 			for( int j = 0; j < 3; ++j )
