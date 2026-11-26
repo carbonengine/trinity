@@ -1937,6 +1937,10 @@ private:
 
 	static constexpr float s_eigenTruncation = 0.01; // QEF eigenvalues below this fraction of the largest are dropped
 	static constexpr int s_jacobiSweeps = 6; // cyclic Jacobi sweeps of the 3x3 QEF eigen decomposition
+	static constexpr float s_eigenMinimum = 1e-6f; // QEF eigenvalues at or below this are dropped regardless of the largest
+	static constexpr float s_flatMinTrace = 1e-6f; // QEFs with a smaller trace skip the flat fast path
+	static constexpr float s_flatMargin = 0.9f; // safety factor on the flat test, leaving borderline QEFs to the full solve
+	static constexpr int s_flatPowerIterations = 2; // power iterations for the dominant eigenvector of a flat QEF
 
 	/**
 	 * @brief Computes a gradient vector from a signed distance field at a given cell, using direct lookup at scale 1 or the window's
@@ -2027,6 +2031,20 @@ private:
 
 		// Crossings are relative to the block's minimum cell to keep the solve well conditioned
 		const Window::BlockCells cells = window.GetBlock( block );
+
+		// Each corner is shared by three edges, so its gradient is looked up at most once
+		std::array<Vector3, 8> gradients;
+		uint32_t loadedGradients = 0;
+		const auto cornerGradient = [&]( int32_t corner ) -> const Vector3& {
+			if( !( loadedGradients & ( 1u << corner ) ) )
+			{
+				loadedGradients |= 1u << corner;
+				const Int3 cell = { block[0] + ( corner & 1 ), block[1] + ( ( corner >> 1 ) & 1 ), block[2] + ( corner >> 2 ) };
+				gradients[corner] = GetGradient( cells.gradient[corner], field, cell, scale );
+			}
+			return gradients[corner];
+		};
+
 		std::array<Vector3, 12> points;
 		std::array<Vector3, 12> normals;
 		int32_t count = 0;
@@ -2048,8 +2066,8 @@ private:
 			{
 				t = std::min( std::max( da / ( da - db ), float( 0.0 ) ), float( 1.0 ) );
 			}
-			const Vector3 ga = GetGradient( cells.gradient[ia], field, { block[0] + lo[0], block[1] + lo[1], block[2] + lo[2] }, scale );
-			const Vector3 gb = GetGradient( cells.gradient[ib], field, { block[0] + hi[0], block[1] + hi[1], block[2] + hi[2] }, scale );
+			const Vector3& ga = cornerGradient( ia );
+			const Vector3& gb = cornerGradient( ib );
 			Vector3& point = points[count];
 			Vector3& normal = normals[count];
 			for( int j = 0; j < 3; ++j )
@@ -2096,24 +2114,11 @@ private:
 			}
 		}
 
-		Mat3 eigenvectors;
-		Eigendecompose( ata, eigenvectors );
-		const float largest = std::max( { ata[0][0], ata[1][1], ata[2][2] } );
-
 		// x = massPoint + V diag( 1 / lambda, truncated ) V^T A^T b
 		Vector3 offset = { 0.0, 0.0, 0.0 };
-		for( int k = 0; k < 3; ++k )
+		if( !SolveFlatQef( ata, atb, offset ) )
 		{
-			const float lambda = ata[k][k];
-			if( lambda <= s_eigenTruncation * largest || lambda <= 1e-6 )
-			{
-				continue;
-			}
-			const float projection = ( eigenvectors[0][k] * atb[0] + eigenvectors[1][k] * atb[1] + eigenvectors[2][k] * atb[2] ) / lambda;
-			for( int j = 0; j < 3; ++j )
-			{
-				offset[j] += eigenvectors[j][k] * projection;
-			}
+			SolveQef( ata, atb, offset );
 		}
 
 		Vector3 result;
@@ -2123,6 +2128,102 @@ private:
 			result[j] = ( block[j] + position ) / scale;
 		}
 		return result;
+	}
+
+	/**
+	 * @brief Fast path of SolveQef for the common flat block, where only the largest eigenvalue of A^T A survives truncation.
+	 * The eigenvalues are bounded in closed form from the trace and the sum of the principal 2x2 minors, and the dominant
+	 * eigenvector is found by power iteration, which converges by the truncated eigenvalue ratio (at most s_eigenTruncation)
+	 * per step.
+	 * @param ata The symmetric positive semi-definite matrix A^T A.
+	 * @param atb The vector A^T b.
+	 * @param offset Receives the truncated pseudo-inverse solution when the block is flat.
+	 * @return False, leaving offset untouched, when the block cannot be proven flat; the caller then uses SolveQef.
+	 */
+	static bool SolveFlatQef( const Mat3& ata, const Vector3& atb, Vector3& offset )
+	{
+		// With eigenvalues l1 >= l2 >= l3 >= 0, trace T and minor sum M = l1 l2 + l1 l3 + l2 l3: s = l2 + l3 satisfies
+		// ( T - s ) s <= M, and since l1 >= T / 3 also s <= 2T / 3. While M < 2T^2 / 9 this confines s below the smaller root of
+		// ( T - s ) s = M, so ( T - s0 ) s0 >= M proves s <= s0. With s0 = c T / ( 1 + c ) that gives l2, l3 <= s <= c l1
+		const float trace = ata[0][0] + ata[1][1] + ata[2][2];
+		if( !( trace > s_flatMinTrace ) )
+		{
+			return false;
+		}
+		const float minors = ata[0][0] * ata[1][1] - ata[0][1] * ata[0][1] + ata[0][0] * ata[2][2] - ata[0][2] * ata[0][2] + ata[1][1] * ata[2][2] - ata[1][2] * ata[1][2];
+		const float s0 = s_eigenTruncation * trace / ( 1 + s_eigenTruncation );
+		if( minors > s_flatMargin * ( trace - s0 ) * s0 )
+		{
+			return false;
+		}
+
+		// Power iteration from the column of the largest diagonal entry, which has a dominant eigenvector component of at least
+		// about 1 / sqrt( 3 ); each step is scaled by 1 / T to stay in range
+		int32_t column = 0;
+		if( ata[1][1] > ata[column][column] )
+		{
+			column = 1;
+		}
+		if( ata[2][2] > ata[column][column] )
+		{
+			column = 2;
+		}
+		const float invTrace = 1 / trace;
+		Vector3 v = { ata[0][column] * invTrace, ata[1][column] * invTrace, ata[2][column] * invTrace };
+		Vector3 av;
+		for( int iteration = 0; iteration < s_flatPowerIterations; ++iteration )
+		{
+			for( int r = 0; r < 3; ++r )
+			{
+				av[r] = ( ata[r][0] * v[0] + ata[r][1] * v[1] + ata[r][2] * v[2] ) * invTrace;
+			}
+			v = av;
+		}
+
+		// offset = u ( u . atb ) / l1 for the unit eigenvector u = v / |v|, with l1 = v . A v / |v|^2
+		for( int r = 0; r < 3; ++r )
+		{
+			av[r] = ata[r][0] * v[0] + ata[r][1] * v[1] + ata[r][2] * v[2];
+		}
+		const float vav = v[0] * av[0] + v[1] * av[1] + v[2] * av[2];
+		const float vv = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+		if( !( vav > s_eigenMinimum * vv ) )
+		{
+			return false;
+		}
+		const float projection = ( v[0] * atb[0] + v[1] * atb[1] + v[2] * atb[2] ) / vav;
+		for( int j = 0; j < 3; ++j )
+		{
+			offset[j] = v[j] * projection;
+		}
+		return true;
+	}
+
+	/**
+	 * @brief Solves the QEF normal equations with a truncated pseudo-inverse from the eigen decomposition of A^T A.
+	 * @param ata The symmetric positive semi-definite matrix A^T A; overwritten by the decomposition.
+	 * @param atb The vector A^T b.
+	 * @param offset Receives V diag( 1 / lambda, truncated ) V^T A^T b.
+	 */
+	static void SolveQef( Mat3& ata, const Vector3& atb, Vector3& offset )
+	{
+		Mat3 eigenvectors;
+		Eigendecompose( ata, eigenvectors );
+		const float largest = std::max( { ata[0][0], ata[1][1], ata[2][2] } );
+		offset = { 0.0, 0.0, 0.0 };
+		for( int k = 0; k < 3; ++k )
+		{
+			const float lambda = ata[k][k];
+			if( lambda <= s_eigenTruncation * largest || lambda <= s_eigenMinimum )
+			{
+				continue;
+			}
+			const float projection = ( eigenvectors[0][k] * atb[0] + eigenvectors[1][k] * atb[1] + eigenvectors[2][k] * atb[2] ) / lambda;
+			for( int j = 0; j < 3; ++j )
+			{
+				offset[j] += eigenvectors[j][k] * projection;
+			}
+		}
 	}
 };
 
