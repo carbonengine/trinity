@@ -27,7 +27,11 @@ constexpr float SHADOW_SIZE_THRESHOLD = 5.0f;
 
 // True when no instance of the group can be binned in this view: every instance sphere lies inside group.bounds
 // and is at most maxInstanceRadius, so GetPixelSizeAccrossEst of each is at most the size of that radius at the
-// bounds' nearest point. Half the threshold keeps a margin for float error.
+// bounds' nearest point. The bound is already conservative (nearest point, largest radius), so the
+// margin only covers float error.
+float g_eveInstancedGroupCullMargin = 0.95f;
+TRI_REGISTER_SETTING( "eveInstancedGroupCullMargin", g_eveInstancedGroupCullMargin );
+
 template <typename Group>
 bool IsGroupBelowScreenSize( const TriFrustum& cameraFrustum, const Group& group, float invLodFactor )
 {
@@ -42,7 +46,7 @@ bool IsGroupBelowScreenSize( const TriFrustum& cameraFrustum, const Group& group
 		return false;
 	}
 	const float maxSize = r / std::sqrt( nearest * nearest - r * r ) * cameraFrustum.m_halfWidthProjection * 2.0f * invLodFactor;
-	return maxSize <= SCREEN_SIZE_THRESHOLD * 0.5f;
+	return maxSize <= SCREEN_SIZE_THRESHOLD * g_eveInstancedGroupCullMargin;
 }
 
 struct PickingPerObjectData : public Tr2PerObjectData
