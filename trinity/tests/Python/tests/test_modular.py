@@ -182,6 +182,55 @@ class TestModular(unittest.TestCase):
         self.assertEqual(self.instanceCount(0), 1)
         self.assertEqual(self.instanceCount(1), 1)
 
+    def test_repeatedHullAcrossEditSessionsSharesOneMesh(self):
+        with self.modify():
+            self.addHull()
+        with self.modify():
+            self.addHull(pos=(1, 2, 3))
+            self.addHull(pos=(4, 5, 6))
+
+        self.assertEqual(self.instancedMeshes().GetMeshCount(), 1)
+        self.assertEqual(self.instanceCount(), 3)
+
+    def test_interleavedHullsKeepTheirOwnMeshes(self):
+        with self.modify():
+            for i, name in enumerate(('static_hull', 'static_hull2', 'static_hull', 'static_hull2', 'static_hull')):
+                self.addHull(name, pos=(i, 0, 0))
+
+        self.assertEqual(self.instancedMeshes().GetMeshCount(), 2)
+        self.assertEqual(sorted((self.instanceCount(0), self.instanceCount(1))), [2, 3])
+
+    def test_removeMiddleInstanceThenAddAgain(self):
+        with self.modify():
+            self.addHull(pos=(1, 0, 0))
+            middle = self.addHull(pos=(2, 0, 0))
+            self.addHull(pos=(3, 0, 0))
+        with self.modify():
+            self._m.Remove(middle)
+        with self.modify():
+            part = self.addHull(pos=(4, 0, 0))
+
+        self.assertNotEqual(part, trinity.GetInvalidPartTag())
+        self.assertEqual(self.instancedMeshes().GetMeshCount(), 1)
+        self.assertEqual(self.instanceCount(), 3)
+        positions = sorted(round(position[0]) for position, _, _ in self.instancedMeshes().GetInstancesTransforms(0))
+        self.assertEqual(positions, [1, 3, 4])
+
+    def test_removeAllThenAddAcrossHullsRebuildsMeshes(self):
+        with self.modify():
+            a = self.addHull()
+            b = self.addHull('static_hull2', pos=(1, 0, 0))
+        with self.modify():
+            self._m.Remove(a)
+            self._m.Remove(b)
+        with self.modify():
+            self.addHull('static_hull2', pos=(2, 0, 0))
+            self.addHull(pos=(3, 0, 0))
+            self.addHull('static_hull2', pos=(4, 0, 0))
+
+        self.assertEqual(self.instancedMeshes().GetMeshCount(), 2)
+        self.assertEqual(sorted((self.instanceCount(0), self.instanceCount(1))), [1, 2])
+
     def test_addHullUnknownHullReturnsInvalidTag(self):
         with self.modify():
             tag = self.addHull('invalid_hull_name')

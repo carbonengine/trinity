@@ -420,6 +420,12 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 			newObj->AddToEffectChildrenList( sharedMeshes );
 		}
 
+		// The same DNA always builds the same mesh areas and materials, and AddMesh would merge
+		// this part into the entry an earlier part of the DNA made, discarding the materials built
+		// for it. Append the instance to that entry instead (most of a repeated AddHull's cost).
+		const std::string sofDnaKey( dnaString );
+		if( !sharedMeshes->AppendInstancesForSofDna( sofDnaKey, placementOffsets.data(), 1, partTag ) )
+		{
 		TriBatchType types[] = {
 			TRIBATCHTYPE_OPAQUE, TRIBATCHTYPE_DECAL, TRIBATCHTYPE_TRANSPARENT, TRIBATCHTYPE_ADDITIVE, TRIBATCHTYPE_DISTORTION
 		};
@@ -464,6 +470,8 @@ bool EveSOF::BuildChild( EveSpaceObject2* newObj, const char* dnaString, uint32_
 			partTag,
 			partLocatorSets,
 			partArmorDamageShader );
+		sharedMeshes->RememberLastMeshForSofDna( sofDnaKey );
+		}
 
 		SetupAttachments( BlueCastPtr( placementContainer ), dna, { IdentityMatrix() }, buildFlags );
 	}

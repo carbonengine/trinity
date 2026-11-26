@@ -507,6 +507,65 @@ void EveChildInstancedMeshes::SetShaderOption( const BlueSharedString& name, con
 }
 
 
+void EveChildInstancedMeshes::AppendInstances( Mesh& mesh, const Matrix* instanceTransforms, size_t count, EveSpaceObjectChild::PartTag partTag )
+{
+	const size_t existingCount = mesh.instances.size();
+	mesh.instances.reserve( existingCount + count );
+	mesh.partTags.reserve( mesh.partTags.size() + count );
+
+	const uint32_t pickingMeshIndex = static_cast<uint32_t>( std::distance( m_meshes.data(), &mesh ) );
+	uint32_t instanceIndex = static_cast<uint32_t>( existingCount );
+	for( size_t i = 0; i < count; ++i )
+	{
+		EveInstancedMeshManager::StaticPerInstanceData instanceData;
+		instanceData.worldTransform = Float4x3( instanceTransforms[i] );
+		instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
+		instanceData.mirrored = IsMirrored( instanceTransforms[i] );
+		instanceData.pickingMeshIndex = pickingMeshIndex;
+		instanceData.pickingInstanceIndex = instanceIndex++;
+		mesh.instances.push_back( instanceData );
+		mesh.partTags.push_back( partTag );
+	}
+	mesh.instanceSpheres.resize( mesh.instances.size() );
+	if( mesh.sphereHandle )
+	{
+		mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
+	}
+	for( auto& area : mesh.areas )
+	{
+		if( area.meshGroupHandle )
+		{
+			area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
+		}
+	}
+	if( !mesh.ownedLocatorSets.empty() && GetOwner() )
+	{
+		GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
+	}
+	m_allRegistered = false;
+	m_audioGeometryDirty = true;
+}
+
+bool EveChildInstancedMeshes::AppendInstancesForSofDna( const std::string& sofDna, const Matrix* instanceTransforms, size_t count, EveSpaceObjectChild::PartTag partTag )
+{
+	const auto found = m_meshIndexBySofDna.find( sofDna );
+	if( found == m_meshIndexBySofDna.end() || found->second >= m_meshes.size() || count == 0 )
+	{
+		return false;
+	}
+	AppendInstances( m_meshes[found->second], instanceTransforms, count, partTag );
+	return true;
+}
+
+void EveChildInstancedMeshes::RememberLastMeshForSofDna( const std::string& sofDna )
+{
+	if( m_lastAddedMeshIndex < m_meshes.size() )
+	{
+		m_meshIndexBySofDna[sofDna] = m_lastAddedMeshIndex;
+	}
+	m_lastAddedMeshIndex = UINT32_MAX;
+}
+
 void EveChildInstancedMeshes::AddMesh(
 	const char* geometryPath,
 	bool castsShadow,
@@ -522,6 +581,7 @@ void EveChildInstancedMeshes::AddMesh(
 	const std::vector<EveLocatorSetsPtr>& ownedLocatorSets,
 	Tr2Effect* armorDamageShader )
 {
+	m_lastAddedMeshIndex = UINT32_MAX;
 	if( areaCount == 0 || count == 0 )
 	{
 		return;
@@ -568,43 +628,12 @@ void EveChildInstancedMeshes::AddMesh(
 		{
 			continue;
 		}
-		const size_t existingCount = mesh.instances.size();
-		mesh.instances.reserve( existingCount + count );
-		mesh.partTags.reserve( mesh.partTags.size() + count );
-
-		uint32_t instanceIndex = static_cast<uint32_t>( mesh.instances.size() );
-		for( size_t i = 0; i < count; ++i )
-		{
-			EveInstancedMeshManager::StaticPerInstanceData instanceData;
-			instanceData.worldTransform = Float4x3( instanceTransforms[i] );
-			instanceData.sphereIndex = static_cast<uint32_t>( existingCount + i );
-			instanceData.mirrored = IsMirrored( instanceTransforms[i] );
-			instanceData.pickingMeshIndex = static_cast<uint32_t>( std::distance( m_meshes.data(), &mesh ) );
-			instanceData.pickingInstanceIndex = instanceIndex++;
-			mesh.instances.push_back( instanceData );
-			mesh.partTags.push_back( partTag );
-		}
-		mesh.instanceSpheres.resize( mesh.instances.size() );
-		if( mesh.sphereHandle )
-		{
-			mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
-		}
-		for( auto& area : mesh.areas )
-		{
-			if( area.meshGroupHandle )
-			{
-				area.meshGroupHandle.owner->RemoveMeshGroup( area.meshGroupHandle );
-			}
-		}
-		if( !mesh.ownedLocatorSets.empty() && GetOwner() )
-		{
-			GetOwner()->InvalidateMergedLocators( LocatorInvalidationReason::StructureChanged );
-		}
-		m_allRegistered = false;
-		m_audioGeometryDirty = true;
+		m_lastAddedMeshIndex = static_cast<uint32_t>( std::distance( m_meshes.data(), &mesh ) );
+		AppendInstances( mesh, instanceTransforms, count, partTag );
 		return;
 	}
 
+	m_lastAddedMeshIndex = static_cast<uint32_t>( m_meshes.size() );
 	Mesh& mesh = m_meshes.emplace_back();
 	mesh.geometryPath = geometryPath;
 	mesh.reflectionMode = reflectionMode;
@@ -706,6 +735,7 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 				geometry->RemoveNotifyTarget( this );
 			}
 			m_meshes.pop_back();
+			m_meshIndexBySofDna.clear();
 			--i;
 			continue;
 		}

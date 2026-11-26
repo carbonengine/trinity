@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <string>
+#include <unordered_map>
+
 #include "EveSpaceObjectChild.h"
 #include "../../EveInstancedMeshManager.h"
 #include "ITr2Renderable.h"
@@ -99,6 +102,13 @@ public:
 		EveSpaceObjectChild::PartTag partTag = EveSpaceObjectChild::NO_PART_TAG,
 		const std::vector<EveLocatorSetsPtr>& ownedLocatorSets = {},
 		Tr2Effect* armorDamageShader = nullptr );
+
+	/// @brief Appends instances to the mesh entry AddMesh last filled for this SOF DNA, without
+	/// building its materials again. False when no entry is known for the DNA (call AddMesh, then
+	/// RememberLastMeshForSofDna).
+	bool AppendInstancesForSofDna( const std::string& sofDna, const Matrix* instanceTransforms, size_t count, EveSpaceObjectChild::PartTag partTag );
+	/// @brief Records that the entry the last AddMesh filled holds the given SOF DNA's hull.
+	void RememberLastMeshForSofDna( const std::string& sofDna );
 
 	void RemoveInstancesByPartTag( EveSpaceObjectChild::PartTag partTag );
 	void SetInstanceTransformByPartTag( PartTag partTag, const Vector3& translation, const Quaternion& rotation, Vector3 scale );
@@ -230,7 +240,13 @@ private:
 	const PEveMeshOverlayEffectVector* m_parentOverlayEffects = nullptr;
 	EveInstancedMeshManager::PerObjectDataHandle m_perObjectDataHandle;
 	EveInstancedMeshManager::PerObjectDataHandle m_perObjectDataNoClipHandle;
+	void AppendInstances( Mesh& mesh, const Matrix* instanceTransforms, size_t count, EveSpaceObjectChild::PartTag partTag );
+
 	std::vector<Mesh> m_meshes;
+	// Mesh entry per SOF DNA, so AddHull of a hull already here skips the material build.
+	// Cleared whenever an entry is removed (removal reorders m_meshes).
+	std::unordered_map<std::string, uint32_t> m_meshIndexBySofDna;
+	uint32_t m_lastAddedMeshIndex = UINT32_MAX;
 	std::map<PartTag, EveDamageOverlayPtr> m_partDamageOverlays;
 	TriFrustum m_lastCameraFrustum;
 	float m_lastInvLodFactor = 1.0f;
