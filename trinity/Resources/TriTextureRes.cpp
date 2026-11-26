@@ -1,6 +1,7 @@
 ﻿// Copyright © 2023 CCP ehf.
 
 #include "StdAfx.h"
+#include "Tr2ScreenSizeRequests.h"
 #include "TriTextureRes.h"
 #include "TriSettingsRegistrar.h"
 
@@ -641,6 +642,7 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 
 		m_originalResolution = std::min( m_loadedBitmap->GetWidth(), m_loadedBitmap->GetHeight() );
 		m_originalResolution = m_originalResolution << m_requestedLoadMip;
+		Tr2ScreenSizeRequests::BumpGeneration();
 		m_cpuMip = m_requestedLoadMip;
 		m_maxMip = m_loadedBitmap->GetTrueMipCount();
 		if( m_maxMip > 4 )
@@ -715,8 +717,10 @@ void TriTextureRes::RequestResolution( const uint32_t requestedLod )
 	{
 		return;
 	}
-	m_hadLodRequests = true;
-
+	if( !m_hadLodRequests.load( std::memory_order_relaxed ) )
+	{
+		m_hadLodRequests = true;
+	}
 	AtomicMinUpdate( m_requestedMip, requestedLod );
 }
 

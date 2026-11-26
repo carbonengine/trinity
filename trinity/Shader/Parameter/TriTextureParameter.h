@@ -30,7 +30,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriEffectParameter
 	const char* GetParameterName() const;
-	void RebuildEffectHandles( Tr2Shader * effectRes );
+	void RebuildEffectHandles( Tr2Shader* effectRes );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriEffectTextureParameter
@@ -48,20 +48,21 @@ public:
 		Tr2RenderContextEnum::ShaderType stage,
 		uint32_t registerIndex,
 		Tr2RenderContext& renderContext ) const override;
-	void AddUsedTexture( Tr2BindlessResourcesAL & usedTextures ) const override;
+	void AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const override;
 	unsigned GetHashValue( unsigned startingHash ) const;
 	bool SupportsDirtyNotification() const override;
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities ) override;
+	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests ) override;
 	void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) override;
 	void DisableTextureLoding() override;
 
-	void OnAddedToMaterial( Tr2Material * material ) override;
-	void OnRemovedFromMaterial( Tr2Material * material ) override;
+	void OnAddedToMaterial( Tr2Material* material ) override;
+	void OnRemovedFromMaterial( Tr2Material* material ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var * val );
+	bool OnModified( Be::Var* val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -72,11 +73,11 @@ public:
 	// ICopierCustomAssignment
 	/////////////////////////////////////////////////////////////////////////////////////
 	virtual bool AssignTo(
-		ICopierCustomAssignment * other,
-		ICopier * copier );
+		ICopierCustomAssignment* other,
+		ICopier* copier );
 
 	// access resource
-	void SetResource( ITr2TextureProvider * newRes );
+	void SetResource( ITr2TextureProvider* newRes );
 
 	virtual ITr2TextureProvider* GetResource() const;
 
@@ -90,6 +91,8 @@ private:
 	void CacheTexture();
 
 	Tr2ShaderPtr m_cachedEffect;
+
+	void RequestLod( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests* requests );
 
 	BlueSharedString m_name;
 

@@ -4,6 +4,7 @@
 #define ITr2EffectParameter_h
 
 #include "ITr2EffectValue.h"
+#include "Tr2ScreenSizeRequests.h"
 
 BLUE_DECLARE( Tr2Shader );
 
@@ -12,7 +13,7 @@ BLUE_INTERFACE( ITriEffectParameter ) :
 {
 	virtual const char* GetParameterName() const = 0;
 
-	virtual void RebuildEffectHandles( Tr2Shader * effectRes ) = 0;
+	virtual void RebuildEffectHandles( Tr2Shader* effectRes ) = 0;
 
 	virtual unsigned GetHashValue( unsigned startingHash ) const = 0;
 
@@ -26,9 +27,15 @@ typedef BlueDict<ITriEffectParameter> ITriEffectParameterDict;
 TYPEDEF_BLUECLASS( ITriEffectParameterDict );
 
 BLUE_INTERFACE( ITriEffectResourceParameter ) :
-	public ITriEffectParameter{
-		virtual void OnAddedToMaterial( Tr2Material * material ){} virtual void OnRemovedFromMaterial( Tr2Material * material ){}
-	};
+	public ITriEffectParameter
+{
+	virtual void OnAddedToMaterial( Tr2Material* material )
+	{
+	}
+	virtual void OnRemovedFromMaterial( Tr2Material* material )
+	{
+	}
+};
 BLUE_DECLARE_IVECTOR( ITriEffectResourceParameter );
 
 BLUE_INTERFACE( ITriEffectTextureParameter ) :
@@ -36,6 +43,11 @@ BLUE_INTERFACE( ITriEffectTextureParameter ) :
 {
 	static const size_t UV_SET_MAX_COUNT = 8;
 	virtual void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities ) = 0;
+	virtual void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests )
+	{
+		UsedWithScreenSize( screenSize, worldRadius, uvDensities );
+		requests.Invalidate();
+	}
 	virtual void EnableTextureLoding( const std::array<float, UV_SET_MAX_COUNT>& uvDensityScale ) = 0;
 	virtual void DisableTextureLoding() = 0;
 };

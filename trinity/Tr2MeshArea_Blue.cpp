@@ -13,6 +13,7 @@ const Be::ClassInfo* Tr2MeshArea::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2MeshArea, "" )
 
 		MAP_INTERFACE( Tr2MeshArea )
+		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "na", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "Toggle visibility", Be::READWRITE )

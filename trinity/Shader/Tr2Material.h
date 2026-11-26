@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Tr2EffectDescription.h"
+struct Tr2ScreenSizeRequests;
 
 BLUE_DECLARE( Tr2Shader );
 BLUE_DECLARE_INTERFACE( ITriEffectTextureParameter );
@@ -219,6 +220,7 @@ public:
 	void MarkConstantBuffersDirty();
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities );
+	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities, Tr2ScreenSizeRequests& requests );
 
 	void GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessResourcesAL& usedTextures );
 
@@ -227,9 +229,9 @@ public:
 	void ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int passIndex, Tr2IndirectDrawBufferWriter& indirectBuffer, Tr2RenderContext& renderContext );
 
 protected:
-	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
-	void SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput & input, Tr2RenderContext & renderContext ) const;
+	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	void SetResources( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2RenderContext& renderContext ) const;
 
 
 	Tr2ShaderPtr m_shader;
