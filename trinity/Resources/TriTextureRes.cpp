@@ -155,7 +155,6 @@ TriTextureRes::TriTextureRes() :
 
 TriTextureRes::~TriTextureRes()
 {
-	Tr2ScreenSizeRequests::BumpGeneration();
 	// Note: ReleaseResources now happens in Unlock due to threading issues.
 	// If a texture resource was deleted while it was still being loaded it would cause crash.
 	Tr2TextureLodManager::Instance().UnregisterTexture( this );

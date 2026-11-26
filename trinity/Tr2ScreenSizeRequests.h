@@ -8,7 +8,7 @@
 #include <limits>
 #include <vector>
 
-class TriTextureRes;
+BLUE_DECLARE( TriTextureRes );
 
 // The texture LOD requests one UseWithScreenSize walk produced, plus the screen-size range over which
 // every request stays the same, so later frames can replay them instead of re-walking the materials.
@@ -16,7 +16,7 @@ struct Tr2ScreenSizeRequests
 {
 	struct Request
 	{
-		TriTextureRes* texture;
+		TriTextureResPtr texture;
 		uint32_t lod;
 	};
 
@@ -54,7 +54,7 @@ struct Tr2ScreenSizeRequests
 		return valid && screenSize >= minScreenSize && ( screenSize < maxScreenSize || maxScreenSize == std::numeric_limits<float>::max() );
 	}
 
-	// Bumped whenever anything a cached request depends on changes (texture assigned/loaded/destroyed, LOD parameters).
+	// Bumped whenever anything a cached request depends on changes (texture assigned/loaded, LOD parameters).
 	static uint32_t Generation()
 	{
 		return s_generation.load( std::memory_order_acquire );
