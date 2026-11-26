@@ -249,11 +249,12 @@ void EveInstancedMeshManager::RemoveBoundingSphereGroup( BoundingSphereHandle& h
 	}
 }
 
-void EveInstancedMeshManager::SetSphereGroupBounds( const BoundingSphereHandle& handle, const CcpMath::Sphere& bounds, const InstanceFlags& flags )
+void EveInstancedMeshManager::SetSphereGroupBounds( const BoundingSphereHandle& handle, const CcpMath::Sphere& bounds, const InstanceFlags& flags, float maxInstanceRadius )
 {
 	auto& group = m_sphereGroups[handle.index];
 	group.bounds = bounds;
 	group.flags = flags;
+	group.maxInstanceRadius = maxInstanceRadius;
 }
 
 void EveInstancedMeshManager::ReplaceHandle( BoundingSphereHandle* oldHandle, BoundingSphereHandle* newHandle )

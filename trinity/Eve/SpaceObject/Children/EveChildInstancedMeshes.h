@@ -160,6 +160,13 @@ private:
 		uint32_t meshIndex = 0;
 
 		CcpMath::Sphere worldBoundingSphere;
+		// instanceSpheres are valid for spheresWorldTransform until the instances or the geometry change
+		Matrix spheresWorldTransform = IdentityMatrix();
+		float maxInstanceRadius = 0.0f;
+		bool spheresValid = false;
+		// rtMeshes[].instanceWorldTransforms are valid for rtWorldTransform while every instance uses the last LOD
+		mutable Matrix rtWorldTransform = IdentityMatrix();
+		mutable bool rtTransformsValid = false;
 		EveInstancedMeshManager::InstanceFlags flags;
 		EntityComponents::ReflectionMode reflectionMode = EntityComponents::REFLECT_NEVER;
 

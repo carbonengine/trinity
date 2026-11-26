@@ -6,9 +6,31 @@
 #include "../EveSpaceObject2.h"
 #include "../Attachments/EveDamageOverlay.h"
 #include "../Utils/EveLocatorSets.h"
+#include "TriSettingsRegistrar.h"
+
+// Reuse instance bounding spheres and ray tracing transforms while a child and its instances don't move.
+bool g_eveStaticInstanceCaching = true;
+TRI_REGISTER_SETTING( "eveStaticInstanceCaching", g_eveStaticInstanceCaching );
 
 namespace
 {
+bool SameTransform( const Matrix& a, const Matrix& b )
+{
+	return memcmp( &a, &b, sizeof( Matrix ) ) == 0;
+}
+
+// Upper bound of TriFrustum::GetPixelSizeAccrossEst for any sphere of radius <= maxRadius inside bounds.
+// Returns a negative value when no useful bound exists (camera too close).
+float MaxInstancePixelSize( const TriFrustum& frustum, const CcpMath::Sphere& bounds, float maxRadius )
+{
+	float nearest = Length( bounds.center - frustum.m_viewPos ) - bounds.radius;
+	if( maxRadius <= 0.0f || nearest <= maxRadius )
+	{
+		return -1.0f;
+	}
+	return maxRadius / std::sqrt( nearest * nearest - maxRadius * maxRadius ) * frustum.m_halfWidthProjection * 2.0f;
+}
+
 const LocatorStructureList* FindDamageLocators( const std::vector<EveLocatorSetsPtr>& sets )
 {
 	for( const auto& entry : sets )
@@ -202,29 +224,58 @@ void EveChildInstancedMeshes::PushRtGeometry( Tr2RaytracingManager& rtManager ) 
 			continue;
 		}
 
-		for( auto& lod : mesh.rtMeshes )
+		const int32_t lastLod = static_cast<int32_t>( mesh.rtMeshes.size() ) - 1;
+		// Every instance picks the last LOD when it has only one, or when no instance can be larger on screen than
+		// the last LOD's max size; then the per-LOD transform lists are the same as on the last frame that held.
+		bool allLastLod = false;
+		if( g_eveStaticInstanceCaching && mesh.spheresValid )
 		{
-			lod.instanceWorldTransforms.clear();
-			lod.instanceWorldTransforms.reserve( mesh.instances.size() );
-		}
-
-		for( const auto& instanceTransform : mesh.instances )
-		{
-			float screenSize = m_lastCameraFrustum.GetPixelSizeAccross( mesh.instanceSpheres[&instanceTransform - mesh.instances.data()] );
-			uint32_t lodIndex = 0;
-			int32_t lastLod = static_cast<int32_t>( mesh.rtMeshes.size() ) - 1;
-			for( int32_t i = lastLod; i >= 0; i-- )
+			if( lastLod == 0 )
 			{
-				if( mesh.rtMeshes[i].maxScreenSize >= screenSize )
-				{
-					lodIndex = static_cast<uint32_t>( i );
-					break;
-				}
+				allLastLod = true;
+			}
+			else
+			{
+				float maxSize = MaxInstancePixelSize( m_lastCameraFrustum, mesh.worldBoundingSphere, mesh.maxInstanceRadius );
+				allLastLod = maxSize >= 0.0f && maxSize <= mesh.rtMeshes[lastLod].maxScreenSize;
+			}
+		}
+		const bool reuseTransforms = allLastLod && mesh.rtTransformsValid && SameTransform( mesh.rtWorldTransform, m_worldTransform );
+
+		if( !reuseTransforms )
+		{
+			for( auto& lod : mesh.rtMeshes )
+			{
+				lod.instanceWorldTransforms.clear();
+				lod.instanceWorldTransforms.reserve( mesh.instances.size() );
 			}
 
-			XMMATRIX m = Matrix( instanceTransform.worldTransform );
-			m = XMMatrixMultiply( m, m_worldTransform );
-			mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
+			for( const auto& instanceTransform : mesh.instances )
+			{
+				uint32_t lodIndex = 0;
+				if( allLastLod )
+				{
+					lodIndex = static_cast<uint32_t>( lastLod );
+				}
+				else
+				{
+					float screenSize = m_lastCameraFrustum.GetPixelSizeAccross( mesh.instanceSpheres[&instanceTransform - mesh.instances.data()] );
+					for( int32_t i = lastLod; i >= 0; i-- )
+					{
+						if( mesh.rtMeshes[i].maxScreenSize >= screenSize )
+						{
+							lodIndex = static_cast<uint32_t>( i );
+							break;
+						}
+					}
+				}
+
+				XMMATRIX m = Matrix( instanceTransform.worldTransform );
+				m = XMMatrixMultiply( m, m_worldTransform );
+				mesh.rtMeshes[lodIndex].instanceWorldTransforms.push_back( Float4x3( Matrix( m ) ) );
+			}
+			mesh.rtTransformsValid = allLastLod;
+			mesh.rtWorldTransform = m_worldTransform;
 		}
 
 		for( auto& lod : mesh.rtMeshes )
@@ -355,31 +406,39 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		mesh.flags.SetRenderInReflections( EntityComponents::ShouldReflect( mesh.reflectionMode ) );
 
-		auto meshData = mesh.geometry->GetMeshData( mesh.meshIndex );
-		auto sphere = CcpMath::Sphere( CcpMath::AxisAlignedBox( meshData->m_minBounds, meshData->m_maxBounds ) );
-		float radius = sphere.radius + Length( sphere.center );
-
-		CcpMath::AxisAlignedBox worldBounds;
-
-		for( const auto& instance : mesh.instances )
+		if( !( g_eveStaticInstanceCaching && mesh.spheresValid && SameTransform( mesh.spheresWorldTransform, m_worldTransform ) ) )
 		{
-			Matrix m = instance.worldTransform;
-			Vector3 position = m.GetTranslation();
-			float scale = std::sqrtf( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ),
-												  LengthSq( Vector3( m._21, m._22, m._23 ) ),
-												  LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
-			position = TransformCoord( position, m_worldTransform );
-			scale *= worldScale;
-			mesh.instanceSpheres[&instance - mesh.instances.data()] = CcpMath::Sphere( position, radius * scale );
-			worldBounds.Include( CcpMath::Sphere( position, radius * scale ) );
+			auto meshData = mesh.geometry->GetMeshData( mesh.meshIndex );
+			auto sphere = CcpMath::Sphere( CcpMath::AxisAlignedBox( meshData->m_minBounds, meshData->m_maxBounds ) );
+			float radius = sphere.radius + Length( sphere.center );
+
+			CcpMath::AxisAlignedBox worldBounds;
+			float maxInstanceRadius = 0.0f;
+
+			for( const auto& instance : mesh.instances )
+			{
+				Matrix m = instance.worldTransform;
+				Vector3 position = m.GetTranslation();
+				float scale = std::sqrtf( std::max( { LengthSq( Vector3( m._11, m._12, m._13 ) ),
+													  LengthSq( Vector3( m._21, m._22, m._23 ) ),
+													  LengthSq( Vector3( m._31, m._32, m._33 ) ) } ) );
+				position = TransformCoord( position, m_worldTransform );
+				scale *= worldScale;
+				mesh.instanceSpheres[&instance - mesh.instances.data()] = CcpMath::Sphere( position, radius * scale );
+				worldBounds.Include( CcpMath::Sphere( position, radius * scale ) );
+				maxInstanceRadius = std::max( maxInstanceRadius, radius * scale );
+			}
+			mesh.worldBoundingSphere = CcpMath::Sphere( worldBounds );
+			mesh.maxInstanceRadius = maxInstanceRadius;
+			mesh.spheresWorldTransform = m_worldTransform;
+			mesh.spheresValid = !mesh.instances.empty();
 		}
-		mesh.worldBoundingSphere = CcpMath::Sphere( worldBounds );
 
 		if( !mesh.instanceSpheres.empty() )
 		{
 			if( mesh.sphereHandle )
 			{
-				mesh.sphereHandle.owner->SetSphereGroupBounds( mesh.sphereHandle, mesh.worldBoundingSphere, mesh.flags );
+				mesh.sphereHandle.owner->SetSphereGroupBounds( mesh.sphereHandle, mesh.worldBoundingSphere, mesh.flags, mesh.spheresValid ? mesh.maxInstanceRadius : -1.0f );
 			}
 		}
 	}
@@ -455,6 +514,7 @@ void EveChildInstancedMeshes::UpdateAsyncronous( const EveUpdateContext& updateC
 
 		auto meshData = mesh.geometry->GetMeshData( mesh.meshIndex );
 		mesh.rtMeshes.resize( meshData->m_lods.size() );
+		mesh.rtTransformsValid = false;
 
 		for( auto& lod : mesh.rtMeshes )
 		{
@@ -527,6 +587,8 @@ void EveChildInstancedMeshes::AppendInstances( Mesh& mesh, const Matrix* instanc
 		mesh.partTags.push_back( partTag );
 	}
 	mesh.instanceSpheres.resize( mesh.instances.size() );
+	mesh.spheresValid = false;
+	mesh.rtTransformsValid = false;
 	if( mesh.sphereHandle )
 	{
 		mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
@@ -752,6 +814,8 @@ void EveChildInstancedMeshes::RemoveInstancesByPartTag( EveSpaceObjectChild::Par
 		{
 			m_allRegistered = false;
 			mesh.instanceSpheres.resize( mesh.instances.size() );
+			mesh.spheresValid = false;
+			mesh.rtTransformsValid = false;
 			if( mesh.sphereHandle )
 			{
 				mesh.sphereHandle.owner->RemoveBoundingSphereGroup( mesh.sphereHandle );
@@ -785,6 +849,8 @@ void EveChildInstancedMeshes::SetInstanceTransformByPartTag( PartTag partTag, co
 			{
 				mesh.instances[i].worldTransform = packedTransform;
 				mesh.instances[i].mirrored = mirrored;
+				mesh.spheresValid = false;
+				mesh.rtTransformsValid = false;
 				movedOwnedLocators |= !mesh.ownedLocatorSets.empty();
 				m_audioGeometryDirty = true;
 			}
@@ -807,6 +873,8 @@ void EveChildInstancedMeshes::RebuildCachedData( BlueAsyncRes* p )
 		if( mesh.geometry == p )
 		{
 			m_audioGeometryDirty = true;
+			mesh.spheresValid = false;
+			mesh.rtTransformsValid = false;
 			mesh.combinedVertexDeclaration = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 
 			if( auto data = mesh.geometry->GetMeshData( mesh.meshIndex ) )

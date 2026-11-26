@@ -109,7 +109,8 @@ public:
 
 	void AddBoundingSphereGroup( BoundingSphereHandle& handle, const CcpMath::Sphere& bounds, const InstanceFlags& flags, const CcpMath::Sphere* boundingSpheres, uint32_t count );
 	void RemoveBoundingSphereGroup( BoundingSphereHandle& handle );
-	void SetSphereGroupBounds( const BoundingSphereHandle& handle, const CcpMath::Sphere& bounds, const InstanceFlags& flags );
+	// maxInstanceRadius: the largest sphere in the group, or negative when unknown (no group-level screen size cull)
+	void SetSphereGroupBounds( const BoundingSphereHandle& handle, const CcpMath::Sphere& bounds, const InstanceFlags& flags, float maxInstanceRadius = -1.0f );
 	void ReplaceHandle( BoundingSphereHandle* oldHandle, BoundingSphereHandle* newHandle );
 
 	void AddMeshGroup(
@@ -263,6 +264,7 @@ private:
 	{
 		CcpMath::Sphere bounds = {};
 		InstanceFlags flags;
+		float maxInstanceRadius = -1.0f;
 		uint32_t count = 0;
 		const CcpMath::Sphere* boundingSpheres = nullptr;
 		BoundingSphereHandle* handle = nullptr;
