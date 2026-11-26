@@ -2149,6 +2149,9 @@ endif()
 if(BUILD_TESTING)
     find_package(GTest CONFIG REQUIRED)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    # FindPython reports STDLIB as a native path (backslashes on Windows), which
+    # breaks when embedded in the PYTHON_LIB_PATH C string literal below.
+    file(TO_CMAKE_PATH "${Python3_STDLIB}" TRINITY_PYTHON3_STDLIB)
     include(GoogleTest)
 
     # Find exefile tool, which is used to run the tests
@@ -2211,9 +2214,9 @@ if(BUILD_TESTING)
         target_link_libraries(${TEST_TARGET} PRIVATE GTest::gtest)
         add_dependencies(${TEST_TARGET} ${trinity_target})
         if(WIN32)
-            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"$<TARGET_FILE_DIR:${TEST_TARGET}>\;$<TARGET_FILE_DIR:${trinity_target}>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${Python3_STDLIB}\"")
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"$<TARGET_FILE_DIR:${TEST_TARGET}>\;$<TARGET_FILE_DIR:${trinity_target}>\;${CMAKE_CURRENT_SOURCE_DIR}/python\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib\;${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python\;${TRINITY_PYTHON3_STDLIB}\"")
         elseif (APPLE)
-            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:${TEST_TARGET}>:$<TARGET_FILE_DIR:${trinity_target}>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${Python3_STDLIB}\"")
+            target_compile_definitions(${TEST_TARGET} PRIVATE "PYTHON_LIB_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}/tests/python:$<TARGET_FILE_DIR:${TEST_TARGET}>:$<TARGET_FILE_DIR:${trinity_target}>:${CMAKE_CURRENT_SOURCE_DIR}/python:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/lib/python3.12/lib-dynload:${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}/bin/python:${TRINITY_PYTHON3_STDLIB}\"")
         else()
             message(FATAL_ERROR "Unsupported platform")
         endif ()
