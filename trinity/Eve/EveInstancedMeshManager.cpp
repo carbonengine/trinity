@@ -3,6 +3,11 @@
 #include "StdAfx.h"
 #include "EveInstancedMeshManager.h"
 #include "../Tr2GpuStructuredBuffer.h"
+#include "TriSettingsRegistrar.h"
+
+// Skip a sphere group's per-instance work in a view when none of its instances can reach the screen size cut.
+bool g_eveInstancedGroupScreenSizeCull = true;
+TRI_REGISTER_SETTING( "eveInstancedGroupScreenSizeCull", g_eveInstancedGroupScreenSizeCull );
 
 
 CCP_STATS_DECLARE( eimmPerInstanceSize, "Trinity/EveInstancedMeshManager/perInstanceSize", true, CST_MEMORY, "Total size of per-object data uploaded per frame" );
@@ -19,6 +24,26 @@ namespace
 {
 constexpr float SCREEN_SIZE_THRESHOLD = 5.0f;
 constexpr float SHADOW_SIZE_THRESHOLD = 5.0f;
+
+// True when no instance of the group can be binned in this view: every instance sphere lies inside group.bounds
+// and is at most maxInstanceRadius, so GetPixelSizeAccrossEst of each is at most the size of that radius at the
+// bounds' nearest point. Half the threshold keeps a margin for float error.
+template <typename Group>
+bool IsGroupBelowScreenSize( const TriFrustum& cameraFrustum, const Group& group, float invLodFactor )
+{
+	if( !g_eveInstancedGroupScreenSizeCull || group.maxInstanceRadius <= 0.0f )
+	{
+		return false;
+	}
+	const float r = group.maxInstanceRadius;
+	const float nearest = Length( group.bounds.center - cameraFrustum.m_viewPos ) - group.bounds.radius;
+	if( nearest <= r )
+	{
+		return false;
+	}
+	const float maxSize = r / std::sqrt( nearest * nearest - r * r ) * cameraFrustum.m_halfWidthProjection * 2.0f * invLodFactor;
+	return maxSize <= SCREEN_SIZE_THRESHOLD * 0.5f;
+}
 
 struct PickingPerObjectData : public Tr2PerObjectData
 {
@@ -556,6 +581,10 @@ void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFru
 			if( group.flags.MatchesFilter( filter ) )
 			{
 				auto res = cameraFrustum.SphereTest( group.bounds );
+				if( res != TriFrustumTestResult::Outside && IsGroupBelowScreenSize( cameraFrustum, group, invLodFactor ) )
+				{
+					res = TriFrustumTestResult::Outside;
+				}
 				switch( res )
 				{
 				case TriFrustumTestResult::Outside:
@@ -601,6 +630,10 @@ void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFru
 			if( group.flags.MatchesFilter( filter ) )
 			{
 				auto res = pickingFrustum.SphereTest( group.bounds );
+				if( res != TriFrustumTestResult::Outside && IsGroupBelowScreenSize( cameraFrustum, group, invLodFactor ) )
+				{
+					res = TriFrustumTestResult::Outside;
+				}
 				switch( res )
 				{
 				case TriFrustumTestResult::Outside:
@@ -646,6 +679,10 @@ void EveInstancedMeshManager::PerformFrustumCulling( const TriFrustum& cameraFru
 			if( group.flags.MatchesFilter( filter ) )
 			{
 				auto res = shadowFrustum.SphereTest( cameraFrustum, group.bounds );
+				if( res != TriFrustumTestResult::Outside && IsGroupBelowScreenSize( cameraFrustum, group, invLodFactor ) )
+				{
+					res = TriFrustumTestResult::Outside;
+				}
 				switch( res )
 				{
 				case TriFrustumTestResult::Outside:
