@@ -12,6 +12,7 @@ const Be::ClassInfo* Tr2CurveEulerRotation::ExposeToBlue()
 		MAP_INTERFACE( ITriQuaternionFunction )
 		MAP_INTERFACE( ITriFunction )
 		MAP_INTERFACE( ITriCurveLength )
+		MAP_INTERFACE( ITr2SampledCurve )
 
 		MAP_ATTRIBUTE(
 			"name",

@@ -64,6 +64,7 @@ const Be::ClassInfo* Tr2CurveScalar::ExposeToBlue()
 		MAP_INTERFACE( ITriScalarFunction )
 		MAP_INTERFACE( ITriFunction )
 		MAP_INTERFACE( ITriCurveLength )
+		MAP_INTERFACE( ITr2SampledCurve )
 
 		MAP_ATTRIBUTE(
 			"keys",

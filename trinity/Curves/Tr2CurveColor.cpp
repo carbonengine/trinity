@@ -46,7 +46,24 @@ float Tr2CurveColor::Length()
 Color Tr2CurveColor::GetValue( double time ) const
 {
 	double t = time - m_timeOffset;
-	Color color( m_r.GetValue( t ), m_g.GetValue( t ), m_b.GetValue( t ), m_a.IsEmpty() ? 1.0f : m_a.GetValue( t ) );
+	return ToOutput( Color( m_r.GetValue( t ), m_g.GetValue( t ), m_b.GetValue( t ), m_a.IsEmpty() ? 1.0f : m_a.GetValue( t ) ) );
+}
+
+// --------------------------------------------------------------------------------
+Vector4 Tr2CurveColor::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+{
+	double t = time - m_timeOffset;
+	const Color value = ToOutput( Color(
+		m_r.SampleValue( t, segmentCaches[0] ),
+		m_g.SampleValue( t, segmentCaches[1] ),
+		m_b.SampleValue( t, segmentCaches[2] ),
+		m_a.IsEmpty() ? 1.0f : m_a.SampleValue( t, segmentCaches[3] ) ) );
+	return Vector4( value.r, value.g, value.b, value.a );
+}
+
+// --------------------------------------------------------------------------------
+Color Tr2CurveColor::ToOutput( Color color ) const
+{
 	if( m_srgbOutput )
 	{
 		color.r = std::max( color.r, 0.f );

@@ -10,7 +10,8 @@
 
 BLUE_CLASS( Tr2CurveVector3 ) :
 	public ITriCurveLength,
-	public ITriVectorFunction
+	public ITriVectorFunction,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveVector3( IRoot* lockobj = nullptr );
@@ -22,6 +23,9 @@ public:
 	virtual float Length();
 
 	Vector3 GetValue( double time ) const;
+	// The value at time, like GetValue, but looking each channel's keys up from
+	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,
@@ -33,15 +37,15 @@ public:
 
 	void SetExtrapolation( Tr2CurveExtrapolation::Type extrapolation );
 
-	virtual Vector3* Update( Vector3 * in, Be::Time time );
-	virtual Vector3* Update( Vector3 * in, double time );
-	virtual Vector3* GetValueAt( Vector3 * in, Be::Time time );
-	virtual Vector3* GetValueAt( Vector3 * in, double time );
-	virtual Vector3* GetValueDotAt( Vector3 * in, Be::Time time );
-	virtual Vector3* GetValueDotAt( Vector3 * in, double time );
-	virtual Vector3* GetValueDoubleDotAt( Vector3 * in, Be::Time time );
-	virtual Vector3* GetValueDoubleDotAt( Vector3 * in, double time );
-	virtual Vector3d* InterpolatedPosition( Vector3d * out, Be::Time time );
+	virtual Vector3* Update( Vector3* in, Be::Time time );
+	virtual Vector3* Update( Vector3* in, double time );
+	virtual Vector3* GetValueAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueAt( Vector3* in, double time );
+	virtual Vector3* GetValueDotAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueDotAt( Vector3* in, double time );
+	virtual Vector3* GetValueDoubleDotAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueDoubleDotAt( Vector3* in, double time );
+	virtual Vector3d* InterpolatedPosition( Vector3d* out, Be::Time time );
 
 private:
 	std::string m_name;

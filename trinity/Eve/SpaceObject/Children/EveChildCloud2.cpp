@@ -797,10 +797,10 @@ bool EveChildCloud2::PrepareCloudShadowMap( Tr2RenderContext& renderContext )
 
 	renderContext.m_esm.UpdateRenderTargetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight() );
 
+	renderContext.SetReadOnlyDepth( false );
+
 	// we want a clean depth buffer for this
 	CR( renderContext.Clear( Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xffffffff, 1, 0 ) );
-
-	renderContext.SetReadOnlyDepth( false );
 
 	renderContext.m_esm.SetViewport( m_shadowMapDS->GetWidth(), m_shadowMapDS->GetHeight(), 0, 0, 0, 1 );
 

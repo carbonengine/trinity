@@ -9,6 +9,7 @@
 #include "include/ITr2GpuBuffer.h"
 
 #include "Tr2CmfContent.h"
+#include <ITr2AudGeometry.h>
 #include "Tr2SuballocatedBuffer.h"
 #include "../Utilities/BVH.h"
 
@@ -28,7 +29,7 @@ BLUE_CLASS( Tr2RaycastGeometryRes ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	void SetLodIndices( std::vector<int32_t> && lodIndices );
+	void SetLodIndices( std::vector<int32_t>&& lodIndices );
 	BVH::BoundingVolumeHierarchy& GetBVH();
 
 protected:
@@ -142,15 +143,11 @@ struct TriGeometryResMeshData;
 
 extern bool g_eveIsAudioOcclusionGeometryEnabled;
 
+// Mesh sent to carbon-audio as Wwise geometry. Each load gets a new ID, so a reload registers again.
 struct AudioGeometryResData
 {
 	uint64_t m_id;
-
-	std::vector<Vector3> m_vertices;
-	std::vector<uint32_t> m_indices;
-
-	Vector3 m_minBounds;
-	Vector3 m_maxBounds;
+	Tr2AudGeometryData m_data;
 
 	AudioGeometryResData() :
 		m_id( s_nextId++ )
@@ -328,7 +325,7 @@ public:
 	bool GetBoundingSphere( unsigned int meshIx, Vector4& sphere ) const;
 	Be::Result<std::string> GetBoundingSphereFromScript( unsigned int meshIx, std::pair<Vector3, float>& bounds ) const;
 
-	void PrepareFromGrannyRes( TriGrannyRes * g );
+	void PrepareFromGrannyRes( TriGrannyRes* g );
 
 	BlueStdResult GetMeshVertexElements( size_t meshIndex, std::vector<std::pair<uint32_t, uint32_t>>& elements ) const;
 
@@ -365,7 +362,7 @@ public:
 
 	void ReleaseResourcesHelper();
 #if TRINITYDEV
-	virtual void GetDescription( std::string & desc );
+	virtual void GetDescription( std::string& desc );
 #endif
 
 #if WITH_GRANNY
@@ -373,9 +370,9 @@ public:
 #endif
 
 #if WITH_GRANNY
-	static bool SaveMeshToGrannyFile( TriGeometryResMeshData & mesh, const char* filename );
+	static bool SaveMeshToGrannyFile( TriGeometryResMeshData& mesh, const char* filename );
 #endif
-	static bool SaveMeshToCMFFile( TriGeometryResMeshData & mesh, const char* filename );
+	static bool SaveMeshToCMFFile( TriGeometryResMeshData& mesh, const char* filename );
 
 	//	Iterator functions for processing mesh data
 	typedef void ( *PerTriangleCallback )( void* context, const Vector3& p1, const Vector3& p2, const Vector3& p3 );
@@ -427,18 +424,15 @@ private:
 	bool ReadGrannyFile();
 	void ClearGrannyData();
 
-	bool SetupMeshes( granny_file_info * gi );
-	void SetupSkeletons( granny_file_info * gi );
-	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData & area, granny_mesh * grannyMesh, int bytesPerVertex );
-	bool IsAreaSkinned( TriGeometryResAreaData & area, granny_mesh * grannyMesh, granny_file_info * gi, int bytesPerVertex );
-	bool IsAreaMorphed( TriGeometryResAreaData & area, granny_mesh * myMesh, granny_file_info * gi );
+	bool SetupMeshes( granny_file_info* gi );
+	void SetupSkeletons( granny_file_info* gi );
+	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* grannyMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* grannyMesh, granny_file_info* gi, int bytesPerVertex );
+	bool IsAreaMorphed( TriGeometryResAreaData& area, granny_mesh* myMesh, granny_file_info* gi );
 
 	// Create D3D mesh from data in m_pGrannyFile
-	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
-	bool CreateLodFromGrannyMesh( granny_mesh * myMesh, TriGeometryResLodData * pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext, void* pVBOverride = NULL );
-
-	// Extract audio geometry from lowest LOD for Wwise spatial audio
-	void ExtractAudioGeometry( TriGeometryResMeshData * mesh, granny_mesh * grannyMesh );
+	bool CreateMeshesFromGrannyFile( granny_file_info* gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateLodFromGrannyMesh( granny_mesh* myMesh, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
 #endif
 
 	bool ReadCMFFile();
@@ -446,8 +440,8 @@ private:
 
 	bool SetupMeshes( const cmf::Data& cmfData );
 	void SetupSkeletons( const cmf::Data& cmfData );
-	bool CreateMeshesFromCMFFile( Tr2CmfContents & cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );
-	bool CreateLodFromCMFMesh( Tr2CmfContents & cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateMeshesFromCMFFile( Tr2CmfContents& cmfContents, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
+	bool CreateLodFromCMFMesh( Tr2CmfContents& cmfContents, const cmf::Mesh& cmfMesh, const cmf::MeshLod& cmfMeshLod, TriGeometryResLodData* pMesh, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext& renderContext );
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( TriGeometryRes );

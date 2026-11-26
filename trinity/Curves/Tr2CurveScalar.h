@@ -4,6 +4,7 @@
 
 #include <ITriFunction.h>
 #include <ITriCurveLength.h>
+#include "ITr2SampledCurve.h"
 
 namespace Tr2CurveInterpolation
 {
@@ -90,7 +91,9 @@ struct Tr2CurveRasterizeDestination
 
 
 BLUE_CLASS( Tr2CurveScalar ) :
-	public ITriScalarFunction, public ITriCurveLength
+	public ITriScalarFunction,
+	public ITriCurveLength,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveScalar( IRoot* lockobj = nullptr );
@@ -110,6 +113,12 @@ public:
 	void SetName( const char* name );
 
 	float GetValue( double time ) const;
+	// The value at time, like GetValue, but looking keys up from the caller's
+	// segment cache rather than the curve's own. For callers that sample the
+	// curve at times of their own (bindings with a time offset), so they and the
+	// curve's own UpdateValue don't keep moving each other's cache.
+	float SampleValue( double time, size_t& segmentCache ) const;
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 	float GetTangent( double time ) const;
 	float GetCurrentValue() const;
 

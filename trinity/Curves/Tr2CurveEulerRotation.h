@@ -10,7 +10,8 @@
 
 BLUE_CLASS( Tr2CurveEulerRotation ) :
 	public ITriCurveLength,
-	public ITriQuaternionFunction
+	public ITriQuaternionFunction,
+	public ITr2SampledCurve
 {
 public:
 	Tr2CurveEulerRotation( IRoot* lockobj = nullptr );
@@ -19,18 +20,21 @@ public:
 
 	virtual void UpdateValue( double time );
 
-	virtual Quaternion* Update( Quaternion * in, Be::Time time );
-	virtual Quaternion* Update( Quaternion * in, double time );
-	virtual Quaternion* GetValueAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDotAt( Quaternion * in, double time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, Be::Time time );
-	virtual Quaternion* GetValueDoubleDotAt( Quaternion * in, double time );
+	virtual Quaternion* Update( Quaternion* in, Be::Time time );
+	virtual Quaternion* Update( Quaternion* in, double time );
+	virtual Quaternion* GetValueAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDotAt( Quaternion* in, double time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, Be::Time time );
+	virtual Quaternion* GetValueDoubleDotAt( Quaternion* in, double time );
 
 	virtual float Length();
 
 	Quaternion GetValue( double time ) const;
+	// The value at time, like GetValue, but looking each channel's keys up from
+	// the caller's segment caches (see Tr2CurveScalar::SampleValue).
+	virtual Vector4 SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const;
 
 	void AddKey(
 		float time,

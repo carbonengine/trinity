@@ -34,6 +34,15 @@ Quaternion Tr2CurveEulerRotation::GetValue( double time ) const
 	return RotationQuaternion( yaw, pitch, roll );
 }
 
+Vector4 Tr2CurveEulerRotation::SampleValue( double time, Tr2CurveChannelSegments& segmentCaches ) const
+{
+	float yaw = m_yaw.SampleValue( time, segmentCaches[0] );
+	float pitch = m_pitch.SampleValue( time, segmentCaches[1] );
+	float roll = m_roll.SampleValue( time, segmentCaches[2] );
+	const Quaternion value = RotationQuaternion( yaw, pitch, roll );
+	return Vector4( value.x, value.y, value.z, value.w );
+}
+
 // --------------------------------------------------------------------------------
 Quaternion* Tr2CurveEulerRotation::Update( Quaternion* in, Be::Time time )
 {
