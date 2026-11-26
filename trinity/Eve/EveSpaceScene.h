@@ -396,6 +396,11 @@ public:
 
 	void EnableShadowsInReflections( bool enable );
 	bool IsShadowsInReflectionsEnabled() const;
+	// The cube face the next reflection view renders, so its shadows can be cached per face.
+	void SetReflectionFace( uint32_t face )
+	{
+		m_reflectionFace = face;
+	}
 
 	void GetLightMatrices( const Tr2LightManager::PerLightData& lightData, Matrix& projection, Matrix& view );
 
@@ -412,6 +417,16 @@ protected:
 	//cascaded shadow map
 	Tr2ShadowMapPtr m_cascadedShadowMap;
 	Tr2ShadowMapPtr m_reflectionShadowMap;
+	// Per cube face: a shadow map (its own light matrices) and the cascade atlas it last rendered,
+	// reused for eveReflectionShadowRefreshVisits - 1 visits of that face.
+	struct ReflectionShadowFace
+	{
+		Tr2ShadowMapPtr shadowMap;
+		Tr2GpuResourcePool::Texture cascadedShadowDepth;
+		uint32_t reuses = 0;
+	};
+	ReflectionShadowFace m_reflectionShadowFaces[6];
+	uint32_t m_reflectionFace = 0;
 
 	PIEveSpaceObject2Vector m_backgroundObjects;
 	PEvePlanetVector m_planets;

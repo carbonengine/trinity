@@ -748,6 +748,11 @@ EveSpaceSceneRenderDriver::ViewTargets EveSpaceSceneRenderDriver::RenderView( co
 	{
 		{
 			TimeSection shadowsSection( timers.shadows, "Shadows", rootTimer, renderContext );
+			if( view.scene.IsReflection() )
+			{
+				// a reflection view renders into the cube face given as the target slice
+				m_scene->SetReflectionFace( colorTargetSlice );
+			}
 			shadowResources = m_scene->RenderShadows( depthBuffer, normalMap, m_gpuResourcePool, view.scene, renderContext );
 		}
 		TimeSection ssaoSection( timers.ssao, "SSAO", rootTimer, renderContext );

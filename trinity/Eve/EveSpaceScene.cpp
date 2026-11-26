@@ -70,6 +70,11 @@ TRI_REGISTER_SETTING( "eveIsSpaceObjectResourceUnloadingEnabled", g_eveIsSpaceOb
 float g_eveSpaceObjectResourceUnloadingTimeThreshold = 15.0f;
 TRI_REGISTER_SETTING( "eveSpaceObjectResourceUnloadingTimeThreshold", g_eveSpaceObjectResourceUnloadingTimeThreshold );
 
+// Re-render a reflection face's cascaded shadows every N visits of that face; in between, the face
+// reuses its last cascade atlas and light matrices. 1 renders them on every visit.
+int g_eveReflectionShadowRefreshVisits = 1;
+TRI_REGISTER_SETTING( "eveReflectionShadowRefreshVisits", g_eveReflectionShadowRefreshVisits );
+
 // Object itself only renders if estimated pixel diameter is above
 // this threshold. Note that attachments may still render, in particular
 // turret firing effects, or light glows as they may be more noticeable from afar.
@@ -2550,8 +2555,40 @@ EveSpaceScene::ShadowResources EveSpaceScene::RenderReflectionShadows( const Tr2
 	// the shadow map is not rendered into the cubemap, so it must not use the inverted cull mode
 	bool prevCullInversion = renderContext.m_esm.IsCullModeInverted();
 	renderContext.m_esm.SetInvertedCullMode( false );
-	ShadowResources result = SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, m_updateContext.GetFrustum(), depthMap, gpuResourcePool, renderContext );
-	renderContext.m_esm.SetInvertedCullMode( prevCullInversion );
+	ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedCullMode( prevCullInversion ); } );
+
+	const uint32_t refreshVisits = g_eveReflectionShadowRefreshVisits > 1 ? uint32_t( g_eveReflectionShadowRefreshVisits ) : 1u;
+	if( refreshVisits <= 1 || m_reflectionFace >= 6u )
+	{
+		for( auto& cached : m_reflectionShadowFaces )
+		{
+			cached = {};
+		}
+		return SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *m_reflectionShadowMap, m_updateContext.GetFrustum(), depthMap, gpuResourcePool, renderContext );
+	}
+
+	ReflectionShadowFace& cached = m_reflectionShadowFaces[m_reflectionFace];
+	if( !cached.shadowMap )
+	{
+		cached.shadowMap.CreateInstance();
+		cached.shadowMap->Setup( 512, SHADOW_FRUSTUM_COUNT, false );
+	}
+	if( cached.cascadedShadowDepth.IsValid() && cached.reuses + 1 < refreshVisits )
+	{
+		// Same face as when the atlas was rendered: its light matrices still describe the atlas.
+		++cached.reuses;
+		PopulatePerFramePSData( m_perFramePS, &*cached.shadowMap, renderContext );
+		ApplyPerFrameData( renderContext );
+		SetupPlanetsAsShadowCaster( renderContext );
+		auto shadowMap = cached.shadowMap->DrawToShadowMapResult( renderContext, gpuResourcePool, depthMap, cached.cascadedShadowDepth, m_upscalingAmount );
+		return { shadowMap, cached.cascadedShadowDepth };
+	}
+
+	// Unlock the face's old atlas first, so the pool hands the same texture back instead of creating one.
+	cached.cascadedShadowDepth = {};
+	ShadowResources result = SetupCascadedShadows( TR2RENDERREASON_REFLECTION, *cached.shadowMap, m_updateContext.GetFrustum(), depthMap, gpuResourcePool, renderContext );
+	cached.cascadedShadowDepth = result.cascadedShadowDepth;
+	cached.reuses = 0;
 	return result;
 }
 
