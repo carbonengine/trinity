@@ -191,6 +191,8 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 	{
 	case OP_TEXTURE2D:
 	case OP_TEXTURE2DARRAY:
+	case OP_TEXTURECUBE:
+	case OP_TEXTURECUBEARRAY:
 		if( method == MakeInlineString( "Gather" ) ||
 			method == MakeInlineString( "GatherRed" ) ||
 			method == MakeInlineString( "GatherGreen" ) ||
@@ -220,10 +222,8 @@ bool Type::GetMethodType( ASTNode* methodCall, Type& returnType ) const
 		}
 	case OP_TEXTURE1D:
 	case OP_TEXTURE3D:
-	case OP_TEXTURECUBE:
 	case OP_TEXTURE1DARRAY:
 	case OP_TEXTURE3DARRAY:
-	case OP_TEXTURECUBEARRAY:
 		if( method == MakeInlineString( "CalculateLevelOfDetail" ) )
 		{
 			returnType.FromTokenType( OP_FLOAT );
