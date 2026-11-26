@@ -1286,12 +1286,14 @@ protected:
 		const size_t vertexCount = positions.size();
 		const size_t triangleCount = indices.size() / 3;
 
+		// Per triangle: normal, and its length, or a negative length for triangles too tiny to split
 		std::vector<Vector3> triangleNormals( triangleCount );
-		std::vector<uint8_t> tiny( triangleCount, 0 );
+		std::vector<float> triangleLengths( triangleCount );
 		for( size_t t = 0; t < triangleCount; ++t )
 		{
 			triangleNormals[t] = GetTriangleNormal( positions[indices[t * 3]], positions[indices[t * 3 + 1]], positions[indices[t * 3 + 2]] );
-			tiny[t] = Length( triangleNormals[t] ) * 0.5f < s_minShadingArea ? 1 : 0;
+			const float length = Length( triangleNormals[t] );
+			triangleLengths[t] = length * 0.5f < s_minShadingArea ? -1.f : length;
 		}
 
 		// Triangles around each vertex, as corner indices into indices
@@ -1304,43 +1306,36 @@ protected:
 		{
 			firstCorner[v + 1] += firstCorner[v];
 		}
-		std::vector<uint32_t> vertexCorners( indices.size() );
+		// Corners grouped by vertex, each with its triangle and the triangle's two other vertices
+		struct VertexCorner
+		{
+			uint32_t corner;
+			uint32_t triangle;
+			uint32_t others[2];
+		};
+		std::vector<VertexCorner> vertexCorners( indices.size() );
 		{
 			auto next = firstCorner;
-			for( size_t corner = 0; corner < indices.size(); ++corner )
+			for( uint32_t triangle = 0; triangle < triangleCount; ++triangle )
 			{
-				vertexCorners[next[indices[corner]]++] = uint32_t( corner );
+				const uint32_t* vertices = &indices[triangle * 3];
+				for( uint32_t k = 0; k < 3; ++k )
+				{
+					vertexCorners[next[vertices[k]]++] = { triangle * 3 + k, triangle, { vertices[( k + 1 ) % 3], vertices[( k + 2 ) % 3] } };
+				}
 			}
 		}
 
 		// Two corners on the same vertex share an edge when their triangles have another vertex in common
-		auto sharesEdge = [&]( uint32_t a, uint32_t b ) {
-			for( uint32_t i : { 1u, 2u } )
-			{
-				const uint32_t vertex = indices[a - a % 3 + ( a % 3 + i ) % 3];
-				for( uint32_t j : { 1u, 2u } )
-				{
-					if( vertex == indices[b - b % 3 + ( b % 3 + j ) % 3] )
-					{
-						return true;
-					}
-				}
-			}
-			return false;
+		auto sharesEdge = []( const VertexCorner& a, const VertexCorner& b ) {
+			return a.others[0] == b.others[0] || a.others[0] == b.others[1] || a.others[1] == b.others[0] || a.others[1] == b.others[1];
 		};
 
-		std::vector<Vector3> splitPositions;
-		std::vector<Vector3> splitNormals;
+		// Each output vertex is a copy of sourceVertices[copy]; the attributes are only rewritten if some vertex splits
+		std::vector<uint32_t> sourceVertices;
 		std::vector<Vector3> shadingNormals;
-		std::vector<float> splitCurvature;
-		std::vector<float> splitSmoothedCurvature;
-		std::vector<DataTag> splitDataTags;
-		splitPositions.reserve( vertexCount );
-		splitNormals.reserve( vertexCount );
+		sourceVertices.reserve( vertexCount );
 		shadingNormals.reserve( vertexCount );
-		splitCurvature.reserve( curvature.size() );
-		splitSmoothedCurvature.reserve( smoothedCurvature.size() );
-		splitDataTags.reserve( dataTags.size() );
 		std::vector<uint32_t> splitIndices( indices.size() );
 		const auto shadingSplitCos = cosf( s_shadingSplitDegrees * 3.14159265358979323846 / 180.0 );
 
@@ -1356,6 +1351,7 @@ protected:
 			}
 			return i;
 		};
+		bool unchanged = true;
 		for( size_t v = 0; v < vertexCount; ++v )
 		{
 			const uint32_t first = firstCorner[v];
@@ -1364,17 +1360,18 @@ protected:
 			std::iota( parent.begin(), parent.end(), 0u );
 			for( uint32_t i = 0; i < count; ++i )
 			{
-				const uint32_t a = vertexCorners[first + i];
-				const Vector3& na = triangleNormals[a / 3];
+				const VertexCorner& a = vertexCorners[first + i];
+				const Vector3& na = triangleNormals[a.triangle];
+				const float la = triangleLengths[a.triangle];
 				for( uint32_t j = 0; j < i; ++j )
 				{
-					const uint32_t b = vertexCorners[first + j];
+					const VertexCorner& b = vertexCorners[first + j];
 					if( !sharesEdge( a, b ) )
 					{
 						continue;
 					}
-					const Vector3& nb = triangleNormals[b / 3];
-					if( tiny[a / 3] || tiny[b / 3] || Dot( na, nb ) >= shadingSplitCos * Length( na ) * Length( nb ) )
+					const float lb = triangleLengths[b.triangle];
+					if( la < 0 || lb < 0 || Dot( na, triangleNormals[b.triangle] ) >= shadingSplitCos * la * lb )
 					{
 						parent[find( i )] = find( j );
 					}
@@ -1384,7 +1381,7 @@ protected:
 			sums.assign( count, Vector3( 0.f, 0.f, 0.f ) );
 			for( uint32_t i = 0; i < count; ++i )
 			{
-				sums[find( i )] += triangleNormals[vertexCorners[first + i] / 3];
+				sums[find( i )] += triangleNormals[vertexCorners[first + i].triangle];
 			}
 			copies.assign( count, std::numeric_limits<uint32_t>::max() );
 			for( uint32_t i = 0; i < count; ++i )
@@ -1399,34 +1396,50 @@ protected:
 					{
 						shading = sums[root] / length;
 					}
-					copies[root] = uint32_t( splitPositions.size() );
-					splitPositions.push_back( positions[v] );
-					splitNormals.push_back( normals[v] );
+					copies[root] = uint32_t( sourceVertices.size() );
+					sourceVertices.push_back( uint32_t( v ) );
 					shadingNormals.push_back( shading );
-					if( !curvature.empty() )
-					{
-						splitCurvature.push_back( curvature[v] );
-					}
-					if( !smoothedCurvature.empty() )
-					{
-						splitSmoothedCurvature.push_back( smoothedCurvature[v] );
-					}
-					if( !dataTags.empty() )
-					{
-						splitDataTags.push_back( dataTags[v] );
-					}
 				}
-				splitIndices[vertexCorners[first + i]] = copies[root];
+				splitIndices[vertexCorners[first + i].corner] = copies[root];
 			}
+			// A vertex with no triangles has no copy, one with several fans has several
+			unchanged = unchanged && sourceVertices.size() == v + 1;
 		}
 
-		positions.swap( splitPositions );
-		normals.swap( splitNormals );
-		curvature.swap( splitCurvature );
-		smoothedCurvature.swap( splitSmoothedCurvature );
-		dataTags.swap( splitDataTags );
+		// When every vertex is its own only copy, the attributes and indices are unchanged
+		if( unchanged )
+		{
+			return shadingNormals;
+		}
+		positions = Gather( positions, sourceVertices );
+		normals = Gather( normals, sourceVertices );
+		curvature = Gather( curvature, sourceVertices );
+		smoothedCurvature = Gather( smoothedCurvature, sourceVertices );
+		dataTags = Gather( dataTags, sourceVertices );
 		indices.swap( splitIndices );
 		return shadingNormals;
+	}
+
+	/**
+	 * @brief Gathers per-vertex values by source vertex; an empty input (an attribute that was not computed) stays empty.
+	 * @param values The per-vertex values to gather from.
+	 * @param sources The source vertex of each output value.
+	 * @return The gathered values.
+	 */
+	template <typename T>
+	static std::vector<T> Gather( const std::vector<T>& values, const std::vector<uint32_t>& sources )
+	{
+		std::vector<T> gathered;
+		if( values.empty() )
+		{
+			return gathered;
+		}
+		gathered.reserve( sources.size() );
+		for( const uint32_t source : sources )
+		{
+			gathered.push_back( values[source] );
+		}
+		return gathered;
 	}
 
 	/**
