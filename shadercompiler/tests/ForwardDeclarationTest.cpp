@@ -177,3 +177,38 @@ technique t0
 
 	EXPECT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
 }
+
+TYPED_TEST( ForwardDeclaration, ForwardDeclaredConstantInitializer )
+{
+	const char* src = R"SRC(
+float4 vs(): SV_Position
+{
+	return float4( 0.0, 0.0, 0.0, 1.0 );
+}
+
+float ForwardDeclared( float a );
+
+static const float Constant = ForwardDeclared( 1.0 );
+
+float ps(): SV_Target
+{
+	return Constant;
+}
+
+float ForwardDeclared( float a )
+{
+	return a;
+}
+
+technique t0
+{
+	pass p0
+	{
+		vertexshader = compile vs_3_0 vs();
+		pixelshader = compile ps_3_0 ps();
+	}
+}
+)SRC";
+
+	EXPECT_TRUE( Compiles<typename TestFixture::Compiler>( src ) );
+}
