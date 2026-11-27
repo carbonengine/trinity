@@ -69,6 +69,7 @@ set(_SOURCES
 
 set(_TEST_SOURCES
     tests/Bindless.cpp
+    tests/DeterminismTest.cpp
     tests/GlobalInputTest.cpp
     tests/MetalConversionTest.cpp
     tests/RayTracingTest.cpp

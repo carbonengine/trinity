@@ -19,7 +19,7 @@ public:
 	}
 
 private:
-	uint32_t reference;
+	uint32_t reference = 0xffffffff; // invalid until assigned, so an unset reference never saves garbage
 	friend class StringTable;
 };
 
