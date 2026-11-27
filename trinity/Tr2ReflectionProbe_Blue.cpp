@@ -8,6 +8,7 @@ BLUE_DEFINE( Tr2ReflectionProbe );
 const Be::VarChooser RenderFrequencyChooser[] = {
 	{ "OneSidePerFrame", BeCast( Tr2ReflectionProbe::ONE_SIDE_PER_FRAME ), "One side per frame" },
 	{ "AllSidesPerFrame", BeCast( Tr2ReflectionProbe::ALL_SIDES_PER_FRAME ), "All sides per frame" },
+	{ "OneSideEveryOtherFrame", BeCast( Tr2ReflectionProbe::ONE_SIDE_EVERY_OTHER_FRAME ), "One side every other frame" },
 	{ 0 }
 };
 

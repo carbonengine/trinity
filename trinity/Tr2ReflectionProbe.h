@@ -20,7 +20,10 @@ public:
 	enum ReflectionProbeRenderFrequency
 	{
 		ONE_SIDE_PER_FRAME,
-		ALL_SIDES_PER_FRAME
+		ALL_SIDES_PER_FRAME,
+		// Renders one face and re-filters the cube on every second frame only, so a full
+		// update takes 12 frames. Halves the reflection pass cost for a slower update.
+		ONE_SIDE_EVERY_OTHER_FRAME
 	};
 
 	Tr2ReflectionProbe( IRoot* lockobj = NULL );
@@ -44,6 +47,9 @@ public:
 	bool IsHollyWoodModeOn() const;
 	bool ReadyForDynamicObjectReflections() const;
 
+	// False on the frames that ONE_SIDE_EVERY_OTHER_FRAME skips; the render driver then
+	// renders no reflection faces and the last filtered reflection stays in use.
+	bool ShouldRenderThisFrame() const;
 	uint8_t GetStartFace() const;
 	uint8_t GetEndFace() const;
 
