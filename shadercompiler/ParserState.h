@@ -284,6 +284,7 @@ private:
 	void ShowMessageImpl( const FileLocation& location, int32_t errorCode, va_list args );
 	bool FindConcatOperator( size_t depth );
 	bool ParseMacroArguments( std::vector<InlineString>& arguments );
+	InlineString JoinTokens( const std::vector<PreprocessorToken>& tokens );
 	void AddIntrinsics();
 
 	struct FileContents

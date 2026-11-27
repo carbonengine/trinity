@@ -47,10 +47,10 @@ void ParserState::AddIntrinsics()
 	m_dx9Functions["AllMemoryBarrierWithGroupSync"] = AddFunction( table, "AllMemoryBarrierWithGroupSync", &FunctionDescription0<TypeIs<OP_VOID>, DimIs<1, 1>> );
 	m_dx9Functions["any"] = AddFunction( table, "any", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeSameAsArg<0>, DimSameAsArg<0>> );
 	m_dx9Functions["asdouble"] = AddFunction( table, "asdouble", &FunctionDescription2<TypeIs<OP_DOUBLE>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
-	m_dx9Functions["asfloat"] = AddFunction( table, "asfloat", &FunctionDescription1<TypeIs<OP_FLOAT>, DimIs<2, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["asfloat"] = AddFunction( table, "asfloat", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeSameAsArg<0>, DimSameAsArg<0>> );
 	m_dx9Functions["asin"] = AddFunction( table, "asin", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
-	m_dx9Functions["asint"] = AddFunction( table, "asint", &FunctionDescription1<TypeIs<OP_INT>, DimIs<2, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>> );
-	m_dx9Functions["asuint"] = AddFunction( table, "asuint", &FunctionDescription3<TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["asint"] = AddFunction( table, "asint", &FunctionDescription1<TypeIs<OP_INT>, DimSameAsArg<0>, TypeSameAsArg<0>, DimSameAsArg<0>> );
+	m_dx9Functions["asuint"] = AddFunction( table, "asuint", &FunctionDescription3<TypeIs<OP_UINT>, DimSameAsArg<0>, TypeSameAsArg<0>, DimSameAsArg<0>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
 	m_dx9Functions["atan"] = AddFunction( table, "atan", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["atan2"] = AddFunction( table, "atan2", &FunctionDescription2<TypeIs<OP_FLOAT>, CommonArgDim, TypeIs<OP_FLOAT>, CommonArgDim, TypeIs<OP_FLOAT>, CommonArgDim> );
 	m_dx9Functions["ceil"] = AddFunction( table, "ceil", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
@@ -289,6 +289,25 @@ ParserState::~ParserState()
 extern PreprocessorScanResult GetPreprocessorToken( ParserState& state, PreprocessorToken& token );
 extern bool ConvertToScannerToken( ParserState& state, const PreprocessorToken& ppToken, ScannerToken& token );
 
+// Builds a macro argument's text from its tokens. The tokens are already macro-expanded in the
+// caller's context and can come from different buffers (source file, macro bodies, other
+// arguments), so the argument can't be a range of the source text.
+InlineString ParserState::JoinTokens( const std::vector<PreprocessorToken>& tokens )
+{
+	std::string text;
+	for( auto& token : tokens )
+	{
+		if( !text.empty() )
+		{
+			text += ' ';
+		}
+		text.append( token.string.start, token.string.end );
+	}
+	char* string = AllocateString( text.length() + 1 );
+	memcpy( string, text.c_str(), text.length() + 1 );
+	return MakeInlineString( string, string + text.length() );
+}
+
 bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 {
 	std::vector<PreprocessorToken> argument;
@@ -318,10 +337,10 @@ bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 			{
 				if( parenDepth == 0 )
 				{
-					arguments.push_back( MakeInlineString( argument.front().string.start, argument.back().string.end ) );
+					arguments.push_back( JoinTokens( argument ) );
 					argument.clear();
+					continue;
 				}
-				continue;
 			}
 			else if( *token.string.start == '(' )
 			{
@@ -331,7 +350,7 @@ bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 			{
 				if( parenDepth == 0 )
 				{
-					arguments.push_back( MakeInlineString( argument.front().string.start, argument.back().string.end ) );
+					arguments.push_back( JoinTokens( argument ) );
 					return true;
 				}
 				else

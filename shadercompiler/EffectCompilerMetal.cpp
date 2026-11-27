@@ -200,6 +200,99 @@ void CollectFunctions( ParserState& state, std::map<Symbol*, ASTNode*>& function
 	}
 }
 
+size_t CountFunctionParameters( const ASTNode* header )
+{
+	size_t count = 0;
+	for( size_t i = 0; i < header->GetChildrenCount(); ++i )
+	{
+		const ASTNode* child = header->GetChild( i );
+		if( child && child->GetNodeType() == NT_FUNCTION_PARAMETER )
+		{
+			++count;
+		}
+	}
+	return count;
+}
+
+// Function forward declarations are separate NT_FUNCTION_HEADER nodes at the top level. The
+// passes that turn globals into function parameters only patch function definitions, so a
+// forward declaration would no longer match its patched definition and calls made after the
+// forward declaration would fail to compile. A forward declaration shares its Symbol with the
+// definition, so replace each one whose definition gained parameters with a copy of the
+// definition's (patched) header.
+//
+// The patched header can name types the forward declaration didn't, such as a cbuffer struct
+// declared later in the source, while SortProgramNodes keeps forward declarations among the
+// structs. So move the replaced forward declarations to just before the first function
+// definition, after every struct and global. A function that gained resource parameters can't
+// be called from a global's initializer, so this breaks nothing. Forward declarations whose
+// definition didn't change stay where they are.
+void SyncForwardDeclarations( ParserState& state )
+{
+	ZoneScoped;
+
+	ASTNode* root = state.GetTree();
+	if( !root )
+	{
+		return;
+	}
+
+	std::vector<ASTNode*> toBeMoved;
+	for( size_t i = 0; i < root->GetChildrenCount(); ++i )
+	{
+		ASTNode* node = root->GetChild( i );
+		if( !node || node->GetNodeType() != NT_FUNCTION_HEADER || !node->GetSymbol() )
+		{
+			continue;
+		}
+
+		ASTNode* definition = node->GetSymbol()->definition;
+		if( !definition || definition->GetNodeType() != NT_FUNCTION_DEFINITION )
+		{
+			// Declared but never defined; leave it as it is.
+			continue;
+		}
+
+		ASTNode* header = definition->GetChild( 0 );
+		assert( header && header->GetNodeType() == NT_FUNCTION_HEADER );
+		if( CountFunctionParameters( header ) == CountFunctionParameters( node ) )
+		{
+			// No parameters were added, so the forward declaration still matches.
+			continue;
+		}
+
+		ASTNode* declaration = header->Copy();
+
+		// Parameters share their Symbol with the definition, so parameters bound to a register
+		// would also print their binding attribute (e.g. [[ buffer(n) ]]) on the forward
+		// declaration, which Metal ignores with a warning. Give those parameters a copy without the
+		// register.
+		for( size_t j = 0; j < declaration->GetChildrenCount(); ++j )
+		{
+			ASTNode* param = declaration->GetChild( j );
+			if( !param || param->GetNodeType() != NT_FUNCTION_PARAMETER || !param->GetSymbol() ||
+				param->GetSymbol()->registerSpecifier.empty() || !param->GetScope() )
+			{
+				continue;
+			}
+			Symbol* unbound = new Symbol( *param->GetSymbol() );
+			unbound->registerSpecifier.clear();
+			param->GetScope()->AddSymbol( unbound, ALLOW_OVERRIDES ); // The scope owns the copy.
+			param->SetSymbol( unbound );
+		}
+
+		toBeMoved.push_back( declaration );
+		root->RemoveChild( i );
+		--i;
+	}
+
+	auto& children = root->GetChildren();
+	auto firstDefinition = std::find_if( children.begin(), children.end(), []( const ASTNode* child ) {
+		return child && child->GetNodeType() == NT_FUNCTION_DEFINITION;
+	} );
+	children.insert( firstDefinition, toBeMoved.begin(), toBeMoved.end() );
+}
+
 void AddStructDotPrefix( ASTNode* node, const std::set<Symbol*>& structMembers, Symbol* symbol )
 {
 	for( size_t i = 0, n = node->GetChildrenCount(); i < n; ++i )
@@ -4913,6 +5006,9 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 			}
 		}
 	}
+
+	// Must run after every pass above that adds parameters to function definitions.
+	SyncForwardDeclarations( state );
 
 	PatchMatrixRows( state, state.GetTree() );
 

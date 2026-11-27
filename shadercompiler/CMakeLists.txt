@@ -70,11 +70,14 @@ set(_SOURCES
 set(_TEST_SOURCES
     tests/Bindless.cpp
     tests/DeterminismTest.cpp
+    tests/ForwardDeclarationTest.cpp
     tests/GlobalInputTest.cpp
     tests/MetalConversionTest.cpp
+    tests/PreprocessorTest.cpp
     tests/RayTracingTest.cpp
     tests/ShaderCompilerTest.cpp
     tests/TesingUtils.h
+    tests/TextureFunctionTest.cpp
 )
 
 
