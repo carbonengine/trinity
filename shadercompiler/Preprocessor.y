@@ -174,7 +174,7 @@ shift_expression(A) ::= shift_expression(B) PP_LEFT_OP additive_expression(D).
 
 shift_expression(A) ::= shift_expression(B) PP_RIGHT_OP additive_expression(D).
 {
-	A = B << D;
+	A = B >> D;
 }
 
 

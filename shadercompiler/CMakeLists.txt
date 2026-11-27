@@ -72,6 +72,7 @@ set(_TEST_SOURCES
     tests/ForwardDeclarationTest.cpp
     tests/GlobalInputTest.cpp
     tests/MetalConversionTest.cpp
+    tests/PreprocessorTest.cpp
     tests/RayTracingTest.cpp
     tests/ShaderCompilerTest.cpp
     tests/TesingUtils.h
