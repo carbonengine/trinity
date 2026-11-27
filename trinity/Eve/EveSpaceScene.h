@@ -526,6 +526,8 @@ protected:
 
 	// Tells audio where the scene origin is, so audio can keep still what holds still in the world while the player moves.
 	ITr2AudWorldPtr m_audioWorld;
+	// Frames left before AudWorld is looked for again, after carbon-audio did not have one
+	uint32_t m_audioWorldRetryFrames = 0;
 	void UpdateAudioWorld();
 
 	PTr2ExternalParameterVector m_externalParameters;

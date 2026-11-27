@@ -531,10 +531,18 @@ void EveSpaceScene::UpdateAudioWorld()
 
 	if( !m_audioWorld )
 	{
-		// An audio build without AudWorld keeps getting positions relative to the player.
+		// An audio build without AudWorld keeps getting positions relative to the player. It is looked for again
+		// now and then, not on every frame, in case carbon-audio loads after the scene started.
+		constexpr uint32_t retryFrames = 600;
+		if( m_audioWorldRetryFrames > 0 )
+		{
+			--m_audioWorldRetryFrames;
+			return;
+		}
 		BeClasses->CreateInstanceFromName( "AudWorld", BlueInterfaceIID<ITr2AudWorld>(), reinterpret_cast<void**>( &m_audioWorld.p ) );
 		if( !m_audioWorld )
 		{
+			m_audioWorldRetryFrames = retryFrames;
 			return;
 		}
 	}
