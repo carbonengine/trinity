@@ -325,6 +325,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			Be::READ | Be::PERSIST )
 
 		MAP_PROPERTY( "audioGeometry", GetAudioGeometry, SetAudioGeometry, "Audio geometry interface for Wwise Spatial Audio occlusion and diffraction processing." )
+		MAP_ATTRIBUTE( "isAudioOccluder", m_isAudioOccluder, "Whether this object and the meshes it carries block sound for Wwise Spatial Audio. False for ships, which only listen; a ship drawn with another model class, such as a Creation, gets it set by the game.", Be::READWRITE )
 
 		MAP_ATTRIBUTE( "impactOverlay", m_impactOverlay, "object for rendering damage/impact fx on this space object.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "decals", m_decals, "list of all decals on this space object.", Be::READ | Be::PERSIST )
