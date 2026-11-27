@@ -118,6 +118,7 @@ set(_SHADERS_METAL
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
 find_package(GTest CONFIG REQUIRED)
+include(GoogleTest)
 
 function(set_shared_trinityaltest_properties target)
 
