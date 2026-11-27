@@ -151,7 +151,7 @@ static Symbol* FindTextureToSampler( ParserState& state, ASTNode* sampler, std::
 		}
 		else if( sampler->GetSymbol()->definition && sampler->GetSymbol()->definition->GetNodeType() == NT_FUNCTION_PARAMETER )
 		{
-			InlineString str = state.AllocateName();
+			InlineString str = state.AllocateGlobalName();
 			texture = state.GetSymbolTable().AddSymbol( str );
 			texture->type.FromTokenType( usedType );
 			if( !sampler->GetSymbol()->registerSpecifier.empty() )
@@ -234,7 +234,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					{
 						// we have a local symbol with the same name as the texture
 						// rename it
-						otherSymbol->name = state.AllocateName();
+						otherSymbol->name = state.AllocateGlobalName();
 					}
 					ScannerToken token;
 					token.fileLocation.fileName.start = token.fileLocation.fileName.end = nullptr;

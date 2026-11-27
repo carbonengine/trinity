@@ -859,20 +859,6 @@ FileLocation& ParserState::GetCurrentLocation()
 	return m_fileStack.back().location;
 }
 
-InlineString ParserState::AllocateName()
-{
-	const char* format = "_new_symbol_%04i";
-	size_t len = strlen( format ) + 1;
-	char* newName = new char[len];
-#if _WIN32
-	sprintf_s( newName, len, format, m_strings.size() );
-#else
-	snprintf( newName, len, format, m_strings.size() );
-#endif
-	m_strings.push_back( newName );
-	return MakeInlineString( newName, newName + len - 1 );
-}
-
 InlineString ParserState::AllocateName( const char* name )
 {
 	size_t len = strlen( name ) + 1;
@@ -902,32 +888,45 @@ InlineString ParserState::AllocateName( const InlineString& name )
 	return MakeInlineString( newName, newName + len - 1 );
 }
 
-InlineString ParserState::AllocateNameWithPrefix( const char* prefix )
+namespace
 {
-	const char* format = "__%s_%04i";
-	size_t len = strlen( format ) - 2 + strlen( prefix ) + 1;
-	char* newName = new char[len];
-#if _WIN32
-	sprintf_s( newName, len, format, prefix, m_strings.size() );
-#else
-	snprintf( newName, len, format, prefix, m_strings.size() );
-#endif
-	m_strings.push_back( newName );
-	return MakeInlineString( newName, newName + len - 1 );
+// stem + marker + number, e.g. "__pos_" + "p" + "0003".
+std::string NumberedName( const std::string& stem, const char* marker, unsigned number )
+{
+	char suffix[32];
+	snprintf( suffix, sizeof( suffix ), "%s%04u", marker, number );
+	return stem + suffix;
+}
 }
 
-InlineString ParserState::AllocateNameWithPrefix( const InlineString& prefix )
+InlineString ParserState::AllocateGlobalName()
 {
-	const char* format = "__%s_%04i";
-	size_t len = strlen( format ) - 2 + ( prefix.end - prefix.start ) + 1;
-	char* newName = new char[len];
-#if _WIN32
-	sprintf_s( newName, len, format, ToString( prefix ).c_str(), m_strings.size() );
-#else
-	snprintf( newName, len, format, ToString( prefix ).c_str(), m_strings.size() );
-#endif
-	m_strings.push_back( newName );
-	return MakeInlineString( newName, newName + len - 1 );
+	return AllocateName( NumberedName( "_new_symbol_", "", m_globalNameCount++ ).c_str() );
+}
+
+InlineString ParserState::AllocateGlobalName( const char* prefix )
+{
+	return AllocateName( NumberedName( std::string( "__" ) + prefix + "_", "", m_globalNameCount++ ).c_str() );
+}
+
+void ParserState::ResetLocalNames()
+{
+	m_localNameCount = 0;
+}
+
+InlineString ParserState::AllocateLocalName()
+{
+	return AllocateName( NumberedName( "_new_symbol_", "p", m_localNameCount++ ).c_str() );
+}
+
+InlineString ParserState::AllocateLocalName( const char* prefix )
+{
+	return AllocateName( NumberedName( std::string( "__" ) + prefix + "_", "p", m_localNameCount++ ).c_str() );
+}
+
+InlineString ParserState::AllocateLocalName( const InlineString& prefix )
+{
+	return AllocateLocalName( ToString( prefix ).c_str() );
 }
 
 char* ParserState::AllocateString( size_t size )
