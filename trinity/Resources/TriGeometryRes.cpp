@@ -2322,10 +2322,11 @@ static std::unique_ptr<AudioGeometryResData> ExtractAudioGeometry( Tr2CmfContent
 	Tr2AudGeometryData& data = audioGeometry->m_data;
 
 	const cmf::AudioOcclusionMesh& occlusionMesh = cmfMesh.audioOcclusionMesh;
-	if( occlusionMesh.indices.empty() && occlusionMesh.bounds.IsInitialized() )
+	if( occlusionMesh.vertices.empty() && occlusionMesh.indices.empty() && occlusionMesh.bounds.IsInitialized() )
 	{
-		// The asset pipeline looked at the mesh and found it does not block sound (a pole, lattice or debris), so there is no
-		// occlusion mesh to send, and no render LOD stands in for one.
+		// The asset pipeline looked at the mesh and found it does not block sound (a pole, lattice or debris): it wrote
+		// bounds and no mesh. There is no occlusion mesh to send, and no render LOD stands in for one. A mesh that was
+		// simplified down to vertices without triangles is not marked this way and still falls back.
 		return nullptr;
 	}
 
