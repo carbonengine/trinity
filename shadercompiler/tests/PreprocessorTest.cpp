@@ -62,81 +62,87 @@ TEST( Preprocessor, UndeclaredNameFailsCompile )
 
 TEST( Preprocessor, NestedCallInLastArgument )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )
 #if FMA( 2, 3, FMA( 1, 1, 1 ) ) != 8
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, NestedCallInFirstArgument )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )
 #if FMA( FMA( 1, 1, 1 ), 3, 1 ) != 7
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, ObjectLikeMacroAtStartOfArgument )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )
 #define ONE 1
 #if FMA( 2, 3, ONE + 1 ) != 8
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, ObjectLikeMacroAtEndOfArgument )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )
 #define ONE 1
 #if FMA( 2, 3, 1 + ONE ) != 8
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, ParameterPassedOnToAnotherMacro )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define INNER( x, y ) ( ( x ) + ( y ) )
 #define OUTER( a ) INNER( a, 1 )
 #if OUTER( 5 ) != 6
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, EmptyArgument )
 {
-	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( R"SRC(
+	const char* prelude = R"SRC(
 #define PLUS_ONE( x ) x 1
 #if PLUS_ONE() != 1
 #error "wrong expansion"
 #endif
-)SRC" ).c_str() ) );
+)SRC";
+	EXPECT_TRUE( Compiles<DefaultCompiler>( Effect( prelude ).c_str() ) );
 }
 
 TEST( Preprocessor, NestedCallInShaderCode )
 {
-	auto data = Compile<DefaultCompiler>( Effect(
-		"#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )\n",
-		"float4( FMA( -p0.x, p0.x, FMA( -p0.y, p0.y, float( 1.0 ) ) ).xxxx )" ).c_str() );
+	const char* prelude = "#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )\n";
+	const char* result = "float4( FMA( -p0.x, p0.x, FMA( -p0.y, p0.y, float( 1.0 ) ) ).xxxx )";
+	auto data = Compile<DefaultCompiler>( Effect( prelude, result ).c_str() );
 	ASSERT_EQ( data.techniques.size(), 1u );
 	EXPECT_EQ( data.techniques[0].passes[0].stages[1].source.find( "FMA" ), std::string::npos );
 }
 
 TEST( Preprocessor, CommaInsideParenthesesInArgument )
 {
-	auto data = Compile<DefaultCompiler>( Effect(
-		"#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )\n",
-		"float4( FMA( float2( p0.x, p0.y ), float2( 2.0, 3.0 ), p0.zw ), 0.0, 1.0 )" ).c_str() );
+	const char* prelude = "#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )\n";
+	const char* result = "float4( FMA( float2( p0.x, p0.y ), float2( 2.0, 3.0 ), p0.zw ), 0.0, 1.0 )";
+	auto data = Compile<DefaultCompiler>( Effect( prelude, result ).c_str() );
 	ASSERT_EQ( data.techniques.size(), 1u );
 	EXPECT_EQ( data.techniques[0].passes[0].stages[1].source.find( "FMA" ), std::string::npos );
 }
@@ -144,10 +150,11 @@ TEST( Preprocessor, CommaInsideParenthesesInArgument )
 TEST( Preprocessor, FunctionLikeMacroNameWithoutParenthesesIsNotExpanded )
 {
 	// A function-like macro's name not followed by '(' stays an identifier.
-	auto data = Compile<DefaultCompiler>( Effect(
-		"#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )\n"
-		"static const float FMA = 0.5;\n",
-		"float4( FMA, FMA, FMA, 1.0 )" ).c_str() );
+	const char* prelude = R"SRC(
+#define FMA( x, y, z ) ( ( x ) * ( y ) + ( z ) )
+static const float FMA = 0.5;
+)SRC";
+	auto data = Compile<DefaultCompiler>( Effect( prelude, "float4( FMA, FMA, FMA, 1.0 )" ).c_str() );
 	ASSERT_EQ( data.techniques.size(), 1u );
 	EXPECT_NE( data.techniques[0].passes[0].stages[1].source.find( "FMA" ), std::string::npos );
 }
