@@ -31,6 +31,7 @@
 
 #include <ITriFunction.h>
 #include <IEveBallpark.h>
+#include <ITr2AudWorld.h>
 
 class TriProjection;
 class TriView;
@@ -522,6 +523,10 @@ protected:
 
 	// ballpark of this scene
 	IEveBallparkPtr m_ballpark;
+
+	// Tells audio where the scene origin is, so audio can keep still what holds still in the world while the player moves.
+	ITr2AudWorldPtr m_audioWorld;
+	void UpdateAudioWorld();
 
 	PTr2ExternalParameterVector m_externalParameters;
 

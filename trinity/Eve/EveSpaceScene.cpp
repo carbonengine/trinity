@@ -512,6 +512,38 @@ void EveSpaceScene::SetCamera( const EveSceneView::Camera& camera )
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Tells audio where the scene origin is. Every position this scene hands audio is relative
+//   to it, and it follows the player, so without it a still mesh moves for audio whenever
+//   the player does. Only a scene with a ballpark has an origin, which keeps scenes without
+//   one, such as previews, from moving audio's origin back and forth.
+// --------------------------------------------------------------------------------------
+void EveSpaceScene::UpdateAudioWorld()
+{
+	IEveReferencePointPtr referencePoint( m_ballpark );
+	if( !referencePoint )
+	{
+		return;
+	}
+
+	// A ballpark without an ego ball, such as during a jump or before the ego arrives, puts the origin on the
+	// sun, and every position this frame is relative to it, so audio gets that origin too.
+	const Vector3d origin = m_updateContext.GetOrigin();
+
+	if( !m_audioWorld )
+	{
+		// An audio build without AudWorld keeps getting positions relative to the player.
+		BeClasses->CreateInstanceFromName( "AudWorld", BlueInterfaceIID<ITr2AudWorld>(), reinterpret_cast<void**>( &m_audioWorld.p ) );
+		if( !m_audioWorld )
+		{
+			return;
+		}
+	}
+
+	m_audioWorld->SetSceneOrigin( origin.x, origin.y, origin.z );
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Per-frame part of the update: animates and updates all objects, using the camera set
 //   with SetCamera before it for LOD.
 // --------------------------------------------------------------------------------------
@@ -524,6 +556,7 @@ void EveSpaceScene::UpdateFrame( Be::Time realTime, Be::Time simTime )
 
 	m_updateContext.SetTime( simTime );
 	m_updateContext.UpdateOrigin( m_ballpark );
+	UpdateAudioWorld();
 	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
 	{

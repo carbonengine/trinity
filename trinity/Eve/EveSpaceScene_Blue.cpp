@@ -3,6 +3,8 @@
 #include "StdAfx.h"
 #include "EveSpaceScene.h"
 
+BLUE_DEFINE_INTERFACE( ITr2AudWorld );
+
 #include "TriProjection.h"
 #include "TriPythonContext.h"
 #include "TriView.h"
