@@ -112,6 +112,23 @@ bool CheckHash( const HashCheckArguments& query )
 	return true;
 }
 
+// Hashes file contents without CR characters, so the hash doesn't depend on how the sources
+// were synced: CRLF on Windows clients, LF on macOS/Linux or from a Git checkout.
+void AddWithoutCarriageReturns( MD5& md5, const char* data, size_t size )
+{
+	const char* start = data;
+	const char* end = data + size;
+	for( const char* p = data; p < end; ++p )
+	{
+		if( *p == '\r' )
+		{
+			md5.add( start, p - start );
+			start = p + 1;
+		}
+	}
+	md5.add( start, end - start );
+}
+
 void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, CachingIncludeHandler::IncludeType includeType, std::set<std::string>& visited, MD5& md5 )
 {
 	if( visited.find( sourcePath ) != end( visited ) )
@@ -121,7 +138,7 @@ void GetSourceHash( const char* sourcePath, const char* parentData, const char* 
 	visited.insert( sourcePath );
 	if( auto opened = s_includeHandler.Open( sourcePath, includeType, parentData, rootPath ) )
 	{
-		md5.add( opened->data, opened->size );
+		AddWithoutCarriageReturns( md5, opened->data, opened->size );
 
 		std::cmatch match;
 		auto begin = opened->data;
