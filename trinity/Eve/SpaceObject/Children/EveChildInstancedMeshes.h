@@ -219,6 +219,8 @@ private:
 	ITr2AudGeometryPtr m_audioGeometry;
 	std::vector<AudioInstance> m_audioInstances;
 	Matrix m_audioWorldTransform = IdentityMatrix();
+	// g_eveAudioOcclusionMinSize when the instances were last registered
+	float m_audioMinSize = 0.0f;
 	bool m_audioGeometryDirty = true;
 	// a geometry resource is still loading, so its instances are not registered yet
 	bool m_audioGeometryPending = false;
