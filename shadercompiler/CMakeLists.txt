@@ -71,6 +71,7 @@ set(_TEST_SOURCES
     tests/Bindless.cpp
     tests/GlobalInputTest.cpp
     tests/MetalConversionTest.cpp
+    tests/PreprocessorTest.cpp
     tests/RayTracingTest.cpp
     tests/ShaderCompilerTest.cpp
     tests/TesingUtils.h

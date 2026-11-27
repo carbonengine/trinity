@@ -289,6 +289,25 @@ ParserState::~ParserState()
 extern PreprocessorScanResult GetPreprocessorToken( ParserState& state, PreprocessorToken& token );
 extern bool ConvertToScannerToken( ParserState& state, const PreprocessorToken& ppToken, ScannerToken& token );
 
+// Builds a macro argument's text from its tokens. The tokens are already macro-expanded in the
+// caller's context and can come from different buffers (source file, macro bodies, other
+// arguments), so the argument can't be a range of the source text.
+InlineString ParserState::JoinTokens( const std::vector<PreprocessorToken>& tokens )
+{
+	std::string text;
+	for( auto& token : tokens )
+	{
+		if( !text.empty() )
+		{
+			text += ' ';
+		}
+		text.append( token.string.start, token.string.end );
+	}
+	char* string = AllocateString( text.length() + 1 );
+	memcpy( string, text.c_str(), text.length() + 1 );
+	return MakeInlineString( string, string + text.length() );
+}
+
 bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 {
 	std::vector<PreprocessorToken> argument;
@@ -318,10 +337,10 @@ bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 			{
 				if( parenDepth == 0 )
 				{
-					arguments.push_back( MakeInlineString( argument.front().string.start, argument.back().string.end ) );
+					arguments.push_back( JoinTokens( argument ) );
 					argument.clear();
+					continue;
 				}
-				continue;
 			}
 			else if( *token.string.start == '(' )
 			{
@@ -331,7 +350,7 @@ bool ParserState::ParseMacroArguments( std::vector<InlineString>& arguments )
 			{
 				if( parenDepth == 0 )
 				{
-					arguments.push_back( MakeInlineString( argument.front().string.start, argument.back().string.end ) );
+					arguments.push_back( JoinTokens( argument ) );
 					return true;
 				}
 				else
