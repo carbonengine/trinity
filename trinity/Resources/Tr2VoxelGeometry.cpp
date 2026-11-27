@@ -261,55 +261,73 @@ protected:
 			nullptr,
 			uint32_t( positions.size() * vertexStride ),
 			vertexStride );
-		cmf::BufferElementStream<Vector3> positionStream( *positionElement, vbView, buffers );
-		for( uint32_t i = 0; i < uint32_t( positions.size() ); ++i )
-		{
-			positionStream.set( i, positions[i] * scale + offset );
-		}
+		// The elements have the layout CreateVertexDeclaration gives them, so the vertices are written directly rather than
+		// through cmf::BufferElementStream, which converts every scalar through a function pointer. The conversions match the
+		// stream's: Float_16 for halves and round( clamp( v, -1, 1 ) * 127 ) for Int8Norm
+		CCP_ASSERT( positionElement && positionElement->type == cmf::ElementType::Float32 && positionElement->elementCount == 3 );
+		CCP_ASSERT( !normalElement || ( normalElement->type == cmf::ElementType::Float16 && normalElement->elementCount == 4 ) );
+		CCP_ASSERT( !shadingNormalElement || ( shadingNormalElement->type == cmf::ElementType::Float16 && shadingNormalElement->elementCount == 4 ) );
+		CCP_ASSERT( !extraElement || ( extraElement->type == cmf::ElementType::Int8Norm && extraElement->elementCount == 4 ) );
+		const bool packedTangents = m_outputSettings.packedTangents;
+		const bool writeCurvature = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !curvature.empty();
+		const bool writeSmoothedCurvature = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) && !smoothedCurvature.empty();
+		const bool writeDataTags = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !dataTags.empty();
 
-		auto PopulateNormals = [&]( const std::vector<Vector3>& normalsToPopulate, const cmf::VertexElement* elementIndex ) {
-			if( m_outputSettings.packedTangents )
-			{
-				cmf::BufferElementStream<Vector4> normalStream( *elementIndex, vbView, buffers );
-				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
-				{
-					const Vector3& n = normalsToPopulate[i];
-					auto tangent = std::abs( n.x ) < 0.999f ? Vector3( 1.0f, 0.0f, 0.0f ) : Vector3( 0.0f, 1.0f, 0.0f );
-					const auto bitangent = Normalize( Cross( tangent, n ) );
-					tangent = Normalize( Cross( n, bitangent ) );
-					const Vector4 packedTangent = cmf::PackTangents( cmf::TangentCompression::PackedTangent, n, tangent, bitangent );
-					normalStream.set( i, packedTangent );
-				}
-			}
-			else
-			{
-				cmf::BufferElementStream<Vector3> normalStream( *elementIndex, vbView, buffers );
-				for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
-				{
-					normalStream.set( i, normalsToPopulate[i] );
-				}
-			}
+		// A plain normal fills the first three halves of its element
+		auto writeNormal = []( uint8_t* dest, const Vector3& n ) {
+			Float_16* halves = reinterpret_cast<Float_16*>( dest );
+			halves[0] = Float_16( n.x );
+			halves[1] = Float_16( n.y );
+			halves[2] = Float_16( n.z );
+		};
+		auto toInt8Norm = []( float value ) {
+			return int8_t( std::round( std::clamp( value, -1.0f, 1.0f ) * 127.0f ) );
 		};
 
-		if( normalElement )
+		uint8_t* vertex = static_cast<uint8_t*>( buffers.GetData( vbView ) );
+		for( size_t i = 0; i < positions.size(); ++i, vertex += vertexStride )
 		{
-			PopulateNormals( normals, normalElement );
-		}
-		if( shadingNormalElement )
-		{
-			PopulateNormals( shadingNormals, shadingNormalElement );
-		}
-		if( extraElement )
-		{
-			cmf::BufferElementStream<Vector4> extraDataStream( *extraElement, vbView, buffers );
-
-			for( uint32_t i = 0; i < extraDataStream.size(); ++i )
+			const Vector3 position = positions[i] * scale + offset;
+			std::memcpy( vertex + positionElement->offset, &position, sizeof( Vector3 ) );
+			if( normalElement && !packedTangents )
 			{
-				const float curvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::Curvature ) && !curvature.empty() ? curvature[i] : 0.0f;
-				const float smoothedCurvatureValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::SmoothedCurvature ) && !smoothedCurvature.empty() ? smoothedCurvature[i] : 0.0f;
-				const Vector2 dataTagValue = m_outputSettings.components.HasBit( Tr2VoxelGeometryComponents::DataTags ) && !dataTags.empty() ? Vector2( dataTags[i].solid, dataTags[i].empty ) : Vector2( 0.0f, 0.0f );
-				extraDataStream.set( i, Vector4( curvatureValue, smoothedCurvatureValue, dataTagValue.x, dataTagValue.y ) );
+				writeNormal( vertex + normalElement->offset, normals[i] );
 			}
+			if( shadingNormalElement && !packedTangents )
+			{
+				writeNormal( vertex + shadingNormalElement->offset, shadingNormals[i] );
+			}
+			if( extraElement )
+			{
+				int8_t* extra = reinterpret_cast<int8_t*>( vertex + extraElement->offset );
+				extra[0] = toInt8Norm( writeCurvature ? curvature[i] : 0.0f );
+				extra[1] = toInt8Norm( writeSmoothedCurvature ? smoothedCurvature[i] : 0.0f );
+				extra[2] = toInt8Norm( writeDataTags ? dataTags[i].solid : 0.0f );
+				extra[3] = toInt8Norm( writeDataTags ? dataTags[i].empty : 0.0f );
+			}
+		}
+
+		// Packed tangents stay on the stream: the packing is discontinuous, so recompiling the tangent frame elsewhere can
+		// move its last bits under /fp:fast and visibly change the output
+		auto populatePackedTangents = [&]( const std::vector<Vector3>& normalsToPopulate, const cmf::VertexElement* elementIndex ) {
+			cmf::BufferElementStream<Vector4> normalStream( *elementIndex, vbView, buffers );
+			for( uint32_t i = 0; i < uint32_t( normalsToPopulate.size() ); ++i )
+			{
+				const Vector3& n = normalsToPopulate[i];
+				auto tangent = std::abs( n.x ) < 0.999f ? Vector3( 1.0f, 0.0f, 0.0f ) : Vector3( 0.0f, 1.0f, 0.0f );
+				const auto bitangent = Normalize( Cross( tangent, n ) );
+				tangent = Normalize( Cross( n, bitangent ) );
+				const Vector4 packedTangent = cmf::PackTangents( cmf::TangentCompression::PackedTangent, n, tangent, bitangent );
+				normalStream.set( i, packedTangent );
+			}
+		};
+		if( packedTangents && normalElement )
+		{
+			populatePackedTangents( normals, normalElement );
+		}
+		if( packedTangents && shadingNormalElement )
+		{
+			populatePackedTangents( shadingNormals, shadingNormalElement );
 		}
 
 		// Allocate index buffer
