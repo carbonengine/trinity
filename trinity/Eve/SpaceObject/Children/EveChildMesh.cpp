@@ -856,6 +856,7 @@ bool EveChildMesh::IsShadowCastingDirty() const
 void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )
 {
 	m_instanceTransforms = instances;
+	m_audioInstancesDirty = true;
 }
 
 float EveChildMesh::GetSortValue()
@@ -1253,22 +1254,41 @@ void EveChildMesh::UpdateAudioGeometry( bool allowAudioGeometry )
 		m_audioGeometry = EveAudioOccluder::CreateAudioGeometry();
 	}
 
-	if( !m_instancedMesh || m_instanceTransforms.empty() )
+	if( !m_instancedMesh )
 	{
 		m_audioInstanceOccluders.clear();
+		m_audioInstancesDirty = true;
 		m_audioOccluder.Update( m_audioGeometry, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_worldTransform );
 		return;
 	}
 
 	// The mesh is drawn once for each instance transform and not at the child's own transform, so each copy
-	// occludes where it is drawn.
+	// occludes where it is drawn, and without copies nothing occludes.
 	m_audioOccluder.Release();
+
+	// Every copy is looked at again only when something its occluder depends on changed
+	TriGeometryRes* geometry = m_mesh->GetGeometryResource();
+	const AudioGeometryResData* audioGeometry = geometry && geometry->IsGood() ? geometry->GetAudioGeometry( m_mesh->GetMeshIndex() ) : nullptr;
+	const uint64_t geometryId = audioGeometry ? audioGeometry->m_id : 0;
+	const float minSize = GetEveAudioOcclusionMinSize();
+	if( !m_audioInstancesDirty && m_audioGeometry && m_audioInstancesGeometryId == geometryId && m_audioInstancesMinSize == minSize
+		&& m_audioInstancesRegisteredTransform == m_worldTransform )
+	{
+		return;
+	}
+	// Without carbon-audio nothing registers, so it is tried again until there is one
+	m_audioInstancesDirty = !m_audioGeometry;
+	m_audioInstancesGeometryId = geometryId;
+	m_audioInstancesMinSize = minSize;
+	m_audioInstancesRegisteredTransform = m_worldTransform;
+	m_audioInstancesPlacedTransform = m_worldTransform;
+
 	m_audioInstanceOccluders.resize( m_instanceTransforms.size() );
 	for( size_t i = 0; i < m_audioInstanceOccluders.size(); ++i )
 	{
 		if( IsAffineTransform( m_instanceTransforms[i] ) )
 		{
-			m_audioInstanceOccluders[i].Update( m_audioGeometry, m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_instanceTransforms[i] * m_worldTransform );
+			m_audioInstanceOccluders[i].Update( m_audioGeometry, geometry, m_mesh->GetMeshIndex(), m_instanceTransforms[i] * m_worldTransform );
 		}
 		else
 		{
@@ -1281,6 +1301,13 @@ void EveChildMesh::UpdateAudioGeometryTransforms()
 {
 	m_audioOccluder.SetTransform( m_worldTransform );
 
+	// The copies move with the child. New instance transforms wait for the synchronous update, which registers them.
+	if( m_audioInstanceOccluders.empty() || m_audioInstancesPlacedTransform == m_worldTransform )
+	{
+		return;
+	}
+	m_audioInstancesPlacedTransform = m_worldTransform;
+
 	const size_t count = std::min( m_audioInstanceOccluders.size(), m_instanceTransforms.size() );
 	for( size_t i = 0; i < count; ++i )
 	{
@@ -1292,6 +1319,7 @@ void EveChildMesh::UnregisterAudioGeometry()
 {
 	m_audioOccluder.Release();
 	m_audioInstanceOccluders.clear();
+	m_audioInstancesDirty = true;
 }
 
 void EveChildMesh::SetOrigin( Origin origin )

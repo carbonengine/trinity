@@ -301,6 +301,12 @@ protected:
 	EveAudioOccluder m_audioOccluder;
 	// One for each instance transform, in the same order, when the mesh is drawn as instances
 	std::vector<EveAudioOccluder> m_audioInstanceOccluders;
+	// What the instance occluders were last registered and last placed with, so a child that holds still skips them
+	Matrix m_audioInstancesRegisteredTransform = IdentityMatrix();
+	Matrix m_audioInstancesPlacedTransform = IdentityMatrix();
+	uint64_t m_audioInstancesGeometryId = 0;
+	float m_audioInstancesMinSize = 0.0f;
+	bool m_audioInstancesDirty = true;
 
 	void UpdateAudioGeometry( bool allowAudioGeometry );
 	void UpdateAudioGeometryTransforms();
