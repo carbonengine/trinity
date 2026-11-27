@@ -172,6 +172,39 @@ MAP_FUNCTION_AND_WRAP( "AddMipLevelSkipExclusionDirectory", AddMipLevelSkipExclu
 																							   "To clear the internal directory-list, use ::ClearMipLevelSkipExclusionDirectories()\n"
 																							   ":param name: directory res path" );
 
+static void SetTextureGroupCaps( const std::vector<std::pair<std::string, uint32_t>>& caps )
+{
+	Tr2Renderer::SetTextureGroupCaps( caps );
+}
+
+MAP_FUNCTION_AND_WRAP( "SetTextureGroupCaps", SetTextureGroupCaps, "Replaces every texture group cap at once. caps is a list of (pattern, maxSize): textures whose\n"
+																   "path contains pattern (case-insensitive, / and \\ alike) load with their larger side at most\n"
+																   "maxSize pixels. Rules are checked in list order and the first match wins; maxSize 0 leaves\n"
+																   "that group uncapped. The cap drops whole top mips, so a maxSize that is not a power of two\n"
+																   "rounds down (3000 loads a 4096 texture at 2048), and a texture never drops below its last mip.\n"
+																   "It is a ceiling after the quality skip (mipLevelSkipCount): the smaller size wins.\n"
+																   "Applies to 2D and volume DDS loads from then on; cube maps and other formats are not capped.\n"
+																   "Reload textures to apply it to loaded ones. Folders excluded with\n"
+																   "AddMipLevelSkipExclusionDirectory are never capped. An empty list removes every cap.\n"
+																   ":param caps: list of (path substring, largest side in pixels or 0 for no cap)" );
+
+static void AddTextureGroupCap( const char* pattern, uint32_t maxSize )
+{
+	Tr2Renderer::AddTextureGroupCap( pattern, maxSize );
+}
+
+MAP_FUNCTION_AND_WRAP( "AddTextureGroupCap", AddTextureGroupCap, "Appends one texture group cap; see SetTextureGroupCaps, which replaces the whole table at\n"
+																 "once and is the one to use when setting more than one rule.\n"
+																 ":param pattern: path substring, e.g. \"/model/ship/\"\n"
+																 ":param maxSize: largest side in pixels (rounds down to a power of two), 0 for no cap" );
+
+static void ClearTextureGroupCaps()
+{
+	Tr2Renderer::ClearTextureGroupCaps();
+}
+
+MAP_FUNCTION_AND_WRAP( "ClearTextureGroupCaps", ClearTextureGroupCaps, "Removes every texture group cap; textures load as before from then on." );
+
 static void EnableFallbackTextureDebugging()
 {
 	Tr2Renderer::EnableFallbackTextureDebugging();

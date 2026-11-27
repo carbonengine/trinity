@@ -174,6 +174,7 @@ private:
 	std::unique_ptr<ImageIO::HostBitmap> m_loadedBitmap;
 
 	unsigned m_mipLevelMaxCount;
+	uint32_t m_groupMaxSize; // texture group cap: largest side in pixels to load at, 0 = no cap
 	bool m_isTextureLoadDisabled : 1;
 	bool m_isTextureResizable : 1; // do we listen to the global mipskip setting?
 

@@ -11,6 +11,9 @@
 #include "TriPoolAllocator.h"
 #include "Resources/TriGeometryRes.h"
 
+#include <memory>
+#include <mutex>
+
 using namespace Tr2RenderContextEnum;
 
 bool Tr2Renderer::m_disableGeometryLoad = false;
@@ -47,6 +50,12 @@ uint32_t s_upscalingContextID = Tr2UpscalingAL::INVALID_CONTEXT_ID;
 TriPoolAllocator* s_poolAllocator = NULL;
 // keep an array of directories which are to exclude from texture-sizing
 std::vector<std::string> s_dirsToExclude;
+// texture group caps: (upper-case path substring, max size in pixels), first match wins. Null = no caps.
+// The table is never changed in place: a writer swaps in a new one under the mutex and a reader
+// takes a reference under it, so a load on any thread sees either the old table or the new one.
+typedef std::vector<std::pair<std::string, uint32_t>> TextureGroupCaps;
+std::shared_ptr<const TextureGroupCaps> s_textureGroupCaps;
+std::mutex s_textureGroupCapsMutex;
 
 PROJECTION_TYPE s_currentProjectionType = PT_PERSPECTIVE;
 
@@ -1191,6 +1200,73 @@ bool Tr2Renderer::IsTextureToResize( const char* filename )
 	}
 	// not found, so can do a resize!
 	return true;
+}
+
+static std::string NormalizedTexturePath( std::string path )
+{
+	std::transform( path.begin(), path.end(), path.begin(), []( char c ) { return c == '\\' ? '/' : (char)toupper( (unsigned char)c ); } );
+	return path;
+}
+
+static std::shared_ptr<const TextureGroupCaps> CurrentTextureGroupCaps()
+{
+	std::lock_guard<std::mutex> lock( s_textureGroupCapsMutex );
+	return s_textureGroupCaps;
+}
+
+static void SwapTextureGroupCaps( std::shared_ptr<const TextureGroupCaps> caps )
+{
+	std::lock_guard<std::mutex> lock( s_textureGroupCapsMutex );
+	s_textureGroupCaps.swap( caps );
+}
+
+void Tr2Renderer::SetTextureGroupCaps( const std::vector<std::pair<std::string, uint32_t>>& caps )
+{
+	if( caps.empty() )
+	{
+		SwapTextureGroupCaps( nullptr );
+		return;
+	}
+	auto table = std::make_shared<TextureGroupCaps>();
+	table->reserve( caps.size() );
+	for( const auto& cap : caps )
+	{
+		// A max size of 0 means "no cap" for this group; the rule is kept so that a later, broader
+		// rule cannot catch it.
+		table->emplace_back( NormalizedTexturePath( cap.first ), cap.second );
+	}
+	SwapTextureGroupCaps( table );
+}
+
+void Tr2Renderer::AddTextureGroupCap( const char* pattern, uint32_t maxSize )
+{
+	auto current = CurrentTextureGroupCaps();
+	auto table = current ? std::make_shared<TextureGroupCaps>( *current ) : std::make_shared<TextureGroupCaps>();
+	table->emplace_back( NormalizedTexturePath( pattern ), maxSize );
+	SwapTextureGroupCaps( table );
+}
+
+void Tr2Renderer::ClearTextureGroupCaps()
+{
+	SwapTextureGroupCaps( nullptr );
+}
+
+uint32_t Tr2Renderer::GetTextureGroupMaxSize( const wchar_t* filename )
+{
+	const auto caps = CurrentTextureGroupCaps();
+	if( !caps )
+	{
+		return 0;
+	}
+	const std::string path = NormalizedTexturePath( std::string( CW2A( filename ) ) );
+	for( const auto& cap : *caps )
+	{
+		if( path.find( cap.first ) != std::string::npos )
+		{
+			return cap.second;
+		}
+	}
+	return 0;
 }
 
 bool Tr2Renderer::IsLowQuality( void )

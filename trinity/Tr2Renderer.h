@@ -115,6 +115,15 @@ public:
 	static bool IsTextureToResize( const char* filename );
 	static void AddMipLevelSkipExclusionDirectory( const char* path );
 
+	// texture group caps: ordered (path substring, max size in pixels) rules, first match wins.
+	// SetTextureGroupCaps replaces the whole table at once; a load on any thread sees the old
+	// table or the new one, never a half-built one.
+	static void SetTextureGroupCaps( const std::vector<std::pair<std::string, uint32_t>>& caps );
+	static void AddTextureGroupCap( const char* pattern, uint32_t maxSize );
+	static void ClearTextureGroupCaps();
+	// The largest side, in pixels, a texture with this path may load at; 0 = no cap.
+	static uint32_t GetTextureGroupMaxSize( const wchar_t* filename );
+
 	// Register an effect. All registered effects are automatically reinitialized upon shader model change.
 	// Reinit's can also be triggered from somewhere else, for example when toggling shadows
 	static void RegisterEffect( Tr2Effect* f );

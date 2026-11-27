@@ -116,6 +116,49 @@ void CreateDescription( const ImageIO::HostBitmap& bitmap, uint32_t lod, Tr2Bitm
 	}
 }
 
+// --------------------------------------------------------------------------------------
+// Description:
+//   The number of top mips to skip so that a DDS loads with its larger side at most maxSize
+//   pixels, read from the file's header: the side is halved until it fits, and never past the
+//   chain's last mip, so a chain that stops early (4x4 for block-compressed files) is capped
+//   by its size, not by its mip count. The stream is left where it was found.
+// Return Value:
+//   0 for anything that is not a DDS with a mip chain, or when the stream cannot be rewound.
+// --------------------------------------------------------------------------------------
+uint32_t DdsMipSkipForMaxSize( ICcpStream& stream, uint32_t maxSize )
+{
+	const ptrdiff_t start = stream.GetPosition();
+	if( start < 0 )
+	{
+		return 0;
+	}
+	// magic, dwSize, dwFlags, dwHeight, dwWidth, dwPitchOrLinearSize, dwDepth, dwMipMapCount
+	uint32_t header[8] = {};
+	const bool isRead = stream.Read( header, sizeof( header ) ) == ptrdiff_t( sizeof( header ) );
+	// Seek's return value is not the new position in every stream, so check the position itself.
+	stream.Seek( start, ICcpStream::SO_BEGIN );
+	if( stream.GetPosition() != start )
+	{
+		CCP_LOGERR( "TriTextureRes: could not rewind the stream after reading the DDS header" );
+		return 0;
+	}
+	const uint32_t ddsMagic = 0x20534444; // "DDS "
+	const uint32_t ddsdMipMapCount = 0x00020000;
+	if( !isRead || header[0] != ddsMagic || !( header[2] & ddsdMipMapCount ) )
+	{
+		return 0;
+	}
+	uint32_t largestSide = std::max( header[3], header[4] );
+	const uint32_t mipCount = header[7];
+	uint32_t skip = 0;
+	while( largestSide > maxSize && skip + 1 < mipCount )
+	{
+		largestSide >>= 1;
+		++skip;
+	}
+	return skip;
+}
+
 void AtomicMinUpdate( std::atomic<uint32_t>& a, uint32_t b )
 {
 	uint32_t prev = a;
@@ -138,6 +181,7 @@ TriTextureRes::TriTextureRes() :
 	m_cutoutWidth( 1.0f ),
 	m_cutoutHeight( 1.0f ),
 	m_mipLevelMaxCount( std::numeric_limits<uint32_t>::max() ),
+	m_groupMaxSize( 0 ),
 	m_isTextureResizable( true ),
 	m_lodEnabled( false ),
 	m_hadLodRequests( false ),
@@ -259,9 +303,13 @@ void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 		}
 	}
 
+	m_isTextureResizable = Tr2Renderer::IsTextureToResize( CW2A( name ) );
+
 	m_mipLevelMaxCount = 255;
 
-	m_isTextureResizable = Tr2Renderer::IsTextureToResize( CW2A( name ) );
+	// The group cap is read here and applied in DoLoad, once the file's size is known. Folders
+	// excluded from the quality skip (UI) are excluded from caps too.
+	m_groupMaxSize = m_isTextureResizable ? Tr2Renderer::GetTextureGroupMaxSize( name ) : 0;
 
 	m_isTextureLoadDisabled = Tr2Renderer::IsTextureLoadDisabled();
 
@@ -608,6 +656,11 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 
 	ImageIO::Result result;
 	auto mipSkip = m_requestedLoadMip + ComputeMipSkipCount();
+	if( m_groupMaxSize )
+	{
+		// A ceiling after the quality skip: the larger skip (the smaller texture) wins.
+		mipSkip = std::max<unsigned>( mipSkip, DdsMipSkipForMaxSize( *m_dataStream, m_groupMaxSize ) );
+	}
 	ImageIO::LoadParameters params( m_path.c_str(), mipSkip, m_mipLevelMaxCount );
 	result = ImageIO::ReadImage( *m_dataStream, params, *m_loadedBitmap, &m_metadata );
 
