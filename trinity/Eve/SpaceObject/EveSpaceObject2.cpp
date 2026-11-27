@@ -1587,7 +1587,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 
 void EveSpaceObject2::UpdateVisibility( const EveUpdateContext& updateContext, const Matrix& parentTransform )
 {
-	TRINITY_STATS_ZONE( __FUNCTION__ );
+	// No per-object zone here: it heap-allocates per call while Tracy runs and inflated the loop ~10x.
 
 	m_isVisible = false;
 	m_isMeshVisible = false;
