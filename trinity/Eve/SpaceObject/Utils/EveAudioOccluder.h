@@ -6,9 +6,10 @@
 
 BLUE_DECLARE( TriGeometryRes );
 
-// Smallest a mesh can be and still be handed to carbon-audio, in meters. The size is the middle side of the mesh's
-// bounding box in the world, so a long thin mesh counts as small. Can change while the scene runs.
-extern float g_eveAudioOcclusionMinSize;
+// Smallest a mesh can be and still be handed to carbon-audio, in meters: the eveAudioOcclusionMinSize setting, with
+// anything that is not a positive number read as 0, no limit. The size is the middle side of the mesh's bounding box
+// in the world, so a long thin mesh counts as small. Can change while the scene runs.
+float GetEveAudioOcclusionMinSize();
 
 // Represents one instance of a mesh's audio geometry in carbon-audio and keeps its transform up to date.
 class EveAudioOccluder
@@ -23,7 +24,7 @@ public:
 	EveAudioOccluder& operator=( const EveAudioOccluder& ) = delete;
 
 	// Registers the mesh once its audio geometry is loaded and registers it again when the resource reloads.
-	// Releases when there is nothing to register or the mesh is smaller than g_eveAudioOcclusionMinSize.
+	// Releases when there is nothing to register or the mesh is smaller than GetEveAudioOcclusionMinSize().
 	// Reads the resource, so call it from the synchronous update.
 	void Update( ITr2AudGeometry* audio, TriGeometryRes* geometry, unsigned int meshIndex, const Matrix& worldTransform );
 

@@ -77,7 +77,8 @@ void EveChildInstancedMeshes::UpdateAudioGeometry( bool allowAudioGeometry )
 	}
 
 	const bool moved = m_audioWorldTransform != m_worldTransform;
-	const bool sizeLimitChanged = m_audioMinSize != g_eveAudioOcclusionMinSize;
+	const float minSize = GetEveAudioOcclusionMinSize();
+	const bool sizeLimitChanged = m_audioMinSize != minSize;
 	if( !m_audioGeometryDirty && !m_audioGeometryPending && !moved && !sizeLimitChanged )
 	{
 		return;
@@ -111,7 +112,7 @@ void EveChildInstancedMeshes::UpdateAudioGeometry( bool allowAudioGeometry )
 	}
 
 	m_audioWorldTransform = m_worldTransform;
-	m_audioMinSize = g_eveAudioOcclusionMinSize;
+	m_audioMinSize = minSize;
 	m_audioGeometryPending = false;
 	for( AudioInstance& audioInstance : m_audioInstances )
 	{

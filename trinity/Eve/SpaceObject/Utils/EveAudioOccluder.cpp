@@ -7,19 +7,33 @@
 
 #include <algorithm>
 #include <atomic>
+#include <limits>
 
 // Only the big meshes block sound: every mesh in Wwise costs ray tracing time, and the small ones block little.
 // 0 hands every mesh to carbon-audio.
-float g_eveAudioOcclusionMinSize = 1000.0f;
-TRI_REGISTER_SETTING( "eveAudioOcclusionMinSize", g_eveAudioOcclusionMinSize );
+static float s_eveAudioOcclusionMinSize = 1000.0f;
+TRI_REGISTER_SETTING( "eveAudioOcclusionMinSize", s_eveAudioOcclusionMinSize );
 
 static std::atomic<uint64_t> s_nextInstanceId{ 1 };
+
+float GetEveAudioOcclusionMinSize()
+{
+	// Written as > so NaN reads as no limit too
+	return s_eveAudioOcclusionMinSize > 0.0f ? s_eveAudioOcclusionMinSize : 0.0f;
+}
 
 // How big a mesh is as something that blocks sound: the middle side of its bounding box in the world.
 // A wall or a block scores its width; a pipe or a beam scores its thickness however long it is.
 static float OccluderSize( const Tr2AudGeometryData& data, const Matrix& m )
 {
 	const Vector3 box = data.m_maxBounds - data.m_minBounds;
+	// Bounds that were never filled in say nothing about the size, and a mesh is not left out for that.
+	// Written as !(>=) so NaN counts as not filled in too.
+	if( !( box.x >= 0.0f && box.y >= 0.0f && box.z >= 0.0f ) )
+	{
+		return std::numeric_limits<float>::max();
+	}
+
 	float sides[3] = {
 		box.x * Length( Vector3( m._11, m._12, m._13 ) ),
 		box.y * Length( Vector3( m._21, m._22, m._23 ) ),
@@ -80,7 +94,7 @@ void EveAudioOccluder::Update( ITr2AudGeometry* audio, TriGeometryRes* geometry,
 		audioGeometry = geometry->GetAudioGeometry( meshIndex );
 	}
 
-	if( audioGeometry && OccluderSize( audioGeometry->m_data, worldTransform ) < g_eveAudioOcclusionMinSize )
+	if( audioGeometry && OccluderSize( audioGeometry->m_data, worldTransform ) < GetEveAudioOcclusionMinSize() )
 	{
 		audioGeometry = nullptr;
 	}
