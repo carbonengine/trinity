@@ -74,6 +74,7 @@ set(_TEST_SOURCES
     tests/RayTracingTest.cpp
     tests/ShaderCompilerTest.cpp
     tests/TesingUtils.h
+    tests/TextureFunctionTest.cpp
 )
 
 

@@ -751,6 +751,34 @@ void SplitCoordVec( ASTNode* call, const Type& textureType, size_t coordOffset =
 	}
 };
 
+// Appends the component argument of a Metal gather() call, e.g. component::y for GatherGreen.
+// Call after SplitCoordVec. Metal takes the component after the offset, so for 2D textures and
+// 2D texture arrays, the only ones whose gather() has an offset parameter, add a zero offset
+// when the HLSL call had none. Otherwise the component would be taken as the offset.
+void AddGatherComponent( ASTNode* call, const Type& textureType, const char* component )
+{
+	size_t argsWithoutOffset = 0;
+	if( textureType.builtInType == OP_TEXTURE2D )
+	{
+		argsWithoutOffset = 2; // sampler, coord
+	}
+	else if( textureType.builtInType == OP_TEXTURE2DARRAY )
+	{
+		argsWithoutOffset = 3; // sampler, coord, array index
+	}
+
+	if( argsWithoutOffset && call->GetChildrenCount() == argsWithoutOffset )
+	{
+		auto zero = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+		zero.stringValue = MakeInlineString( "int2( 0 )" );
+		call->AddChild( new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &zero ) );
+	}
+
+	auto token = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
+	token.stringValue = MakeInlineString( component );
+	call->AddChild( new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &token ) );
+}
+
 
 void PatchMetalBufferCalls( ParserState& state, ASTNode* node )
 {
@@ -859,44 +887,35 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		WrapInOption( { 2 }, "level" );
 		SplitCoordVec( call, textureType );
 	}
-	else if( functionToken.stringValue == "GatherRed" )
+	else if( functionToken.stringValue == "Gather" || functionToken.stringValue == "GatherRed" )
 	{
 		isGatherCall = true;
 		functionToken.stringValue = MakeInlineString( "gather" );
-
-		// Add x component enumeration to the function
-		//auto x = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
-		//x.stringValue = MakeInlineString("component::x");
-		//ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &x);
-		//call->AddChild(component);
-
 		SplitCoordVec( call, textureType );
+		// component::x is Metal's default. Adding it explicitly would need special treatment for
+		// depth textures, whose gather() takes no component argument.
+		//AddGatherComponent( call, textureType, "component::x" );
 	}
 	else if( functionToken.stringValue == "GatherGreen" )
 	{
 		isGatherCall = true;
 		functionToken.stringValue = MakeInlineString( "gather" );
-
-		// Add y component enumeration to the function
-		auto y = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
-		y.stringValue = MakeInlineString( "component::y" );
-		ASTNode* component = new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &y );
-		call->AddChild( component );
-
 		SplitCoordVec( call, textureType );
+		AddGatherComponent( call, textureType, "component::y" );
 	}
 	else if( functionToken.stringValue == "GatherBlue" )
 	{
 		isGatherCall = true;
 		functionToken.stringValue = MakeInlineString( "gather" );
-
-		// Add z component enumeration to the function
-		auto z = ScannerToken::FromTokenType( OP_INT_CONST, call->GetLocation() );
-		z.stringValue = MakeInlineString( "component::z" );
-		ASTNode* component = new ASTNode( NT_CONSTANT, call->GetLocation(), call->GetScope(), &z );
-		call->AddChild( component );
-
 		SplitCoordVec( call, textureType );
+		AddGatherComponent( call, textureType, "component::z" );
+	}
+	else if( functionToken.stringValue == "GatherAlpha" )
+	{
+		isGatherCall = true;
+		functionToken.stringValue = MakeInlineString( "gather" );
+		SplitCoordVec( call, textureType );
+		AddGatherComponent( call, textureType, "component::w" );
 	}
 	else if( functionToken.stringValue == "Load" )
 	{
