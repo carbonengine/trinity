@@ -882,7 +882,9 @@ void CollectGlobals(
 						if( !globalsStruct )
 						{
 							InlineString name = MakeInlineString( "GlobalsData" );
-							globalsStruct = new ASTNode( NT_STRUCT, node->GetLocation(), node->GetScope(), nullptr );
+							// The GlobalsData struct has no proper location, so give it a dummy one.
+							FileLocation location{ 1, name };
+							globalsStruct = new ASTNode( NT_STRUCT, location, node->GetScope(), nullptr );
 
 							RegisterSpecifier reg;
 							reg.shaderProfile.start = nullptr;
@@ -5117,16 +5119,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				RemapSystemSemanticsDXtoMetal( shaderNode->GetChild( 1 ) );
 
-				std::string shaderCacheKey;
-				{
-					state.GetSymbolTable().ResetUsedFlag();
-					MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
-
-					CompilerInputStream os( state, ShadingLanguage::MSL );
-					os << MSL{ state.GetTree(), &state.GetSymbolTable() };
-					shaderCacheKey = os.str();
-					state.GetSymbolTable().ResetUsedFlag();
-				}
 				PatchShaderType patchShaderType;
 				switch( stage.type )
 				{
@@ -5190,6 +5182,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				os << AtomicFn{ "xor", "Xor" };
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
 
+				// Key on the exact source code that we intend to feed to the Metal compiler.
+				std::string shaderCacheKey = os.str();
 
 				// Let only one thread compile this permutation.
 				bool needsToCompile = false;

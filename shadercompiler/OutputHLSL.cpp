@@ -73,6 +73,38 @@ bool HasUsedDeclarations( ASTNode* node )
 	return false;
 }
 
+// Returns true for declarations (top-level or struct members) that the MSL writer would not write anything for.
+bool IsUnusedDeclaration( ASTNode* node )
+{
+	if( !node )
+	{
+		return false;
+	}
+	switch( node->GetNodeType() )
+	{
+	case NT_TECHNIQUE:
+		return true;
+	case NT_FUNCTION_DEFINITION:
+		return !node->GetChild( 0 )->GetSymbol()->used;
+	case NT_FUNCTION_HEADER:
+	case NT_STRUCT:
+	case NT_NAME_DECLARATION:
+		return node->GetSymbol() && !node->GetSymbol()->used;
+	case NT_VAR_DECLARATION_LIST:
+	case NT_STRUCT_MEMBER:
+		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+		{
+			if( !IsUnusedDeclaration( node->GetChild( i ) ) )
+			{
+				return false;
+			}
+		}
+		return true;
+	default:
+		return false;
+	}
+}
+
 std::map<int, std::string> s_operators = {
 	{ OP_MUL_ASSIGN, "*=" },
 	{ OP_DIV_ASSIGN, "/=" },
@@ -1307,7 +1339,11 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 {
 	auto node = msl.node;
 
-	os << node->GetLocation();
+	// Children write their own locations, so the program's location (that of its first declaration) is never needed.
+	if( node->GetNodeType() != NT_PROGRAM )
+	{
+		os << node->GetLocation();
+	}
 
 	auto Child = [&]( size_t index ) -> MSL { return XSLChild( msl, index ); };
 
@@ -1880,7 +1916,15 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		{
 			os << "struct " << " " << node->GetSymbol()->name << Endl();
 			os << "{" << Endl();
-			os << Indent() << Children<MSL>( msl, "" ) << Unindent() << Endl();
+			os << Indent();
+			for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
+			{
+				if( !IsUnusedDeclaration( node->GetChild( i ) ) )
+				{
+					os << Child( i );
+				}
+			}
+			os << Unindent() << Endl();
 			os << "};" << Endl();
 		}
 		break;
@@ -1901,6 +1945,10 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 	case NT_PROGRAM:
 		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
 		{
+			if( IsUnusedDeclaration( node->GetChild( i ) ) )
+			{
+				continue;
+			}
 			os << Child( i );
 			if( node->GetChild( i ) && node->GetChild( i )->GetNodeType() == NT_FUNCTION_HEADER )
 			{

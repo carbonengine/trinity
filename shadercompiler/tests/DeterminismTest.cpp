@@ -55,9 +55,9 @@ TEST( Determinism, SourceHashIgnoresLineEndings )
 
 TEST( Determinism, MetalPatchedShaderDoesNotDependOnEarlierStrings )
 {
-	// Metal shares one compile between permutations whose shader is the same before patching, so
-	// patching must generate the same code for them. Token pasting allocates strings in the parser,
-	// which used to change the numbers of the names that patching generates.
+	// Metal shares one compile between permutations whose patched shader is the same, so patching
+	// must generate the same code for them. Token pasting allocates strings in the parser, which
+	// used to change the numbers of the names that patching generates.
 	if( !g_metalCompilerAvailable )
 	{
 		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
@@ -153,6 +153,102 @@ technique t1 { pass p0 { vertexshader = compile vs_3_0 vs(); pixelshader = compi
 			ADD_FAILURE() << "t1 stage " << i << " differs at " << at << ":\n"
 						  << sourceA.substr( from, 300 ) << "\n----- vs -----\n"
 						  << sourceB.substr( from, 300 );
+		}
+	}
+}
+
+TEST( Determinism, MetalUnusedDeclarationsLeaveNoTrace )
+{
+	// Permutations differ in which declarations they have. Metal shares one compile between
+	// permutations whose generated code is the same, so declarations a stage doesn't use must not
+	// leave anything (such as #line directives) in its code.
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+	// The WITH_UNUSED permutation adds one unused declaration of each kind. The unused function comes
+	// first, as it is the program's first declaration. unusedGlobal ends up as an unused member of
+	// the globals struct, which usedGlobal keeps in the code.
+	const char* source = R"SRC(
+#if WITH_UNUSED
+struct UnusedStruct { float4 v; };
+UnusedStruct unusedFunction( float4 v ) { UnusedStruct s; s.v = v; return s; }
+float4 unusedPrototype( float4 v );
+float4 unusedGlobal;
+Texture2D unusedTexture;
+SamplerState unusedSampler;
+#endif
+
+float4 usedGlobal;
+struct VsIn { float4 pos: POSITION; float2 uv: TEXCOORD0; };
+struct VsOut { float4 pos: SV_Position; float2 uv: TEXCOORD0; };
+VsOut vs( VsIn input ) { VsOut o; o.pos = input.pos; o.uv = input.uv; return o; }
+float4 ps( VsOut input ): SV_Target { return usedGlobal * input.uv.x; }
+
+technique t0 { pass p0 { vertexshader = compile vs_3_0 vs(); pixelshader = compile ps_3_0 ps(); } }
+)SRC";
+	auto a = Compile<EffectCompilerMetal>( source, { { "WITH_UNUSED", "1" } } );
+	auto b = Compile<EffectCompilerMetal>( source, { { "WITH_UNUSED", "0" } } );
+	ASSERT_EQ( a.techniques.size(), 1u );
+	ASSERT_EQ( b.techniques.size(), 1u );
+	auto& stagesA = a.techniques[0].passes[0].stages;
+	auto& stagesB = b.techniques[0].passes[0].stages;
+	ASSERT_EQ( stagesA.size(), stagesB.size() );
+	for( size_t i = 0; i < stagesA.size(); ++i )
+	{
+		auto& sourceA = stagesA[i].source;
+		auto& sourceB = stagesB[i].source;
+		auto diff = std::mismatch( sourceA.begin(), sourceA.end(), sourceB.begin(), sourceB.end() );
+		if( diff.first != sourceA.end() || diff.second != sourceB.end() )
+		{
+			auto at = size_t( diff.first - sourceA.begin() );
+			auto from = at > 200 ? at - 200 : 0;
+			ADD_FAILURE() << "stage " << i << " differs at " << at << ":\n"
+						  << sourceA.substr( from, 300 ) << "\n----- vs -----\n"
+						  << sourceB.substr( from, 300 );
+		}
+	}
+}
+
+TEST( Determinism, MetalLineDirectivesAreFollowedByCode )
+{
+	// A #line directive with no code after it comes from a node that wrote nothing, such as an unused
+	// declaration or a technique. Those can differ between permutations, so they must not be written.
+	if( !g_metalCompilerAvailable )
+	{
+		GTEST_SKIP() << "Skipping test: Metal compiler is not available.";
+	}
+	// One unused declaration of each kind, and a technique. unusedGlobal ends up as an unused member of
+	// the globals struct, which usedGlobal keeps in the code.
+	const char* source = R"SRC(
+struct UnusedStruct { float4 v; };
+UnusedStruct unusedFunction( float4 v ) { UnusedStruct s; s.v = v; return s; }
+float4 unusedPrototype( float4 v );
+float4 unusedGlobal;
+Texture2D unusedTexture;
+SamplerState unusedSampler;
+
+float4 usedGlobal;
+struct VsIn { float4 pos: POSITION; float2 uv: TEXCOORD0; };
+struct VsOut { float4 pos: SV_Position; float2 uv: TEXCOORD0; };
+VsOut vs( VsIn input ) { VsOut o; o.pos = input.pos; o.uv = input.uv; return o; }
+float4 ps( VsOut input ): SV_Target { return usedGlobal * input.uv.x; }
+
+technique t0 { pass p0 { vertexshader = compile vs_3_0 vs(); pixelshader = compile ps_3_0 ps(); } }
+)SRC";
+	auto data = Compile<EffectCompilerMetal>( source );
+	ASSERT_EQ( data.techniques.size(), 1u );
+	auto& stages = data.techniques[0].passes[0].stages;
+	for( size_t i = 0; i < stages.size(); ++i )
+	{
+		auto& code = stages[i].source;
+		for( size_t pos = code.find( "#line " ); pos != std::string::npos; pos = code.find( "#line ", pos + 1 ) )
+		{
+			auto next = code.find( '\n', pos );
+			ASSERT_NE( next, std::string::npos );
+			auto nextLine = code.substr( next + 1, code.find( '\n', next + 1 ) - next - 1 );
+			EXPECT_FALSE( nextLine.empty() || nextLine.rfind( "#line ", 0 ) == 0 )
+				<< "stage " << i << ": " << code.substr( pos, next - pos ) << " is not followed by code";
 		}
 	}
 }
