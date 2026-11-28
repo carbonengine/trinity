@@ -213,11 +213,25 @@ public:
 
 	FileLocation& GetCurrentLocation();
 
-	InlineString AllocateName();
+	// Copies of existing names.
 	InlineString AllocateName( const char* name );
 	InlineString AllocateName( const InlineString& name );
-	InlineString AllocateNameWithPrefix( const char* prefix );
-	InlineString AllocateNameWithPrefix( const InlineString& prefix );
+
+	// Generated names that are unique within the whole permutation: "_new_symbol_0012" or, with
+	// a prefix, "__cbuffer_0013". Numbered by their own counter, so other string allocations
+	// (e.g. token pasting) don't renumber them.
+	InlineString AllocateGlobalName();
+	InlineString AllocateGlobalName( const char* prefix );
+
+	// Generated names numbered from the last ResetLocalNames(): "_new_symbol_p0000" or, with a
+	// prefix, "__pos_p0003". The "p" keeps them from matching any global name. Used by the Metal
+	// compiler's stage patching: permutations whose stage is the same before patching share one
+	// compile, so the names patching generates must not depend on the rest of the permutation.
+	void ResetLocalNames();
+	InlineString AllocateLocalName();
+	InlineString AllocateLocalName( const char* prefix );
+	InlineString AllocateLocalName( const InlineString& prefix );
+
 	char* AllocateString( size_t size );
 
 	void ShowMessage( const FileLocation& location, int32_t errorCode, ... );
@@ -299,6 +313,8 @@ private:
 	bool m_inDiscoverMode;
 
 	std::vector<char*> m_strings;
+	unsigned m_globalNameCount = 0;
+	unsigned m_localNameCount = 0;
 	std::set<Symbol*> m_dx9TextureFunctions;
 	std::map<const char*, Symbol*> m_dx9Functions;
 };

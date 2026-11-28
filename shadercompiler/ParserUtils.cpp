@@ -1044,10 +1044,10 @@ void CreateGlobalsCB( ParserState& state )
 	}
 }
 
-ASTNode* NewStruct( ParserState& state, const InlineString& name )
+ASTNode* NewStruct( ParserState& state, const InlineString& name, OverrideBehavior overrideBehavior )
 {
 	auto structDecl = state.NewNode( NT_STRUCT );
-	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateGlobalName(), overrideBehavior );
 	symbol->isTypeName = true;
 	symbol->definition = structDecl;
 	structDecl->SetSymbol( symbol );
@@ -1145,7 +1145,7 @@ ASTNode* NewConditionalExpression( ParserState& state, ASTNode* condition, ASTNo
 ASTNode* NewVarDeclaration( ParserState& state, const Type& type, const InlineString& name )
 {
 	auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
-	auto nameSymbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	auto nameSymbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateGlobalName() );
 	nameDecl->SetSymbol( nameSymbol );
 
 	nameSymbol->type = type;
@@ -1217,7 +1217,7 @@ ASTNode* NewReturn( ParserState& state, ASTNode* expr )
 ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const InlineString& name )
 {
 	auto param = state.NewNode( NT_FUNCTION_PARAMETER );
-	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateGlobalName() );
 	symbol->type = type;
 	symbol->definition = param;
 	param->SetType( symbol->type );

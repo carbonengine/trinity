@@ -882,7 +882,9 @@ void CollectGlobals(
 						if( !globalsStruct )
 						{
 							InlineString name = MakeInlineString( "GlobalsData" );
-							globalsStruct = new ASTNode( NT_STRUCT, node->GetLocation(), node->GetScope(), nullptr );
+							// The GlobalsData struct has no proper location, so give it a dummy one.
+							FileLocation location{ 1, name };
+							globalsStruct = new ASTNode( NT_STRUCT, location, node->GetScope(), nullptr );
 
 							RegisterSpecifier reg;
 							reg.shaderProfile.start = nullptr;
@@ -947,7 +949,7 @@ void CollectGlobals(
 			}
 		}
 
-		PatchGlobalsInFunctions( functions, cbuffer->GetSymbol(), state.AllocateNameWithPrefix( "cbuffer" ), members );
+		PatchGlobalsInFunctions( functions, cbuffer->GetSymbol(), state.AllocateGlobalName( "cbuffer" ), members );
 	}
 }
 
@@ -2301,7 +2303,7 @@ bool AutoAssignRegisters( ParserState& state, ASTNode* callNode )
 
 ASTNode* NewStructMember( ParserState& state, Symbol* sourceSymbol )
 {
-	auto symbol = state.GetSymbolTable().AddSymbol( state.AllocateNameWithPrefix( sourceSymbol->name ) );
+	auto symbol = state.GetSymbolTable().AddSymbol( state.AllocateLocalName( sourceSymbol->name ) );
 	auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
 	symbol->definition = nameDecl;
 	symbol->type = sourceSymbol->type;
@@ -2362,7 +2364,7 @@ void GatherSystemFields( ASTNode* destStruct, std::vector<ASTNode*>& accessors, 
 				auto it = s_systemSemantics.find( name->GetSymbol()->semantic );
 				if( it != s_systemSemantics.end() )
 				{
-					auto param = NewFunctionParameter( state, name->GetType() );
+					auto param = NewFunctionParameter( state, name->GetType(), state.AllocateLocalName() );
 					param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( it->second );
 					destStruct->AddChild( param );
 					argumentAccessors.push_back( NewVarIdentifier( state, param->GetSymbol() ) );
@@ -2371,7 +2373,7 @@ void GatherSystemFields( ASTNode* destStruct, std::vector<ASTNode*>& accessors, 
 					// subtract base_vertex from vertex_id to match dx12 behaviour for SV_VertexID
 					if( name->GetSymbol()->semantic == "SV_VertexID" )
 					{
-						auto base_param = NewFunctionParameter( state, hlsl::uint_t );
+						auto base_param = NewFunctionParameter( state, hlsl::uint_t, state.AllocateLocalName() );
 						base_param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_vertex );
 						destStruct->AddChild( base_param );
 
@@ -2387,7 +2389,7 @@ void GatherSystemFields( ASTNode* destStruct, std::vector<ASTNode*>& accessors, 
 					// subtract base_instance from instance_id to match dx12 behaviour for SV_InstanceID
 					if( name->GetSymbol()->semantic == "SV_InstanceID" )
 					{
-						auto base_param = NewFunctionParameter( state, hlsl::uint_t );
+						auto base_param = NewFunctionParameter( state, hlsl::uint_t, state.AllocateLocalName() );
 						base_param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_instance );
 						destStruct->AddChild( base_param );
 
@@ -2494,7 +2496,7 @@ void GatherSystemInputs( ASTNode* destStruct, std::vector<ASTNode*>& accessors, 
 			// subtract base_vertex from vertex_id to match dx12 behaviour for SV_VertexID
 			if( symbol->semantic == "SV_VertexID" )
 			{
-				auto param = NewFunctionParameter( state, hlsl::uint_t );
+				auto param = NewFunctionParameter( state, hlsl::uint_t, state.AllocateLocalName() );
 				param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_vertex );
 				destStruct->AddChild( param );
 
@@ -2510,7 +2512,7 @@ void GatherSystemInputs( ASTNode* destStruct, std::vector<ASTNode*>& accessors, 
 			// subtract base_instance from instance_id to match dx12 behaviour for SV_InstanceID
 			if( symbol->semantic == "SV_InstanceID" )
 			{
-				auto param = NewFunctionParameter( state, hlsl::uint_t );
+				auto param = NewFunctionParameter( state, hlsl::uint_t, state.AllocateLocalName() );
 				param->GetSymbol()->registerSpecifier[{}] = MetalSystemSemantics( MetalSystemSemanticsType::Enum::base_instance );
 				destStruct->AddChild( param );
 
@@ -2798,6 +2800,11 @@ ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState
 {
 	ZoneScoped;
 
+	// Permutations whose stage is the same before patching share one compile (see
+	// EffectCompilerMetal::CompileEffect), so the names generated here must not depend on the
+	// rest of the permutation: they are numbered from zero for every patch.
+	state.ResetLocalNames();
+
 	Symbol* entryPointSymbol = callNode->GetSymbol();
 	if( !entryPointSymbol || !entryPointSymbol->definition )
 	{
@@ -2815,8 +2822,10 @@ ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState
 	state.GetCurrentLocation().fileName = shaderName.stringValue;
 	state.GetCurrentLocation().lineNumber = 1;
 
-	ASTNode* inputsStruct = NewStruct( state, state.AllocateNameWithPrefix( "StageInData" ) );
-	ASTNode* outputsStruct = NewStruct( state, state.AllocateNameWithPrefix( "StageOutData" ) );
+	// Every patch numbers its names from zero, so other stages' patches have structs with the same
+	// names. Each stage's code only contains its own.
+	ASTNode* inputsStruct = NewStruct( state, state.AllocateLocalName( "StageInData" ), ALLOW_OVERRIDES );
+	ASTNode* outputsStruct = NewStruct( state, state.AllocateLocalName( "StageOutData" ), ALLOW_OVERRIDES );
 
 	auto header = state.NewNode( NT_FUNCTION_HEADER, shaderName );
 	auto shaderSymbol = state.GetSymbolTable().AddSymbol( shaderName.stringValue, ALLOW_OVERRIDES );
@@ -2895,7 +2904,7 @@ ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState
 	{
 		// Local variable for return value
 
-		auto declList = NewVarDeclaration( state, functionHeader->GetType(), state.AllocateNameWithPrefix( "result" ) );
+		auto declList = NewVarDeclaration( state, functionHeader->GetType(), state.AllocateLocalName( "result" ) );
 		auto nameSymbol = declList->GetChild( 0 )->GetSymbol();
 		shaderBody->AddChild( declList );
 
@@ -2923,7 +2932,7 @@ ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState
 		state.GetTree()->AddChild( inputsStruct );
 
 		// Add [[stage_in]] parameter.
-		auto stageIn = NewFunctionParameter( state, TypeFromSymbol( inputsStruct->GetSymbol() ), state.AllocateNameWithPrefix( "stageIn" ) );
+		auto stageIn = NewFunctionParameter( state, TypeFromSymbol( inputsStruct->GetSymbol() ), state.AllocateLocalName( "stageIn" ) );
 		header->AddChild( stageIn );
 
 		stageInSymbol = stageIn->GetSymbol();
@@ -3051,7 +3060,7 @@ ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState
 			header->SetType( TypeFromSymbol( outputsStruct->GetSymbol() ) );
 
 			// Create a local variable for outputs
-			auto resultDeclList = NewVarDeclaration( state, TypeFromSymbol( outputsStruct->GetSymbol() ), state.AllocateNameWithPrefix( "stageOut" ) );
+			auto resultDeclList = NewVarDeclaration( state, TypeFromSymbol( outputsStruct->GetSymbol() ), state.AllocateLocalName( "stageOut" ) );
 			auto resultSymbol = resultDeclList->GetChild( 0 )->GetSymbol();
 			shaderBody->AddChild( resultDeclList );
 
@@ -5110,16 +5119,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				RemapSystemSemanticsDXtoMetal( shaderNode->GetChild( 1 ) );
 
-				std::string shaderCacheKey;
-				{
-					state.GetSymbolTable().ResetUsedFlag();
-					MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
-
-					CompilerInputStream os( state, ShadingLanguage::MSL );
-					os << MSL{ state.GetTree(), &state.GetSymbolTable() };
-					shaderCacheKey = os.str();
-					state.GetSymbolTable().ResetUsedFlag();
-				}
 				PatchShaderType patchShaderType;
 				switch( stage.type )
 				{
@@ -5183,6 +5182,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				os << AtomicFn{ "xor", "Xor" };
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
 
+				// Key on the exact source code that we intend to feed to the Metal compiler.
+				std::string shaderCacheKey = os.str();
 
 				// Let only one thread compile this permutation.
 				bool needsToCompile = false;

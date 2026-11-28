@@ -58,7 +58,7 @@ extern void SortProgramNodes( ASTNode* root );
 extern void CreateGlobalsCB( ParserState& state );
 
 
-ASTNode* NewStruct( ParserState& state, const InlineString& name = InlineString() );
+ASTNode* NewStruct( ParserState& state, const InlineString& name = InlineString(), OverrideBehavior overrideBehavior = DISALOW_OVERRIDES );
 
 ASTNode* NewVarIdentifier( ParserState& state, Symbol* var );
 ASTNode* NewLiteralConst( ParserState& state, float value );

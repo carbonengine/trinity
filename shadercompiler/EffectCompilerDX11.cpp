@@ -324,7 +324,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 	// return type
 	os << functionHeader->GetType();
 	// name
-	InlineString name = state.AllocateName();
+	InlineString name = state.AllocateGlobalName();
 	os << ' ' << name << "( ";
 	bool first = true;
 
@@ -376,7 +376,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 		{
 			if( callNode->GetChildrenCount() <= uniformIndex && functionHeader->GetChild( i )->GetChildOrNull( 1 ) != nullptr )
 			{
-				InlineString uniformName = state.AllocateName();
+				InlineString uniformName = state.AllocateGlobalName();
 				Type type = functionHeader->GetChild( i )->GetType();
 				type.storageClass = 0;
 				os << type << ' ' << uniformName << " = " << HLSL{ functionHeader->GetChild( i )->GetChildOrNull( 1 ), nullptr };

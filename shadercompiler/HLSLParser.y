@@ -2200,7 +2200,7 @@ struct_specifier(A) ::= OP_STRUCT(B) enter_block OP_LEFT_BRACE  OP_RIGHT_BRACE.
 
 	parserState->GetSymbolTable().LeaveScope();
 
-	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateName() );
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateGlobalName() );
 	symbol->definition = A;
 	symbol->isTypeName = true;
 
@@ -2242,7 +2242,7 @@ struct_specifier(A) ::= OP_STRUCT enter_block OP_LEFT_BRACE struct_declaration_l
 
 	A = C;
 
-	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateName() );
+	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( parserState->AllocateGlobalName() );
 	symbol->definition = C;
 	symbol->isTypeName = true;
 
@@ -3069,7 +3069,7 @@ cbuffer_declaration(A) ::= buffer_type(T) register_specifier(R) OP_LEFT_BRACE cb
 {
 	A = B;
 	A->SetToken( &T );
-	Symbol* symbol = parserState->GetSymbolTable().AddBufferSymbol( parserState->AllocateName() );
+	Symbol* symbol = parserState->GetSymbolTable().AddBufferSymbol( parserState->AllocateGlobalName() );
 	symbol->registerSpecifier[R.shaderProfile] = R;
 	A->SetSymbol( symbol );
 	A->SetLocation( T.fileLocation );
@@ -3079,7 +3079,7 @@ cbuffer_declaration(A) ::= buffer_type(T) OP_LEFT_BRACE cbuffer_members(B)  OP_R
 {
 	A = B;
 	A->SetToken( &T );
-	A->SetSymbol( parserState->GetSymbolTable().AddBufferSymbol( parserState->AllocateName() ) );
+	A->SetSymbol( parserState->GetSymbolTable().AddBufferSymbol( parserState->AllocateGlobalName() ) );
 	A->SetLocation( T.fileLocation );
 }
 
